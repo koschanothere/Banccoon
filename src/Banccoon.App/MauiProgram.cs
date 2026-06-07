@@ -5,6 +5,7 @@ using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
+using Banccoon.Core.Reconciliation;
 using Banccoon.Infrastructure.Database;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
@@ -29,6 +30,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
+        builder.Services.AddSingleton<ICheckInService, CheckInService>();
+        builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
+        builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
+        builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
         builder.Services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         builder.Services.AddSingleton<IBanccoonDatabaseInitializer, BanccoonDatabaseInitializer>();

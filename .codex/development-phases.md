@@ -4,6 +4,28 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 5
+
+Branch: `codex/phase-5-reconciliation-check-in`
+
+This branch starts the reconciliation and weekly check-in system. The first slice focuses on testable workflow logic rather than full UI screens: expected scheduled event review, forecast-versus-reality comparison, grouped spending creation, and balance-adjustment transactions.
+
+### Planned Deliverables
+
+- Add check-in session models.
+- Add expected transaction review decisions: pending, confirmed, delayed, and cancelled.
+- Add reconciliation result models for expected balance, actual balance, and difference.
+- Add grouped spending entry model and service.
+- Add balance adjustment model and service.
+- Add focused unit tests for check-in discovery, reconciliation math, grouped spending, and adjustment creation.
+
+### Scope Boundaries
+
+- No full check-in UI yet.
+- No notification scheduling yet.
+- No automatic account mutation yet; balance adjustment produces explicit transaction records for traceability.
+- Confirm/delay/cancel persistence wiring can follow in the UI data-wiring phase.
+
 ## Active Branch Plan: Phase 4
 
 Branch: `codex/phase-4-import-export-backup-restore`
@@ -631,7 +653,59 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 
 - Banccoon feels like a complete local Windows desktop application rather than a prototype.
 
-## Phase 8: Future Optional Features
+## Phase 8: UI Data Wiring
+
+### Goals
+
+- Connect the visual shell and feature screens to the real local SQLite repositories.
+- Make the app usable for actual data entry and saved workflows.
+- Persist user preferences, including currency, navigation style, power-user visibility, and theme settings.
+
+### Components To Build
+
+- Accounts CRUD UI wired to `IAccountRepository`.
+- Categories picker and creation flow wired to `ICategoryRepository`.
+- Transactions UI wired to `ITransactionRepository`.
+- Scheduled transactions UI wired to recurrence editor and `IScheduledTransactionRepository`.
+- Dashboard and forecast screens reading real stored data.
+- Preferences screen wired to `ISettingsRepository` and appearance preference storage.
+- Import/export screen wired to backup services and file pickers.
+
+### ViewModels Required
+
+- `AccountsViewModel`
+- `AccountEditorViewModel`
+- `TransactionsViewModel`
+- `TransactionEditorViewModel`
+- `ScheduledTransactionsViewModel`
+- `ScheduledTransactionEditorViewModel`
+- `ForecastViewModel`
+- `PreferencesViewModel`
+- `ImportExportViewModel`
+
+### Screens Required
+
+- Real Accounts screen.
+- Real Transactions screen.
+- Real Scheduled screen.
+- Real Forecast screen.
+- Real Preferences screen.
+- Real Import/export screen.
+
+### Testing Requirements
+
+- ViewModel tests where behavior is nontrivial.
+- Repository integration tests remain the persistence safety net.
+- Manual app run checks for create/edit/delete and restart persistence.
+
+### Exit Criteria
+
+- A user can enter real accounts and scheduled transactions in the UI.
+- Data persists between app restarts and builds.
+- Dashboard and forecast use saved local data.
+- Preferences persist through restart.
+
+## Phase 9: Future Optional Features
 
 ### Goals
 
@@ -667,8 +741,9 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 5. Versioned import/export and backup/restore.
 6. Guided weekly check-in and reconciliation.
 7. Savings goals and credit card obligations.
-8. Windows desktop hardening for V1.
-9. Optional OCR and bank sync research spikes.
+8. UI data wiring for real saved workflows.
+9. Windows desktop hardening for V1.
+10. Optional OCR and bank sync research spikes.
 
 ## Technical Priorities
 
