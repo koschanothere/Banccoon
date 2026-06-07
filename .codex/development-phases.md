@@ -4,6 +4,30 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 2
+
+Branch: `codex/phase-2-local-persistence`
+
+This branch starts local persistence. The aim is to make Banccoon capable of storing and loading real user data from a per-user local SQLite database while keeping repository interfaces in Core and database details in Infrastructure.
+
+### Planned Deliverables
+
+- Add repository hygiene with `.gitignore`.
+- Add SQLite package reference to `Banccoon.Infrastructure`.
+- Add a database path provider for per-user local storage.
+- Add schema initialization for Phase 2 tables.
+- Implement repository round-trips for accounts, categories, scheduled transactions, transactions, savings goals, and settings.
+- Add tests using temporary SQLite database files.
+- Keep MAUI screens minimal until repository behavior is verified.
+
+### Phase 2 Scope Boundaries
+
+- No cloud storage.
+- No bank sync.
+- No import/export yet.
+- No advanced UI polish yet.
+- No encrypted database yet, though the file-based design should allow that later.
+
 ## Active Branch Plan: Phase 0 And Phase 1
 
 Branch: `codex/phase-0-1-foundation-forecasting`

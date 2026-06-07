@@ -2,7 +2,10 @@ using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
+using Banccoon.Infrastructure.Database;
+using Banccoon.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Banccoon.App;
@@ -21,6 +24,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
+        builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
+        builder.Services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
+        builder.Services.AddSingleton<IBanccoonDatabaseInitializer, BanccoonDatabaseInitializer>();
+        builder.Services.AddSingleton<IAccountRepository, SqliteAccountRepository>();
+        builder.Services.AddSingleton<ICategoryRepository, SqliteCategoryRepository>();
+        builder.Services.AddSingleton<ITransactionRepository, SqliteTransactionRepository>();
+        builder.Services.AddSingleton<IScheduledTransactionRepository, SqliteScheduledTransactionRepository>();
+        builder.Services.AddSingleton<ISavingsGoalRepository, SqliteSavingsGoalRepository>();
+        builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
 
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<MainPage>();
