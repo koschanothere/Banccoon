@@ -4,6 +4,31 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 0 And Phase 1
+
+Branch: `codex/phase-0-1-foundation-forecasting`
+
+This branch implements the first engineering slice of Banccoon: a clean solution skeleton plus a testable forecasting and recurrence core. The .NET SDK is not currently visible on this machine, so project files and source are created directly and build/test verification must be completed once an SDK is installed or added to `PATH`.
+
+### Planned Deliverables
+
+- Create `Banccoon.sln` with Core, Infrastructure, App, and Tests projects.
+- Keep business logic in `Banccoon.Core`.
+- Add placeholder Infrastructure and App projects that can compile once the SDK is available.
+- Implement domain models for accounts, transactions, scheduled transactions, categories, goals, settings, and recurrence.
+- Implement recurrence occurrence generation for daily, weekly, monthly, month-end, and yearly rules.
+- Implement forecast generation for 7, 30, 60, and 90 day periods.
+- Calculate current balance, forecasted ending balance, lowest forecasted balance, upcoming obligations, and available to spend.
+- Add focused unit tests for recurrence edge cases and forecast calculations.
+
+### Phase 0/1 Scope Boundaries
+
+- No SQLite implementation yet.
+- No MAUI UI polish yet.
+- No reconciliation workflow yet.
+- No import/export implementation yet.
+- Credit card and savings-goal forecast extensions remain in later phases, though the models can exist early.
+
 ## Phase 0: Repository And Product Foundation
 
 ### Goals
