@@ -16,8 +16,8 @@
             BackgroundColor="{StaticResource ShellBackgroundColor}"
             IsVisible="{Binding IsRailMode}"
             StrokeThickness="0">
-            <Grid Padding="12,14" RowDefinitions="Auto,Auto,*,Auto">
-                <Grid ColumnDefinitions="36,*" ColumnSpacing="9">
+            <Grid Padding="12,14" RowDefinitions="Auto,*,Auto">
+                <Grid ColumnDefinitions="36,*,38" ColumnSpacing="9">
                     <Border
                         BackgroundColor="{StaticResource AccentColor}"
                         HeightRequest="34"
@@ -45,16 +45,41 @@
                             Text="Private forecast"
                             TextColor="#B8C7BD" />
                     </VerticalStackLayout>
+                    <Border
+                        Grid.Column="2"
+                        BackgroundColor="{StaticResource ShellPanelColor}"
+                        HeightRequest="34"
+                        StrokeThickness="0"
+                        WidthRequest="34"
+                        HorizontalOptions="End"
+                        VerticalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleNavigationCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout
+                            HorizontalOptions="Center"
+                            Spacing="4"
+                            VerticalOptions="Center">
+                            <BoxView
+                                Color="{StaticResource ShellTextColor}"
+                                HeightRequest="2"
+                                WidthRequest="16" />
+                            <BoxView
+                                Color="{StaticResource ShellTextColor}"
+                                HeightRequest="2"
+                                WidthRequest="16" />
+                            <BoxView
+                                Color="{StaticResource ShellTextColor}"
+                                HeightRequest="2"
+                                WidthRequest="16" />
+                        </VerticalStackLayout>
+                    </Border>
                 </Grid>
 
-                <Button
-                    Grid.Row="1"
-                    Margin="0,16,0,10"
-                    Command="{Binding ToggleNavigationCommand}"
-                    Style="{StaticResource ShellButton}"
-                    Text="{Binding NavigationToggleText}" />
-
-                <VerticalStackLayout Grid.Row="2" Spacing="4">
+                <VerticalStackLayout Grid.Row="1" Margin="0,16,0,0" Spacing="4">
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Dashboard}"
@@ -93,7 +118,7 @@
                 </VerticalStackLayout>
 
                 <Border
-                    Grid.Row="3"
+                    Grid.Row="2"
                     Padding="12"
                     BackgroundColor="{StaticResource ShellPanelColor}"
                     StrokeThickness="0">
@@ -343,6 +368,28 @@
                 <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Preferences" />
                     <Label Style="{StaticResource MutedLabel}" Text="Appearance, navigation style, default currency, analytics options, and privacy settings will be customized here." />
+                    <Border
+                        Padding="16"
+                        BackgroundColor="{StaticResource SurfaceColor}"
+                        Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label
+                                    FontAttributes="Bold"
+                                    Text="Power-user features" />
+                                <Label
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Show advanced controls such as technical recurrence syntax. Friendly controls stay as the default." />
+                            </VerticalStackLayout>
+                            <CheckBox
+                                Grid.Column="1"
+                                IsChecked="{Binding ShowPowerUserFeatures}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
                     <Grid ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
                         <Button
                             Command="{Binding UseRailNavigationCommand}"

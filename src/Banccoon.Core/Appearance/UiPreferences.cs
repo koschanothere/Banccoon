@@ -3,10 +3,12 @@ namespace Banccoon.Core.Appearance;
 public sealed record UiPreferences(
     AppThemeMode ThemeMode,
     AccentColor AccentColor,
-    NavigationStyle NavigationStyle)
+    NavigationStyle NavigationStyle,
+    bool ShowPowerUserFeatures)
 {
     public static UiPreferences Default { get; } = new(
         AppThemeMode.Light,
         AccentColor.Emerald,
-        NavigationStyle.Rail);
+        NavigationStyle.Rail,
+        ShowPowerUserFeatures: false);
 }

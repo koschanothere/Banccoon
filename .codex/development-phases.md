@@ -49,13 +49,17 @@ This branch starts the user-friendly recurrence layer. The stored recurrence dat
 - Keep `RecurrenceRule` as the durable source of truth.
 - Add a MAUI recurrence editor ViewModel with selectable frequencies, intervals, weekdays, and monthly modes.
 - Add a reusable recurrence editor control for future scheduled-transaction screens.
+- Add optional technical recurrence syntax for power users.
+- Default to the friendly sentence-style UI, with an expandable advanced syntax area.
+- Provide syntax examples and validation messages instead of exposing raw storage details.
+- Mark all power-user UI elements with a shared power-user tag so preferences can show or hide them globally.
 - Register recurrence editor services in DI.
 - Add focused tests for validation and natural-language descriptions.
 
 ### Phase 3 Scope Boundaries
 
 - No full scheduled-transaction CRUD screen yet.
-- No advanced custom recurrence grammar yet.
+- No full iCalendar/RFC 5545 implementation yet.
 - No database migration changes unless the structured rule model changes.
 - No localization yet; descriptions are English for the first product slice.
 
@@ -380,7 +384,9 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 
 ### Exit Criteria
 
-- Users can create recurring income and expenses without seeing technical recurrence syntax.
+- Users can create recurring income and expenses without seeing technical recurrence syntax by default.
+- Power users can expand an advanced section to view or edit technical recurrence syntax with examples.
+- Power-user controls can be globally hidden or shown from preferences.
 
 ## Phase 4: Import, Export, Backup, And Restore
 

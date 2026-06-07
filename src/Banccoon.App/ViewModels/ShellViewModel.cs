@@ -10,6 +10,7 @@ public sealed class ShellViewModel : ViewModelBase
     private NavigationStyle navigationStyle = UiPreferences.Default.NavigationStyle;
     private AppThemeMode themeMode = UiPreferences.Default.ThemeMode;
     private AccentColor accentColor = UiPreferences.Default.AccentColor;
+    private bool showPowerUserFeatures = UiPreferences.Default.ShowPowerUserFeatures;
 
     public ShellViewModel()
     {
@@ -74,7 +75,6 @@ public sealed class ShellViewModel : ViewModelBase
             if (SetProperty(ref isNavigationExpanded, value))
             {
                 OnPropertyChanged(nameof(NavigationColumnWidth));
-                OnPropertyChanged(nameof(NavigationToggleText));
                 OnPropertyChanged(nameof(IsMenuButtonVisible));
             }
         }
@@ -108,6 +108,12 @@ public sealed class ShellViewModel : ViewModelBase
         set => SetProperty(ref accentColor, value);
     }
 
+    public bool ShowPowerUserFeatures
+    {
+        get => showPowerUserFeatures;
+        set => SetProperty(ref showPowerUserFeatures, value);
+    }
+
     public GridLength NavigationColumnWidth
     {
         get
@@ -117,7 +123,7 @@ public sealed class ShellViewModel : ViewModelBase
                 return new GridLength(0);
             }
 
-            return IsNavigationExpanded ? new GridLength(218) : new GridLength(0);
+            return IsNavigationExpanded ? new GridLength(176) : new GridLength(0);
         }
     }
 
@@ -126,8 +132,6 @@ public sealed class ShellViewModel : ViewModelBase
     public bool IsTopTabsMode => NavigationStyle == NavigationStyle.TopTabs;
 
     public bool IsMenuButtonVisible => NavigationStyle != NavigationStyle.Rail;
-
-    public string NavigationToggleText => "Focus mode";
 
     public string SelectedTitle => SelectedItem.Title;
 

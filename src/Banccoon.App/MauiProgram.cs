@@ -22,6 +22,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDateProvider, SystemDateProvider>();
         builder.Services.AddSingleton<IRecurrenceValidationService, RecurrenceValidationService>();
         builder.Services.AddSingleton<IRecurrenceDescriptionService, RecurrenceDescriptionService>();
+        builder.Services.AddSingleton<IRecurrenceSyntaxService, RecurrenceSyntaxService>();
         builder.Services.AddSingleton<IRecurrenceService, RecurrenceService>();
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();

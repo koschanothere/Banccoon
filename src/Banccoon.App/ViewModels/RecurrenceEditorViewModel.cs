@@ -1,4 +1,6 @@
+using System.Windows.Input;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Appearance;
 using Banccoon.Core.Recurrence;
 
 namespace Banccoon.App.ViewModels;
@@ -6,6 +8,7 @@ namespace Banccoon.App.ViewModels;
 public sealed class RecurrenceEditorViewModel : ViewModelBase
 {
     private readonly IRecurrenceDescriptionService recurrenceDescriptionService;
+    private readonly IRecurrenceSyntaxService recurrenceSyntaxService;
     private readonly IRecurrenceValidationService recurrenceValidationService;
     private RecurrenceFrequency frequency = RecurrenceFrequency.Weekly;
     private int interval = 1;
@@ -15,14 +18,23 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
     private DateTime startDate;
     private DateTime endDate;
     private bool hasEndDate;
+    private bool showPowerUserFeatures = UiPreferences.Default.ShowPowerUserFeatures;
+    private bool isTechnicalSyntaxExpanded;
+    private bool isUpdatingTechnicalSyntax;
+    private string technicalSyntax = string.Empty;
 
     public RecurrenceEditorViewModel(
         IDateProvider dateProvider,
         IRecurrenceDescriptionService recurrenceDescriptionService,
+        IRecurrenceSyntaxService recurrenceSyntaxService,
         IRecurrenceValidationService recurrenceValidationService)
     {
         this.recurrenceDescriptionService = recurrenceDescriptionService;
+        this.recurrenceSyntaxService = recurrenceSyntaxService;
         this.recurrenceValidationService = recurrenceValidationService;
+
+        SyntaxExamples = recurrenceSyntaxService.GetExamples();
+        ApplyTechnicalSyntaxCommand = new RelayCommand(ApplyTechnicalSyntax);
 
         var today = dateProvider.Today;
         dayOfWeek = today.DayOfWeek;
@@ -39,6 +51,10 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
 
     public IReadOnlyList<MonthlyRecurrenceMode> MonthlyModes { get; } = Enum.GetValues<MonthlyRecurrenceMode>();
 
+    public IReadOnlyList<RecurrenceSyntaxExample> SyntaxExamples { get; }
+
+    public ICommand ApplyTechnicalSyntaxCommand { get; }
+
     public RecurrenceFrequency Frequency
     {
         get => frequency;
@@ -48,6 +64,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsWeekly));
                 OnPropertyChanged(nameof(IsMonthly));
+                OnPropertyChanged(nameof(UsesDayOfMonth));
                 UpdateDerivedState();
             }
         }
@@ -138,6 +155,24 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         }
     }
 
+    public bool ShowPowerUserFeatures
+    {
+        get => showPowerUserFeatures;
+        set => SetProperty(ref showPowerUserFeatures, value);
+    }
+
+    public bool IsTechnicalSyntaxExpanded
+    {
+        get => isTechnicalSyntaxExpanded;
+        set => SetProperty(ref isTechnicalSyntaxExpanded, value);
+    }
+
+    public string TechnicalSyntax
+    {
+        get => technicalSyntax;
+        set => SetProperty(ref technicalSyntax, value);
+    }
+
     public bool IsWeekly => Frequency == RecurrenceFrequency.Weekly;
 
     public bool IsMonthly => Frequency == RecurrenceFrequency.Monthly;
@@ -147,6 +182,8 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
     public string Description { get; private set; } = string.Empty;
 
     public string ValidationMessage { get; private set; } = string.Empty;
+
+    public string TechnicalSyntaxMessage { get; private set; } = string.Empty;
 
     public bool IsValid { get; private set; }
 
@@ -162,6 +199,49 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
             MonthlyMode);
     }
 
+    private void ApplyTechnicalSyntax()
+    {
+        var parseResult = recurrenceSyntaxService.TryParse(TechnicalSyntax);
+        if (!parseResult.IsValid || parseResult.Rule is null)
+        {
+            TechnicalSyntaxMessage = parseResult.Errors.Count == 0
+                ? "Syntax could not be parsed."
+                : parseResult.Errors[0];
+            OnPropertyChanged(nameof(TechnicalSyntaxMessage));
+            return;
+        }
+
+        ApplyRule(parseResult.Rule);
+        TechnicalSyntaxMessage = "Technical syntax applied.";
+        OnPropertyChanged(nameof(TechnicalSyntaxMessage));
+    }
+
+    private void ApplyRule(RecurrenceRule rule)
+    {
+        frequency = rule.Frequency;
+        interval = rule.Interval;
+        dayOfWeek = rule.DayOfWeek ?? rule.StartDate.DayOfWeek;
+        dayOfMonth = rule.DayOfMonth ?? rule.StartDate.Day;
+        monthlyMode = rule.MonthlyMode;
+        startDate = rule.StartDate.ToDateTime(TimeOnly.MinValue);
+        hasEndDate = rule.EndDate.HasValue;
+        endDate = (rule.EndDate ?? rule.StartDate.AddMonths(3)).ToDateTime(TimeOnly.MinValue);
+
+        OnPropertyChanged(nameof(Frequency));
+        OnPropertyChanged(nameof(Interval));
+        OnPropertyChanged(nameof(DayOfWeek));
+        OnPropertyChanged(nameof(DayOfMonth));
+        OnPropertyChanged(nameof(MonthlyMode));
+        OnPropertyChanged(nameof(StartDate));
+        OnPropertyChanged(nameof(HasEndDate));
+        OnPropertyChanged(nameof(EndDate));
+        OnPropertyChanged(nameof(IsWeekly));
+        OnPropertyChanged(nameof(IsMonthly));
+        OnPropertyChanged(nameof(UsesDayOfMonth));
+
+        UpdateDerivedState();
+    }
+
     private void UpdateDerivedState()
     {
         var rule = BuildRule();
@@ -174,6 +254,13 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         Description = validationResult.IsValid
             ? recurrenceDescriptionService.Describe(rule)
             : "Invalid recurrence";
+
+        if (validationResult.IsValid && !isUpdatingTechnicalSyntax)
+        {
+            isUpdatingTechnicalSyntax = true;
+            TechnicalSyntax = recurrenceSyntaxService.Format(rule);
+            isUpdatingTechnicalSyntax = false;
+        }
 
         OnPropertyChanged(nameof(IsValid));
         OnPropertyChanged(nameof(ValidationMessage));

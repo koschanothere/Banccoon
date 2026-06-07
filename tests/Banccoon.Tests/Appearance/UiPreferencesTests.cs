@@ -13,5 +13,6 @@ public sealed class UiPreferencesTests
         Assert.Equal(AppThemeMode.Light, preferences.ThemeMode);
         Assert.Equal(AccentColor.Emerald, preferences.AccentColor);
         Assert.Equal(NavigationStyle.Rail, preferences.NavigationStyle);
+        Assert.False(preferences.ShowPowerUserFeatures);
     }
 }

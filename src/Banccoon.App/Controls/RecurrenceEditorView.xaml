@@ -2,7 +2,8 @@
 <ContentView
     x:Class="Banccoon.App.Controls.RecurrenceEditorView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls">
     <VerticalStackLayout Spacing="12">
         <Grid ColumnDefinitions="Auto,96,160,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
             <Label
@@ -88,5 +89,74 @@
         <Label
             Text="{Binding ValidationMessage}"
             TextColor="#B3261E" />
+
+        <Border
+            Padding="14"
+            BackgroundColor="{StaticResource SurfaceMutedColor}"
+            Stroke="{StaticResource DividerColor}"
+            controls:PowerUser.IsPowerUserElement="True"
+            controls:PowerUser.ShowPowerUserElements="{Binding ShowPowerUserFeatures}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontAttributes="Bold"
+                            Text="Technical recurrence syntax" />
+                        <Label
+                            Style="{StaticResource MutedLabel}"
+                            Text="Optional power-user mode. Friendly controls remain the default." />
+                    </VerticalStackLayout>
+                    <CheckBox
+                        Grid.Column="1"
+                        IsChecked="{Binding IsTechnicalSyntaxExpanded}"
+                        VerticalOptions="Center" />
+                </Grid>
+
+                <VerticalStackLayout
+                    IsVisible="{Binding IsTechnicalSyntaxExpanded}"
+                    Spacing="8">
+                    <Editor
+                        AutoSize="TextChanges"
+                        FontFamily="Consolas"
+                        HeightRequest="74"
+                        Text="{Binding TechnicalSyntax}" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button
+                            Command="{Binding ApplyTechnicalSyntaxCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Text="Apply syntax" />
+                    </HorizontalStackLayout>
+                    <Label
+                        Style="{StaticResource MutedLabel}"
+                        Text="{Binding TechnicalSyntaxMessage}" />
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        Text="Examples" />
+                    <CollectionView
+                        HeightRequest="148"
+                        ItemsSource="{Binding SyntaxExamples}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <VerticalStackLayout Padding="0,4" Spacing="2">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        Text="{Binding Label}" />
+                                    <Label
+                                        FontFamily="Consolas"
+                                        FontSize="12"
+                                        Text="{Binding Syntax}"
+                                        TextColor="{StaticResource SecondaryTextColor}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Border>
     </VerticalStackLayout>
 </ContentView>
