@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Banccoon.Core\Banccoon.Core.csproj" />
     <ProjectReference Include="..\Banccoon.Infrastructure\Banccoon.Infrastructure.csproj" />
   </ItemGroup>

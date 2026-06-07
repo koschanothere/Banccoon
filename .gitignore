@@ -1,0 +1,37 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio and Rider
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test output
+TestResults/
+*.trx
+coverage/
+coverage.cobertura.xml
+
+# NuGet
+*.nupkg
+packages/
+
+# Local app data and databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.banccoonbackup
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Banccoon.Core\Banccoon.Core.csproj" />
+    <ProjectReference Include="..\..\src\Banccoon.Infrastructure\Banccoon.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
