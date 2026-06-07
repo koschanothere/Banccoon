@@ -20,6 +20,8 @@ public static class MauiProgram
             .UseMauiApp<App>();
 
         builder.Services.AddSingleton<IDateProvider, SystemDateProvider>();
+        builder.Services.AddSingleton<IRecurrenceValidationService, RecurrenceValidationService>();
+        builder.Services.AddSingleton<IRecurrenceDescriptionService, RecurrenceDescriptionService>();
         builder.Services.AddSingleton<IRecurrenceService, RecurrenceService>();
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
@@ -35,6 +37,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
 
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<MainPage>();
 
         return builder.Build();

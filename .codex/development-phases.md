@@ -4,6 +4,29 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 3
+
+Branch: `codex/phase-3-recurrence-editor`
+
+This branch starts the user-friendly recurrence layer. The stored recurrence data remains structured, while Core and App gain the services and ViewModels needed to present rules as natural-language choices such as "Every week on Monday" or "Every month on the last day".
+
+### Planned Deliverables
+
+- Add recurrence validation service in Core.
+- Add recurrence description service in Core.
+- Keep `RecurrenceRule` as the durable source of truth.
+- Add a MAUI recurrence editor ViewModel with selectable frequencies, intervals, weekdays, and monthly modes.
+- Add a reusable recurrence editor control for future scheduled-transaction screens.
+- Register recurrence editor services in DI.
+- Add focused tests for validation and natural-language descriptions.
+
+### Phase 3 Scope Boundaries
+
+- No full scheduled-transaction CRUD screen yet.
+- No advanced custom recurrence grammar yet.
+- No database migration changes unless the structured rule model changes.
+- No localization yet; descriptions are English for the first product slice.
+
 ## Active Branch Plan: Phase 2
 
 Branch: `codex/phase-2-local-persistence`

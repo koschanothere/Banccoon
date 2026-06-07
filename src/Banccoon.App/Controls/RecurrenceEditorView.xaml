@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Banccoon.App.Controls.RecurrenceEditorView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <VerticalStackLayout Spacing="12">
+        <Grid ColumnDefinitions="Auto,96,160,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <Label
+                Grid.Row="0"
+                Grid.Column="0"
+                Text="Every"
+                VerticalOptions="Center" />
+            <Entry
+                Grid.Row="0"
+                Grid.Column="1"
+                Keyboard="Numeric"
+                Text="{Binding Interval}" />
+            <Picker
+                Grid.Row="0"
+                Grid.Column="2"
+                ItemsSource="{Binding Frequencies}"
+                SelectedItem="{Binding Frequency}" />
+
+            <Label
+                Grid.Row="1"
+                Grid.Column="0"
+                IsVisible="{Binding IsWeekly}"
+                Text="On"
+                VerticalOptions="Center" />
+            <Picker
+                Grid.Row="1"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                IsVisible="{Binding IsWeekly}"
+                ItemsSource="{Binding DaysOfWeek}"
+                SelectedItem="{Binding DayOfWeek}" />
+
+            <Label
+                Grid.Row="2"
+                Grid.Column="0"
+                IsVisible="{Binding IsMonthly}"
+                Text="Monthly"
+                VerticalOptions="Center" />
+            <Picker
+                Grid.Row="2"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                IsVisible="{Binding IsMonthly}"
+                ItemsSource="{Binding MonthlyModes}"
+                SelectedItem="{Binding MonthlyMode}" />
+            <Entry
+                Grid.Row="2"
+                Grid.Column="3"
+                IsVisible="{Binding UsesDayOfMonth}"
+                Keyboard="Numeric"
+                Placeholder="Day"
+                Text="{Binding DayOfMonth}" />
+
+            <Label
+                Grid.Row="3"
+                Grid.Column="0"
+                Text="Starts"
+                VerticalOptions="Center" />
+            <DatePicker
+                Grid.Row="3"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Date="{Binding StartDate}" />
+
+            <HorizontalStackLayout
+                Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="4"
+                Spacing="8">
+                <CheckBox IsChecked="{Binding HasEndDate}" />
+                <Label
+                    Text="Ends"
+                    VerticalOptions="Center" />
+                <DatePicker
+                    Date="{Binding EndDate}"
+                    IsEnabled="{Binding HasEndDate}" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Label
+            FontAttributes="Bold"
+            Text="{Binding Description}" />
+        <Label
+            Text="{Binding ValidationMessage}"
+            TextColor="#B3261E" />
+    </VerticalStackLayout>
+</ContentView>
