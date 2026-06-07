@@ -16,19 +16,19 @@
             BackgroundColor="{StaticResource ShellBackgroundColor}"
             IsVisible="{Binding IsRailMode}"
             StrokeThickness="0">
-            <Grid Padding="16,18" RowDefinitions="Auto,Auto,*,Auto">
-                <Grid ColumnDefinitions="44,*" ColumnSpacing="10">
+            <Grid Padding="12,14" RowDefinitions="Auto,Auto,*,Auto">
+                <Grid ColumnDefinitions="36,*" ColumnSpacing="9">
                     <Border
                         BackgroundColor="{StaticResource AccentColor}"
-                        HeightRequest="40"
+                        HeightRequest="34"
                         StrokeThickness="0"
-                        WidthRequest="40">
+                        WidthRequest="34">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
                         <Label
                             FontAttributes="Bold"
-                            FontSize="22"
+                            FontSize="18"
                             HorizontalTextAlignment="Center"
                             Text="B"
                             TextColor="#FFFFFF"
@@ -37,7 +37,7 @@
                     <VerticalStackLayout Grid.Column="1" Spacing="0">
                         <Label
                             FontAttributes="Bold"
-                            FontSize="18"
+                            FontSize="16"
                             Text="Banccoon"
                             TextColor="{StaticResource ShellTextColor}" />
                         <Label
@@ -49,7 +49,7 @@
 
                 <Button
                     Grid.Row="1"
-                    Margin="0,20,0,10"
+                    Margin="0,16,0,10"
                     Command="{Binding ToggleNavigationCommand}"
                     Style="{StaticResource ShellButton}"
                     Text="{Binding NavigationToggleText}" />
@@ -59,37 +59,37 @@
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Dashboard}"
                         Style="{StaticResource ShellButton}"
-                        Text="⌂  Dashboard" />
+                        Text="Dashboard" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Accounts}"
                         Style="{StaticResource ShellButton}"
-                        Text="◫  Accounts" />
+                        Text="Accounts" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Transactions}"
                         Style="{StaticResource ShellButton}"
-                        Text="≡  Transactions" />
+                        Text="Transactions" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
                         Style="{StaticResource ShellButton}"
-                        Text="↻  Scheduled" />
+                        Text="Scheduled" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Forecast}"
                         Style="{StaticResource ShellButton}"
-                        Text="⌁  Forecast" />
+                        Text="Forecast" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Analytics}"
                         Style="{StaticResource ShellButton}"
-                        Text="◌  Analytics" />
+                        Text="Analytics" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Preferences}"
                         Style="{StaticResource ShellButton}"
-                        Text="⚙  Preferences" />
+                        Text="Preferences" />
                 </VerticalStackLayout>
 
                 <Border
@@ -120,8 +120,40 @@
             BackgroundColor="{StaticResource SurfaceColor}"
             Stroke="{StaticResource DividerColor}"
             StrokeThickness="0">
-            <Grid Padding="28,16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                <VerticalStackLayout Spacing="2">
+            <Grid Padding="22,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
+                <Border
+                    HeightRequest="38"
+                    IsVisible="{Binding IsMenuButtonVisible}"
+                    StrokeThickness="0"
+                    WidthRequest="38"
+                    BackgroundColor="{StaticResource SurfaceMutedColor}"
+                    VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleNavigationCommand}" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout
+                        HorizontalOptions="Center"
+                        Spacing="4"
+                        VerticalOptions="Center">
+                        <BoxView
+                            Color="{StaticResource PrimaryTextColor}"
+                            HeightRequest="2"
+                            WidthRequest="18" />
+                        <BoxView
+                            Color="{StaticResource PrimaryTextColor}"
+                            HeightRequest="2"
+                            WidthRequest="18" />
+                        <BoxView
+                            Color="{StaticResource PrimaryTextColor}"
+                            HeightRequest="2"
+                            WidthRequest="18" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
                     <Label
                         FontAttributes="Bold"
                         FontSize="22"
@@ -132,7 +164,7 @@
                 </VerticalStackLayout>
 
                 <HorizontalStackLayout
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Spacing="8"
                     VerticalOptions="Center">
                     <Button
@@ -147,7 +179,7 @@
 
                 <ScrollView
                     Grid.Row="1"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="3"
                     Margin="0,14,0,0"
                     IsVisible="{Binding IsTopTabsMode}"
                     Orientation="Horizontal">

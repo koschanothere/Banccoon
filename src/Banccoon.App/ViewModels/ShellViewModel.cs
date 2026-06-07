@@ -15,13 +15,13 @@ public sealed class ShellViewModel : ViewModelBase
     {
         NavigationItems =
         [
-            new(AppSection.Dashboard, "Dashboard", "⌂", "Today, obligations, and safe-to-spend."),
-            new(AppSection.Accounts, "Accounts", "◫", "Balances, cards, cash, and savings."),
-            new(AppSection.Transactions, "Transactions", "≡", "Manual and grouped spending entries."),
-            new(AppSection.Scheduled, "Scheduled", "↻", "Recurring income, bills, and reminders."),
-            new(AppSection.Forecast, "Forecast", "⌁", "Future balances and lowest balance points."),
-            new(AppSection.Analytics, "Analytics", "◌", "Trends, categories, and money patterns."),
-            new(AppSection.Preferences, "Preferences", "⚙", "Theme, navigation, privacy, and defaults.")
+            new(AppSection.Dashboard, "Dashboard", "D", "Today, obligations, and safe-to-spend."),
+            new(AppSection.Accounts, "Accounts", "A", "Balances, cards, cash, and savings."),
+            new(AppSection.Transactions, "Transactions", "T", "Manual and grouped spending entries."),
+            new(AppSection.Scheduled, "Scheduled", "S", "Recurring income, bills, and reminders."),
+            new(AppSection.Forecast, "Forecast", "F", "Future balances and lowest balance points."),
+            new(AppSection.Analytics, "Analytics", "N", "Trends, categories, and money patterns."),
+            new(AppSection.Preferences, "Preferences", "P", "Theme, navigation, privacy, and defaults.")
         ];
 
         SelectSectionCommand = new RelayCommand<AppSection>(SelectSection);
@@ -75,6 +75,7 @@ public sealed class ShellViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(NavigationColumnWidth));
                 OnPropertyChanged(nameof(NavigationToggleText));
+                OnPropertyChanged(nameof(IsMenuButtonVisible));
             }
         }
     }
@@ -89,6 +90,7 @@ public sealed class ShellViewModel : ViewModelBase
                 IsNavigationExpanded = value == NavigationStyle.Rail;
                 OnPropertyChanged(nameof(IsRailMode));
                 OnPropertyChanged(nameof(IsTopTabsMode));
+                OnPropertyChanged(nameof(IsMenuButtonVisible));
                 OnPropertyChanged(nameof(NavigationColumnWidth));
             }
         }
@@ -115,7 +117,7 @@ public sealed class ShellViewModel : ViewModelBase
                 return new GridLength(0);
             }
 
-            return IsNavigationExpanded ? new GridLength(260) : new GridLength(74);
+            return IsNavigationExpanded ? new GridLength(218) : new GridLength(0);
         }
     }
 
@@ -123,7 +125,9 @@ public sealed class ShellViewModel : ViewModelBase
 
     public bool IsTopTabsMode => NavigationStyle == NavigationStyle.TopTabs;
 
-    public string NavigationToggleText => IsNavigationExpanded ? "Hide navigation" : "Show navigation";
+    public bool IsMenuButtonVisible => NavigationStyle != NavigationStyle.Rail;
+
+    public string NavigationToggleText => "Focus mode";
 
     public string SelectedTitle => SelectedItem.Title;
 
@@ -152,9 +156,9 @@ public sealed class ShellViewModel : ViewModelBase
 
     private void ToggleNavigation()
     {
-        NavigationStyle = NavigationStyle == NavigationStyle.TopTabs
-            ? NavigationStyle.Rail
-            : NavigationStyle.CompactRail;
+        NavigationStyle = NavigationStyle == NavigationStyle.Rail
+            ? NavigationStyle.CompactRail
+            : NavigationStyle.Rail;
     }
 
     private void UpdateSelectedNavigationItem()
