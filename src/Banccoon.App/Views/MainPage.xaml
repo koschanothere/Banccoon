@@ -3,19 +3,332 @@
     x:Class="Banccoon.App.Views.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     BackgroundColor="{StaticResource PageBackgroundColor}"
-    Title="Dashboard">
-    <Grid Padding="32" RowDefinitions="Auto,Auto,*">
-        <Label
-            FontAttributes="Bold"
-            FontSize="34"
-            Text="{Binding Title}"
-            TextColor="{StaticResource PrimaryTextColor}" />
-        <Label
-            Grid.Row="1"
-            FontSize="16"
-            Margin="0,8,0,0"
-            Text="{Binding Subtitle}"
-            TextColor="{StaticResource PrimaryTextColor}" />
+    Title="Banccoon">
+    <Grid RowDefinitions="Auto,*">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding NavigationColumnWidth}" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border
+            Grid.RowSpan="2"
+            BackgroundColor="{StaticResource ShellBackgroundColor}"
+            IsVisible="{Binding IsRailMode}"
+            StrokeThickness="0">
+            <Grid Padding="16,18" RowDefinitions="Auto,Auto,*,Auto">
+                <Grid ColumnDefinitions="44,*" ColumnSpacing="10">
+                    <Border
+                        BackgroundColor="{StaticResource AccentColor}"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        WidthRequest="40">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="22"
+                            HorizontalTextAlignment="Center"
+                            Text="B"
+                            TextColor="#FFFFFF"
+                            VerticalTextAlignment="Center" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="0">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            Text="Banccoon"
+                            TextColor="{StaticResource ShellTextColor}" />
+                        <Label
+                            FontSize="11"
+                            Text="Private forecast"
+                            TextColor="#B8C7BD" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <Button
+                    Grid.Row="1"
+                    Margin="0,20,0,10"
+                    Command="{Binding ToggleNavigationCommand}"
+                    Style="{StaticResource ShellButton}"
+                    Text="{Binding NavigationToggleText}" />
+
+                <VerticalStackLayout Grid.Row="2" Spacing="4">
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Dashboard}"
+                        Style="{StaticResource ShellButton}"
+                        Text="⌂  Dashboard" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Accounts}"
+                        Style="{StaticResource ShellButton}"
+                        Text="◫  Accounts" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Transactions}"
+                        Style="{StaticResource ShellButton}"
+                        Text="≡  Transactions" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                        Style="{StaticResource ShellButton}"
+                        Text="↻  Scheduled" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Forecast}"
+                        Style="{StaticResource ShellButton}"
+                        Text="⌁  Forecast" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Analytics}"
+                        Style="{StaticResource ShellButton}"
+                        Text="◌  Analytics" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Preferences}"
+                        Style="{StaticResource ShellButton}"
+                        Text="⚙  Preferences" />
+                </VerticalStackLayout>
+
+                <Border
+                    Grid.Row="3"
+                    Padding="12"
+                    BackgroundColor="{StaticResource ShellPanelColor}"
+                    StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="4">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="12"
+                            Text="Logo space"
+                            TextColor="{StaticResource ShellTextColor}" />
+                        <Label
+                            FontSize="11"
+                            Text="Ready for the Banccoon mascot."
+                            TextColor="#B8C7BD" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Column="1"
+            BackgroundColor="{StaticResource SurfaceColor}"
+            Stroke="{StaticResource DividerColor}"
+            StrokeThickness="0">
+            <Grid Padding="28,16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <VerticalStackLayout Spacing="2">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="22"
+                        Text="{Binding SelectedTitle}" />
+                    <Label
+                        Style="{StaticResource MutedLabel}"
+                        Text="{Binding SelectedDescription}" />
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout
+                    Grid.Column="1"
+                    Spacing="8"
+                    VerticalOptions="Center">
+                    <Button
+                        Command="{Binding UseRailNavigationCommand}"
+                        Style="{StaticResource QuietButton}"
+                        Text="Rail" />
+                    <Button
+                        Command="{Binding UseTopTabsCommand}"
+                        Style="{StaticResource QuietButton}"
+                        Text="Tabs" />
+                </HorizontalStackLayout>
+
+                <ScrollView
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Margin="0,14,0,0"
+                    IsVisible="{Binding IsTopTabsMode}"
+                    Orientation="Horizontal">
+                    <HorizontalStackLayout Spacing="8">
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Dashboard}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Dashboard" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Accounts}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Accounts" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Transactions}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Transactions" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Scheduled" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Forecast}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Forecast" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Analytics}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Analytics" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Preferences}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Preferences" />
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Border>
+
+        <ScrollView Grid.Row="1" Grid.Column="1">
+            <Grid Padding="28" RowDefinitions="Auto">
+                <VerticalStackLayout
+                    IsVisible="{Binding IsDashboardSelected}"
+                    Spacing="22">
+                    <Grid ColumnDefinitions="2*,*" ColumnSpacing="18">
+                        <Border
+                            Padding="22"
+                            BackgroundColor="{StaticResource SurfaceColor}"
+                            Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="14">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="30"
+                                    Text="You can safely spend €0 today." />
+                                <Label
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Once accounts and scheduled payments are wired into the UI, this will use the forecast engine and local SQLite data." />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Button
+                                        Command="{Binding SelectSectionCommand}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Accounts}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Text="Add account" />
+                                    <Button
+                                        Command="{Binding SelectSectionCommand}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                                        Style="{StaticResource QuietButton}"
+                                        Text="Add scheduled item" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            Padding="18"
+                            BackgroundColor="{StaticResource AccentSoftColor}"
+                            StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="8">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    Text="Weekly check-in" />
+                                <Label
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Future workflow: confirm what happened, enter real balances, and reconcile differences without logging every tiny purchase." />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="14">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Current balance" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Upcoming obligations" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Lowest forecast" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="3" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Forecast period" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="30 days" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Accounts" />
+                    <Label Style="{StaticResource MutedLabel}" Text="This screen will manage cash, debit, credit, savings, investment, and other accounts." />
+                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="New account" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsTransactionsSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Transactions" />
+                    <Label Style="{StaticResource MutedLabel}" Text="Manual transactions and grouped spending will live here, with categories optional by design." />
+                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="Add transaction" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsScheduledSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Scheduled" />
+                    <Label Style="{StaticResource MutedLabel}" Text="Recurring income, bills, subscriptions, and planned payments will be managed here." />
+                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="New scheduled item" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsForecastSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Forecast" />
+                    <Label Style="{StaticResource MutedLabel}" Text="A timeline of expected money movement and projected balances will appear here." />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsAnalyticsSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Analytics" />
+                    <Label Style="{StaticResource MutedLabel}" Text="Future analytics will explain trends, categories, changes, and available spending patterns." />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Preferences" />
+                    <Label Style="{StaticResource MutedLabel}" Text="Appearance, navigation style, default currency, analytics options, and privacy settings will be customized here." />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
+                        <Button
+                            Command="{Binding UseRailNavigationCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Use rail" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding UseCompactNavigationCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Compact rail" />
+                        <Button
+                            Grid.Column="2"
+                            Command="{Binding UseTopTabsCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Use tabs" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
     </Grid>
 </ContentPage>

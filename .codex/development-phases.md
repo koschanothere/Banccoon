@@ -4,6 +4,38 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: UI Shell And Customization Foundation
+
+Branch: `codex/ui-shell-navigation-customization`
+
+This branch starts a dedicated UI shell phase. Banccoon should feel semi-professional, friendly, modern, and calm rather than like a raw technical prototype. The first UI pass should create the app frame users will live in: navigation, dashboard structure, theme tokens, and preference hooks.
+
+### Design Direction
+
+- Calm financial clarity inspired by products like Zenmoney, without copying their UI.
+- Friendly desktop-first layout with generous spacing, clear numbers, and soft contrast.
+- First-class room for future Banccoon branding and mascot/logo placement.
+- Main areas should be visible as stable destinations: Dashboard, Accounts, Transactions, Scheduled, Forecast, Analytics, and Preferences.
+- Navigation should support both a visible left rail and a compact focus mode.
+- Long-term customization should include light/dark mode, highlight/accent colors, dashboard layout preferences, analytics preferences, and navigation style.
+
+### Planned Deliverables
+
+- Add UI preference models for theme mode, accent color, and navigation style.
+- Add a shell ViewModel that tracks the selected section and navigation preferences.
+- Replace the placeholder dashboard with a real desktop app shell.
+- Add placeholder content surfaces for the main app areas.
+- Establish theme resources for light, calm, modern UI styling.
+- Keep real CRUD/data-entry wiring for the next Phase 2 UI continuation.
+
+### Scope Boundaries
+
+- This is not the final polished UI.
+- No logo/mascot assets yet; the shell should reserve space for them.
+- No full accounts or transaction forms yet.
+- No advanced custom theme editor yet.
+- The layout should be ready for future light/dark and accent customization.
+
 ## Active Branch Plan: Phase 3
 
 Branch: `codex/phase-3-recurrence-editor`
@@ -249,6 +281,55 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Users can create accounts and scheduled transactions.
 - Forecasts are generated from persisted local data.
 - Data remains available after restarting the app.
+
+## Phase 2.5: UI Shell And Design System
+
+### Goals
+
+- Make Banccoon feel like a real desktop app before deeper feature screens are added.
+- Establish the main navigation structure.
+- Define visual style, spacing, theme resources, and reusable layout patterns.
+- Provide a home for future branding, including the Banccoon logo and mascot.
+
+### Components To Build
+
+- Desktop app shell.
+- Navigation rail with collapsible focus mode.
+- Optional top-tab navigation mode later.
+- Theme resource dictionaries.
+- Reusable dashboard stat cards and list sections.
+- Empty-state patterns.
+- Preference model for navigation and appearance.
+
+### ViewModels Required
+
+- `ShellViewModel`
+- `NavigationItemViewModel`
+- `DashboardViewModel` updates
+- `PreferencesViewModel` foundation
+
+### Screens Required
+
+- Dashboard
+- Accounts placeholder
+- Transactions placeholder
+- Scheduled placeholder
+- Forecast placeholder
+- Analytics placeholder
+- Preferences placeholder
+
+### Testing Requirements
+
+- Build verification for MAUI shell.
+- Unit tests for UI preference defaults where practical.
+- Manual run check for navigation behavior.
+
+### Exit Criteria
+
+- The app opens into a semi-professional, friendly shell.
+- Users can switch between the major app sections.
+- Navigation can be shown or collapsed for focus.
+- The UI has a clear direction for future customization.
 
 ## Phase 3: Recurrence Editor And Advanced Recurrence Support
 
@@ -534,6 +615,7 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Optional encrypted cloud synchronization.
 - Mobile-specific UI shells.
 - Rich analytics based on logged or imported transactions.
+- Advanced appearance customization with accent colors, saved themes, custom dashboard layouts, and user-selected navigation style.
 
 ### Architectural Constraints
 

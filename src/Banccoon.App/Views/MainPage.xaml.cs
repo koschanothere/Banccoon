@@ -4,7 +4,7 @@ namespace Banccoon.App.Views;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(DashboardViewModel viewModel)
+    public MainPage(ShellViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

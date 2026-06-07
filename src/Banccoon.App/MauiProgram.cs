@@ -38,6 +38,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
+        builder.Services.AddTransient<ShellViewModel>();
         builder.Services.AddTransient<MainPage>();
 
         return builder.Build();
