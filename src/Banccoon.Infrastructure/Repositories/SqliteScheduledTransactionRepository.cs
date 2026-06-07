@@ -172,6 +172,17 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM ScheduledTransactions;";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static ScheduledTransaction ReadScheduledTransaction(System.Data.Common.DbDataReader reader)
     {
         var recurrenceDayOfWeek = SqliteData.ReadNullableString(reader, "RecurrenceDayOfWeek");

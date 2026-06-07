@@ -90,6 +90,17 @@ public sealed class SqliteSavingsGoalRepository : SqliteRepositoryBase, ISavings
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SavingsGoals;";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static SavingsGoal ReadSavingsGoal(System.Data.Common.DbDataReader reader)
     {
         return new SavingsGoal(

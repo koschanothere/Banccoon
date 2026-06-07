@@ -96,6 +96,17 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Transactions;";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static async Task<IReadOnlyList<Transaction>> ReadTransactionsAsync(
         Microsoft.Data.Sqlite.SqliteCommand command,
         CancellationToken cancellationToken)

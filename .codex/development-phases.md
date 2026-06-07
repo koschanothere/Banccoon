@@ -4,6 +4,29 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 4
+
+Branch: `codex/phase-4-import-export-backup-restore`
+
+This branch starts data portability. Banccoon should be able to produce a versioned, human-readable JSON export containing the user's financial data, validate imports before applying them, merge or replace local data, and create/restore backup files without any cloud service.
+
+### Planned Deliverables
+
+- Add versioned export envelope and data transfer models.
+- Add import modes for validation, merge, and replace.
+- Add export validation for format version and broken references.
+- Add repository-backed export/import services.
+- Add JSON file backup/restore service.
+- Add tests for export contents, import validation, replace import, merge import, and round-trip restore.
+- Add default currency selection to Preferences.
+
+### Scope Boundaries
+
+- Export files are plain JSON for this slice.
+- Compressed backup archives can be added later once the schema stabilizes.
+- No cloud backup or sync.
+- No full file picker UI yet; services are testable first and UI wiring follows.
+
 ## Active Branch Plan: UI Shell And Customization Foundation
 
 Branch: `codex/ui-shell-navigation-customization`

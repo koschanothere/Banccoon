@@ -2,9 +2,11 @@ using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
 using Banccoon.Infrastructure.Database;
+using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -36,6 +38,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionRepository, SqliteScheduledTransactionRepository>();
         builder.Services.AddSingleton<ISavingsGoalRepository, SqliteSavingsGoalRepository>();
         builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
+        builder.Services.AddSingleton<IExportValidator, ExportValidator>();
+        builder.Services.AddSingleton<IExportService, RepositoryExportService>();
+        builder.Services.AddSingleton<IImportService, RepositoryImportService>();
+        builder.Services.AddSingleton<IBackupService, JsonBackupService>();
 
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();

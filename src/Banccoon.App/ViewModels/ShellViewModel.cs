@@ -11,6 +11,7 @@ public sealed class ShellViewModel : ViewModelBase
     private AppThemeMode themeMode = UiPreferences.Default.ThemeMode;
     private AccentColor accentColor = UiPreferences.Default.AccentColor;
     private bool showPowerUserFeatures = UiPreferences.Default.ShowPowerUserFeatures;
+    private string defaultCurrency = "EUR";
 
     public ShellViewModel()
     {
@@ -35,6 +36,22 @@ public sealed class ShellViewModel : ViewModelBase
     }
 
     public IReadOnlyList<NavigationItemViewModel> NavigationItems { get; }
+
+    public IReadOnlyList<string> SupportedCurrencies { get; } =
+    [
+        "EUR",
+        "USD",
+        "GBP",
+        "PLN",
+        "CZK",
+        "CHF",
+        "NOK",
+        "SEK",
+        "DKK",
+        "JPY",
+        "CAD",
+        "AUD"
+    ];
 
     public ICommand SelectSectionCommand { get; }
 
@@ -112,6 +129,12 @@ public sealed class ShellViewModel : ViewModelBase
     {
         get => showPowerUserFeatures;
         set => SetProperty(ref showPowerUserFeatures, value);
+    }
+
+    public string DefaultCurrency
+    {
+        get => defaultCurrency;
+        set => SetProperty(ref defaultCurrency, value);
     }
 
     public GridLength NavigationColumnWidth

@@ -1,8 +1,6 @@
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
-using Banccoon.Infrastructure.Database;
-using Banccoon.Infrastructure.Repositories;
 using Xunit;
 
 namespace Banccoon.Tests.Infrastructure;
@@ -160,57 +158,5 @@ public sealed class SqliteRepositoryTests
             1000m,
             "EUR",
             new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
-    }
-
-    private sealed class SqliteTestStore : IAsyncDisposable
-    {
-        private readonly string databasePath;
-
-        public SqliteTestStore()
-        {
-            var testDirectory = Path.Combine(Path.GetTempPath(), "Banccoon.Tests");
-            Directory.CreateDirectory(testDirectory);
-            databasePath = Path.Combine(testDirectory, $"{Guid.NewGuid():N}.db");
-
-            var pathProvider = new StaticDatabasePathProvider(databasePath);
-            var connectionFactory = new SqliteConnectionFactory(pathProvider);
-            var initializer = new BanccoonDatabaseInitializer(connectionFactory);
-
-            Accounts = new SqliteAccountRepository(connectionFactory, initializer);
-            Categories = new SqliteCategoryRepository(connectionFactory, initializer);
-            Transactions = new SqliteTransactionRepository(connectionFactory, initializer);
-            ScheduledTransactions = new SqliteScheduledTransactionRepository(connectionFactory, initializer);
-            SavingsGoals = new SqliteSavingsGoalRepository(connectionFactory, initializer);
-            Settings = new SqliteSettingsRepository(connectionFactory, initializer);
-        }
-
-        public SqliteAccountRepository Accounts { get; }
-
-        public SqliteCategoryRepository Categories { get; }
-
-        public SqliteTransactionRepository Transactions { get; }
-
-        public SqliteScheduledTransactionRepository ScheduledTransactions { get; }
-
-        public SqliteSavingsGoalRepository SavingsGoals { get; }
-
-        public SqliteSettingsRepository Settings { get; }
-
-        public ValueTask DisposeAsync()
-        {
-            DeleteIfExists(databasePath);
-            DeleteIfExists($"{databasePath}-shm");
-            DeleteIfExists($"{databasePath}-wal");
-
-            return ValueTask.CompletedTask;
-        }
-
-        private static void DeleteIfExists(string path)
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
     }
 }

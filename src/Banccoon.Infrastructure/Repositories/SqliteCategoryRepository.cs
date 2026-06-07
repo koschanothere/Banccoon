@@ -74,6 +74,17 @@ public sealed class SqliteCategoryRepository : SqliteRepositoryBase, ICategoryRe
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Categories;";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static Category ReadCategory(System.Data.Common.DbDataReader reader)
     {
         return new Category(

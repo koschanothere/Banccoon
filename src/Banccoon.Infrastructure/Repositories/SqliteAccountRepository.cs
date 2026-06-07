@@ -153,6 +153,17 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Accounts;";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private static Account ReadAccount(System.Data.Common.DbDataReader reader)
     {
         CreditCardDetails? creditCardDetails = new CreditCardDetails(

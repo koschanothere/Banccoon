@@ -375,6 +375,29 @@
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label
+                                    FontAttributes="Bold"
+                                    Text="Default currency" />
+                                <Label
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Used as the default for new accounts and future analytics summaries." />
+                            </VerticalStackLayout>
+                            <Picker
+                                Grid.Column="1"
+                                ItemsSource="{Binding SupportedCurrencies}"
+                                SelectedItem="{Binding DefaultCurrency}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border
+                        Padding="16"
+                        BackgroundColor="{StaticResource SurfaceColor}"
+                        Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
                                 <Label
