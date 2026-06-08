@@ -1,16 +1,26 @@
+using Banccoon.Core.CreditCards;
+using Banccoon.Core.Models;
+using Banccoon.Core.Savings;
+
 namespace Banccoon.Core.Forecasting;
 
 public sealed class ForecastService : IForecastService
 {
     private readonly IAccountBalanceService accountBalanceService;
     private readonly IScheduledTransactionProjectionService scheduledTransactionProjectionService;
+    private readonly ICreditCardForecastService? creditCardForecastService;
+    private readonly ISavingsGoalAllocationService? savingsGoalAllocationService;
 
     public ForecastService(
         IAccountBalanceService accountBalanceService,
-        IScheduledTransactionProjectionService scheduledTransactionProjectionService)
+        IScheduledTransactionProjectionService scheduledTransactionProjectionService,
+        ICreditCardForecastService? creditCardForecastService = null,
+        ISavingsGoalAllocationService? savingsGoalAllocationService = null)
     {
         this.accountBalanceService = accountBalanceService;
         this.scheduledTransactionProjectionService = scheduledTransactionProjectionService;
+        this.creditCardForecastService = creditCardForecastService;
+        this.savingsGoalAllocationService = savingsGoalAllocationService;
     }
 
     public ForecastResult CreateForecast(ForecastRequest request)
@@ -23,8 +33,12 @@ public sealed class ForecastService : IForecastService
         }
 
         var currentBalance = accountBalanceService.GetCurrentBalance(request.Accounts);
-        var forecastEvents = scheduledTransactionProjectionService
+        var scheduledEvents = scheduledTransactionProjectionService
             .Project(request.ScheduledTransactions, request.StartDate, request.EndDate)
+            .ToArray();
+        var creditCardEvents = ProjectCreditCardEvents(request);
+        var forecastEvents = scheduledEvents
+            .Concat(creditCardEvents)
             .OrderBy(forecastEvent => forecastEvent.Date)
             .ThenBy(forecastEvent => forecastEvent.SignedAmount)
             .ThenBy(forecastEvent => forecastEvent.Name, StringComparer.OrdinalIgnoreCase)
@@ -56,15 +70,40 @@ public sealed class ForecastService : IForecastService
                 forecastEvent.Kind))
             .ToArray();
 
+        var reservedForSavingsGoals = savingsGoalAllocationService?
+            .GetAllocations(request.SavingsGoals ?? Array.Empty<SavingsGoal>())
+            .Sum(allocation => allocation.ReservedAmount) ?? 0m;
+
         return new ForecastResult(
             request.StartDate,
             request.EndDate,
             currentBalance,
             runningBalance,
             lowestBalance,
-            Math.Max(0m, lowestBalance),
+            Math.Max(0m, lowestBalance - reservedForSavingsGoals),
             upcomingObligations,
             projectedBalances,
             forecastEvents);
+    }
+
+    private IReadOnlyList<ForecastEvent> ProjectCreditCardEvents(ForecastRequest request)
+    {
+        if (creditCardForecastService is null)
+        {
+            return Array.Empty<ForecastEvent>();
+        }
+
+        return creditCardForecastService
+            .ProjectPayments(request.Accounts, request.StartDate, request.EndDate)
+            .Select(payment => new ForecastEvent(
+                payment.AccountId,
+                payment.PaymentDate,
+                $"{payment.AccountName} payment",
+                payment.Amount,
+                TransactionType.Expense,
+                payment.AccountId,
+                CategoryId: null,
+                ForecastEventKind.CreditCardPayment))
+            .ToArray();
     }
 }

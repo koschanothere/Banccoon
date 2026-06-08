@@ -4,6 +4,30 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 6
+
+Branch: `codex/phase-6-goals-credit-cards-organization`
+
+This branch implements the core savings-goal and credit-card obligation behavior. The first slice stays mostly in Core services so the calculations can be trusted before the later UI data-wiring phase builds full account and goal editors.
+
+### Planned Deliverables
+
+- Add savings-goal allocation models and service.
+- Reduce available-to-spend by reserved savings-goal amounts without changing projected balances.
+- Add credit-card payment projection from planned payments or minimum-payment fallback.
+- Include projected credit-card payments in the forecast timeline and upcoming obligations.
+- Add a credit-card payoff planner using a user-chosen payment amount.
+- Add a manual monthly finance-charge input for power users instead of guessing card interest rules.
+- Add a payoff ViewModel surface that recalculates immediately when the chosen payment amount changes.
+- Add focused tests for goal reservations, card payment projections, payoff timing, and forecast integration.
+
+### Scope Boundaries
+
+- No automatic interest inference yet; promotional periods and purchase-specific rates require bank/API data or careful manual entry.
+- Manual interest/finance charges can be represented in payoff planning now and as a future transaction/category workflow later.
+- No full goals or credit-card editor screens yet; real UI data entry belongs to Phase 8 UI Data Wiring.
+- No automatic balance mutation when a card payment is forecast; actual payments should still enter through transactions/reconciliation.
+
 ## Active Branch Plan: Phase 5
 
 Branch: `codex/phase-5-reconciliation-check-in`
@@ -565,16 +589,21 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Credit card account details.
 - Credit card payment forecasting.
 - Minimum and planned payment handling.
+- User-chosen payoff planning.
+- Manual finance-charge modeling for cards where interest cannot be inferred safely.
 
 ### Data Models Required
 
 - `CreditCardDetails`
 - `CreditCardPaymentProjection`
+- `CreditCardPayoffPlan`
+- `CreditCardPayoffMonth`
 - `SavingsGoalAllocation`
+- `AvailableToSpendBreakdown`
 
 ### Services Required
 
-- `ISavingsGoalService`
+- `ISavingsGoalAllocationService`
 - `ICreditCardForecastService`
 - `IAvailableToSpendService`
 
@@ -595,11 +624,14 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Goal allocations reduce available-to-spend.
 - Credit card planned payments appear in forecasts.
 - Minimum payments are handled when planned payments are missing.
+- User-selected card payment amounts produce payoff timelines.
+- Manual finance charges affect payoff timing and total paid.
 - Optional credit card fields do not block basic account usage.
 
 ### Exit Criteria
 
 - Forecasts reflect savings reservations and upcoming credit card obligations.
+- A payoff calculation can tell the user when a credit-card debt is paid off for a chosen payment amount.
 
 ## Phase 7: Desktop Product Hardening
 

@@ -1,11 +1,13 @@
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Reconciliation;
+using Banccoon.Core.Savings;
 using Banccoon.Infrastructure.Database;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
@@ -29,6 +31,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IRecurrenceService, RecurrenceService>();
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
+        builder.Services.AddSingleton<ISavingsGoalAllocationService, SavingsGoalAllocationService>();
+        builder.Services.AddSingleton<IAvailableToSpendService, AvailableToSpendService>();
+        builder.Services.AddSingleton<ICreditCardForecastService, CreditCardForecastService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
         builder.Services.AddSingleton<ICheckInService, CheckInService>();
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
@@ -50,6 +55,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
+        builder.Services.AddTransient<CreditCardDetailsViewModel>();
         builder.Services.AddTransient<ShellViewModel>();
         builder.Services.AddTransient<MainPage>();
 
