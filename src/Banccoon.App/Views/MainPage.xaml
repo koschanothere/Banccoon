@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="Banccoon.App.Views.MainPage"
+    x:Name="Page"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
@@ -11,6 +12,7 @@
             <ColumnDefinition Width="{Binding NavigationColumnWidth}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+
         <Border
             Grid.RowSpan="2"
             BackgroundColor="{StaticResource ShellBackgroundColor}"
@@ -26,13 +28,10 @@
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
-                        <Label
-                            FontAttributes="Bold"
-                            FontSize="18"
-                            HorizontalTextAlignment="Center"
-                            Text="B"
-                            TextColor="#FFFFFF"
-                            VerticalTextAlignment="Center" />
+                        <Image
+                            Aspect="AspectFit"
+                            Margin="5"
+                            Source="banccoon_mark_placeholder.svg" />
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="0">
                         <Label
@@ -49,10 +48,10 @@
                         Grid.Column="2"
                         BackgroundColor="{StaticResource ShellPanelColor}"
                         HeightRequest="34"
-                        StrokeThickness="0"
-                        WidthRequest="34"
                         HorizontalOptions="End"
-                        VerticalOptions="Center">
+                        StrokeThickness="0"
+                        VerticalOptions="Center"
+                        WidthRequest="34">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
@@ -102,6 +101,11 @@
                         Text="Scheduled" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Goals}"
+                        Style="{StaticResource ShellButton}"
+                        Text="Goals" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Forecast}"
                         Style="{StaticResource ShellButton}"
                         Text="Forecast" />
@@ -129,11 +133,11 @@
                         <Label
                             FontAttributes="Bold"
                             FontSize="12"
-                            Text="Logo space"
+                            Text="Logo folder"
                             TextColor="{StaticResource ShellTextColor}" />
                         <Label
                             FontSize="11"
-                            Text="Ready for the Banccoon mascot."
+                            Text="Resources/Images/banccoon"
                             TextColor="#B8C7BD" />
                     </VerticalStackLayout>
                 </Border>
@@ -147,12 +151,12 @@
             StrokeThickness="0">
             <Grid Padding="22,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
                 <Border
+                    BackgroundColor="{StaticResource SurfaceMutedColor}"
                     HeightRequest="38"
                     IsVisible="{Binding IsMenuButtonVisible}"
                     StrokeThickness="0"
-                    WidthRequest="38"
-                    BackgroundColor="{StaticResource SurfaceMutedColor}"
-                    VerticalOptions="Center">
+                    VerticalOptions="Center"
+                    WidthRequest="38">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -193,6 +197,10 @@
                     Spacing="8"
                     VerticalOptions="Center">
                     <Button
+                        Command="{Binding Data.RefreshCommand}"
+                        Style="{StaticResource QuietButton}"
+                        Text="Refresh" />
+                    <Button
                         Command="{Binding UseRailNavigationCommand}"
                         Style="{StaticResource QuietButton}"
                         Text="Rail" />
@@ -209,51 +217,37 @@
                     IsVisible="{Binding IsTopTabsMode}"
                     Orientation="Horizontal">
                     <HorizontalStackLayout Spacing="8">
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Dashboard}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Dashboard" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Accounts}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Accounts" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Transactions}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Transactions" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Scheduled" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Forecast}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Forecast" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Analytics}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Analytics" />
-                        <Button
-                            Command="{Binding SelectSectionCommand}"
-                            CommandParameter="{x:Static viewModels:AppSection.Preferences}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Preferences" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Dashboard}" Style="{StaticResource QuietButton}" Text="Dashboard" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Accounts}" Style="{StaticResource QuietButton}" Text="Accounts" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Transactions}" Style="{StaticResource QuietButton}" Text="Transactions" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Scheduled}" Style="{StaticResource QuietButton}" Text="Scheduled" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Goals}" Style="{StaticResource QuietButton}" Text="Goals" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Forecast}" Style="{StaticResource QuietButton}" Text="Forecast" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Analytics}" Style="{StaticResource QuietButton}" Text="Analytics" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Preferences}" Style="{StaticResource QuietButton}" Text="Preferences" />
                     </HorizontalStackLayout>
                 </ScrollView>
             </Grid>
         </Border>
 
         <ScrollView Grid.Row="1" Grid.Column="1">
-            <Grid Padding="28" RowDefinitions="Auto">
+            <VerticalStackLayout Padding="28" Spacing="18">
+                <Border
+                    Padding="12,10"
+                    BackgroundColor="{StaticResource AccentSoftColor}"
+                    StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Label
+                        FontSize="13"
+                        Text="{Binding Data.StatusMessage}"
+                        TextColor="{StaticResource PrimaryTextColor}" />
+                </Border>
+
                 <VerticalStackLayout
                     IsVisible="{Binding IsDashboardSelected}"
-                    Spacing="22">
+                    Spacing="18">
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="18">
                         <Border
                             Padding="22"
@@ -266,10 +260,10 @@
                                 <Label
                                     FontAttributes="Bold"
                                     FontSize="30"
-                                    Text="You can safely spend €0 today." />
+                                    Text="{Binding Data.AvailableToSpendText, StringFormat='You can safely spend {0}.'}" />
                                 <Label
                                     Style="{StaticResource MutedLabel}"
-                                    Text="Once accounts and scheduled payments are wired into the UI, this will use the forecast engine and local SQLite data." />
+                                    Text="This uses saved local accounts, scheduled obligations, credit card payments, and savings reservations." />
                                 <HorizontalStackLayout Spacing="10">
                                     <Button
                                         Command="{Binding SelectSectionCommand}"
@@ -281,6 +275,11 @@
                                         CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
                                         Style="{StaticResource QuietButton}"
                                         Text="Add scheduled item" />
+                                    <Button
+                                        Command="{Binding SelectSectionCommand}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Goals}"
+                                        Style="{StaticResource QuietButton}"
+                                        Text="Add goal" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
@@ -288,8 +287,8 @@
                         <Border
                             Grid.Column="1"
                             Padding="18"
-                            BackgroundColor="{StaticResource AccentSoftColor}"
-                            StrokeThickness="0">
+                            BackgroundColor="{StaticResource SurfaceColor}"
+                            Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
@@ -297,10 +296,25 @@
                                 <Label
                                     FontAttributes="Bold"
                                     FontSize="16"
-                                    Text="Weekly check-in" />
-                                <Label
-                                    Style="{StaticResource MutedLabel}"
-                                    Text="Future workflow: confirm what happened, enter real balances, and reconcile differences without logging every tiny purchase." />
+                                    Text="Next obligations" />
+                                <CollectionView
+                                    HeightRequest="156"
+                                    ItemsSource="{Binding Data.UpcomingObligations}">
+                                    <CollectionView.EmptyView>
+                                        <Label Style="{StaticResource MutedLabel}" Text="No obligations in this forecast period." />
+                                    </CollectionView.EmptyView>
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Padding="0,4" ColumnDefinitions="*,Auto">
+                                                <VerticalStackLayout Spacing="1">
+                                                    <Label FontAttributes="Bold" FontSize="13" Text="{Binding Name}" />
+                                                    <Label FontSize="11" Style="{StaticResource MutedLabel}" Text="{Binding DateText}" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1" FontAttributes="Bold" Text="{Binding AmountText}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
@@ -310,127 +324,367 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Current balance" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.CurrentBalanceText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Upcoming obligations" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.UpcomingObligationsText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Lowest forecast" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="€0" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.LowestForecastText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="3" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Forecast period" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="30 days" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.ForecastPeriodText}" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="14">
+                <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Accounts" />
-                    <Label Style="{StaticResource MutedLabel}" Text="This screen will manage cash, debit, credit, savings, investment, and other accounts." />
-                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="New account" />
+                    <Grid ColumnDefinitions="1.1*,1.2*" ColumnSpacing="18">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="New account" />
+                                <Entry Placeholder="Name" Text="{Binding Data.NewAccountName}" />
+                                <Picker ItemsSource="{Binding Data.AccountTypes}" SelectedItem="{Binding Data.SelectedAccountType}" />
+                                <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
+                                    <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
+                                    <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
+                                </Grid>
+                                <VerticalStackLayout IsVisible="{Binding Data.IsNewAccountCreditCard}" Spacing="8">
+                                    <Label FontAttributes="Bold" FontSize="13" Text="Credit card details" />
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.NewCreditCardDebtText}" />
+                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.NewCreditCardPaymentDueDayText}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding Data.NewCreditCardMinimumPaymentText}" />
+                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding Data.NewCreditCardPlannedPaymentText}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                                <Button Command="{Binding Data.AddAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Update selected account" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.Accounts}"
+                                    SelectedItem="{Binding Data.SelectedAccount}" />
+                                <Entry Keyboard="Numeric" Placeholder="Current balance" Text="{Binding Data.SelectedAccountBalanceText}" />
+                                <VerticalStackLayout IsVisible="{Binding Data.IsSelectedAccountCreditCard}" Spacing="8">
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.SelectedAccountDebtText}" />
+                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.SelectedAccountPaymentDueDayText}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding Data.SelectedAccountMinimumPaymentText}" />
+                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding Data.SelectedAccountPlannedPaymentText}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Entry Keyboard="Numeric" Placeholder="Payoff calculator payment" Text="{Binding Data.SelectedAccountPayoffPaymentText}" />
+                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Manual monthly finance charge" Text="{Binding Data.SelectedAccountManualFinanceChargeText}" />
+                                    </Grid>
+                                    <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountPayoffSummary}" />
+                                </VerticalStackLayout>
+                                <Button Command="{Binding Data.SaveSelectedAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Update account" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding Data.AccountSummaries}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No accounts yet." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding CreditText}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding BalanceText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding TypeText}" />
+                                        </VerticalStackLayout>
+                                        <Button
+                                            Grid.Column="2"
+                                            Command="{Binding BindingContext.Data.DeleteAccountCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding Source}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Delete" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout IsVisible="{Binding IsTransactionsSelected}" Spacing="14">
+                <VerticalStackLayout IsVisible="{Binding IsTransactionsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Transactions" />
-                    <Label Style="{StaticResource MutedLabel}" Text="Manual transactions and grouped spending will live here, with categories optional by design." />
-                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="Add transaction" />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="1.4*,*,*,*,Auto" ColumnSpacing="10">
+                            <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" />
+                            <Picker Grid.Column="1" ItemsSource="{Binding Data.TransactionTypes}" SelectedItem="{Binding Data.SelectedTransactionType}" />
+                            <DatePicker Grid.Column="2" Date="{Binding Data.NewTransactionDate}" />
+                            <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
+                            <Button Grid.Column="4" Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
+                        </Grid>
+                    </Border>
+                    <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
+                    <CollectionView ItemsSource="{Binding Data.TransactionSummaries}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No transactions yet." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold" Text="{Binding AccountName}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding NotesText}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding DateText}" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout IsVisible="{Binding IsScheduledSelected}" Spacing="14">
+                <VerticalStackLayout IsVisible="{Binding IsScheduledSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Scheduled" />
-                    <Label Style="{StaticResource MutedLabel}" Text="Recurring income, bills, subscriptions, and planned payments will be managed here." />
-                    <Button HorizontalOptions="Start" Style="{StaticResource PrimaryButton}" Text="New scheduled item" />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="1.2*,*,*" ColumnSpacing="10">
+                                <Entry Placeholder="Name" Text="{Binding Data.NewScheduledName}" />
+                                <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewScheduledAccount}" />
+                                <Picker Grid.Column="2" ItemsSource="{Binding Data.TransactionTypes}" SelectedItem="{Binding Data.SelectedScheduledType}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="10">
+                                <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewScheduledAmountText}" />
+                                <Picker Grid.Column="1" ItemsSource="{Binding Data.RecurrenceFrequencies}" SelectedItem="{Binding Data.SelectedScheduledFrequency}" />
+                                <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Interval" Text="{Binding Data.NewScheduledIntervalText}" />
+                                <DatePicker Grid.Column="3" Date="{Binding Data.NewScheduledDate}" />
+                            </Grid>
+                            <Button Command="{Binding Data.AddScheduledTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save scheduled item" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <CollectionView ItemsSource="{Binding Data.ScheduledTransactionSummaries}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No scheduled transactions yet." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding RecurrenceText}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding NextText}" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteScheduledTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout IsVisible="{Binding IsForecastSelected}" Spacing="14">
+                <VerticalStackLayout IsVisible="{Binding IsGoalsSelected}" Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Goals" />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="1.2*,*,*,*,Auto" ColumnSpacing="10">
+                            <Entry Placeholder="Goal name" Text="{Binding Data.NewGoalName}" />
+                            <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Target" Text="{Binding Data.NewGoalTargetAmountText}" />
+                            <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Current" Text="{Binding Data.NewGoalCurrentAmountText}" />
+                            <DatePicker Grid.Column="3" Date="{Binding Data.NewGoalTargetDate}" />
+                            <Button Grid.Column="4" Command="{Binding Data.AddSavingsGoalCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
+                        </Grid>
+                    </Border>
+                    <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewGoalAccount}" Title="Optional linked savings account" />
+                    <CollectionView ItemsSource="{Binding Data.SavingsGoalSummaries}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No savings goals yet." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding AccountName}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding CurrentText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding ProgressText}" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteSavingsGoalCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsForecastSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Forecast" />
-                    <Label Style="{StaticResource MutedLabel}" Text="A timeline of expected money movement and projected balances will appear here." />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Available to spend" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.AvailableToSpendText}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Lowest balance" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.LowestForecastText}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Period" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.ForecastPeriodText}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding Data.ForecastEvents}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No forecast events yet. Add scheduled items or credit card payment details." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout>
+                                            <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding DateText}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding KindText}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout IsVisible="{Binding IsAnalyticsSelected}" Spacing="14">
+                <VerticalStackLayout IsVisible="{Binding IsAnalyticsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Analytics" />
-                    <Label Style="{StaticResource MutedLabel}" Text="Future analytics will explain trends, categories, changes, and available spending patterns." />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Accounts" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.Accounts.Count}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Transactions" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.Transactions.Count}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Style="{StaticResource MutedLabel}" Text="Scheduled" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.ScheduledTransactions.Count}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                    <Label Style="{StaticResource MutedLabel}" Text="Richer trend and category analytics can build on these saved local transactions once category management is wired." />
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Preferences" />
-                    <Label Style="{StaticResource MutedLabel}" Text="Appearance, navigation style, default currency, analytics options, and privacy settings will be customized here." />
-                    <Border
-                        Padding="16"
-                        BackgroundColor="{StaticResource SurfaceColor}"
-                        Stroke="{StaticResource DividerColor}">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="8" />
-                        </Border.StrokeShape>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
-                                <Label
-                                    FontAttributes="Bold"
-                                    Text="Default currency" />
-                                <Label
-                                    Style="{StaticResource MutedLabel}"
-                                    Text="Used as the default for new accounts and future analytics summaries." />
+                                <Label FontAttributes="Bold" Text="Default currency" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Used for new accounts and summary displays." />
                             </VerticalStackLayout>
-                            <Picker
-                                Grid.Column="1"
-                                ItemsSource="{Binding SupportedCurrencies}"
-                                SelectedItem="{Binding DefaultCurrency}"
-                                VerticalOptions="Center" />
+                            <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.DefaultCurrency}" />
                         </Grid>
                     </Border>
-                    <Border
-                        Padding="16"
-                        BackgroundColor="{StaticResource SurfaceColor}"
-                        Stroke="{StaticResource DividerColor}">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="8" />
-                        </Border.StrokeShape>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Default forecast period" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Controls dashboard and forecast horizon." />
+                            </VerticalStackLayout>
+                            <Picker Grid.Column="1" ItemsSource="{Binding Data.ForecastPeriods}" SelectedItem="{Binding Data.SelectedForecastPeriod}" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Check-in reminder" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Stored now; notification scheduling comes in hardening." />
+                            </VerticalStackLayout>
+                            <Picker Grid.Column="1" ItemsSource="{Binding Data.ReminderFrequencies}" SelectedItem="{Binding Data.SelectedReminderFrequency}" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
-                                <Label
-                                    FontAttributes="Bold"
-                                    Text="Power-user features" />
-                                <Label
-                                    Style="{StaticResource MutedLabel}"
-                                    Text="Show advanced controls such as technical recurrence syntax. Friendly controls stay as the default." />
+                                <Label FontAttributes="Bold" Text="Power-user features" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Show advanced controls such as technical recurrence syntax." />
                             </VerticalStackLayout>
-                            <CheckBox
-                                Grid.Column="1"
-                                IsChecked="{Binding ShowPowerUserFeatures}"
-                                VerticalOptions="Center" />
+                            <CheckBox Grid.Column="1" IsChecked="{Binding ShowPowerUserFeatures}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
-                    <Grid ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
-                        <Button
-                            Command="{Binding UseRailNavigationCommand}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Use rail" />
-                        <Button
-                            Grid.Column="1"
-                            Command="{Binding UseCompactNavigationCommand}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Compact rail" />
-                        <Button
-                            Grid.Column="2"
-                            Command="{Binding UseTopTabsCommand}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Use tabs" />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
+                        <Button Command="{Binding Data.SavePreferencesCommand}" Style="{StaticResource PrimaryButton}" Text="Save preferences" />
+                        <Button Grid.Column="1" Command="{Binding UseRailNavigationCommand}" Style="{StaticResource QuietButton}" Text="Use rail" />
+                        <Button Grid.Column="2" Command="{Binding UseCompactNavigationCommand}" Style="{StaticResource QuietButton}" Text="Compact rail" />
+                        <Button Grid.Column="3" Command="{Binding UseTopTabsCommand}" Style="{StaticResource QuietButton}" Text="Use tabs" />
                     </Grid>
                 </VerticalStackLayout>
-            </Grid>
+            </VerticalStackLayout>
         </ScrollView>
     </Grid>
 </ContentPage>

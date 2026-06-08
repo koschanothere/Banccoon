@@ -13,14 +13,17 @@ public sealed class ShellViewModel : ViewModelBase
     private bool showPowerUserFeatures = UiPreferences.Default.ShowPowerUserFeatures;
     private string defaultCurrency = "EUR";
 
-    public ShellViewModel()
+    public ShellViewModel(FinanceDataViewModel data)
     {
+        Data = data;
+
         NavigationItems =
         [
             new(AppSection.Dashboard, "Dashboard", "D", "Today, obligations, and safe-to-spend."),
             new(AppSection.Accounts, "Accounts", "A", "Balances, cards, cash, and savings."),
             new(AppSection.Transactions, "Transactions", "T", "Manual and grouped spending entries."),
             new(AppSection.Scheduled, "Scheduled", "S", "Recurring income, bills, and reminders."),
+            new(AppSection.Goals, "Goals", "G", "Savings reservations that reduce safe-to-spend."),
             new(AppSection.Forecast, "Forecast", "F", "Future balances and lowest balance points."),
             new(AppSection.Analytics, "Analytics", "N", "Trends, categories, and money patterns."),
             new(AppSection.Preferences, "Preferences", "P", "Theme, navigation, privacy, and defaults.")
@@ -34,6 +37,8 @@ public sealed class ShellViewModel : ViewModelBase
 
         UpdateSelectedNavigationItem();
     }
+
+    public FinanceDataViewModel Data { get; }
 
     public IReadOnlyList<NavigationItemViewModel> NavigationItems { get; }
 
@@ -77,6 +82,7 @@ public sealed class ShellViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsAccountsSelected));
                 OnPropertyChanged(nameof(IsTransactionsSelected));
                 OnPropertyChanged(nameof(IsScheduledSelected));
+                OnPropertyChanged(nameof(IsGoalsSelected));
                 OnPropertyChanged(nameof(IsForecastSelected));
                 OnPropertyChanged(nameof(IsAnalyticsSelected));
                 OnPropertyChanged(nameof(IsPreferencesSelected));
@@ -167,6 +173,8 @@ public sealed class ShellViewModel : ViewModelBase
     public bool IsTransactionsSelected => SelectedSection == AppSection.Transactions;
 
     public bool IsScheduledSelected => SelectedSection == AppSection.Scheduled;
+
+    public bool IsGoalsSelected => SelectedSection == AppSection.Goals;
 
     public bool IsForecastSelected => SelectedSection == AppSection.Forecast;
 

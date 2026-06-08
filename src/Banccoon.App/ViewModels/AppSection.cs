@@ -6,6 +6,7 @@ public enum AppSection
     Accounts,
     Transactions,
     Scheduled,
+    Goals,
     Forecast,
     Analytics,
     Preferences

@@ -54,6 +54,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IBackupService, JsonBackupService>();
 
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<FinanceDataViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
         builder.Services.AddTransient<ShellViewModel>();

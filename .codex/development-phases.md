@@ -4,6 +4,28 @@ This document defines the development phases for Banccoon, a private offline-fir
 
 The project should start with the smallest usable forecasting product, then expand toward reconciliation, richer account modeling, portability, and optional future integrations.
 
+## Active Branch Plan: Phase 7
+
+Branch: `codex/phase-7-ui-data-wiring`
+
+This branch moves UI data wiring ahead of product hardening. Hardening depends on users being able to exercise real workflows, so the app should first let users enter saved data, see forecasts from SQLite, and update key preferences from the desktop UI.
+
+### Planned Deliverables
+
+- Swap Phase 7 and Phase 8 so UI data wiring comes before desktop product hardening.
+- Add a documented logo asset folder for Banccoon marks and mascot variants.
+- Load accounts, transactions, scheduled transactions, goals, and settings from local SQLite on app startup.
+- Add basic create/delete UI for accounts, transactions, scheduled items, and savings goals.
+- Add selected-account balance updates and credit-card payoff calculation controls.
+- Recalculate dashboard and forecast outputs from saved data.
+- Persist default currency, default forecast period, and reminder frequency from Preferences.
+
+### Scope Boundaries
+
+- This phase favors usable saved workflows over final visual polish.
+- Category CRUD, detailed analytics, file-picker import/export UI, and polished dialogs can follow once the main data screens are alive.
+- Appearance preferences beyond the existing runtime navigation/power-user toggles still need schema support before persistence.
+
 ## Active Branch Plan: Phase 6
 
 Branch: `codex/phase-6-goals-credit-cards-organization`
@@ -25,7 +47,7 @@ This branch implements the core savings-goal and credit-card obligation behavior
 
 - No automatic interest inference yet; promotional periods and purchase-specific rates require bank/API data or careful manual entry.
 - Manual interest/finance charges can be represented in payoff planning now and as a future transaction/category workflow later.
-- No full goals or credit-card editor screens yet; real UI data entry belongs to Phase 8 UI Data Wiring.
+- No full goals or credit-card editor screens yet; real UI data entry belongs to Phase 7 UI Data Wiring.
 - No automatic balance mutation when a card payment is forecast; actual payments should still enter through transactions/reconciliation.
 
 ## Active Branch Plan: Phase 5
@@ -633,59 +655,7 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Forecasts reflect savings reservations and upcoming credit card obligations.
 - A payoff calculation can tell the user when a credit-card debt is paid off for a chosen payment amount.
 
-## Phase 7: Desktop Product Hardening
-
-### Goals
-
-- Turn the MVP into a dependable Windows desktop product.
-- Improve reliability, error handling, and everyday usability.
-
-### Components To Build
-
-- Reminder configuration.
-- Error and validation presentation.
-- Empty states.
-- Import/export safety confirmations.
-- Database backup before risky operations.
-- Settings screen.
-- Logging that does not collect private analytics.
-
-### Data Models Required
-
-- `ReminderSettings`
-- `ForecastSettings`
-- `PrivacySettings`
-
-### Services Required
-
-- `IReminderService`
-- `ISettingsService`
-- `IAppNotificationService`
-- `ILocalDiagnosticsService`
-
-### ViewModels Required
-
-- `SettingsViewModel`
-- `ReminderSettingsViewModel`
-
-### Screens Required
-
-- Settings screen.
-- Reminder configuration.
-- Diagnostics/export log option if needed.
-
-### Testing Requirements
-
-- Settings persistence.
-- Reminder scheduling logic.
-- Backup-before-restore behavior.
-- Error handling paths for failed import and failed database access.
-
-### Exit Criteria
-
-- Banccoon feels like a complete local Windows desktop application rather than a prototype.
-
-## Phase 8: UI Data Wiring
+## Phase 7: UI Data Wiring
 
 ### Goals
 
@@ -702,6 +672,25 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Dashboard and forecast screens reading real stored data.
 - Preferences screen wired to `ISettingsRepository` and appearance preference storage.
 - Import/export screen wired to backup services and file pickers.
+- Brand asset folder for Banccoon logos and rotating mascot art.
+
+### Brand Assets
+
+Place app-ready logo assets in:
+
+`src/Banccoon.App/Resources/Images/banccoon/`
+
+Recommended logo variants:
+
+- `banccoon_logo_full_light.svg` or `.png`: full wordmark plus mascot for light UI.
+- `banccoon_logo_full_dark.svg` or `.png`: full wordmark plus mascot for dark UI.
+- `banccoon_mark.svg` or `.png`: compact square/circle mascot or B mark for the rail.
+- `banccoon_mascot_idle_01.png`: friendly default banking raccoon.
+- `banccoon_mascot_idle_02.png`: alternate expression/pose for occasional rotation.
+- `banccoon_mascot_focus.png`: calmer version for dashboard/check-in moments.
+- Optional fun extras: seasonal or tiny mood variants named `banccoon_mascot_alt_01.png`, `banccoon_mascot_alt_02.png`, etc.
+
+Use lowercase filenames with underscores so .NET MAUI can turn them into image resource names cleanly.
 
 ### ViewModels Required
 
@@ -736,6 +725,58 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Data persists between app restarts and builds.
 - Dashboard and forecast use saved local data.
 - Preferences persist through restart.
+
+## Phase 8: Desktop Product Hardening
+
+### Goals
+
+- Turn the UI-backed MVP into a dependable Windows desktop product.
+- Improve reliability, error handling, and everyday usability after the main workflows exist.
+
+### Components To Build
+
+- Reminder configuration.
+- Error and validation presentation.
+- Empty states.
+- Import/export safety confirmations.
+- Database backup before risky operations.
+- Settings screen hardening.
+- Logging that does not collect private analytics.
+
+### Data Models Required
+
+- `ReminderSettings`
+- `ForecastSettings`
+- `PrivacySettings`
+
+### Services Required
+
+- `IReminderService`
+- `ISettingsService`
+- `IAppNotificationService`
+- `ILocalDiagnosticsService`
+
+### ViewModels Required
+
+- `SettingsViewModel`
+- `ReminderSettingsViewModel`
+
+### Screens Required
+
+- Reminder configuration.
+- Diagnostics/export log option if needed.
+- Hardened import/export confirmations.
+
+### Testing Requirements
+
+- Settings persistence.
+- Reminder scheduling logic.
+- Backup-before-restore behavior.
+- Error handling paths for failed import and failed database access.
+
+### Exit Criteria
+
+- Banccoon feels like a complete local Windows desktop application rather than a prototype.
 
 ## Phase 9: Future Optional Features
 

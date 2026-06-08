@@ -1,0 +1,1197 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Windows.Input;
+using Banccoon.Core.Abstractions;
+using Banccoon.Core.CreditCards;
+using Banccoon.Core.Forecasting;
+using Banccoon.Core.Models;
+using Banccoon.Core.Recurrence;
+using Banccoon.Core.Repositories;
+
+namespace Banccoon.App.ViewModels;
+
+public sealed class FinanceDataViewModel : ViewModelBase
+{
+    private readonly IAccountRepository accountRepository;
+    private readonly ITransactionRepository transactionRepository;
+    private readonly IScheduledTransactionRepository scheduledTransactionRepository;
+    private readonly ISavingsGoalRepository savingsGoalRepository;
+    private readonly ISettingsRepository settingsRepository;
+    private readonly IForecastService forecastService;
+    private readonly ICreditCardForecastService creditCardForecastService;
+    private readonly IDateProvider dateProvider;
+    private bool isLoaded;
+    private bool isBusy;
+    private string statusMessage = "Ready.";
+    private string defaultCurrency = "EUR";
+    private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
+    private ReminderFrequency selectedReminderFrequency = ReminderFrequency.Weekly;
+    private string currentBalanceText = "EUR 0.00";
+    private string availableToSpendText = "EUR 0.00";
+    private string lowestForecastText = "EUR 0.00";
+    private string upcomingObligationsText = "EUR 0.00";
+    private string forecastPeriodText = "30 days";
+    private string newAccountName = string.Empty;
+    private AccountType selectedAccountType = AccountType.DebitCard;
+    private string newAccountBalanceText = "0";
+    private string newAccountCurrency = "EUR";
+    private string newCreditCardDebtText = string.Empty;
+    private string newCreditCardMinimumPaymentText = string.Empty;
+    private string newCreditCardPlannedPaymentText = string.Empty;
+    private string newCreditCardPaymentDueDayText = string.Empty;
+    private Account? selectedAccount;
+    private string selectedAccountBalanceText = string.Empty;
+    private string selectedAccountDebtText = string.Empty;
+    private string selectedAccountMinimumPaymentText = string.Empty;
+    private string selectedAccountPlannedPaymentText = string.Empty;
+    private string selectedAccountPaymentDueDayText = string.Empty;
+    private string selectedAccountPayoffPaymentText = string.Empty;
+    private string selectedAccountManualFinanceChargeText = "0";
+    private string selectedAccountPayoffSummary = "Select a credit card to calculate payoff timing.";
+    private Account? newTransactionAccount;
+    private string newTransactionAmountText = string.Empty;
+    private string newTransactionNotes = string.Empty;
+    private DateTime newTransactionDate;
+    private TransactionType selectedTransactionType = TransactionType.Expense;
+    private Account? newScheduledAccount;
+    private string newScheduledName = string.Empty;
+    private string newScheduledAmountText = string.Empty;
+    private DateTime newScheduledDate;
+    private TransactionType selectedScheduledType = TransactionType.Expense;
+    private RecurrenceFrequency selectedScheduledFrequency = RecurrenceFrequency.Monthly;
+    private string newScheduledIntervalText = "1";
+    private Account? newGoalAccount;
+    private string newGoalName = string.Empty;
+    private string newGoalTargetAmountText = string.Empty;
+    private string newGoalCurrentAmountText = string.Empty;
+    private DateTime newGoalTargetDate;
+
+    public FinanceDataViewModel(
+        IAccountRepository accountRepository,
+        ITransactionRepository transactionRepository,
+        IScheduledTransactionRepository scheduledTransactionRepository,
+        ISavingsGoalRepository savingsGoalRepository,
+        ISettingsRepository settingsRepository,
+        IForecastService forecastService,
+        ICreditCardForecastService creditCardForecastService,
+        IDateProvider dateProvider)
+    {
+        this.accountRepository = accountRepository;
+        this.transactionRepository = transactionRepository;
+        this.scheduledTransactionRepository = scheduledTransactionRepository;
+        this.savingsGoalRepository = savingsGoalRepository;
+        this.settingsRepository = settingsRepository;
+        this.forecastService = forecastService;
+        this.creditCardForecastService = creditCardForecastService;
+        this.dateProvider = dateProvider;
+
+        var today = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
+        newTransactionDate = today;
+        newScheduledDate = today;
+        newGoalTargetDate = today.AddMonths(6);
+
+        LoadCommand = new AsyncRelayCommand(LoadAsync);
+        RefreshCommand = new AsyncRelayCommand(RefreshAsync);
+        AddAccountCommand = new AsyncRelayCommand(AddAccountAsync);
+        SaveSelectedAccountCommand = new AsyncRelayCommand(SaveSelectedAccountAsync);
+        DeleteAccountCommand = new AsyncRelayCommand<Account>(DeleteAccountAsync);
+        AddTransactionCommand = new AsyncRelayCommand(AddTransactionAsync);
+        DeleteTransactionCommand = new AsyncRelayCommand<Transaction>(DeleteTransactionAsync);
+        AddScheduledTransactionCommand = new AsyncRelayCommand(AddScheduledTransactionAsync);
+        DeleteScheduledTransactionCommand = new AsyncRelayCommand<ScheduledTransaction>(DeleteScheduledTransactionAsync);
+        AddSavingsGoalCommand = new AsyncRelayCommand(AddSavingsGoalAsync);
+        DeleteSavingsGoalCommand = new AsyncRelayCommand<SavingsGoal>(DeleteSavingsGoalAsync);
+        SavePreferencesCommand = new AsyncRelayCommand(SavePreferencesAsync);
+    }
+
+    public ObservableCollection<Account> Accounts { get; } = new();
+
+    public ObservableCollection<AccountSummaryViewModel> AccountSummaries { get; } = new();
+
+    public ObservableCollection<Transaction> Transactions { get; } = new();
+
+    public ObservableCollection<TransactionSummaryViewModel> TransactionSummaries { get; } = new();
+
+    public ObservableCollection<ScheduledTransaction> ScheduledTransactions { get; } = new();
+
+    public ObservableCollection<ScheduledTransactionSummaryViewModel> ScheduledTransactionSummaries { get; } = new();
+
+    public ObservableCollection<SavingsGoal> SavingsGoals { get; } = new();
+
+    public ObservableCollection<SavingsGoalSummaryViewModel> SavingsGoalSummaries { get; } = new();
+
+    public ObservableCollection<ForecastEventSummaryViewModel> ForecastEvents { get; } = new();
+
+    public ObservableCollection<UpcomingObligationSummaryViewModel> UpcomingObligations { get; } = new();
+
+    public IReadOnlyList<AccountType> AccountTypes { get; } = Enum.GetValues<AccountType>();
+
+    public IReadOnlyList<TransactionType> TransactionTypes { get; } = Enum.GetValues<TransactionType>();
+
+    public IReadOnlyList<RecurrenceFrequency> RecurrenceFrequencies { get; } = Enum.GetValues<RecurrenceFrequency>();
+
+    public IReadOnlyList<ForecastPeriod> ForecastPeriods { get; } = Enum.GetValues<ForecastPeriod>();
+
+    public IReadOnlyList<ReminderFrequency> ReminderFrequencies { get; } = Enum.GetValues<ReminderFrequency>();
+
+    public IReadOnlyList<string> SupportedCurrencies { get; } =
+    [
+        "EUR",
+        "USD",
+        "GBP",
+        "PLN",
+        "CZK",
+        "CHF",
+        "NOK",
+        "SEK",
+        "DKK",
+        "JPY",
+        "CAD",
+        "AUD"
+    ];
+
+    public ICommand LoadCommand { get; }
+
+    public ICommand RefreshCommand { get; }
+
+    public ICommand AddAccountCommand { get; }
+
+    public ICommand SaveSelectedAccountCommand { get; }
+
+    public ICommand DeleteAccountCommand { get; }
+
+    public ICommand AddTransactionCommand { get; }
+
+    public ICommand DeleteTransactionCommand { get; }
+
+    public ICommand AddScheduledTransactionCommand { get; }
+
+    public ICommand DeleteScheduledTransactionCommand { get; }
+
+    public ICommand AddSavingsGoalCommand { get; }
+
+    public ICommand DeleteSavingsGoalCommand { get; }
+
+    public ICommand SavePreferencesCommand { get; }
+
+    public bool IsBusy
+    {
+        get => isBusy;
+        private set => SetProperty(ref isBusy, value);
+    }
+
+    public string StatusMessage
+    {
+        get => statusMessage;
+        private set => SetProperty(ref statusMessage, value);
+    }
+
+    public string DefaultCurrency
+    {
+        get => defaultCurrency;
+        set
+        {
+            if (SetProperty(ref defaultCurrency, NormalizeCurrency(value)))
+            {
+                if (string.IsNullOrWhiteSpace(NewAccountCurrency))
+                {
+                    NewAccountCurrency = defaultCurrency;
+                }
+            }
+        }
+    }
+
+    public ForecastPeriod SelectedForecastPeriod
+    {
+        get => selectedForecastPeriod;
+        set
+        {
+            if (SetProperty(ref selectedForecastPeriod, value))
+            {
+                UpdateForecast();
+            }
+        }
+    }
+
+    public ReminderFrequency SelectedReminderFrequency
+    {
+        get => selectedReminderFrequency;
+        set => SetProperty(ref selectedReminderFrequency, value);
+    }
+
+    public string CurrentBalanceText
+    {
+        get => currentBalanceText;
+        private set => SetProperty(ref currentBalanceText, value);
+    }
+
+    public string AvailableToSpendText
+    {
+        get => availableToSpendText;
+        private set => SetProperty(ref availableToSpendText, value);
+    }
+
+    public string LowestForecastText
+    {
+        get => lowestForecastText;
+        private set => SetProperty(ref lowestForecastText, value);
+    }
+
+    public string UpcomingObligationsText
+    {
+        get => upcomingObligationsText;
+        private set => SetProperty(ref upcomingObligationsText, value);
+    }
+
+    public string ForecastPeriodText
+    {
+        get => forecastPeriodText;
+        private set => SetProperty(ref forecastPeriodText, value);
+    }
+
+    public bool HasAccounts => Accounts.Count > 0;
+
+    public bool HasTransactions => Transactions.Count > 0;
+
+    public bool HasScheduledTransactions => ScheduledTransactions.Count > 0;
+
+    public bool HasSavingsGoals => SavingsGoals.Count > 0;
+
+    public bool HasForecastEvents => ForecastEvents.Count > 0;
+
+    public bool HasUpcomingObligations => UpcomingObligations.Count > 0;
+
+    public string NewAccountName
+    {
+        get => newAccountName;
+        set => SetProperty(ref newAccountName, value);
+    }
+
+    public AccountType SelectedAccountType
+    {
+        get => selectedAccountType;
+        set
+        {
+            if (SetProperty(ref selectedAccountType, value))
+            {
+                OnPropertyChanged(nameof(IsNewAccountCreditCard));
+            }
+        }
+    }
+
+    public bool IsNewAccountCreditCard => SelectedAccountType == AccountType.CreditCard;
+
+    public string NewAccountBalanceText
+    {
+        get => newAccountBalanceText;
+        set => SetProperty(ref newAccountBalanceText, value);
+    }
+
+    public string NewAccountCurrency
+    {
+        get => newAccountCurrency;
+        set => SetProperty(ref newAccountCurrency, NormalizeCurrency(value));
+    }
+
+    public string NewCreditCardDebtText
+    {
+        get => newCreditCardDebtText;
+        set => SetProperty(ref newCreditCardDebtText, value);
+    }
+
+    public string NewCreditCardMinimumPaymentText
+    {
+        get => newCreditCardMinimumPaymentText;
+        set => SetProperty(ref newCreditCardMinimumPaymentText, value);
+    }
+
+    public string NewCreditCardPlannedPaymentText
+    {
+        get => newCreditCardPlannedPaymentText;
+        set => SetProperty(ref newCreditCardPlannedPaymentText, value);
+    }
+
+    public string NewCreditCardPaymentDueDayText
+    {
+        get => newCreditCardPaymentDueDayText;
+        set => SetProperty(ref newCreditCardPaymentDueDayText, value);
+    }
+
+    public Account? SelectedAccount
+    {
+        get => selectedAccount;
+        set
+        {
+            if (SetProperty(ref selectedAccount, value))
+            {
+                LoadSelectedAccountEditor(value);
+                OnPropertyChanged(nameof(IsSelectedAccountCreditCard));
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public bool IsSelectedAccountCreditCard => SelectedAccount?.Type == AccountType.CreditCard;
+
+    public string SelectedAccountBalanceText
+    {
+        get => selectedAccountBalanceText;
+        set => SetProperty(ref selectedAccountBalanceText, value);
+    }
+
+    public string SelectedAccountDebtText
+    {
+        get => selectedAccountDebtText;
+        set
+        {
+            if (SetProperty(ref selectedAccountDebtText, value))
+            {
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public string SelectedAccountMinimumPaymentText
+    {
+        get => selectedAccountMinimumPaymentText;
+        set
+        {
+            if (SetProperty(ref selectedAccountMinimumPaymentText, value))
+            {
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public string SelectedAccountPlannedPaymentText
+    {
+        get => selectedAccountPlannedPaymentText;
+        set
+        {
+            if (SetProperty(ref selectedAccountPlannedPaymentText, value))
+            {
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public string SelectedAccountPaymentDueDayText
+    {
+        get => selectedAccountPaymentDueDayText;
+        set => SetProperty(ref selectedAccountPaymentDueDayText, value);
+    }
+
+    public string SelectedAccountPayoffPaymentText
+    {
+        get => selectedAccountPayoffPaymentText;
+        set
+        {
+            if (SetProperty(ref selectedAccountPayoffPaymentText, value))
+            {
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public string SelectedAccountManualFinanceChargeText
+    {
+        get => selectedAccountManualFinanceChargeText;
+        set
+        {
+            if (SetProperty(ref selectedAccountManualFinanceChargeText, value))
+            {
+                RecalculateSelectedAccountPayoff();
+            }
+        }
+    }
+
+    public string SelectedAccountPayoffSummary
+    {
+        get => selectedAccountPayoffSummary;
+        private set => SetProperty(ref selectedAccountPayoffSummary, value);
+    }
+
+    public Account? NewTransactionAccount
+    {
+        get => newTransactionAccount;
+        set => SetProperty(ref newTransactionAccount, value);
+    }
+
+    public string NewTransactionAmountText
+    {
+        get => newTransactionAmountText;
+        set => SetProperty(ref newTransactionAmountText, value);
+    }
+
+    public string NewTransactionNotes
+    {
+        get => newTransactionNotes;
+        set => SetProperty(ref newTransactionNotes, value);
+    }
+
+    public DateTime NewTransactionDate
+    {
+        get => newTransactionDate;
+        set => SetProperty(ref newTransactionDate, value);
+    }
+
+    public TransactionType SelectedTransactionType
+    {
+        get => selectedTransactionType;
+        set => SetProperty(ref selectedTransactionType, value);
+    }
+
+    public Account? NewScheduledAccount
+    {
+        get => newScheduledAccount;
+        set => SetProperty(ref newScheduledAccount, value);
+    }
+
+    public string NewScheduledName
+    {
+        get => newScheduledName;
+        set => SetProperty(ref newScheduledName, value);
+    }
+
+    public string NewScheduledAmountText
+    {
+        get => newScheduledAmountText;
+        set => SetProperty(ref newScheduledAmountText, value);
+    }
+
+    public DateTime NewScheduledDate
+    {
+        get => newScheduledDate;
+        set => SetProperty(ref newScheduledDate, value);
+    }
+
+    public TransactionType SelectedScheduledType
+    {
+        get => selectedScheduledType;
+        set => SetProperty(ref selectedScheduledType, value);
+    }
+
+    public RecurrenceFrequency SelectedScheduledFrequency
+    {
+        get => selectedScheduledFrequency;
+        set => SetProperty(ref selectedScheduledFrequency, value);
+    }
+
+    public string NewScheduledIntervalText
+    {
+        get => newScheduledIntervalText;
+        set => SetProperty(ref newScheduledIntervalText, value);
+    }
+
+    public Account? NewGoalAccount
+    {
+        get => newGoalAccount;
+        set => SetProperty(ref newGoalAccount, value);
+    }
+
+    public string NewGoalName
+    {
+        get => newGoalName;
+        set => SetProperty(ref newGoalName, value);
+    }
+
+    public string NewGoalTargetAmountText
+    {
+        get => newGoalTargetAmountText;
+        set => SetProperty(ref newGoalTargetAmountText, value);
+    }
+
+    public string NewGoalCurrentAmountText
+    {
+        get => newGoalCurrentAmountText;
+        set => SetProperty(ref newGoalCurrentAmountText, value);
+    }
+
+    public DateTime NewGoalTargetDate
+    {
+        get => newGoalTargetDate;
+        set => SetProperty(ref newGoalTargetDate, value);
+    }
+
+    public async Task LoadAsync()
+    {
+        if (isLoaded)
+        {
+            return;
+        }
+
+        await RefreshAsync();
+        isLoaded = true;
+    }
+
+    public async Task RefreshAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var settings = await settingsRepository.GetAsync();
+            DefaultCurrency = settings.DefaultCurrency;
+            NewAccountCurrency = settings.DefaultCurrency;
+            selectedForecastPeriod = settings.DefaultForecastPeriod;
+            OnPropertyChanged(nameof(SelectedForecastPeriod));
+            SelectedReminderFrequency = settings.ReminderFrequency;
+
+            Replace(Accounts, await accountRepository.GetAllAsync());
+            Replace(Transactions, await transactionRepository.GetAllAsync());
+            Replace(ScheduledTransactions, await scheduledTransactionRepository.GetAllAsync());
+            Replace(SavingsGoals, await savingsGoalRepository.GetAllAsync());
+
+            EnsureDefaultSelections();
+            UpdateSummaries();
+            UpdateForecast();
+            StatusMessage = "Loaded saved local data.";
+        });
+    }
+
+    private async Task AddAccountAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewAccountName))
+        {
+            StatusMessage = "Give the account a name first.";
+            return;
+        }
+
+        if (!TryReadDecimal(NewAccountBalanceText, out var balance))
+        {
+            StatusMessage = "Account balance must be a number.";
+            return;
+        }
+
+        var creditCardDetails = CreateCreditCardDetailsForNewAccount();
+        var account = new Account(
+            Guid.NewGuid(),
+            NewAccountName.Trim(),
+            SelectedAccountType,
+            balance,
+            NormalizeCurrency(NewAccountCurrency),
+            DateTimeOffset.UtcNow,
+            IsArchived: false,
+            creditCardDetails);
+
+        await accountRepository.SaveAsync(account);
+        NewAccountName = string.Empty;
+        NewAccountBalanceText = "0";
+        NewCreditCardDebtText = string.Empty;
+        NewCreditCardMinimumPaymentText = string.Empty;
+        NewCreditCardPlannedPaymentText = string.Empty;
+        NewCreditCardPaymentDueDayText = string.Empty;
+        await RefreshAfterMutationAsync("Account saved.");
+    }
+
+    private async Task SaveSelectedAccountAsync()
+    {
+        if (SelectedAccount is null)
+        {
+            StatusMessage = "Select an account to update.";
+            return;
+        }
+
+        if (!TryReadDecimal(SelectedAccountBalanceText, out var balance))
+        {
+            StatusMessage = "Updated balance must be a number.";
+            return;
+        }
+
+        var updatedAccount = SelectedAccount with
+        {
+            CurrentBalance = balance,
+            CreditCardDetails = CreateCreditCardDetailsForSelectedAccount()
+        };
+
+        await accountRepository.SaveAsync(updatedAccount);
+        await RefreshAfterMutationAsync("Account updated.");
+    }
+
+    private async Task DeleteAccountAsync(Account account)
+    {
+        await accountRepository.DeleteAsync(account.Id);
+        await RefreshAfterMutationAsync("Account deleted.");
+    }
+
+    private async Task AddTransactionAsync()
+    {
+        if (NewTransactionAccount is null)
+        {
+            StatusMessage = "Create or choose an account before adding a transaction.";
+            return;
+        }
+
+        if (!TryReadDecimal(NewTransactionAmountText, out var amount) || amount <= 0m)
+        {
+            StatusMessage = "Transaction amount must be greater than zero.";
+            return;
+        }
+
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            DateOnly.FromDateTime(NewTransactionDate),
+            amount,
+            NewTransactionAccount.Id,
+            CategoryId: null,
+            string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
+            SelectedTransactionType);
+
+        await transactionRepository.SaveAsync(transaction);
+        NewTransactionAmountText = string.Empty;
+        NewTransactionNotes = string.Empty;
+        await RefreshAfterMutationAsync("Transaction saved.");
+    }
+
+    private async Task DeleteTransactionAsync(Transaction transaction)
+    {
+        await transactionRepository.DeleteAsync(transaction.Id);
+        await RefreshAfterMutationAsync("Transaction deleted.");
+    }
+
+    private async Task AddScheduledTransactionAsync()
+    {
+        if (NewScheduledAccount is null)
+        {
+            StatusMessage = "Create or choose an account before adding a scheduled item.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewScheduledName))
+        {
+            StatusMessage = "Give the scheduled item a name first.";
+            return;
+        }
+
+        if (!TryReadDecimal(NewScheduledAmountText, out var amount) || amount <= 0m)
+        {
+            StatusMessage = "Scheduled amount must be greater than zero.";
+            return;
+        }
+
+        if (!TryReadInt(NewScheduledIntervalText, out var interval) || interval < 1)
+        {
+            StatusMessage = "Recurrence interval must be at least 1.";
+            return;
+        }
+
+        var startDate = DateOnly.FromDateTime(NewScheduledDate);
+        var recurrenceRule = CreateRecurrenceRule(SelectedScheduledFrequency, interval, startDate);
+        var scheduledTransaction = new ScheduledTransaction(
+            Guid.NewGuid(),
+            NewScheduledName.Trim(),
+            amount,
+            NewScheduledAccount.Id,
+            CategoryId: null,
+            SelectedScheduledType,
+            recurrenceRule,
+            startDate,
+            Active: true);
+
+        await scheduledTransactionRepository.SaveAsync(scheduledTransaction);
+        NewScheduledName = string.Empty;
+        NewScheduledAmountText = string.Empty;
+        await RefreshAfterMutationAsync("Scheduled item saved.");
+    }
+
+    private async Task DeleteScheduledTransactionAsync(ScheduledTransaction scheduledTransaction)
+    {
+        await scheduledTransactionRepository.DeleteAsync(scheduledTransaction.Id);
+        await RefreshAfterMutationAsync("Scheduled item deleted.");
+    }
+
+    private async Task AddSavingsGoalAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewGoalName))
+        {
+            StatusMessage = "Give the goal a name first.";
+            return;
+        }
+
+        if (!TryReadDecimal(NewGoalTargetAmountText, out var targetAmount) || targetAmount <= 0m)
+        {
+            StatusMessage = "Goal target must be greater than zero.";
+            return;
+        }
+
+        if (!TryReadDecimal(NewGoalCurrentAmountText, out var currentAmount) || currentAmount < 0m)
+        {
+            StatusMessage = "Goal current amount must be zero or more.";
+            return;
+        }
+
+        var savingsGoal = new SavingsGoal(
+            Guid.NewGuid(),
+            NewGoalName.Trim(),
+            targetAmount,
+            currentAmount,
+            DateOnly.FromDateTime(NewGoalTargetDate),
+            NewGoalAccount?.Id);
+
+        await savingsGoalRepository.SaveAsync(savingsGoal);
+        NewGoalName = string.Empty;
+        NewGoalTargetAmountText = string.Empty;
+        NewGoalCurrentAmountText = string.Empty;
+        await RefreshAfterMutationAsync("Savings goal saved.");
+    }
+
+    private async Task DeleteSavingsGoalAsync(SavingsGoal savingsGoal)
+    {
+        await savingsGoalRepository.DeleteAsync(savingsGoal.Id);
+        await RefreshAfterMutationAsync("Savings goal deleted.");
+    }
+
+    private async Task SavePreferencesAsync()
+    {
+        var settings = new AppSettings(
+            NormalizeCurrency(DefaultCurrency),
+            SelectedForecastPeriod,
+            SelectedReminderFrequency);
+
+        await settingsRepository.SaveAsync(settings);
+        DefaultCurrency = settings.DefaultCurrency;
+        NewAccountCurrency = settings.DefaultCurrency;
+        UpdateForecast();
+        StatusMessage = "Preferences saved.";
+    }
+
+    private async Task RefreshAfterMutationAsync(string message)
+    {
+        await RefreshAsync();
+        StatusMessage = message;
+    }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        try
+        {
+            IsBusy = true;
+            await action();
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private CreditCardDetails? CreateCreditCardDetailsForNewAccount()
+    {
+        if (SelectedAccountType != AccountType.CreditCard)
+        {
+            return null;
+        }
+
+        return new CreditCardDetails(
+            ReadOptionalDecimal(NewCreditCardDebtText),
+            StatementDayOfMonth: null,
+            ReadOptionalPaymentDueDay(NewCreditCardPaymentDueDayText),
+            ReadOptionalDecimal(NewCreditCardMinimumPaymentText),
+            ReadOptionalDecimal(NewCreditCardPlannedPaymentText));
+    }
+
+    private CreditCardDetails? CreateCreditCardDetailsForSelectedAccount()
+    {
+        if (SelectedAccount?.Type != AccountType.CreditCard)
+        {
+            return SelectedAccount?.CreditCardDetails;
+        }
+
+        return new CreditCardDetails(
+            ReadOptionalDecimal(SelectedAccountDebtText),
+            SelectedAccount.CreditCardDetails?.StatementDayOfMonth,
+            ReadOptionalPaymentDueDay(SelectedAccountPaymentDueDayText),
+            ReadOptionalDecimal(SelectedAccountMinimumPaymentText),
+            ReadOptionalDecimal(SelectedAccountPlannedPaymentText));
+    }
+
+    private void LoadSelectedAccountEditor(Account? account)
+    {
+        if (account is null)
+        {
+            SelectedAccountBalanceText = string.Empty;
+            SelectedAccountDebtText = string.Empty;
+            SelectedAccountMinimumPaymentText = string.Empty;
+            SelectedAccountPlannedPaymentText = string.Empty;
+            SelectedAccountPaymentDueDayText = string.Empty;
+            SelectedAccountPayoffPaymentText = string.Empty;
+            return;
+        }
+
+        SelectedAccountBalanceText = ToInputText(account.CurrentBalance);
+        SelectedAccountDebtText = ToInputText(account.CreditCardDetails?.CurrentDebt);
+        SelectedAccountMinimumPaymentText = ToInputText(account.CreditCardDetails?.MinimumPayment);
+        SelectedAccountPlannedPaymentText = ToInputText(account.CreditCardDetails?.PlannedPaymentAmount);
+        SelectedAccountPaymentDueDayText = account.CreditCardDetails?.PaymentDueDayOfMonth?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        SelectedAccountPayoffPaymentText = ToInputText(
+            account.CreditCardDetails?.PlannedPaymentAmount
+            ?? account.CreditCardDetails?.MinimumPayment);
+    }
+
+    private void RecalculateSelectedAccountPayoff()
+    {
+        if (SelectedAccount?.Type != AccountType.CreditCard)
+        {
+            SelectedAccountPayoffSummary = "Select a credit card to calculate payoff timing.";
+            return;
+        }
+
+        if (!TryReadDecimal(SelectedAccountPayoffPaymentText, out var paymentAmount) || paymentAmount <= 0m)
+        {
+            SelectedAccountPayoffSummary = "Enter a monthly payment amount to calculate payoff timing.";
+            return;
+        }
+
+        var accountForCalculation = SelectedAccount with
+        {
+            CreditCardDetails = CreateCreditCardDetailsForSelectedAccount()
+        };
+        var manualFinanceCharge = ReadOptionalDecimal(SelectedAccountManualFinanceChargeText) ?? 0m;
+        var firstPaymentDate = GetNextPaymentDate(accountForCalculation, dateProvider.Today);
+        var plan = creditCardForecastService.CalculatePayoffPlan(
+            accountForCalculation,
+            paymentAmount,
+            firstPaymentDate,
+            manualFinanceCharge);
+
+        if (!plan.IsPaidOff)
+        {
+            SelectedAccountPayoffSummary = $"Not paid off within {plan.MonthCount} months at {FormatMoney(paymentAmount, accountForCalculation.Currency)} per month.";
+            return;
+        }
+
+        var finalPaymentDate = plan.FinalPaymentDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "the final payment";
+        SelectedAccountPayoffSummary = plan.MonthCount == 0
+            ? "No outstanding card debt."
+            : $"Paid off by {finalPaymentDate} after {plan.MonthCount} payments. Total paid: {FormatMoney(plan.TotalPaid, accountForCalculation.Currency)}.";
+    }
+
+    private void EnsureDefaultSelections()
+    {
+        SelectedAccount = FindFreshAccount(SelectedAccount) ?? Accounts.FirstOrDefault();
+        NewTransactionAccount = FindFreshAccount(NewTransactionAccount) ?? Accounts.FirstOrDefault();
+        NewScheduledAccount = FindFreshAccount(NewScheduledAccount) ?? Accounts.FirstOrDefault();
+        NewGoalAccount = FindFreshAccount(NewGoalAccount)
+            ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
+            ?? Accounts.FirstOrDefault();
+    }
+
+    private Account? FindFreshAccount(Account? account)
+    {
+        return account is null
+            ? null
+            : Accounts.FirstOrDefault(candidate => candidate.Id == account.Id);
+    }
+
+    private void UpdateSummaries()
+    {
+        Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(account)));
+        Replace(TransactionSummaries, Transactions.Select(transaction => new TransactionSummaryViewModel(
+            transaction,
+            Accounts.FirstOrDefault(account => account.Id == transaction.AccountId)?.Name ?? "Unknown account",
+            DefaultCurrency)));
+        Replace(ScheduledTransactionSummaries, ScheduledTransactions.Select(item => new ScheduledTransactionSummaryViewModel(
+            item,
+            Accounts.FirstOrDefault(account => account.Id == item.AccountId)?.Name ?? "Unknown account",
+            DefaultCurrency)));
+        Replace(SavingsGoalSummaries, SavingsGoals.Select(goal => new SavingsGoalSummaryViewModel(
+            goal,
+            Accounts.FirstOrDefault(account => account.Id == goal.AccountId)?.Name,
+            DefaultCurrency)));
+
+        OnPropertyChanged(nameof(HasAccounts));
+        OnPropertyChanged(nameof(HasTransactions));
+        OnPropertyChanged(nameof(HasScheduledTransactions));
+        OnPropertyChanged(nameof(HasSavingsGoals));
+    }
+
+    private void UpdateForecast()
+    {
+        if (Accounts.Count == 0)
+        {
+            CurrentBalanceText = FormatMoney(0m, DefaultCurrency);
+            AvailableToSpendText = FormatMoney(0m, DefaultCurrency);
+            LowestForecastText = FormatMoney(0m, DefaultCurrency);
+            UpcomingObligationsText = FormatMoney(0m, DefaultCurrency);
+            ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
+            ForecastEvents.Clear();
+            UpcomingObligations.Clear();
+            OnPropertyChanged(nameof(HasForecastEvents));
+            OnPropertyChanged(nameof(HasUpcomingObligations));
+            return;
+        }
+
+        var startDate = dateProvider.Today;
+        var endDate = startDate.AddDays((int)SelectedForecastPeriod - 1);
+        var forecast = forecastService.CreateForecast(new ForecastRequest(
+            startDate,
+            endDate,
+            Accounts.ToArray(),
+            ScheduledTransactions.ToArray(),
+            SavingsGoals.ToArray()));
+
+        CurrentBalanceText = FormatMoney(forecast.CurrentBalance, DefaultCurrency);
+        AvailableToSpendText = FormatMoney(forecast.AvailableToSpend, DefaultCurrency);
+        LowestForecastText = FormatMoney(forecast.LowestForecastedBalance, DefaultCurrency);
+        UpcomingObligationsText = FormatMoney(forecast.UpcomingObligations.Sum(obligation => obligation.Amount), DefaultCurrency);
+        ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
+
+        Replace(ForecastEvents, forecast.Events.Select(forecastEvent => new ForecastEventSummaryViewModel(forecastEvent, DefaultCurrency)));
+        Replace(UpcomingObligations, forecast.UpcomingObligations.Select(obligation => new UpcomingObligationSummaryViewModel(obligation, DefaultCurrency)));
+        OnPropertyChanged(nameof(HasForecastEvents));
+        OnPropertyChanged(nameof(HasUpcomingObligations));
+    }
+
+    private static RecurrenceRule CreateRecurrenceRule(
+        RecurrenceFrequency frequency,
+        int interval,
+        DateOnly startDate)
+    {
+        return frequency switch
+        {
+            RecurrenceFrequency.Weekly => new RecurrenceRule(
+                frequency,
+                interval,
+                startDate,
+                DayOfWeek: startDate.DayOfWeek),
+            RecurrenceFrequency.Monthly => new RecurrenceRule(
+                frequency,
+                interval,
+                startDate,
+                DayOfMonth: startDate.Day,
+                MonthlyMode: MonthlyRecurrenceMode.DayOfMonth),
+            _ => new RecurrenceRule(frequency, interval, startDate)
+        };
+    }
+
+    private static DateOnly GetNextPaymentDate(Account account, DateOnly today)
+    {
+        var dueDay = account.CreditCardDetails?.PaymentDueDayOfMonth;
+        if (dueDay is null)
+        {
+            return today;
+        }
+
+        var clampedDay = Math.Min(dueDay.Value, DateTime.DaysInMonth(today.Year, today.Month));
+        var date = new DateOnly(today.Year, today.Month, clampedDay);
+        if (date < today)
+        {
+            var nextMonth = today.AddMonths(1);
+            clampedDay = Math.Min(dueDay.Value, DateTime.DaysInMonth(nextMonth.Year, nextMonth.Month));
+            date = new DateOnly(nextMonth.Year, nextMonth.Month, clampedDay);
+        }
+
+        return date;
+    }
+
+    private static void Replace<T>(ObservableCollection<T> collection, IEnumerable<T> values)
+    {
+        collection.Clear();
+        foreach (var value in values)
+        {
+            collection.Add(value);
+        }
+    }
+
+    private static bool TryReadDecimal(string text, out decimal value)
+    {
+        return decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out value)
+            || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static bool TryReadInt(string text, out int value)
+    {
+        return int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out value)
+            || int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static decimal? ReadOptionalDecimal(string text)
+    {
+        return string.IsNullOrWhiteSpace(text)
+            ? null
+            : TryReadDecimal(text, out var value) ? Math.Max(0m, value) : null;
+    }
+
+    private static int? ReadOptionalPaymentDueDay(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || !TryReadInt(text, out var day))
+        {
+            return null;
+        }
+
+        return day is >= 1 and <= 31 ? day : null;
+    }
+
+    private static string FormatMoney(decimal amount, string currency)
+    {
+        return $"{NormalizeCurrency(currency)} {amount:N2}";
+    }
+
+    private static string ToInputText(decimal? value)
+    {
+        return value?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty;
+    }
+
+    private static string NormalizeCurrency(string? currency)
+    {
+        return string.IsNullOrWhiteSpace(currency)
+            ? "EUR"
+            : currency.Trim().ToUpperInvariant();
+    }
+
+    private static string GetForecastPeriodLabel(ForecastPeriod period)
+    {
+        return $"{(int)period} days";
+    }
+}
+
+public sealed class AccountSummaryViewModel
+{
+    public AccountSummaryViewModel(Account account)
+    {
+        Source = account;
+    }
+
+    public Account Source { get; }
+
+    public string Name => Source.Name;
+
+    public string TypeText => Source.Type.ToString();
+
+    public string BalanceText => $"{Source.Currency} {Source.CurrentBalance:N2}";
+
+    public string CreditText
+    {
+        get
+        {
+            if (Source.Type != AccountType.CreditCard)
+            {
+                return "Standard account";
+            }
+
+            var details = Source.CreditCardDetails;
+            var debt = details?.CurrentDebt is null ? "debt not set" : $"{Source.Currency} {details.CurrentDebt:N2} debt";
+            var payment = details?.PlannedPaymentAmount ?? details?.MinimumPayment;
+            return payment is null ? debt : $"{debt}, {Source.Currency} {payment:N2} payment";
+        }
+    }
+}
+
+public sealed class TransactionSummaryViewModel
+{
+    public TransactionSummaryViewModel(Transaction transaction, string accountName, string currency)
+    {
+        Source = transaction;
+        AccountName = accountName;
+        AmountText = $"{currency} {transaction.Amount:N2}";
+    }
+
+    public Transaction Source { get; }
+
+    public string AccountName { get; }
+
+    public string AmountText { get; }
+
+    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public string TypeText => Source.Type.ToString();
+
+    public string NotesText => string.IsNullOrWhiteSpace(Source.Notes) ? "No notes" : Source.Notes;
+}
+
+public sealed class ScheduledTransactionSummaryViewModel
+{
+    public ScheduledTransactionSummaryViewModel(
+        ScheduledTransaction scheduledTransaction,
+        string accountName,
+        string currency)
+    {
+        Source = scheduledTransaction;
+        AccountName = accountName;
+        AmountText = $"{currency} {scheduledTransaction.Amount:N2}";
+    }
+
+    public ScheduledTransaction Source { get; }
+
+    public string AccountName { get; }
+
+    public string AmountText { get; }
+
+    public string Name => Source.Name;
+
+    public string TypeText => Source.Type.ToString();
+
+    public string NextText => Source.NextOccurrence.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public string RecurrenceText => Source.RecurrenceRule.Interval == 1
+        ? Source.RecurrenceRule.Frequency.ToString()
+        : $"Every {Source.RecurrenceRule.Interval} {Source.RecurrenceRule.Frequency}";
+}
+
+public sealed class SavingsGoalSummaryViewModel
+{
+    public SavingsGoalSummaryViewModel(SavingsGoal savingsGoal, string? accountName, string currency)
+    {
+        Source = savingsGoal;
+        AccountName = accountName ?? "No linked account";
+        CurrentText = $"{currency} {savingsGoal.CurrentAmount:N2}";
+        TargetText = $"{currency} {savingsGoal.TargetAmount:N2}";
+        var progress = savingsGoal.TargetAmount <= 0m
+            ? 0m
+            : Math.Clamp(savingsGoal.CurrentAmount / savingsGoal.TargetAmount, 0m, 1m);
+        ProgressText = $"{progress:P0}";
+    }
+
+    public SavingsGoal Source { get; }
+
+    public string AccountName { get; }
+
+    public string CurrentText { get; }
+
+    public string TargetText { get; }
+
+    public string ProgressText { get; }
+
+    public string Name => Source.Name;
+
+    public string TargetDateText => Source.TargetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "No target date";
+}
+
+public sealed class ForecastEventSummaryViewModel
+{
+    public ForecastEventSummaryViewModel(ForecastEvent forecastEvent, string currency)
+    {
+        Source = forecastEvent;
+        AmountText = $"{currency} {forecastEvent.SignedAmount:N2}";
+    }
+
+    public ForecastEvent Source { get; }
+
+    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public string Name => Source.Name;
+
+    public string AmountText { get; }
+
+    public string KindText => Source.Kind.ToString();
+}
+
+public sealed class UpcomingObligationSummaryViewModel
+{
+    public UpcomingObligationSummaryViewModel(UpcomingObligation obligation, string currency)
+    {
+        Source = obligation;
+        AmountText = $"{currency} {obligation.Amount:N2}";
+    }
+
+    public UpcomingObligation Source { get; }
+
+    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public string Name => Source.Name;
+
+    public string AmountText { get; }
+
+    public string KindText => Source.Kind.ToString();
+}
