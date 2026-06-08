@@ -359,7 +359,10 @@
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="New account" />
                                 <Entry Placeholder="Name" Text="{Binding Data.NewAccountName}" />
-                                <Picker ItemsSource="{Binding Data.AccountTypes}" SelectedItem="{Binding Data.SelectedAccountType}" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.AccountTypes}"
+                                    SelectedItem="{Binding Data.SelectedAccountType}" />
                                 <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
                                     <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
                                     <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
@@ -444,12 +447,61 @@
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="1.4*,*,*,*,Auto" ColumnSpacing="10">
                             <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" />
-                            <Picker Grid.Column="1" ItemsSource="{Binding Data.TransactionTypes}" SelectedItem="{Binding Data.SelectedTransactionType}" />
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding Data.TransactionTypes}"
+                                SelectedItem="{Binding Data.SelectedTransactionType}" />
                             <DatePicker Grid.Column="2" Date="{Binding Data.NewTransactionDate}" />
                             <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
                             <Button Grid.Column="4" Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
                         </Grid>
                     </Border>
+                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                        <Picker
+                            ItemDisplayBinding="{Binding Name}"
+                            ItemsSource="{Binding Data.CategoryChoices}"
+                            SelectedItem="{Binding Data.SelectedTransactionCategory}" />
+                        <Entry
+                            Grid.Column="1"
+                            Placeholder="New category"
+                            Text="{Binding Data.NewCategoryName}" />
+                        <Button
+                            Grid.Column="2"
+                            Command="{Binding Data.AddCategoryCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Add category" />
+                    </Grid>
+                    <CollectionView
+                        HeightRequest="70"
+                        ItemsSource="{Binding Data.CategorySummaries}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No categories yet. Transactions can still use None." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Padding="10,8"
+                                    BackgroundColor="{StaticResource SurfaceColor}"
+                                    Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8" />
+                                    </Border.StrokeShape>
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label VerticalTextAlignment="Center" Text="{Binding Name}" />
+                                        <Button
+                                            Command="{Binding BindingContext.Data.DeleteCategoryCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding Source}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Delete" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                     <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
                     <CollectionView ItemsSource="{Binding Data.TransactionSummaries}">
                         <CollectionView.EmptyView>
@@ -462,6 +514,7 @@
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                                         <VerticalStackLayout Spacing="2">
                                             <Label FontAttributes="Bold" Text="{Binding AccountName}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding NotesText}" />
                                         </VerticalStackLayout>
                                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
@@ -484,14 +537,26 @@
                             <Grid ColumnDefinitions="1.2*,*,*" ColumnSpacing="10">
                                 <Entry Placeholder="Name" Text="{Binding Data.NewScheduledName}" />
                                 <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewScheduledAccount}" />
-                                <Picker Grid.Column="2" ItemsSource="{Binding Data.TransactionTypes}" SelectedItem="{Binding Data.SelectedScheduledType}" />
+                                <Picker
+                                    Grid.Column="2"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransactionTypes}"
+                                    SelectedItem="{Binding Data.SelectedScheduledType}" />
                             </Grid>
                             <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="10">
                                 <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewScheduledAmountText}" />
-                                <Picker Grid.Column="1" ItemsSource="{Binding Data.RecurrenceFrequencies}" SelectedItem="{Binding Data.SelectedScheduledFrequency}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.RecurrenceFrequencies}"
+                                    SelectedItem="{Binding Data.SelectedScheduledFrequency}" />
                                 <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Interval" Text="{Binding Data.NewScheduledIntervalText}" />
                                 <DatePicker Grid.Column="3" Date="{Binding Data.NewScheduledDate}" />
                             </Grid>
+                            <Picker
+                                ItemDisplayBinding="{Binding Name}"
+                                ItemsSource="{Binding Data.CategoryChoices}"
+                                SelectedItem="{Binding Data.SelectedScheduledCategory}" />
                             <Button Command="{Binding Data.AddScheduledTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save scheduled item" />
                         </VerticalStackLayout>
                     </Border>
@@ -507,6 +572,7 @@
                                         <VerticalStackLayout Spacing="2">
                                             <Label FontAttributes="Bold" Text="{Binding Name}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding RecurrenceText}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
                                         </VerticalStackLayout>
                                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
@@ -654,7 +720,11 @@
                                 <Label FontAttributes="Bold" Text="Default forecast period" />
                                 <Label Style="{StaticResource MutedLabel}" Text="Controls dashboard and forecast horizon." />
                             </VerticalStackLayout>
-                            <Picker Grid.Column="1" ItemsSource="{Binding Data.ForecastPeriods}" SelectedItem="{Binding Data.SelectedForecastPeriod}" />
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding Data.ForecastPeriods}"
+                                SelectedItem="{Binding Data.SelectedForecastPeriod}" />
                         </Grid>
                     </Border>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
@@ -664,7 +734,11 @@
                                 <Label FontAttributes="Bold" Text="Check-in reminder" />
                                 <Label Style="{StaticResource MutedLabel}" Text="Stored now; notification scheduling comes in hardening." />
                             </VerticalStackLayout>
-                            <Picker Grid.Column="1" ItemsSource="{Binding Data.ReminderFrequencies}" SelectedItem="{Binding Data.SelectedReminderFrequency}" />
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding Data.ReminderFrequencies}"
+                                SelectedItem="{Binding Data.SelectedReminderFrequency}" />
                         </Grid>
                     </Border>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">

@@ -740,6 +740,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Empty states.
 - Import/export safety confirmations.
 - Database backup before risky operations.
+- Delete-all-data workflow for user-controlled local data resets.
 - Settings screen hardening.
 - Logging that does not collect private analytics.
 
@@ -755,6 +756,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - `ISettingsService`
 - `IAppNotificationService`
 - `ILocalDiagnosticsService`
+- `ILocalDataResetService`
 
 ### ViewModels Required
 
@@ -766,12 +768,14 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Reminder configuration.
 - Diagnostics/export log option if needed.
 - Hardened import/export confirmations.
+- Delete-all-data confirmation flow with multiple checks and a focused Banccoon warning mascot.
 
 ### Testing Requirements
 
 - Settings persistence.
 - Reminder scheduling logic.
 - Backup-before-restore behavior.
+- Delete-all-data requires multiple explicit confirmations and offers backup/export first.
 - Error handling paths for failed import and failed database access.
 
 ### Exit Criteria

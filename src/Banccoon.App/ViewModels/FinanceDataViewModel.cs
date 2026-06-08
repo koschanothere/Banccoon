@@ -7,19 +7,23 @@ using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Transactions;
 
 namespace Banccoon.App.ViewModels;
 
 public sealed class FinanceDataViewModel : ViewModelBase
 {
     private readonly IAccountRepository accountRepository;
+    private readonly ICategoryRepository categoryRepository;
     private readonly ITransactionRepository transactionRepository;
     private readonly IScheduledTransactionRepository scheduledTransactionRepository;
     private readonly ISavingsGoalRepository savingsGoalRepository;
     private readonly ISettingsRepository settingsRepository;
     private readonly IForecastService forecastService;
     private readonly ICreditCardForecastService creditCardForecastService;
+    private readonly ITransactionBalanceService transactionBalanceService;
     private readonly IDateProvider dateProvider;
+    private CancellationTokenSource? statusClearCancellation;
     private bool isLoaded;
     private bool isBusy;
     private string statusMessage = "Ready.";
@@ -49,11 +53,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string selectedAccountManualFinanceChargeText = "0";
     private string selectedAccountPayoffSummary = "Select a credit card to calculate payoff timing.";
     private Account? newTransactionAccount;
+    private CategoryChoiceViewModel? selectedTransactionCategory;
     private string newTransactionAmountText = string.Empty;
     private string newTransactionNotes = string.Empty;
     private DateTime newTransactionDate;
     private TransactionType selectedTransactionType = TransactionType.Expense;
     private Account? newScheduledAccount;
+    private CategoryChoiceViewModel? selectedScheduledCategory;
     private string newScheduledName = string.Empty;
     private string newScheduledAmountText = string.Empty;
     private DateTime newScheduledDate;
@@ -65,24 +71,29 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newGoalTargetAmountText = string.Empty;
     private string newGoalCurrentAmountText = string.Empty;
     private DateTime newGoalTargetDate;
+    private string newCategoryName = string.Empty;
 
     public FinanceDataViewModel(
         IAccountRepository accountRepository,
+        ICategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
         IScheduledTransactionRepository scheduledTransactionRepository,
         ISavingsGoalRepository savingsGoalRepository,
         ISettingsRepository settingsRepository,
         IForecastService forecastService,
         ICreditCardForecastService creditCardForecastService,
+        ITransactionBalanceService transactionBalanceService,
         IDateProvider dateProvider)
     {
         this.accountRepository = accountRepository;
+        this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.scheduledTransactionRepository = scheduledTransactionRepository;
         this.savingsGoalRepository = savingsGoalRepository;
         this.settingsRepository = settingsRepository;
         this.forecastService = forecastService;
         this.creditCardForecastService = creditCardForecastService;
+        this.transactionBalanceService = transactionBalanceService;
         this.dateProvider = dateProvider;
 
         var today = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
@@ -97,6 +108,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
         DeleteAccountCommand = new AsyncRelayCommand<Account>(DeleteAccountAsync);
         AddTransactionCommand = new AsyncRelayCommand(AddTransactionAsync);
         DeleteTransactionCommand = new AsyncRelayCommand<Transaction>(DeleteTransactionAsync);
+        AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
+        DeleteCategoryCommand = new AsyncRelayCommand<Category>(DeleteCategoryAsync);
         AddScheduledTransactionCommand = new AsyncRelayCommand(AddScheduledTransactionAsync);
         DeleteScheduledTransactionCommand = new AsyncRelayCommand<ScheduledTransaction>(DeleteScheduledTransactionAsync);
         AddSavingsGoalCommand = new AsyncRelayCommand(AddSavingsGoalAsync);
@@ -107,6 +120,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ObservableCollection<Account> Accounts { get; } = new();
 
     public ObservableCollection<AccountSummaryViewModel> AccountSummaries { get; } = new();
+
+    public ObservableCollection<Category> Categories { get; } = new();
+
+    public ObservableCollection<CategoryChoiceViewModel> CategoryChoices { get; } = new();
+
+    public ObservableCollection<CategorySummaryViewModel> CategorySummaries { get; } = new();
 
     public ObservableCollection<Transaction> Transactions { get; } = new();
 
@@ -163,6 +182,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand AddTransactionCommand { get; }
 
     public ICommand DeleteTransactionCommand { get; }
+
+    public ICommand AddCategoryCommand { get; }
+
+    public ICommand DeleteCategoryCommand { get; }
 
     public ICommand AddScheduledTransactionCommand { get; }
 
@@ -250,6 +273,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
     }
 
     public bool HasAccounts => Accounts.Count > 0;
+
+    public bool HasCategories => Categories.Count > 0;
 
     public bool HasTransactions => Transactions.Count > 0;
 
@@ -417,6 +442,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newTransactionAccount, value);
     }
 
+    public CategoryChoiceViewModel? SelectedTransactionCategory
+    {
+        get => selectedTransactionCategory;
+        set => SetProperty(ref selectedTransactionCategory, value);
+    }
+
     public string NewTransactionAmountText
     {
         get => newTransactionAmountText;
@@ -445,6 +476,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => newScheduledAccount;
         set => SetProperty(ref newScheduledAccount, value);
+    }
+
+    public CategoryChoiceViewModel? SelectedScheduledCategory
+    {
+        get => selectedScheduledCategory;
+        set => SetProperty(ref selectedScheduledCategory, value);
     }
 
     public string NewScheduledName
@@ -513,6 +550,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newGoalTargetDate, value);
     }
 
+    public string NewCategoryName
+    {
+        get => newCategoryName;
+        set => SetProperty(ref newCategoryName, value);
+    }
+
     public async Task LoadAsync()
     {
         if (isLoaded)
@@ -536,14 +579,16 @@ public sealed class FinanceDataViewModel : ViewModelBase
             SelectedReminderFrequency = settings.ReminderFrequency;
 
             Replace(Accounts, await accountRepository.GetAllAsync());
+            Replace(Categories, await categoryRepository.GetAllAsync());
             Replace(Transactions, await transactionRepository.GetAllAsync());
             Replace(ScheduledTransactions, await scheduledTransactionRepository.GetAllAsync());
             Replace(SavingsGoals, await savingsGoalRepository.GetAllAsync());
 
+            UpdateCategoryChoices();
             EnsureDefaultSelections();
             UpdateSummaries();
             UpdateForecast();
-            StatusMessage = "Loaded saved local data.";
+            SetStatus("Loaded saved local data.", clearAutomatically: true);
         });
     }
 
@@ -551,13 +596,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(NewAccountName))
         {
-            StatusMessage = "Give the account a name first.";
+            SetStatus("Give the account a name first.");
             return;
         }
 
         if (!TryReadDecimal(NewAccountBalanceText, out var balance))
         {
-            StatusMessage = "Account balance must be a number.";
+            SetStatus("Account balance must be a number.");
             return;
         }
 
@@ -586,13 +631,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         if (SelectedAccount is null)
         {
-            StatusMessage = "Select an account to update.";
+            SetStatus("Select an account to update.");
             return;
         }
 
         if (!TryReadDecimal(SelectedAccountBalanceText, out var balance))
         {
-            StatusMessage = "Updated balance must be a number.";
+            SetStatus("Updated balance must be a number.");
             return;
         }
 
@@ -612,17 +657,37 @@ public sealed class FinanceDataViewModel : ViewModelBase
         await RefreshAfterMutationAsync("Account deleted.");
     }
 
+    private async Task AddCategoryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            SetStatus("Give the category a name first.");
+            return;
+        }
+
+        var category = new Category(Guid.NewGuid(), NewCategoryName.Trim());
+        await categoryRepository.SaveAsync(category);
+        NewCategoryName = string.Empty;
+        await RefreshAfterMutationAsync("Category saved.");
+    }
+
+    private async Task DeleteCategoryAsync(Category category)
+    {
+        await categoryRepository.DeleteAsync(category.Id);
+        await RefreshAfterMutationAsync("Category deleted.");
+    }
+
     private async Task AddTransactionAsync()
     {
         if (NewTransactionAccount is null)
         {
-            StatusMessage = "Create or choose an account before adding a transaction.";
+            SetStatus("Create or choose an account before adding a transaction.");
             return;
         }
 
         if (!TryReadDecimal(NewTransactionAmountText, out var amount) || amount <= 0m)
         {
-            StatusMessage = "Transaction amount must be greater than zero.";
+            SetStatus("Transaction amount must be greater than zero.");
             return;
         }
 
@@ -631,10 +696,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
             DateOnly.FromDateTime(NewTransactionDate),
             amount,
             NewTransactionAccount.Id,
-            CategoryId: null,
+            SelectedTransactionCategory?.CategoryId,
             string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
             SelectedTransactionType);
 
+        var updatedAccount = transactionBalanceService.Apply(NewTransactionAccount, transaction);
+        await accountRepository.SaveAsync(updatedAccount);
         await transactionRepository.SaveAsync(transaction);
         NewTransactionAmountText = string.Empty;
         NewTransactionNotes = string.Empty;
@@ -643,6 +710,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private async Task DeleteTransactionAsync(Transaction transaction)
     {
+        var account = await accountRepository.GetByIdAsync(transaction.AccountId);
+        if (account is not null)
+        {
+            await accountRepository.SaveAsync(transactionBalanceService.Reverse(account, transaction));
+        }
+
         await transactionRepository.DeleteAsync(transaction.Id);
         await RefreshAfterMutationAsync("Transaction deleted.");
     }
@@ -651,25 +724,25 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         if (NewScheduledAccount is null)
         {
-            StatusMessage = "Create or choose an account before adding a scheduled item.";
+            SetStatus("Create or choose an account before adding a scheduled item.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(NewScheduledName))
         {
-            StatusMessage = "Give the scheduled item a name first.";
+            SetStatus("Give the scheduled item a name first.");
             return;
         }
 
         if (!TryReadDecimal(NewScheduledAmountText, out var amount) || amount <= 0m)
         {
-            StatusMessage = "Scheduled amount must be greater than zero.";
+            SetStatus("Scheduled amount must be greater than zero.");
             return;
         }
 
         if (!TryReadInt(NewScheduledIntervalText, out var interval) || interval < 1)
         {
-            StatusMessage = "Recurrence interval must be at least 1.";
+            SetStatus("Recurrence interval must be at least 1.");
             return;
         }
 
@@ -680,7 +753,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             NewScheduledName.Trim(),
             amount,
             NewScheduledAccount.Id,
-            CategoryId: null,
+            SelectedScheduledCategory?.CategoryId,
             SelectedScheduledType,
             recurrenceRule,
             startDate,
@@ -702,19 +775,19 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(NewGoalName))
         {
-            StatusMessage = "Give the goal a name first.";
+            SetStatus("Give the goal a name first.");
             return;
         }
 
         if (!TryReadDecimal(NewGoalTargetAmountText, out var targetAmount) || targetAmount <= 0m)
         {
-            StatusMessage = "Goal target must be greater than zero.";
+            SetStatus("Goal target must be greater than zero.");
             return;
         }
 
         if (!TryReadDecimal(NewGoalCurrentAmountText, out var currentAmount) || currentAmount < 0m)
         {
-            StatusMessage = "Goal current amount must be zero or more.";
+            SetStatus("Goal current amount must be zero or more.");
             return;
         }
 
@@ -750,13 +823,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         DefaultCurrency = settings.DefaultCurrency;
         NewAccountCurrency = settings.DefaultCurrency;
         UpdateForecast();
-        StatusMessage = "Preferences saved.";
+        SetStatus("Preferences saved.", clearAutomatically: true);
     }
 
     private async Task RefreshAfterMutationAsync(string message)
     {
         await RefreshAsync();
-        StatusMessage = message;
+        SetStatus(message, clearAutomatically: true);
     }
 
     private async Task RunBusyAsync(Func<Task> action)
@@ -768,11 +841,41 @@ public sealed class FinanceDataViewModel : ViewModelBase
         }
         catch (Exception exception)
         {
-            StatusMessage = exception.Message;
+            SetStatus(exception.Message);
         }
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private void SetStatus(string message, bool clearAutomatically = false)
+    {
+        statusClearCancellation?.Cancel();
+        StatusMessage = message;
+
+        if (!clearAutomatically)
+        {
+            return;
+        }
+
+        var cancellation = new CancellationTokenSource();
+        statusClearCancellation = cancellation;
+        _ = ClearStatusAfterDelayAsync(cancellation.Token);
+    }
+
+    private async Task ClearStatusAfterDelayAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(4), cancellationToken);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                StatusMessage = "Ready.";
+            }
+        }
+        catch (TaskCanceledException)
+        {
         }
     }
 
@@ -875,6 +978,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
         NewGoalAccount = FindFreshAccount(NewGoalAccount)
             ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
             ?? Accounts.FirstOrDefault();
+        SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory) ?? CategoryChoices.FirstOrDefault();
+        SelectedScheduledCategory = FindFreshCategoryChoice(SelectedScheduledCategory) ?? CategoryChoices.FirstOrDefault();
     }
 
     private Account? FindFreshAccount(Account? account)
@@ -884,16 +989,37 @@ public sealed class FinanceDataViewModel : ViewModelBase
             : Accounts.FirstOrDefault(candidate => candidate.Id == account.Id);
     }
 
+    private CategoryChoiceViewModel? FindFreshCategoryChoice(CategoryChoiceViewModel? categoryChoice)
+    {
+        return categoryChoice is null
+            ? null
+            : CategoryChoices.FirstOrDefault(candidate => candidate.CategoryId == categoryChoice.CategoryId);
+    }
+
+    private void UpdateCategoryChoices()
+    {
+        var choices = new[]
+            {
+                CategoryChoiceViewModel.None
+            }
+            .Concat(Categories.Select(category => new CategoryChoiceViewModel(category.Id, category.Name)));
+
+        Replace(CategoryChoices, choices);
+    }
+
     private void UpdateSummaries()
     {
         Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(account)));
+        Replace(CategorySummaries, Categories.Select(category => new CategorySummaryViewModel(category)));
         Replace(TransactionSummaries, Transactions.Select(transaction => new TransactionSummaryViewModel(
             transaction,
             Accounts.FirstOrDefault(account => account.Id == transaction.AccountId)?.Name ?? "Unknown account",
+            Categories.FirstOrDefault(category => category.Id == transaction.CategoryId)?.Name,
             DefaultCurrency)));
         Replace(ScheduledTransactionSummaries, ScheduledTransactions.Select(item => new ScheduledTransactionSummaryViewModel(
             item,
             Accounts.FirstOrDefault(account => account.Id == item.AccountId)?.Name ?? "Unknown account",
+            Categories.FirstOrDefault(category => category.Id == item.CategoryId)?.Name,
             DefaultCurrency)));
         Replace(SavingsGoalSummaries, SavingsGoals.Select(goal => new SavingsGoalSummaryViewModel(
             goal,
@@ -901,6 +1027,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             DefaultCurrency)));
 
         OnPropertyChanged(nameof(HasAccounts));
+        OnPropertyChanged(nameof(HasCategories));
         OnPropertyChanged(nameof(HasTransactions));
         OnPropertyChanged(nameof(HasScheduledTransactions));
         OnPropertyChanged(nameof(HasSavingsGoals));
@@ -1057,7 +1184,7 @@ public sealed class AccountSummaryViewModel
 
     public string Name => Source.Name;
 
-    public string TypeText => Source.Type.ToString();
+    public string TypeText => DisplayText.Format(Source.Type);
 
     public string BalanceText => $"{Source.Currency} {Source.CurrentBalance:N2}";
 
@@ -1078,12 +1205,44 @@ public sealed class AccountSummaryViewModel
     }
 }
 
+public sealed class CategoryChoiceViewModel
+{
+    public static CategoryChoiceViewModel None { get; } = new(null, "None");
+
+    public CategoryChoiceViewModel(Guid? categoryId, string name)
+    {
+        CategoryId = categoryId;
+        Name = name;
+    }
+
+    public Guid? CategoryId { get; }
+
+    public string Name { get; }
+}
+
+public sealed class CategorySummaryViewModel
+{
+    public CategorySummaryViewModel(Category category)
+    {
+        Source = category;
+    }
+
+    public Category Source { get; }
+
+    public string Name => Source.Name;
+}
+
 public sealed class TransactionSummaryViewModel
 {
-    public TransactionSummaryViewModel(Transaction transaction, string accountName, string currency)
+    public TransactionSummaryViewModel(
+        Transaction transaction,
+        string accountName,
+        string? categoryName,
+        string currency)
     {
         Source = transaction;
         AccountName = accountName;
+        CategoryText = categoryName ?? "None";
         AmountText = $"{currency} {transaction.Amount:N2}";
     }
 
@@ -1091,11 +1250,13 @@ public sealed class TransactionSummaryViewModel
 
     public string AccountName { get; }
 
+    public string CategoryText { get; }
+
     public string AmountText { get; }
 
     public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    public string TypeText => Source.Type.ToString();
+    public string TypeText => DisplayText.Format(Source.Type);
 
     public string NotesText => string.IsNullOrWhiteSpace(Source.Notes) ? "No notes" : Source.Notes;
 }
@@ -1105,10 +1266,12 @@ public sealed class ScheduledTransactionSummaryViewModel
     public ScheduledTransactionSummaryViewModel(
         ScheduledTransaction scheduledTransaction,
         string accountName,
+        string? categoryName,
         string currency)
     {
         Source = scheduledTransaction;
         AccountName = accountName;
+        CategoryText = categoryName ?? "None";
         AmountText = $"{currency} {scheduledTransaction.Amount:N2}";
     }
 
@@ -1116,17 +1279,19 @@ public sealed class ScheduledTransactionSummaryViewModel
 
     public string AccountName { get; }
 
+    public string CategoryText { get; }
+
     public string AmountText { get; }
 
     public string Name => Source.Name;
 
-    public string TypeText => Source.Type.ToString();
+    public string TypeText => DisplayText.Format(Source.Type);
 
     public string NextText => Source.NextOccurrence.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public string RecurrenceText => Source.RecurrenceRule.Interval == 1
-        ? Source.RecurrenceRule.Frequency.ToString()
-        : $"Every {Source.RecurrenceRule.Interval} {Source.RecurrenceRule.Frequency}";
+        ? DisplayText.Format(Source.RecurrenceRule.Frequency)
+        : $"Every {Source.RecurrenceRule.Interval} {DisplayText.Format(Source.RecurrenceRule.Frequency).ToLowerInvariant()}";
 }
 
 public sealed class SavingsGoalSummaryViewModel
@@ -1174,7 +1339,7 @@ public sealed class ForecastEventSummaryViewModel
 
     public string AmountText { get; }
 
-    public string KindText => Source.Kind.ToString();
+    public string KindText => DisplayText.Format(Source.Kind);
 }
 
 public sealed class UpcomingObligationSummaryViewModel
@@ -1193,5 +1358,38 @@ public sealed class UpcomingObligationSummaryViewModel
 
     public string AmountText { get; }
 
-    public string KindText => Source.Kind.ToString();
+    public string KindText => DisplayText.Format(Source.Kind);
+}
+
+internal static class DisplayText
+{
+    public static string Format(object value)
+    {
+        return value.ToString() is { } text
+            ? SplitPascalCase(text)
+            : string.Empty;
+    }
+
+    private static string SplitPascalCase(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var result = new List<char>(text.Length + 4) { text[0] };
+        for (var index = 1; index < text.Length; index++)
+        {
+            var current = text[index];
+            var previous = text[index - 1];
+            if (char.IsUpper(current) && (char.IsLower(previous) || char.IsDigit(previous)))
+            {
+                result.Add(' ');
+            }
+
+            result.Add(current);
+        }
+
+        return new string(result.ToArray());
+    }
 }

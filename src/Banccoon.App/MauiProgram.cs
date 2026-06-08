@@ -8,6 +8,7 @@ using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Savings;
+using Banccoon.Core.Transactions;
 using Banccoon.Infrastructure.Database;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
@@ -34,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISavingsGoalAllocationService, SavingsGoalAllocationService>();
         builder.Services.AddSingleton<IAvailableToSpendService, AvailableToSpendService>();
         builder.Services.AddSingleton<ICreditCardForecastService, CreditCardForecastService>();
+        builder.Services.AddSingleton<ITransactionBalanceService, TransactionBalanceService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
         builder.Services.AddSingleton<ICheckInService, CheckInService>();
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();

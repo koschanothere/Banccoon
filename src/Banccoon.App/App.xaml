@@ -2,9 +2,12 @@
 <Application
     x:Class="Banccoon.App.App"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:Banccoon.App.Converters">
     <Application.Resources>
         <ResourceDictionary>
+            <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
+
             <Color x:Key="PageBackgroundColor">#F4F6F3</Color>
             <Color x:Key="ShellBackgroundColor">#17201B</Color>
             <Color x:Key="ShellPanelColor">#203128</Color>
@@ -33,6 +36,26 @@
             <Style x:Key="MutedLabel" TargetType="Label">
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="TextColor" Value="{StaticResource SecondaryTextColor}" />
+            </Style>
+
+            <Style TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceMutedColor}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="PlaceholderColor" Value="{StaticResource MutedTextColor}" />
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}" />
+            </Style>
+
+            <Style TargetType="Picker">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceMutedColor}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}" />
+                <Setter Property="TitleColor" Value="{StaticResource MutedTextColor}" />
+            </Style>
+
+            <Style TargetType="DatePicker">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceMutedColor}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}" />
             </Style>
 
             <Style x:Key="ShellButton" TargetType="Button">
