@@ -6,7 +6,18 @@ public sealed class EnumDisplayConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is null ? string.Empty : SplitPascalCase(value.ToString() ?? string.Empty);
+        return value switch
+        {
+            Banccoon.Core.Models.DateDisplayFormat.DayMonthYear => "DD/MM/YYYY",
+            Banccoon.Core.Models.DateDisplayFormat.MonthDayYear => "MM/DD/YYYY",
+            Banccoon.Core.Models.DateDisplayFormat.YearMonthDay => "YYYY-MM-DD",
+            Banccoon.Core.Recurrence.RecurrenceFrequency.Daily => "day",
+            Banccoon.Core.Recurrence.RecurrenceFrequency.Weekly => "week",
+            Banccoon.Core.Recurrence.RecurrenceFrequency.Monthly => "month",
+            Banccoon.Core.Recurrence.RecurrenceFrequency.Yearly => "year",
+            null => string.Empty,
+            _ => SplitPascalCase(value.ToString() ?? string.Empty)
+        };
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

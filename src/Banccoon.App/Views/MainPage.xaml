@@ -235,6 +235,7 @@
                 <Border
                     Padding="12,10"
                     BackgroundColor="{StaticResource AccentSoftColor}"
+                    IsVisible="{Binding Data.HasStatusMessage}"
                     StrokeThickness="0">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
@@ -452,7 +453,10 @@
                                 ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                                 ItemsSource="{Binding Data.TransactionTypes}"
                                 SelectedItem="{Binding Data.SelectedTransactionType}" />
-                            <DatePicker Grid.Column="2" Date="{Binding Data.NewTransactionDate}" />
+                            <DatePicker
+                                Grid.Column="2"
+                                Date="{Binding Data.NewTransactionDate}"
+                                Format="{Binding Data.DatePickerFormat}" />
                             <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
                             <Button Grid.Column="4" Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
                         </Grid>
@@ -543,16 +547,33 @@
                                     ItemsSource="{Binding Data.TransactionTypes}"
                                     SelectedItem="{Binding Data.SelectedScheduledType}" />
                             </Grid>
-                            <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="10">
-                                <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewScheduledAmountText}" />
-                                <Picker
+                            <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewScheduledAmountText}" />
+                            <Grid ColumnDefinitions="Auto,70,170,Auto,Auto" ColumnSpacing="8">
+                                <Label
+                                    Text="Every"
+                                    VerticalTextAlignment="Center" />
+                                <Entry
                                     Grid.Column="1"
+                                    HorizontalTextAlignment="Center"
+                                    Keyboard="Numeric"
+                                    Text="{Binding Data.NewScheduledIntervalText}" />
+                                <Picker
+                                    Grid.Column="2"
                                     ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                                     ItemsSource="{Binding Data.RecurrenceFrequencies}"
                                     SelectedItem="{Binding Data.SelectedScheduledFrequency}" />
-                                <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Interval" Text="{Binding Data.NewScheduledIntervalText}" />
-                                <DatePicker Grid.Column="3" Date="{Binding Data.NewScheduledDate}" />
+                                <Label
+                                    Grid.Column="3"
+                                    Text="starting"
+                                    VerticalTextAlignment="Center" />
+                                <DatePicker
+                                    Grid.Column="4"
+                                    Date="{Binding Data.NewScheduledDate}"
+                                    Format="{Binding Data.DatePickerFormat}" />
                             </Grid>
+                            <Label
+                                Style="{StaticResource MutedLabel}"
+                                Text="{Binding Data.ScheduledRecurrenceSentencePreview}" />
                             <Picker
                                 ItemDisplayBinding="{Binding Name}"
                                 ItemsSource="{Binding Data.CategoryChoices}"
@@ -594,7 +615,10 @@
                             <Entry Placeholder="Goal name" Text="{Binding Data.NewGoalName}" />
                             <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Target" Text="{Binding Data.NewGoalTargetAmountText}" />
                             <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Current" Text="{Binding Data.NewGoalCurrentAmountText}" />
-                            <DatePicker Grid.Column="3" Date="{Binding Data.NewGoalTargetDate}" />
+                            <DatePicker
+                                Grid.Column="3"
+                                Date="{Binding Data.NewGoalTargetDate}"
+                                Format="{Binding Data.DatePickerFormat}" />
                             <Button Grid.Column="4" Command="{Binding Data.AddSavingsGoalCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
                         </Grid>
                     </Border>
@@ -739,6 +763,20 @@
                                 ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                                 ItemsSource="{Binding Data.ReminderFrequencies}"
                                 SelectedItem="{Binding Data.SelectedReminderFrequency}" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Date format" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Used throughout transactions, forecasts, goals, and payoff dates." />
+                            </VerticalStackLayout>
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding Data.DateDisplayFormats}"
+                                SelectedItem="{Binding Data.SelectedDateDisplayFormat}" />
                         </Grid>
                     </Border>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">

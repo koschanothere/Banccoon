@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 namespace Banccoon.Infrastructure.Database;
 
 public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
@@ -83,10 +85,41 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 Id INTEGER PRIMARY KEY CHECK (Id = 1),
                 DefaultCurrency TEXT NOT NULL,
                 DefaultForecastPeriod TEXT NOT NULL,
-                ReminderFrequency TEXT NOT NULL
+                ReminderFrequency TEXT NOT NULL,
+                DateDisplayFormat TEXT NOT NULL DEFAULT 'DayMonthYear'
             );
             """;
 
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "DateDisplayFormat",
+            "TEXT NOT NULL DEFAULT 'DayMonthYear'",
+            cancellationToken);
+    }
+
+    private static async Task AddMissingColumnAsync(
+        SqliteConnection connection,
+        string tableName,
+        string columnName,
+        string columnDefinition,
+        CancellationToken cancellationToken)
+    {
+        await using var queryCommand = connection.CreateCommand();
+        queryCommand.CommandText = $"PRAGMA table_info({tableName});";
+
+        await using var reader = await queryCommand.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+
+        await using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
+        await alterCommand.ExecuteNonQueryAsync(cancellationToken);
     }
 }

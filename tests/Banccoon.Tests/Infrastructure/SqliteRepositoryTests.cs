@@ -131,6 +131,7 @@ public sealed class SqliteRepositoryTests
         Assert.Equal("EUR", settings.DefaultCurrency);
         Assert.Equal(ForecastPeriod.ThirtyDays, settings.DefaultForecastPeriod);
         Assert.Equal(ReminderFrequency.Weekly, settings.ReminderFrequency);
+        Assert.Equal(DateDisplayFormat.DayMonthYear, settings.DateDisplayFormat);
     }
 
     [Fact]
@@ -140,7 +141,8 @@ public sealed class SqliteRepositoryTests
         var settings = new AppSettings(
             "USD",
             ForecastPeriod.NinetyDays,
-            ReminderFrequency.Biweekly);
+            ReminderFrequency.Biweekly,
+            DateDisplayFormat.MonthDayYear);
 
         await store.Settings.SaveAsync(settings);
 

@@ -26,10 +26,11 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private CancellationTokenSource? statusClearCancellation;
     private bool isLoaded;
     private bool isBusy;
-    private string statusMessage = "Ready.";
+    private string statusMessage = string.Empty;
     private string defaultCurrency = "EUR";
     private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
     private ReminderFrequency selectedReminderFrequency = ReminderFrequency.Weekly;
+    private DateDisplayFormat selectedDateDisplayFormat = DateDisplayFormat.DayMonthYear;
     private string currentBalanceText = "EUR 0.00";
     private string availableToSpendText = "EUR 0.00";
     private string lowestForecastText = "EUR 0.00";
@@ -153,6 +154,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public IReadOnlyList<ReminderFrequency> ReminderFrequencies { get; } = Enum.GetValues<ReminderFrequency>();
 
+    public IReadOnlyList<DateDisplayFormat> DateDisplayFormats { get; } = Enum.GetValues<DateDisplayFormat>();
+
     public IReadOnlyList<string> SupportedCurrencies { get; } =
     [
         "EUR",
@@ -166,7 +169,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
         "DKK",
         "JPY",
         "CAD",
-        "AUD"
+        "AUD",
+        "RUB"
     ];
 
     public ICommand LoadCommand { get; }
@@ -206,8 +210,16 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public string StatusMessage
     {
         get => statusMessage;
-        private set => SetProperty(ref statusMessage, value);
+        private set
+        {
+            if (SetProperty(ref statusMessage, value))
+            {
+                OnPropertyChanged(nameof(HasStatusMessage));
+            }
+        }
     }
+
+    public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
     public string DefaultCurrency
     {
@@ -241,6 +253,22 @@ public sealed class FinanceDataViewModel : ViewModelBase
         get => selectedReminderFrequency;
         set => SetProperty(ref selectedReminderFrequency, value);
     }
+
+    public DateDisplayFormat SelectedDateDisplayFormat
+    {
+        get => selectedDateDisplayFormat;
+        set
+        {
+            if (SetProperty(ref selectedDateDisplayFormat, value))
+            {
+                UpdateSummaries();
+                OnPropertyChanged(nameof(DatePickerFormat));
+                OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
+            }
+        }
+    }
+
+    public string DatePickerFormat => DateDisplay.GetPattern(SelectedDateDisplayFormat);
 
     public string CurrentBalanceText
     {
@@ -499,7 +527,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public DateTime NewScheduledDate
     {
         get => newScheduledDate;
-        set => SetProperty(ref newScheduledDate, value);
+        set
+        {
+            if (SetProperty(ref newScheduledDate, value))
+            {
+                OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
+            }
+        }
     }
 
     public TransactionType SelectedScheduledType
@@ -511,13 +545,41 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public RecurrenceFrequency SelectedScheduledFrequency
     {
         get => selectedScheduledFrequency;
-        set => SetProperty(ref selectedScheduledFrequency, value);
+        set
+        {
+            if (SetProperty(ref selectedScheduledFrequency, value))
+            {
+                OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
+            }
+        }
     }
 
     public string NewScheduledIntervalText
     {
         get => newScheduledIntervalText;
-        set => SetProperty(ref newScheduledIntervalText, value);
+        set
+        {
+            if (SetProperty(ref newScheduledIntervalText, value))
+            {
+                OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
+            }
+        }
+    }
+
+    public string ScheduledRecurrenceSentencePreview
+    {
+        get
+        {
+            var interval = TryReadInt(NewScheduledIntervalText, out var parsedInterval) && parsedInterval > 0
+                ? parsedInterval
+                : 1;
+            var period = RecurrenceDisplay.GetPeriodName(SelectedScheduledFrequency, interval);
+            var startDate = DateDisplay.Format(DateOnly.FromDateTime(NewScheduledDate), SelectedDateDisplayFormat);
+
+            return interval <= 1
+                ? $"Every {period} starting {startDate}"
+                : $"Every {interval} {period} starting {startDate}";
+        }
     }
 
     public Account? NewGoalAccount
@@ -577,6 +639,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             selectedForecastPeriod = settings.DefaultForecastPeriod;
             OnPropertyChanged(nameof(SelectedForecastPeriod));
             SelectedReminderFrequency = settings.ReminderFrequency;
+            selectedDateDisplayFormat = settings.DateDisplayFormat;
+            OnPropertyChanged(nameof(SelectedDateDisplayFormat));
 
             Replace(Accounts, await accountRepository.GetAllAsync());
             Replace(Categories, await categoryRepository.GetAllAsync());
@@ -817,7 +881,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
         var settings = new AppSettings(
             NormalizeCurrency(DefaultCurrency),
             SelectedForecastPeriod,
-            SelectedReminderFrequency);
+            SelectedReminderFrequency,
+            SelectedDateDisplayFormat);
 
         await settingsRepository.SaveAsync(settings);
         DefaultCurrency = settings.DefaultCurrency;
@@ -871,7 +936,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             await Task.Delay(TimeSpan.FromSeconds(4), cancellationToken);
             if (!cancellationToken.IsCancellationRequested)
             {
-                StatusMessage = "Ready.";
+                StatusMessage = string.Empty;
             }
         }
         catch (TaskCanceledException)
@@ -964,7 +1029,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        var finalPaymentDate = plan.FinalPaymentDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "the final payment";
+        var finalPaymentDate = plan.FinalPaymentDate is null
+            ? "the final payment"
+            : DateDisplay.Format(plan.FinalPaymentDate.Value, SelectedDateDisplayFormat);
         SelectedAccountPayoffSummary = plan.MonthCount == 0
             ? "No outstanding card debt."
             : $"Paid off by {finalPaymentDate} after {plan.MonthCount} payments. Total paid: {FormatMoney(plan.TotalPaid, accountForCalculation.Currency)}.";
@@ -1015,16 +1082,19 @@ public sealed class FinanceDataViewModel : ViewModelBase
             transaction,
             Accounts.FirstOrDefault(account => account.Id == transaction.AccountId)?.Name ?? "Unknown account",
             Categories.FirstOrDefault(category => category.Id == transaction.CategoryId)?.Name,
-            DefaultCurrency)));
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
         Replace(ScheduledTransactionSummaries, ScheduledTransactions.Select(item => new ScheduledTransactionSummaryViewModel(
             item,
             Accounts.FirstOrDefault(account => account.Id == item.AccountId)?.Name ?? "Unknown account",
             Categories.FirstOrDefault(category => category.Id == item.CategoryId)?.Name,
-            DefaultCurrency)));
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
         Replace(SavingsGoalSummaries, SavingsGoals.Select(goal => new SavingsGoalSummaryViewModel(
             goal,
             Accounts.FirstOrDefault(account => account.Id == goal.AccountId)?.Name,
-            DefaultCurrency)));
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
 
         OnPropertyChanged(nameof(HasAccounts));
         OnPropertyChanged(nameof(HasCategories));
@@ -1064,8 +1134,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
         UpcomingObligationsText = FormatMoney(forecast.UpcomingObligations.Sum(obligation => obligation.Amount), DefaultCurrency);
         ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
 
-        Replace(ForecastEvents, forecast.Events.Select(forecastEvent => new ForecastEventSummaryViewModel(forecastEvent, DefaultCurrency)));
-        Replace(UpcomingObligations, forecast.UpcomingObligations.Select(obligation => new UpcomingObligationSummaryViewModel(obligation, DefaultCurrency)));
+        Replace(ForecastEvents, forecast.Events.Select(forecastEvent => new ForecastEventSummaryViewModel(
+            forecastEvent,
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
+        Replace(UpcomingObligations, forecast.UpcomingObligations.Select(obligation => new UpcomingObligationSummaryViewModel(
+            obligation,
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
         OnPropertyChanged(nameof(HasForecastEvents));
         OnPropertyChanged(nameof(HasUpcomingObligations));
     }
@@ -1238,12 +1314,14 @@ public sealed class TransactionSummaryViewModel
         Transaction transaction,
         string accountName,
         string? categoryName,
-        string currency)
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
     {
         Source = transaction;
         AccountName = accountName;
         CategoryText = categoryName ?? "None";
         AmountText = $"{currency} {transaction.Amount:N2}";
+        DateText = DateDisplay.Format(transaction.Date, dateDisplayFormat);
     }
 
     public Transaction Source { get; }
@@ -1254,7 +1332,7 @@ public sealed class TransactionSummaryViewModel
 
     public string AmountText { get; }
 
-    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    public string DateText { get; }
 
     public string TypeText => DisplayText.Format(Source.Type);
 
@@ -1267,12 +1345,14 @@ public sealed class ScheduledTransactionSummaryViewModel
         ScheduledTransaction scheduledTransaction,
         string accountName,
         string? categoryName,
-        string currency)
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
     {
         Source = scheduledTransaction;
         AccountName = accountName;
         CategoryText = categoryName ?? "None";
         AmountText = $"{currency} {scheduledTransaction.Amount:N2}";
+        NextText = DateDisplay.Format(scheduledTransaction.NextOccurrence, dateDisplayFormat);
     }
 
     public ScheduledTransaction Source { get; }
@@ -1287,16 +1367,18 @@ public sealed class ScheduledTransactionSummaryViewModel
 
     public string TypeText => DisplayText.Format(Source.Type);
 
-    public string NextText => Source.NextOccurrence.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    public string NextText { get; }
 
-    public string RecurrenceText => Source.RecurrenceRule.Interval == 1
-        ? DisplayText.Format(Source.RecurrenceRule.Frequency)
-        : $"Every {Source.RecurrenceRule.Interval} {DisplayText.Format(Source.RecurrenceRule.Frequency).ToLowerInvariant()}";
+    public string RecurrenceText => RecurrenceDisplay.Format(Source.RecurrenceRule);
 }
 
 public sealed class SavingsGoalSummaryViewModel
 {
-    public SavingsGoalSummaryViewModel(SavingsGoal savingsGoal, string? accountName, string currency)
+    public SavingsGoalSummaryViewModel(
+        SavingsGoal savingsGoal,
+        string? accountName,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
     {
         Source = savingsGoal;
         AccountName = accountName ?? "No linked account";
@@ -1306,6 +1388,9 @@ public sealed class SavingsGoalSummaryViewModel
             ? 0m
             : Math.Clamp(savingsGoal.CurrentAmount / savingsGoal.TargetAmount, 0m, 1m);
         ProgressText = $"{progress:P0}";
+        TargetDateText = Source.TargetDate is null
+            ? "No target date"
+            : DateDisplay.Format(Source.TargetDate.Value, dateDisplayFormat);
     }
 
     public SavingsGoal Source { get; }
@@ -1320,20 +1405,24 @@ public sealed class SavingsGoalSummaryViewModel
 
     public string Name => Source.Name;
 
-    public string TargetDateText => Source.TargetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "No target date";
+    public string TargetDateText { get; }
 }
 
 public sealed class ForecastEventSummaryViewModel
 {
-    public ForecastEventSummaryViewModel(ForecastEvent forecastEvent, string currency)
+    public ForecastEventSummaryViewModel(
+        ForecastEvent forecastEvent,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
     {
         Source = forecastEvent;
         AmountText = $"{currency} {forecastEvent.SignedAmount:N2}";
+        DateText = DateDisplay.Format(forecastEvent.Date, dateDisplayFormat);
     }
 
     public ForecastEvent Source { get; }
 
-    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    public string DateText { get; }
 
     public string Name => Source.Name;
 
@@ -1344,15 +1433,19 @@ public sealed class ForecastEventSummaryViewModel
 
 public sealed class UpcomingObligationSummaryViewModel
 {
-    public UpcomingObligationSummaryViewModel(UpcomingObligation obligation, string currency)
+    public UpcomingObligationSummaryViewModel(
+        UpcomingObligation obligation,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
     {
         Source = obligation;
         AmountText = $"{currency} {obligation.Amount:N2}";
+        DateText = DateDisplay.Format(obligation.Date, dateDisplayFormat);
     }
 
     public UpcomingObligation Source { get; }
 
-    public string DateText => Source.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    public string DateText { get; }
 
     public string Name => Source.Name;
 
@@ -1391,5 +1484,55 @@ internal static class DisplayText
         }
 
         return new string(result.ToArray());
+    }
+}
+
+internal static class RecurrenceDisplay
+{
+    public static string Format(RecurrenceRule recurrenceRule)
+    {
+        if (recurrenceRule.Interval <= 1)
+        {
+            return $"Every {GetPeriodName(recurrenceRule.Frequency, 1)}";
+        }
+
+        return $"Every {recurrenceRule.Interval} {GetPeriodName(recurrenceRule.Frequency, recurrenceRule.Interval)}";
+    }
+
+    public static string GetPeriodName(RecurrenceFrequency frequency, int interval)
+    {
+        var singular = frequency switch
+        {
+            RecurrenceFrequency.Daily => "day",
+            RecurrenceFrequency.Weekly => "week",
+            RecurrenceFrequency.Monthly => "month",
+            RecurrenceFrequency.Yearly => "year",
+            _ => DisplayText.Format(frequency).ToLowerInvariant()
+        };
+
+        if (interval <= 1)
+        {
+            return singular;
+        }
+
+        return $"{singular}s";
+    }
+}
+
+internal static class DateDisplay
+{
+    public static string Format(DateOnly date, DateDisplayFormat format)
+    {
+        return date.ToString(GetPattern(format), CultureInfo.InvariantCulture);
+    }
+
+    public static string GetPattern(DateDisplayFormat format)
+    {
+        return format switch
+        {
+            DateDisplayFormat.MonthDayYear => "MM/dd/yyyy",
+            DateDisplayFormat.YearMonthDay => "yyyy-MM-dd",
+            _ => "dd/MM/yyyy"
+        };
     }
 }

@@ -55,7 +55,8 @@ public sealed class ShellViewModel : ViewModelBase
         "DKK",
         "JPY",
         "CAD",
-        "AUD"
+        "AUD",
+        "RUB"
     ];
 
     public ICommand SelectSectionCommand { get; }
