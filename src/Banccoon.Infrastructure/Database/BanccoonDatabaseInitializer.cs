@@ -36,7 +36,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
 
             CREATE TABLE IF NOT EXISTS Categories (
                 Id TEXT PRIMARY KEY,
-                Name TEXT NOT NULL
+                Name TEXT NOT NULL,
+                Type TEXT NULL
             );
 
             CREATE TABLE IF NOT EXISTS Transactions (
@@ -91,6 +92,12 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             """;
 
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Categories",
+            "Type",
+            "TEXT NULL",
+            cancellationToken);
         await AddMissingColumnAsync(
             connection,
             "Settings",

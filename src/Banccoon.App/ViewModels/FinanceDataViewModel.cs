@@ -23,21 +23,21 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private readonly ICreditCardForecastService creditCardForecastService;
     private readonly ITransactionBalanceService transactionBalanceService;
     private readonly IDateProvider dateProvider;
-    private static readonly string[] DefaultCategoryNames =
+    private static readonly DefaultCategoryDefinition[] DefaultCategories =
     [
-        "Salary",
-        "Freelance",
-        "Refund",
-        "Interest",
-        "Rent",
-        "Utilities",
-        "Groceries",
-        "Transport",
-        "Healthcare",
-        "Entertainment",
-        "Subscriptions",
-        "Card payment",
-        "Savings"
+        new(TransactionType.Income, "Salary"),
+        new(TransactionType.Income, "Freelance"),
+        new(TransactionType.Income, "Refund"),
+        new(TransactionType.Income, "Interest"),
+        new(TransactionType.Expense, "Rent"),
+        new(TransactionType.Expense, "Utilities"),
+        new(TransactionType.Expense, "Groceries"),
+        new(TransactionType.Expense, "Transport"),
+        new(TransactionType.Expense, "Healthcare"),
+        new(TransactionType.Expense, "Entertainment"),
+        new(TransactionType.Expense, "Subscriptions"),
+        new(TransactionType.Expense, "Card payment"),
+        new(TransactionType.Expense, "Savings")
     ];
 
     private CancellationTokenSource? statusClearCancellation;
@@ -149,7 +149,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ObservableCollection<Category> Categories { get; } = new();
 
-    public ObservableCollection<CategoryChoiceViewModel> CategoryChoices { get; } = new();
+    public ObservableCollection<CategoryChoiceViewModel> TransactionCategoryChoices { get; } = new();
+
+    public ObservableCollection<CategoryChoiceViewModel> ScheduledCategoryChoices { get; } = new();
 
     public ObservableCollection<CategorySummaryViewModel> CategorySummaries { get; } = new();
 
@@ -586,7 +588,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public TransactionType SelectedTransactionType
     {
         get => selectedTransactionType;
-        set => SetProperty(ref selectedTransactionType, value);
+        set
+        {
+            if (SetProperty(ref selectedTransactionType, value))
+            {
+                UpdateCategoryChoices();
+                SelectedTransactionCategory = TransactionCategoryChoices.FirstOrDefault();
+            }
+        }
     }
 
     public Account? NewScheduledAccount
@@ -628,7 +637,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public TransactionType SelectedScheduledType
     {
         get => selectedScheduledType;
-        set => SetProperty(ref selectedScheduledType, value);
+        set
+        {
+            if (SetProperty(ref selectedScheduledType, value))
+            {
+                UpdateCategoryChoices();
+                SelectedScheduledCategory = ScheduledCategoryChoices.FirstOrDefault();
+            }
+        }
     }
 
     public RecurrenceFrequency SelectedScheduledFrequency

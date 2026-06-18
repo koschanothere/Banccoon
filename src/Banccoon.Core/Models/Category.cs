@@ -1,3 +1,6 @@
 namespace Banccoon.Core.Models;
 
-public sealed record Category(Guid Id, string Name);
+public sealed record Category(
+    Guid Id,
+    string Name,
+    TransactionType? Type = null);
