@@ -23,6 +23,23 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private readonly ICreditCardForecastService creditCardForecastService;
     private readonly ITransactionBalanceService transactionBalanceService;
     private readonly IDateProvider dateProvider;
+    private static readonly string[] DefaultCategoryNames =
+    [
+        "Salary",
+        "Freelance",
+        "Refund",
+        "Interest",
+        "Rent",
+        "Utilities",
+        "Groceries",
+        "Transport",
+        "Healthcare",
+        "Entertainment",
+        "Subscriptions",
+        "Card payment",
+        "Savings"
+    ];
+
     private CancellationTokenSource? statusClearCancellation;
     private bool isLoaded;
     private bool isBusy;
@@ -73,6 +90,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newGoalCurrentAmountText = string.Empty;
     private DateTime newGoalTargetDate;
     private string newCategoryName = string.Empty;
+    private bool isAccountsEditing;
+    private bool isTransactionsEditing;
+    private bool isScheduledEditing;
+    private bool isGoalsEditing;
 
     public FinanceDataViewModel(
         IAccountRepository accountRepository,
@@ -116,6 +137,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         AddSavingsGoalCommand = new AsyncRelayCommand(AddSavingsGoalAsync);
         DeleteSavingsGoalCommand = new AsyncRelayCommand<SavingsGoal>(DeleteSavingsGoalAsync);
         SavePreferencesCommand = new AsyncRelayCommand(SavePreferencesAsync);
+        ToggleAccountsEditingCommand = new RelayCommand(() => IsAccountsEditing = !IsAccountsEditing);
+        ToggleTransactionsEditingCommand = new RelayCommand(() => IsTransactionsEditing = !IsTransactionsEditing);
+        ToggleScheduledEditingCommand = new RelayCommand(() => IsScheduledEditing = !IsScheduledEditing);
+        ToggleGoalsEditingCommand = new RelayCommand(() => IsGoalsEditing = !IsGoalsEditing);
     }
 
     public ObservableCollection<Account> Accounts { get; } = new();
@@ -200,6 +225,70 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand DeleteSavingsGoalCommand { get; }
 
     public ICommand SavePreferencesCommand { get; }
+
+    public ICommand ToggleAccountsEditingCommand { get; }
+
+    public ICommand ToggleTransactionsEditingCommand { get; }
+
+    public ICommand ToggleScheduledEditingCommand { get; }
+
+    public ICommand ToggleGoalsEditingCommand { get; }
+
+    public bool IsAccountsEditing
+    {
+        get => isAccountsEditing;
+        set
+        {
+            if (SetProperty(ref isAccountsEditing, value))
+            {
+                OnPropertyChanged(nameof(AccountsEditModeText));
+            }
+        }
+    }
+
+    public bool IsTransactionsEditing
+    {
+        get => isTransactionsEditing;
+        set
+        {
+            if (SetProperty(ref isTransactionsEditing, value))
+            {
+                OnPropertyChanged(nameof(TransactionsEditModeText));
+            }
+        }
+    }
+
+    public bool IsScheduledEditing
+    {
+        get => isScheduledEditing;
+        set
+        {
+            if (SetProperty(ref isScheduledEditing, value))
+            {
+                OnPropertyChanged(nameof(ScheduledEditModeText));
+            }
+        }
+    }
+
+    public bool IsGoalsEditing
+    {
+        get => isGoalsEditing;
+        set
+        {
+            if (SetProperty(ref isGoalsEditing, value))
+            {
+                OnPropertyChanged(nameof(GoalsEditModeText));
+            }
+        }
+    }
+
+    public string AccountsEditModeText => IsAccountsEditing ? "Done" : "✎";
+
+    public string TransactionsEditModeText => IsTransactionsEditing ? "Done" : "✎";
+
+    public string ScheduledEditModeText => IsScheduledEditing ? "Done" : "✎";
+
+    public string GoalsEditModeText => IsGoalsEditing ? "Done" : "✎";
 
     public bool IsBusy
     {
@@ -729,6 +818,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
+        if (Categories.Any(category => string.Equals(category.Name, NewCategoryName.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            SetStatus("That category already exists.");
+            return;
+        }
+
         var category = new Category(Guid.NewGuid(), NewCategoryName.Trim());
         await categoryRepository.SaveAsync(category);
         NewCategoryName = string.Empty;
@@ -739,6 +834,30 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         await categoryRepository.DeleteAsync(category.Id);
         await RefreshAfterMutationAsync("Category deleted.");
+    }
+
+    private async Task<Guid?> ResolveCategoryChoiceAsync(CategoryChoiceViewModel? categoryChoice)
+    {
+        if (categoryChoice is null || categoryChoice.IsNone)
+        {
+            return null;
+        }
+
+        if (categoryChoice.CategoryId.HasValue)
+        {
+            return categoryChoice.CategoryId.Value;
+        }
+
+        var existing = Categories.FirstOrDefault(category =>
+            string.Equals(category.Name, categoryChoice.Name, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+        {
+            return existing.Id;
+        }
+
+        var category = new Category(Guid.NewGuid(), categoryChoice.Name);
+        await categoryRepository.SaveAsync(category);
+        return category.Id;
     }
 
     private async Task AddTransactionAsync()
@@ -755,12 +874,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
+        var categoryId = await ResolveCategoryChoiceAsync(SelectedTransactionCategory);
         var transaction = new Transaction(
             Guid.NewGuid(),
             DateOnly.FromDateTime(NewTransactionDate),
             amount,
             NewTransactionAccount.Id,
-            SelectedTransactionCategory?.CategoryId,
+            categoryId,
             string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
             SelectedTransactionType);
 
@@ -812,12 +932,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
         var startDate = DateOnly.FromDateTime(NewScheduledDate);
         var recurrenceRule = CreateRecurrenceRule(SelectedScheduledFrequency, interval, startDate);
+        var categoryId = await ResolveCategoryChoiceAsync(SelectedScheduledCategory);
         var scheduledTransaction = new ScheduledTransaction(
             Guid.NewGuid(),
             NewScheduledName.Trim(),
             amount,
             NewScheduledAccount.Id,
-            SelectedScheduledCategory?.CategoryId,
+            categoryId,
             SelectedScheduledType,
             recurrenceRule,
             startDate,
@@ -1065,11 +1186,17 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private void UpdateCategoryChoices()
     {
+        var existingNames = Categories
+            .Select(category => category.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var choices = new[]
             {
                 CategoryChoiceViewModel.None
             }
-            .Concat(Categories.Select(category => new CategoryChoiceViewModel(category.Id, category.Name)));
+            .Concat(Categories.Select(category => new CategoryChoiceViewModel(category.Id, category.Name)))
+            .Concat(DefaultCategoryNames
+                .Where(defaultName => !existingNames.Contains(defaultName))
+                .Select(defaultName => CategoryChoiceViewModel.Suggestion(defaultName)));
 
         Replace(CategoryChoices, choices);
     }
@@ -1283,17 +1410,32 @@ public sealed class AccountSummaryViewModel
 
 public sealed class CategoryChoiceViewModel
 {
-    public static CategoryChoiceViewModel None { get; } = new(null, "None");
+    public static CategoryChoiceViewModel None { get; } = new(null, "None", IsNone: true, IsSuggestion: false);
 
-    public CategoryChoiceViewModel(Guid? categoryId, string name)
+    public static CategoryChoiceViewModel Suggestion(string name)
+    {
+        return new CategoryChoiceViewModel(null, name, IsNone: false, IsSuggestion: true);
+    }
+
+    public CategoryChoiceViewModel(
+        Guid? categoryId,
+        string name,
+        bool IsNone = false,
+        bool IsSuggestion = false)
     {
         CategoryId = categoryId;
         Name = name;
+        this.IsNone = IsNone;
+        this.IsSuggestion = IsSuggestion;
     }
 
     public Guid? CategoryId { get; }
 
     public string Name { get; }
+
+    public bool IsNone { get; }
+
+    public bool IsSuggestion { get; }
 }
 
 public sealed class CategorySummaryViewModel

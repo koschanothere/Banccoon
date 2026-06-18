@@ -353,7 +353,14 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="16">
-                    <Label Style="{StaticResource SectionTitleLabel}" Text="Accounts" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Style="{StaticResource SectionTitleLabel}" Text="Accounts" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Data.ToggleAccountsEditingCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="{Binding Data.AccountsEditModeText}" />
+                    </Grid>
                     <Grid ColumnDefinitions="1.1*,1.2*" ColumnSpacing="18">
                         <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
@@ -433,6 +440,7 @@
                                             Grid.Column="2"
                                             Command="{Binding BindingContext.Data.DeleteAccountCommand, Source={x:Reference Page}}"
                                             CommandParameter="{Binding Source}"
+                                            IsVisible="{Binding BindingContext.Data.IsAccountsEditing, Source={x:Reference Page}}"
                                             Style="{StaticResource QuietButton}"
                                             Text="Delete" />
                                     </Grid>
@@ -443,7 +451,14 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsTransactionsSelected}" Spacing="16">
-                    <Label Style="{StaticResource SectionTitleLabel}" Text="Transactions" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Style="{StaticResource SectionTitleLabel}" Text="Transactions" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Data.ToggleTransactionsEditingCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="{Binding Data.TransactionsEditModeText}" />
+                    </Grid>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="1.4*,*,*,*,Auto" ColumnSpacing="10">
@@ -480,7 +495,7 @@
                         HeightRequest="70"
                         ItemsSource="{Binding Data.CategorySummaries}">
                         <CollectionView.EmptyView>
-                            <Label Style="{StaticResource MutedLabel}" Text="No categories yet. Transactions can still use None." />
+                            <Label Style="{StaticResource MutedLabel}" Text="No saved categories yet. Suggested categories are already available in the picker." />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
@@ -499,6 +514,7 @@
                                         <Button
                                             Command="{Binding BindingContext.Data.DeleteCategoryCommand, Source={x:Reference Page}}"
                                             CommandParameter="{Binding Source}"
+                                            IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
                                             Style="{StaticResource QuietButton}"
                                             Text="Delete" />
                                     </HorizontalStackLayout>
@@ -525,7 +541,13 @@
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding DateText}" />
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Command="{Binding BindingContext.Data.DeleteTransactionCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding Source}"
+                                            IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Delete" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -534,7 +556,14 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsScheduledSelected}" Spacing="16">
-                    <Label Style="{StaticResource SectionTitleLabel}" Text="Scheduled" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Style="{StaticResource SectionTitleLabel}" Text="Scheduled" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Data.ToggleScheduledEditingCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="{Binding Data.ScheduledEditModeText}" />
+                    </Grid>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
@@ -599,7 +628,13 @@
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding NextText}" />
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteScheduledTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Command="{Binding BindingContext.Data.DeleteScheduledTransactionCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding Source}"
+                                            IsVisible="{Binding BindingContext.Data.IsScheduledEditing, Source={x:Reference Page}}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Delete" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -608,7 +643,14 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsGoalsSelected}" Spacing="16">
-                    <Label Style="{StaticResource SectionTitleLabel}" Text="Goals" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Style="{StaticResource SectionTitleLabel}" Text="Goals" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Data.ToggleGoalsEditingCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="{Binding Data.GoalsEditModeText}" />
+                    </Grid>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="1.2*,*,*,*,Auto" ColumnSpacing="10">
@@ -640,7 +682,13 @@
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding CurrentText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding ProgressText}" />
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="2" Command="{Binding BindingContext.Data.DeleteSavingsGoalCommand, Source={x:Reference Page}}" CommandParameter="{Binding Source}" Style="{StaticResource QuietButton}" Text="Delete" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Command="{Binding BindingContext.Data.DeleteSavingsGoalCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding Source}"
+                                            IsVisible="{Binding BindingContext.Data.IsGoalsEditing, Source={x:Reference Page}}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Delete" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
