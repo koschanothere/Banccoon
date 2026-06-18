@@ -4,8 +4,10 @@ using System.Windows.Input;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
+using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
 
@@ -22,6 +24,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private readonly IForecastService forecastService;
     private readonly ICreditCardForecastService creditCardForecastService;
     private readonly ITransactionBalanceService transactionBalanceService;
+    private readonly ICheckInService checkInService;
+    private readonly IReconciliationService reconciliationService;
+    private readonly IGroupedSpendingService groupedSpendingService;
+    private readonly IBalanceAdjustmentService balanceAdjustmentService;
+    private readonly IRecurrenceService recurrenceService;
+    private readonly IBackupService backupService;
+    private readonly IImportService importService;
     private readonly IDateProvider dateProvider;
     private static readonly DefaultCategoryDefinition[] DefaultCategories =
     [
@@ -90,6 +99,25 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newGoalCurrentAmountText = string.Empty;
     private DateTime newGoalTargetDate;
     private string newCategoryName = string.Empty;
+    private DateTime checkInFromDate;
+    private DateTime checkInToDate;
+    private Account? reconciliationAccount;
+    private string actualBalanceText = string.Empty;
+    private DateTime actualBalanceDate;
+    private string reconciliationExpectedText = "Not compared yet.";
+    private string reconciliationActualText = "Not compared yet.";
+    private string reconciliationDifferenceText = "Not compared yet.";
+    private string reconciliationStatusText = "Not compared yet.";
+    private ReconciliationResult? latestReconciliationResult;
+    private string groupedSpendingAmountText = string.Empty;
+    private string groupedSpendingNotes = string.Empty;
+    private CategoryChoiceViewModel? selectedGroupedSpendingCategory;
+    private string exportPathText = string.Empty;
+    private string importPathText = string.Empty;
+    private ImportMode selectedImportMode = ImportMode.Merge;
+    private string importExportSummary = "Portable JSON export format v1.";
+    private string deleteAllConfirmationText = string.Empty;
+    private bool deleteAllBackupAcknowledged;
     private bool isAccountsEditing;
     private bool isTransactionsEditing;
     private bool isScheduledEditing;
@@ -105,6 +133,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         IForecastService forecastService,
         ICreditCardForecastService creditCardForecastService,
         ITransactionBalanceService transactionBalanceService,
+        ICheckInService checkInService,
+        IReconciliationService reconciliationService,
+        IGroupedSpendingService groupedSpendingService,
+        IBalanceAdjustmentService balanceAdjustmentService,
+        IRecurrenceService recurrenceService,
+        IBackupService backupService,
+        IImportService importService,
         IDateProvider dateProvider)
     {
         this.accountRepository = accountRepository;
@@ -116,12 +151,23 @@ public sealed class FinanceDataViewModel : ViewModelBase
         this.forecastService = forecastService;
         this.creditCardForecastService = creditCardForecastService;
         this.transactionBalanceService = transactionBalanceService;
+        this.checkInService = checkInService;
+        this.reconciliationService = reconciliationService;
+        this.groupedSpendingService = groupedSpendingService;
+        this.balanceAdjustmentService = balanceAdjustmentService;
+        this.recurrenceService = recurrenceService;
+        this.backupService = backupService;
+        this.importService = importService;
         this.dateProvider = dateProvider;
 
         var today = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
         newTransactionDate = today;
         newScheduledDate = today;
         newGoalTargetDate = today.AddMonths(6);
+        checkInFromDate = today.AddDays(-7);
+        checkInToDate = today;
+        actualBalanceDate = today;
+        exportPathText = CreateDefaultBackupPath();
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
@@ -136,6 +182,19 @@ public sealed class FinanceDataViewModel : ViewModelBase
         DeleteScheduledTransactionCommand = new AsyncRelayCommand<ScheduledTransaction>(DeleteScheduledTransactionAsync);
         AddSavingsGoalCommand = new AsyncRelayCommand(AddSavingsGoalAsync);
         DeleteSavingsGoalCommand = new AsyncRelayCommand<SavingsGoal>(DeleteSavingsGoalAsync);
+        CreateCheckInCommand = new AsyncRelayCommand(CreateCheckInAsync);
+        ConfirmExpectedTransactionCommand = new AsyncRelayCommand<ExpectedTransactionReviewViewModel>(ConfirmExpectedTransactionAsync);
+        DelayExpectedTransactionCommand = new AsyncRelayCommand<ExpectedTransactionReviewViewModel>(DelayExpectedTransactionAsync);
+        CancelExpectedTransactionCommand = new AsyncRelayCommand<ExpectedTransactionReviewViewModel>(CancelExpectedTransactionAsync);
+        CompareRealityCommand = new AsyncRelayCommand(CompareRealityAsync);
+        AddGroupedSpendingCommand = new AsyncRelayCommand(AddGroupedSpendingAsync);
+        AddBalanceAdjustmentCommand = new AsyncRelayCommand(AddBalanceAdjustmentAsync);
+        CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync);
+        ValidateImportCommand = new AsyncRelayCommand(ValidateImportAsync);
+        RestoreBackupCommand = new AsyncRelayCommand(RestoreBackupAsync);
+        ResetExportPathCommand = new RelayCommand(() => ExportPathText = CreateDefaultBackupPath());
+        CopyExportPathToImportCommand = new RelayCommand(() => ImportPathText = ExportPathText);
+        DeleteAllDataCommand = new AsyncRelayCommand(DeleteAllDataAsync);
         SavePreferencesCommand = new AsyncRelayCommand(SavePreferencesAsync);
         ToggleAccountsEditingCommand = new RelayCommand(() => IsAccountsEditing = !IsAccountsEditing);
         ToggleTransactionsEditingCommand = new RelayCommand(() => IsTransactionsEditing = !IsTransactionsEditing);
@@ -152,6 +211,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ObservableCollection<CategoryChoiceViewModel> TransactionCategoryChoices { get; } = new();
 
     public ObservableCollection<CategoryChoiceViewModel> ScheduledCategoryChoices { get; } = new();
+
+    public ObservableCollection<CategoryChoiceViewModel> GroupedSpendingCategoryChoices { get; } = new();
 
     public ObservableCollection<CategorySummaryViewModel> CategorySummaries { get; } = new();
 
@@ -171,6 +232,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ObservableCollection<UpcomingObligationSummaryViewModel> UpcomingObligations { get; } = new();
 
+    public ObservableCollection<ExpectedTransactionReviewViewModel> CheckInExpectedTransactions { get; } = new();
+
     public IReadOnlyList<AccountType> AccountTypes { get; } = Enum.GetValues<AccountType>();
 
     public IReadOnlyList<TransactionType> TransactionTypes { get; } = Enum.GetValues<TransactionType>();
@@ -182,6 +245,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public IReadOnlyList<ReminderFrequency> ReminderFrequencies { get; } = Enum.GetValues<ReminderFrequency>();
 
     public IReadOnlyList<DateDisplayFormat> DateDisplayFormats { get; } = Enum.GetValues<DateDisplayFormat>();
+
+    public IReadOnlyList<ImportMode> ImportModes { get; } =
+    [
+        ImportMode.Merge,
+        ImportMode.Replace,
+        ImportMode.ValidateOnly
+    ];
 
     public IReadOnlyList<string> SupportedCurrencies { get; } =
     [
@@ -225,6 +295,32 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand AddSavingsGoalCommand { get; }
 
     public ICommand DeleteSavingsGoalCommand { get; }
+
+    public ICommand CreateCheckInCommand { get; }
+
+    public ICommand ConfirmExpectedTransactionCommand { get; }
+
+    public ICommand DelayExpectedTransactionCommand { get; }
+
+    public ICommand CancelExpectedTransactionCommand { get; }
+
+    public ICommand CompareRealityCommand { get; }
+
+    public ICommand AddGroupedSpendingCommand { get; }
+
+    public ICommand AddBalanceAdjustmentCommand { get; }
+
+    public ICommand CreateBackupCommand { get; }
+
+    public ICommand ValidateImportCommand { get; }
+
+    public ICommand RestoreBackupCommand { get; }
+
+    public ICommand ResetExportPathCommand { get; }
+
+    public ICommand CopyExportPathToImportCommand { get; }
+
+    public ICommand DeleteAllDataCommand { get; }
 
     public ICommand SavePreferencesCommand { get; }
 
@@ -723,6 +819,116 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newCategoryName, value);
     }
 
+    public DateTime CheckInFromDate
+    {
+        get => checkInFromDate;
+        set => SetProperty(ref checkInFromDate, value);
+    }
+
+    public DateTime CheckInToDate
+    {
+        get => checkInToDate;
+        set => SetProperty(ref checkInToDate, value);
+    }
+
+    public bool HasCheckInExpectedTransactions => CheckInExpectedTransactions.Count > 0;
+
+    public Account? ReconciliationAccount
+    {
+        get => reconciliationAccount;
+        set => SetProperty(ref reconciliationAccount, value);
+    }
+
+    public string ActualBalanceText
+    {
+        get => actualBalanceText;
+        set => SetProperty(ref actualBalanceText, value);
+    }
+
+    public DateTime ActualBalanceDate
+    {
+        get => actualBalanceDate;
+        set => SetProperty(ref actualBalanceDate, value);
+    }
+
+    public string ReconciliationExpectedText
+    {
+        get => reconciliationExpectedText;
+        private set => SetProperty(ref reconciliationExpectedText, value);
+    }
+
+    public string ReconciliationActualText
+    {
+        get => reconciliationActualText;
+        private set => SetProperty(ref reconciliationActualText, value);
+    }
+
+    public string ReconciliationDifferenceText
+    {
+        get => reconciliationDifferenceText;
+        private set => SetProperty(ref reconciliationDifferenceText, value);
+    }
+
+    public string ReconciliationStatusText
+    {
+        get => reconciliationStatusText;
+        private set => SetProperty(ref reconciliationStatusText, value);
+    }
+
+    public string GroupedSpendingAmountText
+    {
+        get => groupedSpendingAmountText;
+        set => SetProperty(ref groupedSpendingAmountText, value);
+    }
+
+    public string GroupedSpendingNotes
+    {
+        get => groupedSpendingNotes;
+        set => SetProperty(ref groupedSpendingNotes, value);
+    }
+
+    public CategoryChoiceViewModel? SelectedGroupedSpendingCategory
+    {
+        get => selectedGroupedSpendingCategory;
+        set => SetProperty(ref selectedGroupedSpendingCategory, value);
+    }
+
+    public string ExportPathText
+    {
+        get => exportPathText;
+        set => SetProperty(ref exportPathText, value);
+    }
+
+    public string ImportPathText
+    {
+        get => importPathText;
+        set => SetProperty(ref importPathText, value);
+    }
+
+    public ImportMode SelectedImportMode
+    {
+        get => selectedImportMode;
+        set => SetProperty(ref selectedImportMode, value);
+    }
+
+    public string ImportExportSummary
+    {
+        get => importExportSummary;
+        private set => SetProperty(ref importExportSummary, value);
+    }
+
+    public string DeleteAllConfirmationText
+    {
+        get => deleteAllConfirmationText;
+        set => SetProperty(ref deleteAllConfirmationText, value);
+    }
+
+    public bool DeleteAllBackupAcknowledged
+    {
+        get => deleteAllBackupAcknowledged;
+        set => SetProperty(ref deleteAllBackupAcknowledged, value);
+    }
+
     public async Task LoadAsync()
     {
         if (isLoaded)
@@ -840,7 +1046,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        var category = new Category(Guid.NewGuid(), NewCategoryName.Trim());
+        var category = new Category(Guid.NewGuid(), NewCategoryName.Trim(), SelectedTransactionType);
         await categoryRepository.SaveAsync(category);
         NewCategoryName = string.Empty;
         await RefreshAfterMutationAsync("Category saved.");
@@ -852,7 +1058,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         await RefreshAfterMutationAsync("Category deleted.");
     }
 
-    private async Task<Guid?> ResolveCategoryChoiceAsync(CategoryChoiceViewModel? categoryChoice)
+    private async Task<Guid?> ResolveCategoryChoiceAsync(CategoryChoiceViewModel? categoryChoice, TransactionType type)
     {
         if (categoryChoice is null || categoryChoice.IsNone)
         {
@@ -865,13 +1071,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
         }
 
         var existing = Categories.FirstOrDefault(category =>
-            string.Equals(category.Name, categoryChoice.Name, StringComparison.OrdinalIgnoreCase));
+            string.Equals(category.Name, categoryChoice.Name, StringComparison.OrdinalIgnoreCase)
+            && (category.Type is null || category.Type == type));
         if (existing is not null)
         {
             return existing.Id;
         }
 
-        var category = new Category(Guid.NewGuid(), categoryChoice.Name);
+        var category = new Category(Guid.NewGuid(), categoryChoice.Name, type);
         await categoryRepository.SaveAsync(category);
         return category.Id;
     }
@@ -890,7 +1097,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        var categoryId = await ResolveCategoryChoiceAsync(SelectedTransactionCategory);
+        var categoryId = await ResolveCategoryChoiceAsync(SelectedTransactionCategory, SelectedTransactionType);
         var transaction = new Transaction(
             Guid.NewGuid(),
             DateOnly.FromDateTime(NewTransactionDate),
@@ -948,7 +1155,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
         var startDate = DateOnly.FromDateTime(NewScheduledDate);
         var recurrenceRule = CreateRecurrenceRule(SelectedScheduledFrequency, interval, startDate);
-        var categoryId = await ResolveCategoryChoiceAsync(SelectedScheduledCategory);
+        var categoryId = await ResolveCategoryChoiceAsync(SelectedScheduledCategory, SelectedScheduledType);
         var scheduledTransaction = new ScheduledTransaction(
             Guid.NewGuid(),
             NewScheduledName.Trim(),
@@ -1013,6 +1220,259 @@ public sealed class FinanceDataViewModel : ViewModelBase
         await RefreshAfterMutationAsync("Savings goal deleted.");
     }
 
+    private async Task CreateCheckInAsync()
+    {
+        await RunBusyAsync(() =>
+        {
+            var fromDate = DateOnly.FromDateTime(CheckInFromDate);
+            var toDate = DateOnly.FromDateTime(CheckInToDate);
+            var session = checkInService.CreateSession(fromDate, toDate, ScheduledTransactions);
+
+            Replace(CheckInExpectedTransactions, session.ExpectedTransactions.Select(review =>
+                new ExpectedTransactionReviewViewModel(
+                    review,
+                    Accounts.FirstOrDefault(account => account.Id == review.ExpectedEvent.AccountId)?.Name ?? "Unknown account",
+                    Categories.FirstOrDefault(category => category.Id == review.ExpectedEvent.CategoryId)?.Name,
+                    DefaultCurrency,
+                    SelectedDateDisplayFormat)));
+            OnPropertyChanged(nameof(HasCheckInExpectedTransactions));
+            SetStatus($"Loaded {CheckInExpectedTransactions.Count} expected item(s) for check-in.", clearAutomatically: true);
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task ConfirmExpectedTransactionAsync(ExpectedTransactionReviewViewModel item)
+    {
+        if (item.Source.Decision != ExpectedTransactionDecision.Pending)
+        {
+            SetStatus("That expected item has already been reviewed.");
+            return;
+        }
+
+        var forecastEvent = item.Source.ExpectedEvent;
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            forecastEvent.Date,
+            forecastEvent.Amount,
+            forecastEvent.AccountId,
+            forecastEvent.CategoryId,
+            forecastEvent.Name,
+            forecastEvent.Type);
+
+        await SaveAppliedTransactionAsync(transaction);
+        await AdvanceScheduledTransactionAsync(forecastEvent.SourceId, forecastEvent.Date);
+        item.MarkConfirmed();
+        await RefreshAsync();
+        SetStatus("Expected item confirmed and recorded.", clearAutomatically: true);
+    }
+
+    private async Task DelayExpectedTransactionAsync(ExpectedTransactionReviewViewModel item)
+    {
+        if (item.Source.Decision != ExpectedTransactionDecision.Pending)
+        {
+            SetStatus("That expected item has already been reviewed.");
+            return;
+        }
+
+        var delayedUntil = item.Source.ExpectedEvent.Date.AddDays(1);
+        var scheduledTransaction = await scheduledTransactionRepository.GetByIdAsync(item.Source.ExpectedEvent.SourceId);
+        if (scheduledTransaction is null)
+        {
+            SetStatus("Could not find that scheduled item.");
+            return;
+        }
+
+        await scheduledTransactionRepository.SaveAsync(scheduledTransaction with
+        {
+            NextOccurrence = delayedUntil,
+            Active = true
+        });
+        item.MarkDelayed(delayedUntil, SelectedDateDisplayFormat);
+        await RefreshAsync();
+        SetStatus("Expected item delayed by one day.", clearAutomatically: true);
+    }
+
+    private async Task CancelExpectedTransactionAsync(ExpectedTransactionReviewViewModel item)
+    {
+        if (item.Source.Decision != ExpectedTransactionDecision.Pending)
+        {
+            SetStatus("That expected item has already been reviewed.");
+            return;
+        }
+
+        await AdvanceScheduledTransactionAsync(item.Source.ExpectedEvent.SourceId, item.Source.ExpectedEvent.Date);
+        item.MarkCancelled();
+        await RefreshAsync();
+        SetStatus("Expected item skipped.", clearAutomatically: true);
+    }
+
+    private async Task CompareRealityAsync()
+    {
+        await RunBusyAsync(() =>
+        {
+            if (!TryReadDecimal(ActualBalanceText, out var actualBalance))
+            {
+                SetStatus("Actual balance must be a number.");
+                return Task.CompletedTask;
+            }
+
+            var actualDate = DateOnly.FromDateTime(ActualBalanceDate);
+            var forecast = CreateForecastThrough(actualDate);
+            latestReconciliationResult = reconciliationService.Compare(forecast, actualBalance, actualDate);
+            ReconciliationExpectedText = FormatMoney(latestReconciliationResult.ExpectedBalance, DefaultCurrency);
+            ReconciliationActualText = FormatMoney(latestReconciliationResult.ActualBalance, DefaultCurrency);
+            ReconciliationDifferenceText = FormatMoney(latestReconciliationResult.Difference, DefaultCurrency);
+            ReconciliationStatusText = DisplayText.Format(latestReconciliationResult.Status);
+            SetStatus("Reality compared with forecast.", clearAutomatically: true);
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task AddGroupedSpendingAsync()
+    {
+        if (ReconciliationAccount is null)
+        {
+            SetStatus("Choose the account where the grouped spending happened.");
+            return;
+        }
+
+        if (!TryReadDecimal(GroupedSpendingAmountText, out var amount) || amount <= 0m)
+        {
+            SetStatus("Grouped spending amount must be greater than zero.");
+            return;
+        }
+
+        var categoryId = await ResolveCategoryChoiceAsync(SelectedGroupedSpendingCategory, TransactionType.Expense);
+        var transaction = groupedSpendingService.CreateTransaction(new GroupedSpendingEntry(
+            DateOnly.FromDateTime(ActualBalanceDate),
+            amount,
+            ReconciliationAccount.Id,
+            categoryId,
+            string.IsNullOrWhiteSpace(GroupedSpendingNotes) ? null : GroupedSpendingNotes.Trim()));
+
+        await SaveAppliedTransactionAsync(transaction);
+        GroupedSpendingAmountText = string.Empty;
+        GroupedSpendingNotes = string.Empty;
+        await RefreshAsync();
+        SetStatus("Grouped spending saved.", clearAutomatically: true);
+    }
+
+    private async Task AddBalanceAdjustmentAsync()
+    {
+        if (ReconciliationAccount is null)
+        {
+            SetStatus("Choose the account to adjust.");
+            return;
+        }
+
+        if (latestReconciliationResult is null)
+        {
+            SetStatus("Compare reality first, then choose whether to adjust.");
+            return;
+        }
+
+        if (latestReconciliationResult.Difference == 0m)
+        {
+            SetStatus("No adjustment is needed.");
+            return;
+        }
+
+        var transaction = balanceAdjustmentService.CreateTransaction(new BalanceAdjustment(
+            latestReconciliationResult.Date,
+            ReconciliationAccount.Id,
+            latestReconciliationResult.Difference,
+            "Reconciliation balance adjustment"));
+
+        await SaveAppliedTransactionAsync(transaction);
+        latestReconciliationResult = null;
+        await RefreshAsync();
+        SetStatus("Balance adjustment saved.", clearAutomatically: true);
+    }
+
+    private async Task CreateBackupAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(ExportPathText))
+            {
+                SetStatus("Enter an export path first.");
+                return;
+            }
+
+            await backupService.CreateBackupAsync(ExportPathText.Trim());
+            ImportExportSummary = $"Backup created: {ExportPathText.Trim()}";
+            SetStatus("Backup created.", clearAutomatically: true);
+        });
+    }
+
+    private async Task ValidateImportAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(ImportPathText))
+            {
+                SetStatus("Enter an import path first.");
+                return;
+            }
+
+            var exportEnvelope = await backupService.ReadBackupAsync(ImportPathText.Trim());
+            var validation = await importService.ValidateAsync(exportEnvelope);
+            ImportExportSummary = validation.IsValid
+                ? $"Valid Banccoon export v{exportEnvelope.ExportFormatVersion}. Contains {exportEnvelope.Data.Accounts.Count} account(s), {exportEnvelope.Data.Transactions.Count} transaction(s), {exportEnvelope.Data.ScheduledTransactions.Count} scheduled item(s), {exportEnvelope.Data.Categories.Count} categor(ies), and {exportEnvelope.Data.SavingsGoals.Count} goal(s)."
+                : $"Import is not valid: {string.Join(" ", validation.Errors)}";
+            SetStatus(validation.IsValid ? "Import file is valid." : "Import validation failed.", clearAutomatically: validation.IsValid);
+        });
+    }
+
+    private async Task RestoreBackupAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(ImportPathText))
+            {
+                SetStatus("Enter an import path first.");
+                return;
+            }
+
+            var result = await backupService.RestoreBackupAsync(ImportPathText.Trim(), SelectedImportMode);
+            ImportExportSummary = FormatImportResult(result);
+            if (result.Validation.IsValid && result.Mode != ImportMode.ValidateOnly)
+            {
+                await RefreshAsync();
+            }
+
+            SetStatus(result.Validation.IsValid ? "Import action completed." : "Import failed validation.", clearAutomatically: result.Validation.IsValid);
+        });
+    }
+
+    private async Task DeleteAllDataAsync()
+    {
+        if (!DeleteAllBackupAcknowledged)
+        {
+            SetStatus("Confirm that you have exported a backup or intentionally do not want one.");
+            return;
+        }
+
+        if (!string.Equals(DeleteAllConfirmationText.Trim(), "DELETE ALL DATA", StringComparison.Ordinal))
+        {
+            SetStatus("Type DELETE ALL DATA to confirm the local reset.");
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await DeleteAllRepositoryDataAsync();
+            await settingsRepository.SaveAsync(CreateDefaultSettings());
+            DeleteAllConfirmationText = string.Empty;
+            DeleteAllBackupAcknowledged = false;
+            latestReconciliationResult = null;
+            CheckInExpectedTransactions.Clear();
+            OnPropertyChanged(nameof(HasCheckInExpectedTransactions));
+            await RefreshAsync();
+            SetStatus("All local financial data has been deleted.", clearAutomatically: true);
+        });
+    }
+
     private async Task SavePreferencesAsync()
     {
         var settings = new AppSettings(
@@ -1032,6 +1492,90 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         await RefreshAsync();
         SetStatus(message, clearAutomatically: true);
+    }
+
+    private async Task SaveAppliedTransactionAsync(Transaction transaction)
+    {
+        var account = await accountRepository.GetByIdAsync(transaction.AccountId);
+        if (account is null)
+        {
+            throw new InvalidOperationException("The selected account could not be found.");
+        }
+
+        await accountRepository.SaveAsync(transactionBalanceService.Apply(account, transaction));
+        await transactionRepository.SaveAsync(transaction);
+    }
+
+    private async Task AdvanceScheduledTransactionAsync(Guid scheduledTransactionId, DateOnly completedDate)
+    {
+        var scheduledTransaction = await scheduledTransactionRepository.GetByIdAsync(scheduledTransactionId);
+        if (scheduledTransaction is null)
+        {
+            return;
+        }
+
+        var nextOccurrence = recurrenceService.GetNextOccurrence(scheduledTransaction.RecurrenceRule, completedDate);
+        await scheduledTransactionRepository.SaveAsync(scheduledTransaction with
+        {
+            NextOccurrence = nextOccurrence ?? completedDate,
+            Active = nextOccurrence is not null
+        });
+    }
+
+    private ForecastResult CreateForecastThrough(DateOnly date)
+    {
+        var startDate = dateProvider.Today;
+        var endDate = date >= startDate ? date : startDate;
+
+        return forecastService.CreateForecast(new ForecastRequest(
+            startDate,
+            endDate,
+            Accounts.ToArray(),
+            ScheduledTransactions.ToArray(),
+            SavingsGoals.ToArray()));
+    }
+
+    private async Task DeleteAllRepositoryDataAsync()
+    {
+        await transactionRepository.DeleteAllAsync();
+        await scheduledTransactionRepository.DeleteAllAsync();
+        await savingsGoalRepository.DeleteAllAsync();
+        await categoryRepository.DeleteAllAsync();
+        await accountRepository.DeleteAllAsync();
+    }
+
+    private static AppSettings CreateDefaultSettings()
+    {
+        return new AppSettings(
+            "EUR",
+            ForecastPeriod.ThirtyDays,
+            ReminderFrequency.Weekly,
+            DateDisplayFormat.DayMonthYear);
+    }
+
+    private static string CreateDefaultBackupPath()
+    {
+        var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var directory = string.IsNullOrWhiteSpace(documents)
+            ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+            : documents;
+
+        return Path.Combine(directory, $"banccoon_backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+    }
+
+    private static string FormatImportResult(ImportResult result)
+    {
+        if (!result.Validation.IsValid)
+        {
+            return $"Import failed validation: {string.Join(" ", result.Validation.Errors)}";
+        }
+
+        if (result.Mode == ImportMode.ValidateOnly)
+        {
+            return "Import file is valid. No local data was changed.";
+        }
+
+        return $"{DisplayText.Format(result.Mode)} import completed: {result.AccountsImported} account(s), {result.TransactionsImported} transaction(s), {result.ScheduledTransactionsImported} scheduled item(s), {result.CategoriesImported} categor(ies), and {result.SavingsGoalsImported} goal(s).";
     }
 
     private async Task RunBusyAsync(Func<Task> action)
@@ -1182,8 +1726,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         NewGoalAccount = FindFreshAccount(NewGoalAccount)
             ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
             ?? Accounts.FirstOrDefault();
-        SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory) ?? CategoryChoices.FirstOrDefault();
-        SelectedScheduledCategory = FindFreshCategoryChoice(SelectedScheduledCategory) ?? CategoryChoices.FirstOrDefault();
+        ReconciliationAccount = FindFreshAccount(ReconciliationAccount) ?? Accounts.FirstOrDefault();
+        SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory, TransactionCategoryChoices)
+            ?? TransactionCategoryChoices.FirstOrDefault();
+        SelectedScheduledCategory = FindFreshCategoryChoice(SelectedScheduledCategory, ScheduledCategoryChoices)
+            ?? ScheduledCategoryChoices.FirstOrDefault();
+        SelectedGroupedSpendingCategory = FindFreshCategoryChoice(SelectedGroupedSpendingCategory, GroupedSpendingCategoryChoices)
+            ?? GroupedSpendingCategoryChoices.FirstOrDefault();
     }
 
     private Account? FindFreshAccount(Account? account)
@@ -1193,28 +1742,42 @@ public sealed class FinanceDataViewModel : ViewModelBase
             : Accounts.FirstOrDefault(candidate => candidate.Id == account.Id);
     }
 
-    private CategoryChoiceViewModel? FindFreshCategoryChoice(CategoryChoiceViewModel? categoryChoice)
+    private CategoryChoiceViewModel? FindFreshCategoryChoice(
+        CategoryChoiceViewModel? categoryChoice,
+        IEnumerable<CategoryChoiceViewModel> choices)
     {
         return categoryChoice is null
             ? null
-            : CategoryChoices.FirstOrDefault(candidate => candidate.CategoryId == categoryChoice.CategoryId);
+            : choices.FirstOrDefault(candidate =>
+                candidate.CategoryId == categoryChoice.CategoryId
+                && string.Equals(candidate.Name, categoryChoice.Name, StringComparison.OrdinalIgnoreCase));
     }
 
     private void UpdateCategoryChoices()
     {
-        var existingNames = Categories
+        Replace(TransactionCategoryChoices, CreateCategoryChoices(SelectedTransactionType));
+        Replace(ScheduledCategoryChoices, CreateCategoryChoices(SelectedScheduledType));
+        Replace(GroupedSpendingCategoryChoices, CreateCategoryChoices(TransactionType.Expense));
+    }
+
+    private IEnumerable<CategoryChoiceViewModel> CreateCategoryChoices(TransactionType type)
+    {
+        var savedCategories = Categories
+            .Where(category => category.Type is null || category.Type == type)
+            .OrderBy(category => category.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var existingNames = savedCategories
             .Select(category => category.Name)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var choices = new[]
+
+        return new[]
             {
                 CategoryChoiceViewModel.None
             }
-            .Concat(Categories.Select(category => new CategoryChoiceViewModel(category.Id, category.Name)))
-            .Concat(DefaultCategoryNames
-                .Where(defaultName => !existingNames.Contains(defaultName))
-                .Select(defaultName => CategoryChoiceViewModel.Suggestion(defaultName)));
-
-        Replace(CategoryChoices, choices);
+            .Concat(savedCategories.Select(category => new CategoryChoiceViewModel(category.Id, category.Name, type)))
+            .Concat(DefaultCategories
+                .Where(defaultCategory => defaultCategory.Type == type && !existingNames.Contains(defaultCategory.Name))
+                .Select(defaultCategory => CategoryChoiceViewModel.Suggestion(defaultCategory.Name, defaultCategory.Type)));
     }
 
     private void UpdateSummaries()
@@ -1392,6 +1955,68 @@ public sealed class FinanceDataViewModel : ViewModelBase
     }
 }
 
+public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
+{
+    private ExpectedTransactionReview source;
+    private string decisionText;
+
+    public ExpectedTransactionReviewViewModel(
+        ExpectedTransactionReview source,
+        string accountName,
+        string? categoryName,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
+    {
+        this.source = source;
+        AccountName = accountName;
+        CategoryText = categoryName ?? "None";
+        AmountText = $"{currency} {source.ExpectedEvent.Amount:N2}";
+        DateText = DateDisplay.Format(source.ExpectedEvent.Date, dateDisplayFormat);
+        TypeText = DisplayText.Format(source.ExpectedEvent.Type);
+        decisionText = DisplayText.Format(source.Decision);
+    }
+
+    public ExpectedTransactionReview Source => source;
+
+    public string Name => source.ExpectedEvent.Name;
+
+    public string AccountName { get; }
+
+    public string CategoryText { get; }
+
+    public string AmountText { get; }
+
+    public string DateText { get; }
+
+    public string TypeText { get; }
+
+    public string DetailText => $"{DateText} - {AccountName} - {TypeText} - {AmountText} - {CategoryText}";
+
+    public string DecisionText
+    {
+        get => decisionText;
+        private set => SetProperty(ref decisionText, value);
+    }
+
+    public void MarkConfirmed()
+    {
+        source = source.Confirm();
+        DecisionText = "Confirmed and recorded";
+    }
+
+    public void MarkDelayed(DateOnly delayedUntil, DateDisplayFormat dateDisplayFormat)
+    {
+        source = source.DelayUntil(delayedUntil);
+        DecisionText = $"Delayed until {DateDisplay.Format(delayedUntil, dateDisplayFormat)}";
+    }
+
+    public void MarkCancelled()
+    {
+        source = source.Cancel();
+        DecisionText = "Skipped";
+    }
+}
+
 public sealed class AccountSummaryViewModel
 {
     public AccountSummaryViewModel(Account account)
@@ -1426,21 +2051,23 @@ public sealed class AccountSummaryViewModel
 
 public sealed class CategoryChoiceViewModel
 {
-    public static CategoryChoiceViewModel None { get; } = new(null, "None", IsNone: true, IsSuggestion: false);
+    public static CategoryChoiceViewModel None { get; } = new(null, "None", null, IsNone: true, IsSuggestion: false);
 
-    public static CategoryChoiceViewModel Suggestion(string name)
+    public static CategoryChoiceViewModel Suggestion(string name, TransactionType type)
     {
-        return new CategoryChoiceViewModel(null, name, IsNone: false, IsSuggestion: true);
+        return new CategoryChoiceViewModel(null, name, type, IsNone: false, IsSuggestion: true);
     }
 
     public CategoryChoiceViewModel(
         Guid? categoryId,
         string name,
+        TransactionType? type,
         bool IsNone = false,
         bool IsSuggestion = false)
     {
         CategoryId = categoryId;
         Name = name;
+        Type = type;
         this.IsNone = IsNone;
         this.IsSuggestion = IsSuggestion;
     }
@@ -1448,6 +2075,8 @@ public sealed class CategoryChoiceViewModel
     public Guid? CategoryId { get; }
 
     public string Name { get; }
+
+    public TransactionType? Type { get; }
 
     public bool IsNone { get; }
 
@@ -1464,7 +2093,11 @@ public sealed class CategorySummaryViewModel
     public Category Source { get; }
 
     public string Name => Source.Name;
+
+    public string TypeText => Source.Type is null ? "Income and expense" : DisplayText.Format(Source.Type);
 }
+
+internal sealed record DefaultCategoryDefinition(TransactionType Type, string Name);
 
 public sealed class TransactionSummaryViewModel
 {

@@ -37,14 +37,17 @@ public sealed class SqliteRepositoryTests
     public async Task CategoryRepository_SaveUpdateAndDelete_PersistsChanges()
     {
         await using var store = new SqliteTestStore();
-        var category = new Category(Guid.NewGuid(), "Food");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
 
         await store.Categories.SaveAsync(category);
-        await store.Categories.SaveAsync(category with { Name = "Groceries" });
+        var updated = category with { Name = "Groceries" };
+        await store.Categories.SaveAsync(updated);
+        var saved = await store.Categories.GetByIdAsync(category.Id);
         await store.Categories.DeleteAsync(category.Id);
 
         var loaded = await store.Categories.GetByIdAsync(category.Id);
 
+        Assert.Equal(updated, saved);
         Assert.Null(loaded);
     }
 

@@ -6,9 +6,9 @@ The project should start with the smallest usable forecasting product, then expa
 
 ## Active Branch Plan: Phase 7
 
-Branch: `codex/phase-7-ui-data-wiring`
+Branch: `codex/phase-7-workflow-completion-category-filtering`
 
-This branch moves UI data wiring ahead of product hardening. Hardening depends on users being able to exercise real workflows, so the app should first let users enter saved data, see forecasts from SQLite, and update key preferences from the desktop UI.
+This branch completes the most important UI data wiring before product hardening. Hardening depends on users being able to exercise real workflows, so the app should first let users enter saved data, see forecasts from SQLite, reconcile reality, and control local data from the desktop UI.
 
 ### Planned Deliverables
 
@@ -19,11 +19,15 @@ This branch moves UI data wiring ahead of product hardening. Hardening depends o
 - Add selected-account balance updates and credit-card payoff calculation controls.
 - Recalculate dashboard and forecast outputs from saved data.
 - Persist default currency, default forecast period, and reminder frequency from Preferences.
+- Filter income and expense category choices to match the selected transaction type.
+- Add a Reconciliation screen for expected scheduled item review, actual-balance comparison, grouped spending, and balance adjustments.
+- Add a Data screen for JSON backup/export, validation, merge/replace import, and a guarded delete-all-local-data workflow.
 
 ### Scope Boundaries
 
 - This phase favors usable saved workflows over final visual polish.
-- Category CRUD, detailed analytics, file-picker import/export UI, and polished dialogs can follow once the main data screens are alive.
+- Detailed analytics, polished dialogs, and native file-picker polish can follow once the main data screens are alive.
+- Desktop notifications remain in product hardening because reliable reminders require app lifecycle/tray behavior, not just saved reminder settings.
 - Appearance preferences beyond the existing runtime navigation/power-user toggles still need schema support before persistence.
 
 ## Active Branch Plan: Phase 6
@@ -671,8 +675,11 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Scheduled transactions UI wired to recurrence editor and `IScheduledTransactionRepository`.
 - Dashboard and forecast screens reading real stored data.
 - Preferences screen wired to `ISettingsRepository` and appearance preference storage.
-- Import/export screen wired to backup services and file pickers.
+- Import/export screen wired to backup services with path-based JSON files first; native file pickers can be polished later.
 - Brand asset folder for Banccoon logos and rotating mascot art.
+- Reconciliation screen wired to check-in, grouped spending, and balance-adjustment services.
+- Category pickers filtered by income/expense type, while older untyped categories remain usable.
+- Delete-all-data workflow with backup acknowledgement and explicit typed confirmation.
 
 ### Brand Assets
 
@@ -710,8 +717,9 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Real Transactions screen.
 - Real Scheduled screen.
 - Real Forecast screen.
+- Real Reconciliation screen.
 - Real Preferences screen.
-- Real Import/export screen.
+- Real Data/import/export screen.
 
 ### Testing Requirements
 
@@ -725,6 +733,8 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Data persists between app restarts and builds.
 - Dashboard and forecast use saved local data.
 - Preferences persist through restart.
+- Users can reconcile expected scheduled items against real balances.
+- Users can export, validate, merge/replace import, and intentionally reset local data from the app.
 
 ## Phase 8: Desktop Product Hardening
 
@@ -736,11 +746,13 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 ### Components To Build
 
 - Reminder configuration.
+- Tray/app lifecycle support for reminders.
+- Desktop notification scheduling once the app can keep a background/tray presence.
 - Error and validation presentation.
 - Empty states.
 - Import/export safety confirmations.
 - Database backup before risky operations.
-- Delete-all-data workflow for user-controlled local data resets.
+- Polish delete-all-data workflow with a focused Banccoon warning mascot and richer confirmations.
 - Settings screen hardening.
 - Logging that does not collect private analytics.
 
@@ -755,6 +767,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - `IReminderService`
 - `ISettingsService`
 - `IAppNotificationService`
+- `ITrayLifecycleService`
 - `ILocalDiagnosticsService`
 - `ILocalDataResetService`
 
@@ -766,6 +779,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 ### Screens Required
 
 - Reminder configuration.
+- Tray/background behavior for Windows reminders.
 - Diagnostics/export log option if needed.
 - Hardened import/export confirmations.
 - Delete-all-data confirmation flow with multiple checks and a focused Banccoon warning mascot.

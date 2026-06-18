@@ -111,9 +111,19 @@
                         Text="Forecast" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Reconciliation}"
+                        Style="{StaticResource ShellButton}"
+                        Text="Reconciliation" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Analytics}"
                         Style="{StaticResource ShellButton}"
                         Text="Analytics" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Data}"
+                        Style="{StaticResource ShellButton}"
+                        Text="Data" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Preferences}"
@@ -223,7 +233,9 @@
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Scheduled}" Style="{StaticResource QuietButton}" Text="Scheduled" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Goals}" Style="{StaticResource QuietButton}" Text="Goals" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Forecast}" Style="{StaticResource QuietButton}" Text="Forecast" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Reconciliation}" Style="{StaticResource QuietButton}" Text="Reconciliation" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Analytics}" Style="{StaticResource QuietButton}" Text="Analytics" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Data}" Style="{StaticResource QuietButton}" Text="Data" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Preferences}" Style="{StaticResource QuietButton}" Text="Preferences" />
                     </HorizontalStackLayout>
                 </ScrollView>
@@ -479,7 +491,7 @@
                     <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
                         <Picker
                             ItemDisplayBinding="{Binding Name}"
-                            ItemsSource="{Binding Data.CategoryChoices}"
+                            ItemsSource="{Binding Data.TransactionCategoryChoices}"
                             SelectedItem="{Binding Data.SelectedTransactionCategory}" />
                         <Entry
                             Grid.Column="1"
@@ -511,6 +523,7 @@
                                     </Border.StrokeShape>
                                     <HorizontalStackLayout Spacing="8">
                                         <Label VerticalTextAlignment="Center" Text="{Binding Name}" />
+                                        <Label Style="{StaticResource MutedLabel}" VerticalTextAlignment="Center" Text="{Binding TypeText}" />
                                         <Button
                                             Command="{Binding BindingContext.Data.DeleteCategoryCommand, Source={x:Reference Page}}"
                                             CommandParameter="{Binding Source}"
@@ -605,7 +618,7 @@
                                 Text="{Binding Data.ScheduledRecurrenceSentencePreview}" />
                             <Picker
                                 ItemDisplayBinding="{Binding Name}"
-                                ItemsSource="{Binding Data.CategoryChoices}"
+                                ItemsSource="{Binding Data.ScheduledCategoryChoices}"
                                 SelectedItem="{Binding Data.SelectedScheduledCategory}" />
                             <Button Command="{Binding Data.AddScheduledTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save scheduled item" />
                         </VerticalStackLayout>
@@ -745,6 +758,87 @@
                     </CollectionView>
                 </VerticalStackLayout>
 
+                <VerticalStackLayout IsVisible="{Binding IsReconciliationSelected}" Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Reconciliation" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Check-in expected items" />
+                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                                    <DatePicker Date="{Binding Data.CheckInFromDate}" Format="{Binding Data.DatePickerFormat}" />
+                                    <DatePicker Grid.Column="1" Date="{Binding Data.CheckInToDate}" Format="{Binding Data.DatePickerFormat}" />
+                                    <Button Grid.Column="2" Command="{Binding Data.CreateCheckInCommand}" Style="{StaticResource PrimaryButton}" Text="Load" />
+                                </Grid>
+                                <CollectionView HeightRequest="230" ItemsSource="{Binding Data.CheckInExpectedTransactions}">
+                                    <CollectionView.EmptyView>
+                                        <Label Style="{StaticResource MutedLabel}" Text="No expected items loaded for this check-in period." />
+                                    </CollectionView.EmptyView>
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,8" Padding="12" BackgroundColor="{StaticResource SurfaceMutedColor}" StrokeThickness="0">
+                                                <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <VerticalStackLayout Spacing="2">
+                                                        <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                                        <Label Style="{StaticResource MutedLabel}" Text="{Binding DetailText}" />
+                                                        <Label Style="{StaticResource MutedLabel}" Text="{Binding DecisionText}" />
+                                                    </VerticalStackLayout>
+                                                    <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                                        <Button Command="{Binding BindingContext.Data.ConfirmExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Confirm" />
+                                                        <Button Command="{Binding BindingContext.Data.DelayExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Delay" />
+                                                        <Button Command="{Binding BindingContext.Data.CancelExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Skip" />
+                                                    </HorizontalStackLayout>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Reality comparison" />
+                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                                    <Entry Keyboard="Numeric" Placeholder="Actual total balance" Text="{Binding Data.ActualBalanceText}" />
+                                    <DatePicker Grid.Column="1" Date="{Binding Data.ActualBalanceDate}" Format="{Binding Data.DatePickerFormat}" />
+                                    <Button Grid.Column="2" Command="{Binding Data.CompareRealityCommand}" Style="{StaticResource PrimaryButton}" Text="Compare" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <VerticalStackLayout>
+                                        <Label Style="{StaticResource MutedLabel}" Text="Expected" />
+                                        <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationExpectedText}" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Style="{StaticResource MutedLabel}" Text="Actual" />
+                                        <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationActualText}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <VerticalStackLayout>
+                                        <Label Style="{StaticResource MutedLabel}" Text="Difference" />
+                                        <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationDifferenceText}" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Style="{StaticResource MutedLabel}" Text="Status" />
+                                        <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationStatusText}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.ReconciliationAccount}" Title="Account to update" />
+                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                                    <Entry Keyboard="Numeric" Placeholder="Grouped spending amount" Text="{Binding Data.GroupedSpendingAmountText}" />
+                                    <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.GroupedSpendingCategoryChoices}" SelectedItem="{Binding Data.SelectedGroupedSpendingCategory}" />
+                                    <Button Grid.Column="2" Command="{Binding Data.AddGroupedSpendingCommand}" Style="{StaticResource QuietButton}" Text="Add spending" />
+                                </Grid>
+                                <Entry Placeholder="Grouped spending notes" Text="{Binding Data.GroupedSpendingNotes}" />
+                                <Button Command="{Binding Data.AddBalanceAdjustmentCommand}" Style="{StaticResource QuietButton}" Text="Add balance adjustment" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
                 <VerticalStackLayout IsVisible="{Binding IsAnalyticsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Analytics" />
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
@@ -771,6 +865,60 @@
                         </Border>
                     </Grid>
                     <Label Style="{StaticResource MutedLabel}" Text="Richer trend and category analytics can build on these saved local transactions once category management is wired." />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsDataSelected}" Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Data" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Export backup" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Creates a human-readable JSON file containing accounts, transactions, scheduled items, categories, goals, and settings." />
+                                <Entry Text="{Binding Data.ExportPathText}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Command="{Binding Data.CreateBackupCommand}" Style="{StaticResource PrimaryButton}" Text="Create backup" />
+                                    <Button Command="{Binding Data.ResetExportPathCommand}" Style="{StaticResource QuietButton}" Text="New path" />
+                                    <Button Command="{Binding Data.CopyExportPathToImportCommand}" Style="{StaticResource QuietButton}" Text="Use for import" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Import or restore" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Validate first when you are not sure. Merge preserves local data; replace clears local data before restore." />
+                                <Entry Placeholder="Path to Banccoon JSON backup" Text="{Binding Data.ImportPathText}" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.ImportModes}"
+                                    SelectedItem="{Binding Data.SelectedImportMode}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Command="{Binding Data.ValidateImportCommand}" Style="{StaticResource QuietButton}" Text="Validate" />
+                                    <Button Command="{Binding Data.RestoreBackupCommand}" Style="{StaticResource PrimaryButton}" Text="Run import" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="8">
+                            <Label FontAttributes="Bold" Text="Import/export status" />
+                            <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.ImportExportSummary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="#F7E8E8" Stroke="#E1B5B5">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label FontAttributes="Bold" Text="Delete all local data" />
+                            <Label Style="{StaticResource MutedLabel}" Text="For testing and full data ownership. Create an export first unless you truly want to start over." />
+                            <CheckBox IsChecked="{Binding Data.DeleteAllBackupAcknowledged}" />
+                            <Label Style="{StaticResource MutedLabel}" Text="I have exported a backup or intentionally do not want one." />
+                            <Entry Placeholder="Type DELETE ALL DATA" Text="{Binding Data.DeleteAllConfirmationText}" />
+                            <Button Command="{Binding Data.DeleteAllDataCommand}" Style="{StaticResource QuietButton}" Text="Delete all local data" />
+                        </VerticalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">

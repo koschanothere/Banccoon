@@ -25,7 +25,9 @@ public sealed class ShellViewModel : ViewModelBase
             new(AppSection.Scheduled, "Scheduled", "S", "Recurring income, bills, and reminders."),
             new(AppSection.Goals, "Goals", "G", "Savings reservations that reduce safe-to-spend."),
             new(AppSection.Forecast, "Forecast", "F", "Future balances and lowest balance points."),
+            new(AppSection.Reconciliation, "Reconciliation", "R", "Check expected events against real balances."),
             new(AppSection.Analytics, "Analytics", "N", "Trends, categories, and money patterns."),
+            new(AppSection.Data, "Data", "X", "Portable backups, restores, and local data control."),
             new(AppSection.Preferences, "Preferences", "P", "Theme, navigation, privacy, and defaults.")
         ];
 
@@ -85,7 +87,9 @@ public sealed class ShellViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsScheduledSelected));
                 OnPropertyChanged(nameof(IsGoalsSelected));
                 OnPropertyChanged(nameof(IsForecastSelected));
+                OnPropertyChanged(nameof(IsReconciliationSelected));
                 OnPropertyChanged(nameof(IsAnalyticsSelected));
+                OnPropertyChanged(nameof(IsDataSelected));
                 OnPropertyChanged(nameof(IsPreferencesSelected));
             }
         }
@@ -179,7 +183,11 @@ public sealed class ShellViewModel : ViewModelBase
 
     public bool IsForecastSelected => SelectedSection == AppSection.Forecast;
 
+    public bool IsReconciliationSelected => SelectedSection == AppSection.Reconciliation;
+
     public bool IsAnalyticsSelected => SelectedSection == AppSection.Analytics;
+
+    public bool IsDataSelected => SelectedSection == AppSection.Data;
 
     public bool IsPreferencesSelected => SelectedSection == AppSection.Preferences;
 

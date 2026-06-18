@@ -8,6 +8,8 @@ public enum AppSection
     Scheduled,
     Goals,
     Forecast,
+    Reconciliation,
     Analytics,
+    Data,
     Preferences
 }
