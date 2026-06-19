@@ -240,6 +240,28 @@ public sealed class StatementImportService : IStatementImportService
         return skippedRow;
     }
 
+    public async Task<StatementImportCancelResult> CancelImportAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default)
+    {
+        var batch = await statementImportRepository.GetBatchByIdAsync(batchId, cancellationToken);
+        if (batch is null)
+        {
+            return new StatementImportCancelResult(false, "The statement import could not be found.");
+        }
+
+        var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
+        if (rows.Any(row => row.Status == StatementImportRowStatus.Approved))
+        {
+            return new StatementImportCancelResult(
+                false,
+                "This statement already created transactions, so the import batch cannot be cancelled.");
+        }
+
+        await statementImportRepository.DeleteBatchAsync(batchId, cancellationToken);
+        return new StatementImportCancelResult(true, "Statement import cancelled.");
+    }
+
     private StatementImportRow CreateImportRow(
         Guid batchId,
         ParsedStatementRow parsedRow,

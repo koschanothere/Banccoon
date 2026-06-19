@@ -290,9 +290,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         AnalyzeStatementCommand = new AsyncRelayCommand(AnalyzeStatementAsync);
         ConnectStatementAccountCommand = new AsyncRelayCommand(ConnectStatementAccountAsync);
         CreateStatementAccountFromStatementCommand = new AsyncRelayCommand(CreateStatementAccountFromStatementAsync);
+        CancelStatementImportCommand = new AsyncRelayCommand(CancelStatementImportAsync);
         RefreshStatementImportsCommand = new AsyncRelayCommand(RefreshStatementImportsAsync);
-        ApproveStatementRowCommand = new AsyncRelayCommand(ApproveSelectedStatementRowAsync);
-        SkipStatementRowCommand = new AsyncRelayCommand(SkipSelectedStatementRowAsync);
+        ApproveStatementRowCommand = new AsyncRelayCommand<StatementImportRowSummaryViewModel>(ApproveStatementRowAsync);
+        SkipStatementRowCommand = new AsyncRelayCommand<StatementImportRowSummaryViewModel>(SkipStatementRowAsync);
         ResetExportPathCommand = new RelayCommand(() => ExportPathText = CreateDefaultBackupPath());
         CopyExportPathToImportCommand = new RelayCommand(() => ImportPathText = ExportPathText);
         DeleteAllDataCommand = new AsyncRelayCommand(DeleteAllDataAsync);
@@ -450,6 +451,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand ConnectStatementAccountCommand { get; }
 
     public ICommand CreateStatementAccountFromStatementCommand { get; }
+
+    public ICommand CancelStatementImportCommand { get; }
 
     public ICommand RefreshStatementImportsCommand { get; }
 
@@ -2618,39 +2621,59 @@ public sealed class FinanceDataViewModel : ViewModelBase
         });
     }
 
-    private async Task ApproveSelectedStatementRowAsync()
+    private async Task CancelStatementImportAsync()
     {
-        if (SelectedStatementImportRow is null)
+        if (SelectedStatementImportBatch is null)
         {
-            SetStatus("Select a statement row to import.");
+            SetStatus("No statement import is selected.");
             return;
         }
 
         await RunBusyAsync(async () =>
         {
-            var categoryId = await ResolveCategoryAsync(
-                StatementImportCategoryName,
-                SelectedStatementImportCategory,
-                SelectedStatementImportRow.Source.Type);
-            await statementImportService.ApproveRowAsync(SelectedStatementImportRow.Source.Id, categoryId);
-            StatementImportCategoryName = string.Empty;
+            var result = await statementImportService.CancelImportAsync(SelectedStatementImportBatch.Source.Id);
+            StatementImportStatusText = result.Message;
+            if (result.Cancelled)
+            {
+                ClearPendingStatementResolution();
+                await RefreshStatementImportsCoreAsync();
+                SetStatus(result.Message, clearAutomatically: true);
+                return;
+            }
+
+            SetStatus(result.Message);
+        });
+    }
+
+    private async Task ApproveStatementRowAsync(StatementImportRowSummaryViewModel row)
+    {
+        if (row.Source.Status != StatementImportRowStatus.Pending)
+        {
+            SetStatus("That statement row has already been reviewed.");
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var categoryId = await ResolveCategoryChoiceAsync(row.SelectedCategory, row.Source.Type);
+            await statementImportService.ApproveRowAsync(row.Source.Id, categoryId);
             await RefreshAsync();
             SetStatus("Statement row imported as a transaction.", clearAutomatically: true);
         });
     }
 
-    private async Task SkipSelectedStatementRowAsync()
+    private async Task SkipStatementRowAsync(StatementImportRowSummaryViewModel row)
     {
-        if (SelectedStatementImportRow is null)
+        if (row.Source.Status != StatementImportRowStatus.Pending)
         {
-            SetStatus("Select a statement row to skip.");
+            SetStatus("That statement row has already been reviewed.");
             return;
         }
 
         await RunBusyAsync(async () =>
         {
-            await statementImportService.SkipRowAsync(SelectedStatementImportRow.Source.Id);
-            await RefreshStatementImportsCoreAsync(SelectedStatementImportBatch?.Source.Id);
+            await statementImportService.SkipRowAsync(row.Source.Id);
+            await RefreshStatementImportsCoreAsync(SelectedStatementImportBatch?.Source.Id ?? row.Source.BatchId);
             SetStatus("Statement row skipped.", clearAutomatically: true);
         });
     }
@@ -2777,7 +2800,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 Categories.FirstOrDefault(category => category.Id == row.SuggestedCategoryId)?.Name,
                 Categories.FirstOrDefault(category => category.Id == row.CategoryId)?.Name,
                 DefaultCurrency,
-                SelectedDateDisplayFormat)));
+                SelectedDateDisplayFormat,
+                CreateCategoryChoices(row.Type))));
             SelectedStatementImportRow = StatementImportRows.FirstOrDefault(row =>
                     selectedStatementImportRow is not null && row.Source.Id == selectedStatementImportRow.Source.Id)
                 ?? StatementImportRows.FirstOrDefault(row => row.Source.Status == StatementImportRowStatus.Pending)
@@ -3545,6 +3569,21 @@ public sealed class FinanceDataViewModel : ViewModelBase
         StatementMatchedAccountText = "No account matched yet.";
     }
 
+    private void ClearPendingStatementResolution()
+    {
+        pendingStatementPreview = null;
+        pendingStatementFilePath = string.Empty;
+        StatementImportPathText = string.Empty;
+        StatementImportAccount = null;
+        StatementConnectAccount = Accounts.FirstOrDefault();
+        IsStatementAccountUnmatched = false;
+        StatementSelectedFileText = "No file selected.";
+        StatementDetectedAccountText = "No statement account detected yet.";
+        StatementDetectedCardText = string.Empty;
+        StatementMatchedAccountText = "No account matched yet.";
+        StatementImportStatusText = "No statement selected.";
+    }
+
     private Account? FindAccountByAccountNumber(string? accountNumber)
     {
         var normalized = NormalizeAccountNumber(accountNumber);
@@ -3565,7 +3604,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         var normalized = NormalizeAccountNumber(accountNumber);
         return string.IsNullOrWhiteSpace(normalized)
             ? "Account number was not found in the statement."
-            : $"Statement account ending {LastFour(normalized)}";
+            : $"Statement account {FormatAccountNumber(normalized)}";
     }
 
     private static string FormatDetectedCardText(string? cardLastFourDigits)
@@ -3582,11 +3621,23 @@ public sealed class FinanceDataViewModel : ViewModelBase
             : $"Sberbank card {statement.CardLastFourDigits}";
     }
 
-    private static string LastFour(string value)
+    private static string FormatAccountNumber(string? value)
     {
-        return value.Length <= 4
-            ? value
-            : value[^4..];
+        var normalized = NormalizeAccountNumber(value);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return string.Empty;
+        }
+
+        return string.Join(
+            ' ',
+            Enumerable.Range(0, (normalized.Length + 3) / 4)
+                .Select(index =>
+                {
+                    var start = index * 4;
+                    var length = Math.Min(4, normalized.Length - start);
+                    return normalized.Substring(start, length);
+                }));
     }
 
     private static string NormalizeAccountNumber(string? value)
@@ -3847,7 +3898,7 @@ public sealed class AccountSummaryViewModel
         {
             var accountNumber = string.IsNullOrWhiteSpace(Source.AccountNumber)
                 ? null
-                : $"Account {Source.AccountNumber}";
+                : $"Account {FormatAccountNumber(Source.AccountNumber)}";
             var card = string.IsNullOrWhiteSpace(Source.CardLastFourDigits)
                 ? null
                 : $"Card ending {Source.CardLastFourDigits}";
@@ -3880,6 +3931,25 @@ public sealed class AccountSummaryViewModel
             var payment = details?.PlannedPaymentAmount ?? details?.MinimumPayment;
             return payment is null ? debt : $"{debt}, {Source.Currency} {payment:N2} payment";
         }
+    }
+
+    private static string FormatAccountNumber(string value)
+    {
+        var normalized = string.Concat(value.Where(char.IsDigit));
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return value.Trim();
+        }
+
+        return string.Join(
+            ' ',
+            Enumerable.Range(0, (normalized.Length + 3) / 4)
+                .Select(index =>
+                {
+                    var start = index * 4;
+                    var length = Math.Min(4, normalized.Length - start);
+                    return normalized.Substring(start, length);
+                }));
     }
 }
 
@@ -4123,13 +4193,16 @@ public sealed class StatementImportRowSummaryViewModel
         string? suggestedCategoryName,
         string? categoryName,
         string currency,
-        DateDisplayFormat dateDisplayFormat)
+        DateDisplayFormat dateDisplayFormat,
+        IEnumerable<CategoryChoiceViewModel> categoryChoices)
     {
         Source = row;
         SuggestedCategoryName = suggestedCategoryName ?? "None";
         CategoryName = categoryName ?? "None";
         AmountText = $"{currency} {row.Amount:N2}";
         DateText = DateDisplay.Format(row.Date, dateDisplayFormat);
+        CategoryChoices = new ObservableCollection<CategoryChoiceViewModel>(categoryChoices);
+        SelectedCategory = CreateSelectedCategory();
     }
 
     public StatementImportRow Source { get; }
@@ -4146,6 +4219,12 @@ public sealed class StatementImportRowSummaryViewModel
 
     public string DuplicateText => Source.IsDuplicate ? "Possible duplicate" : "New";
 
+    public ObservableCollection<CategoryChoiceViewModel> CategoryChoices { get; }
+
+    public CategoryChoiceViewModel? SelectedCategory { get; set; }
+
+    public bool IsPending => Source.Status == StatementImportRowStatus.Pending;
+
     public string SuggestedCategoryName { get; }
 
     public string CategoryName { get; }
@@ -4155,6 +4234,23 @@ public sealed class StatementImportRowSummaryViewModel
         : Source.SuggestedCategoryId.HasValue
             ? $"Suggested: {SuggestedCategoryName}"
             : "No suggestion";
+
+    private CategoryChoiceViewModel? CreateSelectedCategory()
+    {
+        if (Source.CategoryId is { } categoryId)
+        {
+            return CategoryChoices.FirstOrDefault(choice => choice.CategoryId == categoryId)
+                ?? CategoryChoices.FirstOrDefault();
+        }
+
+        if (Source.SuggestedCategoryId is { } suggestedCategoryId)
+        {
+            return CategoryChoices.FirstOrDefault(choice => choice.CategoryId == suggestedCategoryId)
+                ?? CategoryChoices.FirstOrDefault();
+        }
+
+        return CategoryChoices.FirstOrDefault();
+    }
 }
 
 internal static class DisplayText

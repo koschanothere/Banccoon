@@ -96,6 +96,50 @@ public sealed class StatementImportServiceTests
     }
 
     [Fact]
+    public async Task CancelImportAsync_WhenNoRowsApproved_RemovesBatchAndRows()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(
+                new DateOnly(2026, 6, 10),
+                25m,
+                TransactionType.Expense,
+                "Lunch")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        var result = await service.CancelImportAsync(pending.Batch!.Id);
+
+        Assert.True(result.Cancelled);
+        Assert.Empty(await store.StatementImports.GetAllBatchesAsync());
+        Assert.Empty(await store.StatementImports.GetRowsByBatchIdAsync(pending.Batch.Id));
+    }
+
+    [Fact]
+    public async Task CancelImportAsync_WhenRowsApproved_DoesNotRemoveBatch()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(
+                new DateOnly(2026, 6, 10),
+                25m,
+                TransactionType.Expense,
+                "Lunch")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        await service.ApproveRowAsync(Assert.Single(pending.Rows).Id, null);
+
+        var result = await service.CancelImportAsync(pending.Batch!.Id);
+
+        Assert.False(result.Cancelled);
+        Assert.NotNull(await store.StatementImports.GetBatchByIdAsync(pending.Batch.Id));
+    }
+
+    [Fact]
     public async Task CreatePendingImportAsync_FlagsLikelyDuplicates()
     {
         await using var store = new SqliteTestStore();

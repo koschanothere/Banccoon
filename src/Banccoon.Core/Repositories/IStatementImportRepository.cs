@@ -16,5 +16,7 @@ public interface IStatementImportRepository
 
     Task SaveRowAsync(StatementImportRow row, CancellationToken cancellationToken = default);
 
+    Task DeleteBatchAsync(Guid batchId, CancellationToken cancellationToken = default);
+
     Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

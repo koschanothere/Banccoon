@@ -25,4 +25,8 @@ public interface IStatementImportService
     Task<StatementImportRow> SkipRowAsync(
         Guid rowId,
         CancellationToken cancellationToken = default);
+
+    Task<StatementImportCancelResult> CancelImportAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default);
 }

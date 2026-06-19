@@ -231,6 +231,49 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task StatementImportRepository_DeleteBatch_RemovesBatchAndRows()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake parser",
+            "statement.fake",
+            "C:\\statement.fake",
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 1);
+        var row = new StatementImportRow(
+            Guid.NewGuid(),
+            batch.Id,
+            new DateOnly(2026, 6, 10),
+            25m,
+            TransactionType.Expense,
+            "Lunch",
+            "LUNCH",
+            null,
+            null,
+            null,
+            null,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+
+        await store.Accounts.SaveAsync(account);
+        await store.StatementImports.SaveBatchAsync(batch);
+        await store.StatementImports.SaveRowAsync(row);
+
+        await store.StatementImports.DeleteBatchAsync(batch.Id);
+
+        Assert.Empty(await store.StatementImports.GetAllBatchesAsync());
+        Assert.Empty(await store.StatementImports.GetRowsByBatchIdAsync(batch.Id));
+    }
+
+    [Fact]
     public async Task CategoryLearningRuleRepository_SaveAndGet_RoundTripsRule()
     {
         await using var store = new SqliteTestStore();

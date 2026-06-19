@@ -228,6 +228,24 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteBatchAsync(Guid batchId, CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM StatementImportRows
+            WHERE BatchId = @BatchId;
+
+            DELETE FROM StatementImportBatches
+            WHERE Id = @BatchId;
+            """;
+        AddParameter(command, "@BatchId", batchId.ToString());
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken);

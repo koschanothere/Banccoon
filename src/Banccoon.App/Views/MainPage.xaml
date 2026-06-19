@@ -347,7 +347,12 @@
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardCurrentBalanceText}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border
+                            Grid.Column="1"
+                            IsVisible="{Binding Data.IsAccountsEditing}"
+                            Padding="16"
+                            BackgroundColor="{StaticResource SurfaceColor}"
+                            Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Upcoming obligations" />
@@ -684,9 +689,9 @@
 
                 <VerticalStackLayout IsVisible="{Binding IsStatementsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Statements" />
-                    <Grid ColumnDefinitions="1.1*,1.4*" ColumnSpacing="18">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="1.1*,1.3*" ColumnSpacing="18">
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Import bank statement" />
                                 <Button Command="{Binding Data.PickStatementFileCommand}" Style="{StaticResource PrimaryButton}" Text="Import statement" />
@@ -696,6 +701,9 @@
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementDetectedCardText}" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementMatchedAccountText}" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementImportStatusText}" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="10">
                                 <VerticalStackLayout IsVisible="{Binding Data.IsStatementAccountUnmatched}" Spacing="8">
                                     <Label FontAttributes="Bold" Text="Connect statement account" />
                                     <Picker
@@ -709,44 +717,26 @@
                                     <Picker ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.StatementNewAccountCurrency}" Title="Currency" />
                                     <Button Command="{Binding Data.CreateStatementAccountFromStatementCommand}" Style="{StaticResource QuietButton}" Text="Create new account" />
                                 </VerticalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
-
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                            <VerticalStackLayout Spacing="10">
-                                <Label FontAttributes="Bold" Text="Review batch" />
+                                <Label FontAttributes="Bold" Text="Current review batch" />
                                 <Picker
                                     ItemDisplayBinding="{Binding DisplayTitle}"
                                     ItemsSource="{Binding Data.StatementImportBatchSummaries}"
                                     SelectedItem="{Binding Data.SelectedStatementImportBatch}"
                                     Title="Statement import batch" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedStatementImportBatch.DetailText}" />
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                    <Picker
-                                        ItemDisplayBinding="{Binding Name}"
-                                        ItemsSource="{Binding Data.StatementImportCategoryChoices}"
-                                        SelectedItem="{Binding Data.SelectedStatementImportCategory}" />
-                                    <Entry
-                                        Grid.Column="1"
-                                        Placeholder="New category, optional"
-                                        Text="{Binding Data.StatementImportCategoryName}" />
-                                </Grid>
-                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedStatementImportRow.CategoryText}" />
                                 <HorizontalStackLayout Spacing="8">
-                                    <Button Command="{Binding Data.ApproveStatementRowCommand}" Style="{StaticResource PrimaryButton}" Text="Import row" />
-                                    <Button Command="{Binding Data.SkipStatementRowCommand}" Style="{StaticResource QuietButton}" Text="Skip row" />
+                                    <Button Command="{Binding Data.CancelStatementImportCommand}" Style="{StaticResource QuietButton}" Text="Cancel import" />
                                     <Button Command="{Binding Data.RefreshStatementImportsCommand}" Style="{StaticResource QuietButton}" Text="Refresh" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
-                        </Border>
-                    </Grid>
+                        </Grid>
+                    </Border>
 
                     <CollectionView
                         HeightRequest="340"
                         ItemsSource="{Binding Data.StatementImportRows}"
-                        SelectedItem="{Binding Data.SelectedStatementImportRow, Mode=TwoWay}"
-                        SelectionMode="Single">
+                        SelectionMode="None"
+                        VerticalScrollBarVisibility="Always">
                         <CollectionView.EmptyView>
                             <Label Style="{StaticResource MutedLabel}" Text="No statement rows yet. Import a supported statement to review rows." />
                         </CollectionView.EmptyView>
@@ -754,15 +744,35 @@
                             <DataTemplate>
                                 <Border Margin="0,0,0,6" Padding="10" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                                    <Grid ColumnDefinitions="92,2*,110,90,1.2*" ColumnSpacing="12">
+                                    <Grid ColumnDefinitions="92,2*,110,170,Auto,Auto" ColumnSpacing="10">
                                         <Label Style="{StaticResource MutedLabel}" Text="{Binding DateText}" VerticalTextAlignment="Center" />
                                         <VerticalStackLayout Grid.Column="1" Spacing="1">
                                             <Label FontAttributes="Bold" LineBreakMode="TailTruncation" Text="{Binding Description}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding TypeText}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding DuplicateText}" />
                                         </VerticalStackLayout>
                                         <Label Grid.Column="2" FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" VerticalTextAlignment="Center" />
-                                        <Label Grid.Column="3" Style="{StaticResource MutedLabel}" Text="{Binding StatusText}" VerticalTextAlignment="Center" />
-                                        <Label Grid.Column="4" LineBreakMode="TailTruncation" Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" VerticalTextAlignment="Center" />
+                                        <Picker
+                                            Grid.Column="3"
+                                            IsEnabled="{Binding IsPending}"
+                                            ItemDisplayBinding="{Binding Name}"
+                                            ItemsSource="{Binding CategoryChoices}"
+                                            SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                                            Title="Category" />
+                                        <Button
+                                            Grid.Column="4"
+                                            Command="{Binding BindingContext.Data.ApproveStatementRowCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding .}"
+                                            IsEnabled="{Binding IsPending}"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Text="Import" />
+                                        <Button
+                                            Grid.Column="5"
+                                            Command="{Binding BindingContext.Data.SkipStatementRowCommand, Source={x:Reference Page}}"
+                                            CommandParameter="{Binding .}"
+                                            IsEnabled="{Binding IsPending}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Skip" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
