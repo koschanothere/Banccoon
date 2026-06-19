@@ -750,6 +750,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 ### Components To Build
 
 - Parser contracts and registry with no real bank parser until a redacted sample statement is provided.
+- Sberbank debit-card PDF parser from the first provided statement sample.
 - Statement import batches and rows stored separately from normal transactions.
 - Review workflow for parsed rows, duplicate warnings, category assignment, skip, and import.
 - Local category learning rules based on normalized merchant/source text, transaction type, optional account scope, and optional amount hint.

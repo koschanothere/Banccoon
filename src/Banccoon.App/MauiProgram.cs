@@ -13,6 +13,7 @@ using Banccoon.Core.Transactions;
 using Banccoon.Infrastructure.Database;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
+using Banccoon.Infrastructure.Statements;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Banccoon.App;
@@ -38,6 +39,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ICreditCardForecastService, CreditCardForecastService>();
         builder.Services.AddSingleton<ITransactionBalanceService, TransactionBalanceService>();
         builder.Services.AddSingleton<ICategorySuggestionService, CategorySuggestionService>();
+        builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
         builder.Services.AddSingleton<IStatementImportService, StatementImportService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
