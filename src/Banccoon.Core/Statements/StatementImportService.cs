@@ -37,6 +37,35 @@ public sealed class StatementImportService : IStatementImportService
         this.categorySuggestionService = categorySuggestionService;
     }
 
+    public async Task<StatementPreviewResult> PreviewAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new StatementPreviewResult(
+                ParserAvailable: false,
+                "Choose a bank statement file first.",
+                null);
+        }
+
+        var request = new StatementParseRequest(filePath);
+        var parser = parserRegistry.FindParser(request);
+        if (parser is null)
+        {
+            return new StatementPreviewResult(
+                ParserAvailable: false,
+                "No parser is available for this statement yet.",
+                null);
+        }
+
+        var parsedStatement = await parser.ParseAsync(request, cancellationToken);
+        return new StatementPreviewResult(
+            ParserAvailable: true,
+            $"{parsedStatement.Rows.Count} statement row(s) found.",
+            parsedStatement);
+    }
+
     public async Task<StatementImportCreateResult> CreatePendingImportAsync(
         Guid accountId,
         string filePath,
@@ -69,6 +98,32 @@ public sealed class StatementImportService : IStatementImportService
         }
 
         var parsedStatement = await parser.ParseAsync(request, cancellationToken);
+        return await CreatePendingImportAsync(accountId, filePath, parsedStatement, cancellationToken);
+    }
+
+    public async Task<StatementImportCreateResult> CreatePendingImportAsync(
+        Guid accountId,
+        string filePath,
+        ParsedStatement parsedStatement,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parsedStatement);
+
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new StatementImportCreateResult(
+                ParserAvailable: false,
+                "Choose a bank statement file first.",
+                null,
+                Array.Empty<StatementImportRow>());
+        }
+
+        var account = await accountRepository.GetByIdAsync(accountId, cancellationToken);
+        if (account is null)
+        {
+            throw new InvalidOperationException("The selected account could not be found.");
+        }
+
         var batch = new StatementImportBatch(
             Guid.NewGuid(),
             accountId,

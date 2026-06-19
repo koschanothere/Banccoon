@@ -12,6 +12,8 @@ public sealed class SberbankDebitCardStatementParserTests
         var parser = new SberbankDebitCardStatementParser();
         var lines = new[]
         {
+            "РќРѕРјРµСЂ СЃС‡С‘С‚Р° 40817 810 3 1234 5678901",
+            "РљР°СЂС‚Р° РњРР  Р—РѕР»РѕС‚Р°СЏ •••• 1234",
             "999 www.sberbank.ru Заказано в СберБанк Онлайн",
             "Выписка по счёту дебетовой карты",
             "За период 01.06.2026 — 30.06.2026",
@@ -31,6 +33,8 @@ public sealed class SberbankDebitCardStatementParserTests
         Assert.Equal(new DateOnly(2026, 6, 30), parsed.PeriodEnd);
         Assert.Equal(1000m, parsed.OpeningBalance);
         Assert.Equal(1850m, parsed.ClosingBalance);
+        Assert.Equal("40817810312345678901", parsed.AccountNumber);
+        Assert.Equal("1234", parsed.CardLastFourDigits);
 
         Assert.Collection(
             parsed.Rows,

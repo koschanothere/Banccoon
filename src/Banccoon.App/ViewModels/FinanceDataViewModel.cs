@@ -11,6 +11,7 @@ using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
 using Banccoon.Core.Statements;
+using Microsoft.Maui.Storage;
 
 namespace Banccoon.App.ViewModels;
 
@@ -181,6 +182,16 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private Account? statementImportAccount;
     private string statementImportPathText = string.Empty;
     private string statementImportStatusText = "No statement selected.";
+    private ParsedStatement? pendingStatementPreview;
+    private string pendingStatementFilePath = string.Empty;
+    private Account? statementConnectAccount;
+    private string statementNewAccountName = "Imported statement account";
+    private string statementNewAccountCurrency = "RUB";
+    private string statementSelectedFileText = "No file selected.";
+    private string statementDetectedAccountText = "No statement account detected yet.";
+    private string statementDetectedCardText = string.Empty;
+    private string statementMatchedAccountText = "No account matched yet.";
+    private bool isStatementAccountUnmatched;
     private StatementImportBatchSummaryViewModel? selectedStatementImportBatch;
     private StatementImportRowSummaryViewModel? selectedStatementImportRow;
     private CategoryChoiceViewModel? selectedStatementImportCategory;
@@ -275,7 +286,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync);
         ValidateImportCommand = new AsyncRelayCommand(ValidateImportAsync);
         RestoreBackupCommand = new AsyncRelayCommand(RestoreBackupAsync);
+        PickStatementFileCommand = new AsyncRelayCommand(PickStatementFileAsync);
         AnalyzeStatementCommand = new AsyncRelayCommand(AnalyzeStatementAsync);
+        ConnectStatementAccountCommand = new AsyncRelayCommand(ConnectStatementAccountAsync);
+        CreateStatementAccountFromStatementCommand = new AsyncRelayCommand(CreateStatementAccountFromStatementAsync);
         RefreshStatementImportsCommand = new AsyncRelayCommand(RefreshStatementImportsAsync);
         ApproveStatementRowCommand = new AsyncRelayCommand(ApproveSelectedStatementRowAsync);
         SkipStatementRowCommand = new AsyncRelayCommand(SkipSelectedStatementRowAsync);
@@ -429,7 +443,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ICommand RestoreBackupCommand { get; }
 
+    public ICommand PickStatementFileCommand { get; }
+
     public ICommand AnalyzeStatementCommand { get; }
+
+    public ICommand ConnectStatementAccountCommand { get; }
+
+    public ICommand CreateStatementAccountFromStatementCommand { get; }
 
     public ICommand RefreshStatementImportsCommand { get; }
 
@@ -1469,7 +1489,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         {
             if (SetProperty(ref statementImportAccount, value))
             {
-                UpdateStatementParserStatus();
+                StatementMatchedAccountText = value is null
+                    ? "No account matched yet."
+                    : $"Matched account: {value.Name}";
+                OnPropertyChanged(nameof(HasStatementMatchedAccount));
             }
         }
     }
@@ -1481,10 +1504,63 @@ public sealed class FinanceDataViewModel : ViewModelBase
         {
             if (SetProperty(ref statementImportPathText, value))
             {
+                StatementSelectedFileText = string.IsNullOrWhiteSpace(value)
+                    ? "No file selected."
+                    : Path.GetFileName(value);
                 UpdateStatementParserStatus();
             }
         }
     }
+
+    public Account? StatementConnectAccount
+    {
+        get => statementConnectAccount;
+        set => SetProperty(ref statementConnectAccount, value);
+    }
+
+    public string StatementNewAccountName
+    {
+        get => statementNewAccountName;
+        set => SetProperty(ref statementNewAccountName, value);
+    }
+
+    public string StatementNewAccountCurrency
+    {
+        get => statementNewAccountCurrency;
+        set => SetProperty(ref statementNewAccountCurrency, NormalizeCurrency(value));
+    }
+
+    public string StatementSelectedFileText
+    {
+        get => statementSelectedFileText;
+        private set => SetProperty(ref statementSelectedFileText, value);
+    }
+
+    public string StatementDetectedAccountText
+    {
+        get => statementDetectedAccountText;
+        private set => SetProperty(ref statementDetectedAccountText, value);
+    }
+
+    public string StatementDetectedCardText
+    {
+        get => statementDetectedCardText;
+        private set => SetProperty(ref statementDetectedCardText, value);
+    }
+
+    public string StatementMatchedAccountText
+    {
+        get => statementMatchedAccountText;
+        private set => SetProperty(ref statementMatchedAccountText, value);
+    }
+
+    public bool IsStatementAccountUnmatched
+    {
+        get => isStatementAccountUnmatched;
+        private set => SetProperty(ref isStatementAccountUnmatched, value);
+    }
+
+    public bool HasStatementMatchedAccount => StatementImportAccount is not null;
 
     public string StatementImportStatusText
     {
@@ -2403,29 +2479,133 @@ public sealed class FinanceDataViewModel : ViewModelBase
         });
     }
 
+    private async Task PickStatementFileAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Choose a bank statement"
+            });
+
+            if (result is null)
+            {
+                SetStatus("Statement import cancelled.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(result.FullPath))
+            {
+                SetStatus("The selected file did not provide a local path.");
+                return;
+            }
+
+            await PreviewAndResolveStatementAsync(result.FullPath);
+        });
+    }
+
     private async Task AnalyzeStatementAsync()
     {
         await RunBusyAsync(async () =>
         {
             if (StatementImportAccount is null)
             {
-                SetStatus("Select the account this statement belongs to.");
+                SetStatus("Import a statement file first so Banccoon can match the account.");
                 return;
             }
 
-            var result = await statementImportService.CreatePendingImportAsync(
-                StatementImportAccount.Id,
-                StatementImportPathText.Trim());
-            StatementImportStatusText = result.Message;
+            await CreatePendingStatementImportAsync(
+                StatementImportAccount,
+                pendingStatementPreview,
+                pendingStatementFilePath);
+        });
+    }
 
-            if (result.Batch is not null)
+    private async Task ConnectStatementAccountAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (pendingStatementPreview is null || string.IsNullOrWhiteSpace(pendingStatementFilePath))
             {
-                await RefreshStatementImportsCoreAsync(result.Batch.Id);
-                SetStatus("Statement rows are ready for review.", clearAutomatically: true);
+                SetStatus("Import a statement file before linking an account.");
                 return;
             }
 
-            SetStatus(result.Message);
+            if (StatementConnectAccount is null)
+            {
+                SetStatus("Choose an existing account to link.");
+                return;
+            }
+
+            var accountNumber = NormalizeAccountNumber(pendingStatementPreview.AccountNumber);
+            var updatedAccount = StatementConnectAccount with
+            {
+                AccountNumber = string.IsNullOrWhiteSpace(accountNumber)
+                    ? StatementConnectAccount.AccountNumber
+                    : accountNumber,
+                CardLastFourDigits = string.IsNullOrWhiteSpace(pendingStatementPreview.CardLastFourDigits)
+                    ? StatementConnectAccount.CardLastFourDigits
+                    : pendingStatementPreview.CardLastFourDigits
+            };
+
+            await accountRepository.SaveAsync(updatedAccount);
+            await RefreshAccountsAfterStatementAccountChangeAsync(updatedAccount.Id);
+
+            if (StatementImportAccount is null)
+            {
+                SetStatus("The linked account could not be reloaded.");
+                return;
+            }
+
+            await CreatePendingStatementImportAsync(
+                StatementImportAccount,
+                pendingStatementPreview,
+                pendingStatementFilePath);
+        });
+    }
+
+    private async Task CreateStatementAccountFromStatementAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (pendingStatementPreview is null || string.IsNullOrWhiteSpace(pendingStatementFilePath))
+            {
+                SetStatus("Import a statement file before creating an account.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(StatementNewAccountName))
+            {
+                SetStatus("Name the new statement account first.");
+                return;
+            }
+
+            var account = new Account(
+                Guid.NewGuid(),
+                StatementNewAccountName.Trim(),
+                AccountType.DebitCard,
+                pendingStatementPreview.OpeningBalance ?? 0m,
+                NormalizeCurrency(StatementNewAccountCurrency),
+                DateTimeOffset.UtcNow,
+                IsArchived: false,
+                CreditCardDetails: null,
+                IncludeInDashboardTotals: true,
+                AccountNumber: CleanOptionalText(NormalizeAccountNumber(pendingStatementPreview.AccountNumber)),
+                CardLastFourDigits: CleanOptionalText(pendingStatementPreview.CardLastFourDigits));
+
+            await accountRepository.SaveAsync(account);
+            await RefreshAccountsAfterStatementAccountChangeAsync(account.Id);
+
+            if (StatementImportAccount is null)
+            {
+                SetStatus("The new account could not be loaded.");
+                return;
+            }
+
+            await CreatePendingStatementImportAsync(
+                StatementImportAccount,
+                pendingStatementPreview,
+                pendingStatementFilePath);
         });
     }
 
@@ -2473,6 +2653,88 @@ public sealed class FinanceDataViewModel : ViewModelBase
             await RefreshStatementImportsCoreAsync(SelectedStatementImportBatch?.Source.Id);
             SetStatus("Statement row skipped.", clearAutomatically: true);
         });
+    }
+
+    private async Task PreviewAndResolveStatementAsync(string filePath)
+    {
+        ResetPendingStatementResolution(filePath);
+        StatementImportStatusText = "Reading statement...";
+
+        var preview = await statementImportService.PreviewAsync(filePath);
+        StatementImportStatusText = preview.Message;
+        if (!preview.ParserAvailable || preview.Statement is null)
+        {
+            SetStatus(preview.Message);
+            return;
+        }
+
+        pendingStatementPreview = preview.Statement;
+        pendingStatementFilePath = filePath;
+        StatementDetectedAccountText = FormatDetectedAccountText(preview.Statement.AccountNumber);
+        StatementDetectedCardText = FormatDetectedCardText(preview.Statement.CardLastFourDigits);
+        StatementNewAccountName = CreateDefaultStatementAccountName(preview.Statement);
+        StatementNewAccountCurrency = "RUB";
+
+        var matchedAccount = FindAccountByAccountNumber(preview.Statement.AccountNumber);
+        if (matchedAccount is not null)
+        {
+            IsStatementAccountUnmatched = false;
+            StatementImportAccount = matchedAccount;
+            StatementMatchedAccountText = $"Matched account: {matchedAccount.Name}";
+            await CreatePendingStatementImportAsync(matchedAccount, preview.Statement, filePath);
+            return;
+        }
+
+        StatementImportAccount = null;
+        StatementConnectAccount = Accounts.FirstOrDefault();
+        IsStatementAccountUnmatched = true;
+        StatementMatchedAccountText = "No saved account matches this statement account number.";
+        StatementImportStatusText = "Statement parsed. Choose whether to link it to an existing account or create a new one.";
+        SetStatus("Statement account is not saved yet.");
+    }
+
+    private async Task CreatePendingStatementImportAsync(
+        Account account,
+        ParsedStatement? parsedStatement,
+        string filePath)
+    {
+        if (parsedStatement is null || string.IsNullOrWhiteSpace(filePath))
+        {
+            var resultFromFile = await statementImportService.CreatePendingImportAsync(account.Id, StatementImportPathText.Trim());
+            await HandleStatementImportCreateResultAsync(resultFromFile);
+            return;
+        }
+
+        var result = await statementImportService.CreatePendingImportAsync(
+            account.Id,
+            filePath,
+            parsedStatement);
+        await HandleStatementImportCreateResultAsync(result);
+    }
+
+    private async Task HandleStatementImportCreateResultAsync(StatementImportCreateResult result)
+    {
+        StatementImportStatusText = result.Message;
+
+        if (result.Batch is not null)
+        {
+            IsStatementAccountUnmatched = false;
+            await RefreshStatementImportsCoreAsync(result.Batch.Id);
+            SetStatus("Statement rows are ready for review.", clearAutomatically: true);
+            return;
+        }
+
+        SetStatus(result.Message);
+    }
+
+    private async Task RefreshAccountsAfterStatementAccountChangeAsync(Guid preferredAccountId)
+    {
+        Replace(Accounts, await accountRepository.GetAllAsync());
+        UpdateSummaries();
+        UpdateForecast();
+        StatementConnectAccount = Accounts.FirstOrDefault(account => account.Id == preferredAccountId)
+            ?? Accounts.FirstOrDefault();
+        StatementImportAccount = Accounts.FirstOrDefault(account => account.Id == preferredAccountId);
     }
 
     private async Task RefreshStatementImportsCoreAsync(Guid? preferredBatchId = null)
@@ -2995,7 +3257,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
             ?? Accounts.FirstOrDefault();
         ReconciliationAccount = FindFreshAccount(ReconciliationAccount) ?? Accounts.FirstOrDefault();
-        StatementImportAccount = FindFreshAccount(StatementImportAccount) ?? Accounts.FirstOrDefault();
+        StatementImportAccount = FindFreshAccount(StatementImportAccount);
+        StatementConnectAccount = FindFreshAccount(StatementConnectAccount) ?? Accounts.FirstOrDefault();
         SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory, TransactionCategoryChoices)
             ?? TransactionCategoryChoices.FirstOrDefault();
         EditTransactionCategory = FindFreshCategoryChoice(EditTransactionCategory, EditTransactionCategoryChoices)
@@ -3264,18 +3527,73 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        if (StatementImportAccount is null)
-        {
-            StatementImportStatusText = "Select an account before checking parser support.";
-            return;
-        }
-
-        var parser = statementParserRegistry.FindParser(new StatementParseRequest(
-            StatementImportPathText.Trim(),
-            StatementImportAccount.Id));
+        var parser = statementParserRegistry.FindParser(new StatementParseRequest(StatementImportPathText.Trim()));
         StatementImportStatusText = parser is null
             ? "No parser is available for this statement yet."
-            : $"{parser.Descriptor.Name} can review this statement.";
+            : $"{parser.Descriptor.Name} can read this statement.";
+    }
+
+    private void ResetPendingStatementResolution(string filePath)
+    {
+        pendingStatementPreview = null;
+        pendingStatementFilePath = filePath;
+        StatementImportPathText = filePath;
+        StatementImportAccount = null;
+        IsStatementAccountUnmatched = false;
+        StatementDetectedAccountText = "No statement account detected yet.";
+        StatementDetectedCardText = string.Empty;
+        StatementMatchedAccountText = "No account matched yet.";
+    }
+
+    private Account? FindAccountByAccountNumber(string? accountNumber)
+    {
+        var normalized = NormalizeAccountNumber(accountNumber);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return null;
+        }
+
+        return Accounts.FirstOrDefault(account =>
+            string.Equals(
+                NormalizeAccountNumber(account.AccountNumber),
+                normalized,
+                StringComparison.Ordinal));
+    }
+
+    private static string FormatDetectedAccountText(string? accountNumber)
+    {
+        var normalized = NormalizeAccountNumber(accountNumber);
+        return string.IsNullOrWhiteSpace(normalized)
+            ? "Account number was not found in the statement."
+            : $"Statement account ending {LastFour(normalized)}";
+    }
+
+    private static string FormatDetectedCardText(string? cardLastFourDigits)
+    {
+        return string.IsNullOrWhiteSpace(cardLastFourDigits)
+            ? "Card ending was not found in the statement."
+            : $"Card ending {cardLastFourDigits}";
+    }
+
+    private static string CreateDefaultStatementAccountName(ParsedStatement statement)
+    {
+        return string.IsNullOrWhiteSpace(statement.CardLastFourDigits)
+            ? "Imported statement account"
+            : $"Sberbank card {statement.CardLastFourDigits}";
+    }
+
+    private static string LastFour(string value)
+    {
+        return value.Length <= 4
+            ? value
+            : value[^4..];
+    }
+
+    private static string NormalizeAccountNumber(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : string.Concat(value.Where(char.IsDigit));
     }
 
     private static RecurrenceRule CreateRecurrenceRule(
@@ -3368,7 +3686,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return value?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
-    private static string? CleanOptionalText(string text)
+    private static string? CleanOptionalText(string? text)
     {
         return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
     }

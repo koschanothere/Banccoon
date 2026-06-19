@@ -29,6 +29,10 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         @"(\*{2,}|\u2022{2,})\s*\d{2,4}|\*{4}\d{4}",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex CardLastFourPattern = new(
+        @"(?:\*{2,}|\u2022{2,})\s*(?<last>\d{4})|\*{4}(?<last>\d{4})",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     public StatementParserDescriptor Descriptor { get; } = new(
         "sberbank-debit-card-pdf",
         "Sberbank debit card PDF",
@@ -111,7 +115,49 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             periodStart,
             periodEnd,
             balances.FirstOrDefault(),
-            balances.Length == 0 ? null : balances.Last());
+            balances.Length == 0 ? null : balances.Last(),
+            ParseAccountNumber(lines),
+            ParseCardLastFourDigits(lines));
+    }
+
+    private static string? ParseAccountNumber(IEnumerable<string> lines)
+    {
+        foreach (var line in lines.Select(NormalizeWhitespace))
+        {
+            if (line.Contains('.', StringComparison.Ordinal)
+                || CardLastFourPattern.IsMatch(line))
+            {
+                continue;
+            }
+
+            var digits = DigitsOnly(line);
+            if (digits.Length is >= 16 and <= 34)
+            {
+                return digits;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ParseCardLastFourDigits(IEnumerable<string> lines)
+    {
+        foreach (var line in lines.Select(NormalizeWhitespace))
+        {
+            if (!line.Contains("РљР°СЂС‚Р°", StringComparison.OrdinalIgnoreCase)
+                && !CardLastFourPattern.IsMatch(line))
+            {
+                continue;
+            }
+
+            var match = CardLastFourPattern.Match(line);
+            if (match.Success)
+            {
+                return match.Groups["last"].Value;
+            }
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<ParsedStatementRow> ParseRows(IReadOnlyList<string> lines)
@@ -291,6 +337,11 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
     private static string NormalizeWhitespace(string value)
     {
         return Regex.Replace(value.Trim(), @"\s+", " ", RegexOptions.CultureInvariant);
+    }
+
+    private static string DigitsOnly(string value)
+    {
+        return string.Concat(value.Where(char.IsDigit));
     }
 
     private sealed class PendingOperation

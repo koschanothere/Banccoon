@@ -8,4 +8,6 @@ public sealed record ParsedStatement(
     DateOnly? PeriodStart = null,
     DateOnly? PeriodEnd = null,
     decimal? OpeningBalance = null,
-    decimal? ClosingBalance = null);
+    decimal? ClosingBalance = null,
+    string? AccountNumber = null,
+    string? CardLastFourDigits = null);

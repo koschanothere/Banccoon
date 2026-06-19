@@ -689,18 +689,26 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Import bank statement" />
-                                <Picker
-                                    ItemDisplayBinding="{Binding Name}"
-                                    ItemsSource="{Binding Data.Accounts}"
-                                    SelectedItem="{Binding Data.StatementImportAccount}"
-                                    Title="Statement account" />
-                                <Entry Placeholder="Path to bank statement file" Text="{Binding Data.StatementImportPathText}" />
+                                <Button Command="{Binding Data.PickStatementFileCommand}" Style="{StaticResource PrimaryButton}" Text="Import statement" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementSelectedFileText}" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.AvailableStatementParsersText}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementDetectedAccountText}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementDetectedCardText}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementMatchedAccountText}" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementImportStatusText}" />
-                                <HorizontalStackLayout Spacing="8">
-                                    <Button Command="{Binding Data.AnalyzeStatementCommand}" Style="{StaticResource PrimaryButton}" Text="Check statement" />
-                                    <Button Command="{Binding Data.RefreshStatementImportsCommand}" Style="{StaticResource QuietButton}" Text="Refresh" />
-                                </HorizontalStackLayout>
+                                <VerticalStackLayout IsVisible="{Binding Data.IsStatementAccountUnmatched}" Spacing="8">
+                                    <Label FontAttributes="Bold" Text="Connect statement account" />
+                                    <Picker
+                                        ItemDisplayBinding="{Binding Name}"
+                                        ItemsSource="{Binding Data.Accounts}"
+                                        SelectedItem="{Binding Data.StatementConnectAccount}"
+                                        Title="Existing account" />
+                                    <Button Command="{Binding Data.ConnectStatementAccountCommand}" Style="{StaticResource QuietButton}" Text="Link to account" />
+                                    <BoxView HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    <Entry Placeholder="New account name" Text="{Binding Data.StatementNewAccountName}" />
+                                    <Picker ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.StatementNewAccountCurrency}" Title="Currency" />
+                                    <Button Command="{Binding Data.CreateStatementAccountFromStatementCommand}" Style="{StaticResource QuietButton}" Text="Create new account" />
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
                         </Border>
 
@@ -714,11 +722,6 @@
                                     SelectedItem="{Binding Data.SelectedStatementImportBatch}"
                                     Title="Statement import batch" />
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedStatementImportBatch.DetailText}" />
-                                <Picker
-                                    ItemDisplayBinding="{Binding Description}"
-                                    ItemsSource="{Binding Data.StatementImportRows}"
-                                    SelectedItem="{Binding Data.SelectedStatementImportRow}"
-                                    Title="Statement row" />
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                     <Picker
                                         ItemDisplayBinding="{Binding Name}"
@@ -733,30 +736,33 @@
                                 <HorizontalStackLayout Spacing="8">
                                     <Button Command="{Binding Data.ApproveStatementRowCommand}" Style="{StaticResource PrimaryButton}" Text="Import row" />
                                     <Button Command="{Binding Data.SkipStatementRowCommand}" Style="{StaticResource QuietButton}" Text="Skip row" />
+                                    <Button Command="{Binding Data.RefreshStatementImportsCommand}" Style="{StaticResource QuietButton}" Text="Refresh" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
 
-                    <CollectionView HeightRequest="340" ItemsSource="{Binding Data.StatementImportRows}">
+                    <CollectionView
+                        HeightRequest="340"
+                        ItemsSource="{Binding Data.StatementImportRows}"
+                        SelectedItem="{Binding Data.SelectedStatementImportRow, Mode=TwoWay}"
+                        SelectionMode="Single">
                         <CollectionView.EmptyView>
-                            <Label Style="{StaticResource MutedLabel}" Text="No statement rows yet. Real row preview begins once a bank-specific parser is added." />
+                            <Label Style="{StaticResource MutedLabel}" Text="No statement rows yet. Import a supported statement to review rows." />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,6" Padding="10" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                                        <VerticalStackLayout Spacing="2">
-                                            <Label FontAttributes="Bold" Text="{Binding Description}" />
-                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
+                                    <Grid ColumnDefinitions="92,2*,110,90,1.2*" ColumnSpacing="12">
+                                        <Label Style="{StaticResource MutedLabel}" Text="{Binding DateText}" VerticalTextAlignment="Center" />
+                                        <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                            <Label FontAttributes="Bold" LineBreakMode="TailTruncation" Text="{Binding Description}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding DuplicateText}" />
                                         </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
-                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
-                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding DateText}" />
-                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding StatusText}" />
-                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" VerticalTextAlignment="Center" />
+                                        <Label Grid.Column="3" Style="{StaticResource MutedLabel}" Text="{Binding StatusText}" VerticalTextAlignment="Center" />
+                                        <Label Grid.Column="4" LineBreakMode="TailTruncation" Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" VerticalTextAlignment="Center" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>

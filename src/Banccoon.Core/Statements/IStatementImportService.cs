@@ -2,9 +2,19 @@ namespace Banccoon.Core.Statements;
 
 public interface IStatementImportService
 {
+    Task<StatementPreviewResult> PreviewAsync(
+        string filePath,
+        CancellationToken cancellationToken = default);
+
     Task<StatementImportCreateResult> CreatePendingImportAsync(
         Guid accountId,
         string filePath,
+        CancellationToken cancellationToken = default);
+
+    Task<StatementImportCreateResult> CreatePendingImportAsync(
+        Guid accountId,
+        string filePath,
+        ParsedStatement parsedStatement,
         CancellationToken cancellationToken = default);
 
     Task<StatementRowImportResult> ApproveRowAsync(

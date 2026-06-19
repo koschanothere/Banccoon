@@ -24,6 +24,26 @@ public sealed class StatementImportServiceTests
     }
 
     [Fact]
+    public async Task PreviewAsync_WhenParserAvailable_ReturnsParsedStatementBeforeAccountSelection()
+    {
+        await using var store = new SqliteTestStore();
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(
+                new DateOnly(2026, 6, 10),
+                25m,
+                TransactionType.Expense,
+                "Lunch")
+        ])]);
+
+        var result = await service.PreviewAsync("statement.fake");
+
+        Assert.True(result.ParserAvailable);
+        Assert.NotNull(result.Statement);
+        Assert.Equal("fake", result.Statement.ParserId);
+        Assert.Single(result.Statement.Rows);
+    }
+
+    [Fact]
     public async Task ApproveRowAsync_CreatesTransactionAndUpdatesBalanceOnce()
     {
         await using var store = new SqliteTestStore();
