@@ -738,7 +738,62 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Users can reconcile expected scheduled items against real balances.
 - Users can export, validate, merge/replace import, and intentionally reset local data from the app.
 
-## Phase 8: Desktop Product Hardening
+## Phase 8: Bank Statement Import Foundation And Category Learning
+
+### Goals
+
+- Let users periodically import per-account bank statements without requiring bank sync.
+- Create reusable parser architecture for future bank-specific statement formats.
+- Keep imported rows in review until the user approves them.
+- Learn category suggestions locally from user choices without cloud services or heavy ML.
+
+### Components To Build
+
+- Parser contracts and registry with no real bank parser until a redacted sample statement is provided.
+- Statement import batches and rows stored separately from normal transactions.
+- Review workflow for parsed rows, duplicate warnings, category assignment, skip, and import.
+- Local category learning rules based on normalized merchant/source text, transaction type, optional account scope, and optional amount hint.
+- Backup/export portability for statement import history and learning rules.
+
+### Data Models Required
+
+- `StatementParserDescriptor`
+- `ParsedStatement`
+- `ParsedStatementRow`
+- `StatementImportBatch`
+- `StatementImportRow`
+- `CategoryLearningRule`
+
+### Services Required
+
+- `IStatementParser`
+- `IStatementParserRegistry`
+- `IStatementImportService`
+- `ICategorySuggestionService`
+- `IStatementImportRepository`
+- `ICategoryLearningRuleRepository`
+
+### Screens Required
+
+- Statements screen with account picker, file path input, parser status, batch review, row review, category assignment, skip, and import actions.
+
+### Testing Requirements
+
+- Parser registry tests.
+- Category suggestion and learning tests.
+- Statement import pipeline tests using fake parsers.
+- SQLite repository tests for statement batches, rows, and learning rules.
+- Import/export tests for statement portability.
+
+### Exit Criteria
+
+- App clearly reports unsupported statements when no parser exists.
+- Future bank-specific parsers can plug into the registry without redesigning the workflow.
+- Fake parsed rows can be reviewed, skipped, or approved into real transactions.
+- Approved rows update account balances exactly once.
+- Category assignments create/update local learning rules.
+
+## Phase 9: Desktop Product Hardening
 
 ### Goals
 
@@ -805,7 +860,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 
 - Banccoon feels like a complete local Windows desktop application rather than a prototype.
 
-## Phase 9: Future Optional Features
+## Phase 10: Future Optional Features
 
 ### Goals
 
@@ -842,8 +897,9 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 6. Guided weekly check-in and reconciliation.
 7. Savings goals and credit card obligations.
 8. UI data wiring for real saved workflows.
-9. Windows desktop hardening for V1.
-10. Optional OCR and bank sync research spikes.
+9. Bank statement import foundation and category learning.
+10. Windows desktop hardening for V1.
+11. Optional OCR and bank sync research spikes.
 
 ## Technical Priorities
 

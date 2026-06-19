@@ -2,6 +2,7 @@ using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
+using Banccoon.Core.Statements;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Tests.Infrastructure;
 using Xunit;
@@ -26,6 +27,9 @@ public sealed class ImportExportServiceTests
         Assert.Equal(sample.ScheduledTransaction, Assert.Single(export.Data.ScheduledTransactions));
         Assert.Equal(sample.SavingsGoal, Assert.Single(export.Data.SavingsGoals));
         Assert.Equal(sample.Settings, export.Data.Settings);
+        Assert.Equal(sample.StatementImportBatch, Assert.Single(export.Data.StatementImportBatches));
+        Assert.Equal(sample.StatementImportRow, Assert.Single(export.Data.StatementImportRows));
+        Assert.Equal(sample.CategoryLearningRule, Assert.Single(export.Data.CategoryLearningRules));
     }
 
     [Fact]
@@ -113,6 +117,9 @@ public sealed class ImportExportServiceTests
             Assert.True(result.Validation.IsValid);
             Assert.Equal(sample.Account, await targetStore.Accounts.GetByIdAsync(sample.Account.Id));
             Assert.Equal(sample.Settings, await targetStore.Settings.GetAsync());
+            Assert.Equal(sample.StatementImportBatch, await targetStore.StatementImports.GetBatchByIdAsync(sample.StatementImportBatch.Id));
+            Assert.Equal(sample.StatementImportRow, await targetStore.StatementImports.GetRowByIdAsync(sample.StatementImportRow.Id));
+            Assert.Equal(sample.CategoryLearningRule, await targetStore.CategoryLearningRules.GetByIdAsync(sample.CategoryLearningRule.Id));
         }
         finally
         {
@@ -132,7 +139,9 @@ public sealed class ImportExportServiceTests
             store.Transactions,
             store.ScheduledTransactions,
             store.SavingsGoals,
-            store.Settings);
+            store.Settings,
+            store.StatementImports,
+            store.CategoryLearningRules);
         var importService = new RepositoryImportService(
             store.Accounts,
             store.Categories,
@@ -140,7 +149,9 @@ public sealed class ImportExportServiceTests
             store.ScheduledTransactions,
             store.SavingsGoals,
             store.Settings,
-            validator);
+            validator,
+            store.StatementImports,
+            store.CategoryLearningRules);
         var backupService = new JsonBackupService(exportService, importService);
 
         return new Services(exportService, importService, backupService);
@@ -195,6 +206,44 @@ public sealed class ImportExportServiceTests
             new DateOnly(2026, 12, 1),
             account.Id);
         var settings = new AppSettings("USD", ForecastPeriod.NinetyDays, ReminderFrequency.Biweekly);
+        var statementImportBatch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake statement parser",
+            "statement.fake",
+            null,
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 1);
+        var statementImportRow = new StatementImportRow(
+            Guid.NewGuid(),
+            statementImportBatch.Id,
+            new DateOnly(2026, 6, 8),
+            25m,
+            TransactionType.Expense,
+            "Lunch",
+            "LUNCH",
+            "Cafe",
+            "ref-1",
+            null,
+            category.Id,
+            category.Id,
+            StatementImportRowStatus.Approved,
+            IsDuplicate: false,
+            null,
+            transaction.Id);
+        var categoryLearningRule = new CategoryLearningRule(
+            Guid.NewGuid(),
+            "Cafe",
+            "CAFE",
+            TransactionType.Expense,
+            category.Id,
+            account.Id,
+            25m,
+            MatchCount: 1,
+            new DateTimeOffset(2026, 6, 8, 12, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 8, 12, 0, 0, TimeSpan.Zero));
 
         await store.Accounts.SaveAsync(account);
         await store.Categories.SaveAsync(category);
@@ -202,8 +251,20 @@ public sealed class ImportExportServiceTests
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
         await store.SavingsGoals.SaveAsync(savingsGoal);
         await store.Settings.SaveAsync(settings);
+        await store.StatementImports.SaveBatchAsync(statementImportBatch);
+        await store.StatementImports.SaveRowAsync(statementImportRow);
+        await store.CategoryLearningRules.SaveAsync(categoryLearningRule);
 
-        return new SampleData(account, category, transaction, scheduledTransaction, savingsGoal, settings);
+        return new SampleData(
+            account,
+            category,
+            transaction,
+            scheduledTransaction,
+            savingsGoal,
+            settings,
+            statementImportBatch,
+            statementImportRow,
+            categoryLearningRule);
     }
 
     private static Account CreateAccount(string name)
@@ -231,5 +292,8 @@ public sealed class ImportExportServiceTests
         Transaction Transaction,
         ScheduledTransaction ScheduledTransaction,
         SavingsGoal SavingsGoal,
-        AppSettings Settings);
+        AppSettings Settings,
+        StatementImportBatch StatementImportBatch,
+        StatementImportRow StatementImportRow,
+        CategoryLearningRule CategoryLearningRule);
 }

@@ -10,6 +10,7 @@ using Banccoon.Core.Recurrence;
 using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
+using Banccoon.Core.Statements;
 
 namespace Banccoon.App.ViewModels;
 
@@ -37,6 +38,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private readonly IRecurrenceService recurrenceService;
     private readonly IBackupService backupService;
     private readonly IImportService importService;
+    private readonly IStatementImportService statementImportService;
+    private readonly IStatementImportRepository statementImportRepository;
+    private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly IStatementParserRegistry statementParserRegistry;
     private readonly IDateProvider dateProvider;
     private static readonly DefaultCategoryDefinition[] DefaultCategories =
     [
@@ -173,6 +178,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string importPathText = string.Empty;
     private ImportMode selectedImportMode = ImportMode.Merge;
     private string importExportSummary = "Portable JSON export format v1.";
+    private Account? statementImportAccount;
+    private string statementImportPathText = string.Empty;
+    private string statementImportStatusText = "No statement selected.";
+    private StatementImportBatchSummaryViewModel? selectedStatementImportBatch;
+    private StatementImportRowSummaryViewModel? selectedStatementImportRow;
+    private CategoryChoiceViewModel? selectedStatementImportCategory;
+    private string statementImportCategoryName = string.Empty;
     private string deleteAllConfirmationText = string.Empty;
     private bool deleteAllBackupAcknowledged;
     private bool isAccountsEditing;
@@ -197,6 +209,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         IRecurrenceService recurrenceService,
         IBackupService backupService,
         IImportService importService,
+        IStatementImportService statementImportService,
+        IStatementImportRepository statementImportRepository,
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        IStatementParserRegistry statementParserRegistry,
         IDateProvider dateProvider)
     {
         this.accountRepository = accountRepository;
@@ -215,6 +231,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         this.recurrenceService = recurrenceService;
         this.backupService = backupService;
         this.importService = importService;
+        this.statementImportService = statementImportService;
+        this.statementImportRepository = statementImportRepository;
+        this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.statementParserRegistry = statementParserRegistry;
         this.dateProvider = dateProvider;
 
         var today = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
@@ -255,6 +275,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync);
         ValidateImportCommand = new AsyncRelayCommand(ValidateImportAsync);
         RestoreBackupCommand = new AsyncRelayCommand(RestoreBackupAsync);
+        AnalyzeStatementCommand = new AsyncRelayCommand(AnalyzeStatementAsync);
+        RefreshStatementImportsCommand = new AsyncRelayCommand(RefreshStatementImportsAsync);
+        ApproveStatementRowCommand = new AsyncRelayCommand(ApproveSelectedStatementRowAsync);
+        SkipStatementRowCommand = new AsyncRelayCommand(SkipSelectedStatementRowAsync);
         ResetExportPathCommand = new RelayCommand(() => ExportPathText = CreateDefaultBackupPath());
         CopyExportPathToImportCommand = new RelayCommand(() => ImportPathText = ExportPathText);
         DeleteAllDataCommand = new AsyncRelayCommand(DeleteAllDataAsync);
@@ -300,6 +324,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ObservableCollection<UpcomingObligationSummaryViewModel> UpcomingObligations { get; } = new();
 
     public ObservableCollection<ForecastChartPointViewModel> DashboardForecastPoints { get; } = new();
+
+    public ObservableCollection<StatementImportBatchSummaryViewModel> StatementImportBatchSummaries { get; } = new();
+
+    public ObservableCollection<StatementImportRowSummaryViewModel> StatementImportRows { get; } = new();
+
+    public ObservableCollection<CategoryChoiceViewModel> StatementImportCategoryChoices { get; } = new();
 
     public ObservableCollection<ExpectedTransactionReviewViewModel> CheckInExpectedTransactions { get; } = new();
 
@@ -398,6 +428,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand ValidateImportCommand { get; }
 
     public ICommand RestoreBackupCommand { get; }
+
+    public ICommand AnalyzeStatementCommand { get; }
+
+    public ICommand RefreshStatementImportsCommand { get; }
+
+    public ICommand ApproveStatementRowCommand { get; }
+
+    public ICommand SkipStatementRowCommand { get; }
 
     public ICommand ResetExportPathCommand { get; }
 
@@ -1424,6 +1462,80 @@ public sealed class FinanceDataViewModel : ViewModelBase
         private set => SetProperty(ref importExportSummary, value);
     }
 
+    public Account? StatementImportAccount
+    {
+        get => statementImportAccount;
+        set
+        {
+            if (SetProperty(ref statementImportAccount, value))
+            {
+                UpdateStatementParserStatus();
+            }
+        }
+    }
+
+    public string StatementImportPathText
+    {
+        get => statementImportPathText;
+        set
+        {
+            if (SetProperty(ref statementImportPathText, value))
+            {
+                UpdateStatementParserStatus();
+            }
+        }
+    }
+
+    public string StatementImportStatusText
+    {
+        get => statementImportStatusText;
+        private set => SetProperty(ref statementImportStatusText, value);
+    }
+
+    public string AvailableStatementParsersText => statementParserRegistry.AvailableParsers.Count == 0
+        ? "No bank-specific parsers are installed yet."
+        : $"{statementParserRegistry.AvailableParsers.Count} parser(s) available.";
+
+    public StatementImportBatchSummaryViewModel? SelectedStatementImportBatch
+    {
+        get => selectedStatementImportBatch;
+        set
+        {
+            if (SetProperty(ref selectedStatementImportBatch, value))
+            {
+                _ = LoadSelectedStatementRowsAsync();
+            }
+        }
+    }
+
+    public StatementImportRowSummaryViewModel? SelectedStatementImportRow
+    {
+        get => selectedStatementImportRow;
+        set
+        {
+            if (SetProperty(ref selectedStatementImportRow, value))
+            {
+                UpdateStatementImportCategoryChoices();
+            }
+        }
+    }
+
+    public CategoryChoiceViewModel? SelectedStatementImportCategory
+    {
+        get => selectedStatementImportCategory;
+        set => SetProperty(ref selectedStatementImportCategory, value);
+    }
+
+    public string StatementImportCategoryName
+    {
+        get => statementImportCategoryName;
+        set => SetProperty(ref statementImportCategoryName, value);
+    }
+
+    public bool HasStatementImportBatches => StatementImportBatchSummaries.Count > 0;
+
+    public bool HasStatementImportRows => StatementImportRows.Count > 0;
+
     public string DeleteAllConfirmationText
     {
         get => deleteAllConfirmationText;
@@ -1470,6 +1582,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             EnsureDefaultSelections();
             UpdateSummaries();
             UpdateForecast();
+            await RefreshStatementImportsCoreAsync();
             SetStatus("Loaded saved local data.", clearAutomatically: true);
         });
     }
@@ -2263,7 +2376,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             var exportEnvelope = await backupService.ReadBackupAsync(ImportPathText.Trim());
             var validation = await importService.ValidateAsync(exportEnvelope);
             ImportExportSummary = validation.IsValid
-                ? $"Valid Banccoon export v{exportEnvelope.ExportFormatVersion}. Contains {exportEnvelope.Data.Accounts.Count} account(s), {exportEnvelope.Data.Transactions.Count} transaction(s), {exportEnvelope.Data.ScheduledTransactions.Count} scheduled item(s), {exportEnvelope.Data.Categories.Count} categor(ies), and {exportEnvelope.Data.SavingsGoals.Count} goal(s)."
+                ? $"Valid Banccoon export v{exportEnvelope.ExportFormatVersion}. Contains {exportEnvelope.Data.Accounts.Count} account(s), {exportEnvelope.Data.Transactions.Count} transaction(s), {exportEnvelope.Data.ScheduledTransactions.Count} scheduled item(s), {exportEnvelope.Data.Categories.Count} categor(ies), {exportEnvelope.Data.SavingsGoals.Count} goal(s), and {exportEnvelope.Data.StatementImportBatches.Count} statement import(s)."
                 : $"Import is not valid: {string.Join(" ", validation.Errors)}";
             SetStatus(validation.IsValid ? "Import file is valid." : "Import validation failed.", clearAutomatically: validation.IsValid);
         });
@@ -2288,6 +2401,131 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
             SetStatus(result.Validation.IsValid ? "Import action completed." : "Import failed validation.", clearAutomatically: result.Validation.IsValid);
         });
+    }
+
+    private async Task AnalyzeStatementAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (StatementImportAccount is null)
+            {
+                SetStatus("Select the account this statement belongs to.");
+                return;
+            }
+
+            var result = await statementImportService.CreatePendingImportAsync(
+                StatementImportAccount.Id,
+                StatementImportPathText.Trim());
+            StatementImportStatusText = result.Message;
+
+            if (result.Batch is not null)
+            {
+                await RefreshStatementImportsCoreAsync(result.Batch.Id);
+                SetStatus("Statement rows are ready for review.", clearAutomatically: true);
+                return;
+            }
+
+            SetStatus(result.Message);
+        });
+    }
+
+    private async Task RefreshStatementImportsAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            await RefreshStatementImportsCoreAsync(SelectedStatementImportBatch?.Source.Id);
+            SetStatus("Statement imports refreshed.", clearAutomatically: true);
+        });
+    }
+
+    private async Task ApproveSelectedStatementRowAsync()
+    {
+        if (SelectedStatementImportRow is null)
+        {
+            SetStatus("Select a statement row to import.");
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var categoryId = await ResolveCategoryAsync(
+                StatementImportCategoryName,
+                SelectedStatementImportCategory,
+                SelectedStatementImportRow.Source.Type);
+            await statementImportService.ApproveRowAsync(SelectedStatementImportRow.Source.Id, categoryId);
+            StatementImportCategoryName = string.Empty;
+            await RefreshAsync();
+            SetStatus("Statement row imported as a transaction.", clearAutomatically: true);
+        });
+    }
+
+    private async Task SkipSelectedStatementRowAsync()
+    {
+        if (SelectedStatementImportRow is null)
+        {
+            SetStatus("Select a statement row to skip.");
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await statementImportService.SkipRowAsync(SelectedStatementImportRow.Source.Id);
+            await RefreshStatementImportsCoreAsync(SelectedStatementImportBatch?.Source.Id);
+            SetStatus("Statement row skipped.", clearAutomatically: true);
+        });
+    }
+
+    private async Task RefreshStatementImportsCoreAsync(Guid? preferredBatchId = null)
+    {
+        var batches = await statementImportRepository.GetAllBatchesAsync();
+        var batchSummaries = batches.Select(batch =>
+        {
+            var accountName = Accounts.FirstOrDefault(account => account.Id == batch.AccountId)?.Name ?? "Unknown account";
+            return new StatementImportBatchSummaryViewModel(batch, accountName);
+        });
+        Replace(StatementImportBatchSummaries, batchSummaries);
+        OnPropertyChanged(nameof(HasStatementImportBatches));
+
+        var selectedBatchId = preferredBatchId
+            ?? SelectedStatementImportBatch?.Source.Id
+            ?? StatementImportBatchSummaries.FirstOrDefault()?.Source.Id;
+        var selectedBatch = StatementImportBatchSummaries.FirstOrDefault(summary => summary.Source.Id == selectedBatchId)
+            ?? StatementImportBatchSummaries.FirstOrDefault();
+
+        selectedStatementImportBatch = selectedBatch;
+        OnPropertyChanged(nameof(SelectedStatementImportBatch));
+        await LoadSelectedStatementRowsAsync();
+    }
+
+    private async Task LoadSelectedStatementRowsAsync()
+    {
+        if (SelectedStatementImportBatch is null)
+        {
+            StatementImportRows.Clear();
+            SelectedStatementImportRow = null;
+            OnPropertyChanged(nameof(HasStatementImportRows));
+            return;
+        }
+
+        try
+        {
+            var rows = await statementImportRepository.GetRowsByBatchIdAsync(SelectedStatementImportBatch.Source.Id);
+            Replace(StatementImportRows, rows.Select(row => new StatementImportRowSummaryViewModel(
+                row,
+                Categories.FirstOrDefault(category => category.Id == row.SuggestedCategoryId)?.Name,
+                Categories.FirstOrDefault(category => category.Id == row.CategoryId)?.Name,
+                DefaultCurrency,
+                SelectedDateDisplayFormat)));
+            SelectedStatementImportRow = StatementImportRows.FirstOrDefault(row =>
+                    selectedStatementImportRow is not null && row.Source.Id == selectedStatementImportRow.Source.Id)
+                ?? StatementImportRows.FirstOrDefault(row => row.Source.Status == StatementImportRowStatus.Pending)
+                ?? StatementImportRows.FirstOrDefault();
+            OnPropertyChanged(nameof(HasStatementImportRows));
+        }
+        catch (Exception exception)
+        {
+            SetStatus(exception.Message);
+        }
     }
 
     private async Task DeleteAllDataAsync()
@@ -2458,6 +2696,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private async Task DeleteAllRepositoryDataAsync()
     {
+        await statementImportRepository.DeleteAllAsync();
+        await categoryLearningRuleRepository.DeleteAllAsync();
         await transactionRepository.DeleteAllAsync();
         await scheduledTransactionRepository.DeleteAllAsync();
         await savingsGoalRepository.DeleteAllAsync();
@@ -2755,6 +2995,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
             ?? Accounts.FirstOrDefault();
         ReconciliationAccount = FindFreshAccount(ReconciliationAccount) ?? Accounts.FirstOrDefault();
+        StatementImportAccount = FindFreshAccount(StatementImportAccount) ?? Accounts.FirstOrDefault();
         SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory, TransactionCategoryChoices)
             ?? TransactionCategoryChoices.FirstOrDefault();
         EditTransactionCategory = FindFreshCategoryChoice(EditTransactionCategory, EditTransactionCategoryChoices)
@@ -2765,6 +3006,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             ?? EditScheduledCategoryChoices.FirstOrDefault();
         SelectedGroupedSpendingCategory = FindFreshCategoryChoice(SelectedGroupedSpendingCategory, GroupedSpendingCategoryChoices)
             ?? GroupedSpendingCategoryChoices.FirstOrDefault();
+        SelectedStatementImportCategory = FindFreshCategoryChoice(SelectedStatementImportCategory, StatementImportCategoryChoices)
+            ?? StatementImportCategoryChoices.FirstOrDefault();
     }
 
     private Account? FindFreshAccount(Account? account)
@@ -2799,6 +3042,17 @@ public sealed class FinanceDataViewModel : ViewModelBase
         Replace(ScheduledCategoryChoices, CreateCategoryChoices(SelectedScheduledType));
         Replace(EditScheduledCategoryChoices, CreateCategoryChoices(EditScheduledType));
         Replace(GroupedSpendingCategoryChoices, CreateCategoryChoices(SelectedReconciliationTransactionType));
+        UpdateStatementImportCategoryChoices();
+    }
+
+    private void UpdateStatementImportCategoryChoices()
+    {
+        var type = SelectedStatementImportRow?.Source.Type ?? TransactionType.Expense;
+        Replace(StatementImportCategoryChoices, CreateCategoryChoices(type));
+        SelectedStatementImportCategory = SelectedStatementImportRow?.Source.SuggestedCategoryId is { } suggestedCategoryId
+            ? StatementImportCategoryChoices.FirstOrDefault(choice => choice.CategoryId == suggestedCategoryId)
+                ?? StatementImportCategoryChoices.FirstOrDefault()
+            : StatementImportCategoryChoices.FirstOrDefault();
     }
 
     private IEnumerable<CategoryChoiceViewModel> CreateCategoryChoices(TransactionType type)
@@ -3000,6 +3254,28 @@ public sealed class FinanceDataViewModel : ViewModelBase
             .OrderBy(point => point.Balance)
             .ThenBy(point => point.Date)
             .FirstOrDefault();
+    }
+
+    private void UpdateStatementParserStatus()
+    {
+        if (string.IsNullOrWhiteSpace(StatementImportPathText))
+        {
+            StatementImportStatusText = "No statement selected.";
+            return;
+        }
+
+        if (StatementImportAccount is null)
+        {
+            StatementImportStatusText = "Select an account before checking parser support.";
+            return;
+        }
+
+        var parser = statementParserRegistry.FindParser(new StatementParseRequest(
+            StatementImportPathText.Trim(),
+            StatementImportAccount.Id));
+        StatementImportStatusText = parser is null
+            ? "No parser is available for this statement yet."
+            : $"{parser.Descriptor.Name} can review this statement.";
     }
 
     private static RecurrenceRule CreateRecurrenceRule(
@@ -3501,6 +3777,66 @@ public sealed class UpcomingObligationSummaryViewModel
     public string AmountText { get; }
 
     public string KindText => DisplayText.Format(Source.Kind);
+}
+
+public sealed class StatementImportBatchSummaryViewModel
+{
+    public StatementImportBatchSummaryViewModel(
+        StatementImportBatch batch,
+        string accountName)
+    {
+        Source = batch;
+        AccountName = accountName;
+    }
+
+    public StatementImportBatch Source { get; }
+
+    public string AccountName { get; }
+
+    public string DisplayTitle => $"{Source.SourceFileName} - {AccountName}";
+
+    public string DetailText => $"{DisplayText.Format(Source.Status)} - {Source.RowCount} row(s) - {Source.ParserName}";
+}
+
+public sealed class StatementImportRowSummaryViewModel
+{
+    public StatementImportRowSummaryViewModel(
+        StatementImportRow row,
+        string? suggestedCategoryName,
+        string? categoryName,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
+    {
+        Source = row;
+        SuggestedCategoryName = suggestedCategoryName ?? "None";
+        CategoryName = categoryName ?? "None";
+        AmountText = $"{currency} {row.Amount:N2}";
+        DateText = DateDisplay.Format(row.Date, dateDisplayFormat);
+    }
+
+    public StatementImportRow Source { get; }
+
+    public string DateText { get; }
+
+    public string Description => Source.Description;
+
+    public string AmountText { get; }
+
+    public string TypeText => DisplayText.Format(Source.Type);
+
+    public string StatusText => DisplayText.Format(Source.Status);
+
+    public string DuplicateText => Source.IsDuplicate ? "Possible duplicate" : "New";
+
+    public string SuggestedCategoryName { get; }
+
+    public string CategoryName { get; }
+
+    public string CategoryText => Source.CategoryId.HasValue
+        ? $"Category: {CategoryName}"
+        : Source.SuggestedCategoryId.HasValue
+            ? $"Suggested: {SuggestedCategoryName}"
+            : "No suggestion";
 }
 
 internal static class DisplayText

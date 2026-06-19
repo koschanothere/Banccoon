@@ -1,6 +1,7 @@
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
+using Banccoon.Core.Statements;
 using Xunit;
 
 namespace Banccoon.Tests.Infrastructure;
@@ -181,6 +182,79 @@ public sealed class SqliteRepositoryTests
         var loaded = await store.Settings.GetAsync();
 
         Assert.Equal(settings, loaded);
+    }
+
+    [Fact]
+    public async Task StatementImportRepository_SaveAndGet_RoundTripsBatchAndRows()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake parser",
+            "statement.fake",
+            "C:\\statement.fake",
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 1);
+        var row = new StatementImportRow(
+            Guid.NewGuid(),
+            batch.Id,
+            new DateOnly(2026, 6, 10),
+            25m,
+            TransactionType.Expense,
+            "Lunch",
+            "LUNCH",
+            "Cafe",
+            "ref-1",
+            "raw line",
+            category.Id,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(category);
+        await store.StatementImports.SaveBatchAsync(batch);
+        await store.StatementImports.SaveRowAsync(row);
+
+        var batches = await store.StatementImports.GetAllBatchesAsync();
+        var rows = await store.StatementImports.GetRowsByBatchIdAsync(batch.Id);
+
+        Assert.Equal(batch, Assert.Single(batches));
+        Assert.Equal(row, Assert.Single(rows));
+    }
+
+    [Fact]
+    public async Task CategoryLearningRuleRepository_SaveAndGet_RoundTripsRule()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        var rule = new CategoryLearningRule(
+            Guid.NewGuid(),
+            "Cafe",
+            "CAFE",
+            TransactionType.Expense,
+            category.Id,
+            account.Id,
+            25m,
+            MatchCount: 2,
+            new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero));
+
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(category);
+        await store.CategoryLearningRules.SaveAsync(rule);
+
+        var loaded = await store.CategoryLearningRules.GetByIdAsync(rule.Id);
+
+        Assert.Equal(rule, loaded);
     }
 
     private static Account CreateAccount(string name)

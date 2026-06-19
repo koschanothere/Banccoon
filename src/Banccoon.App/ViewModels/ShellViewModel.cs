@@ -22,6 +22,7 @@ public sealed class ShellViewModel : ViewModelBase
             new(AppSection.Dashboard, "Dashboard", "D", "Today, obligations, and safe-to-spend."),
             new(AppSection.Accounts, "Accounts", "A", "Balances, cards, cash, and savings."),
             new(AppSection.Transactions, "Transactions", "T", "Manual and grouped spending entries."),
+            new(AppSection.Statements, "Statements", "S", "Review bank statement imports before applying them."),
             new(AppSection.Scheduled, "Scheduled", "S", "Recurring income, bills, and reminders."),
             new(AppSection.Goals, "Goals", "G", "Savings reservations that reduce safe-to-spend."),
             new(AppSection.Forecast, "Forecast", "F", "Future balances and lowest balance points."),
@@ -84,6 +85,7 @@ public sealed class ShellViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsDashboardSelected));
                 OnPropertyChanged(nameof(IsAccountsSelected));
                 OnPropertyChanged(nameof(IsTransactionsSelected));
+                OnPropertyChanged(nameof(IsStatementsSelected));
                 OnPropertyChanged(nameof(IsScheduledSelected));
                 OnPropertyChanged(nameof(IsGoalsSelected));
                 OnPropertyChanged(nameof(IsForecastSelected));
@@ -176,6 +178,8 @@ public sealed class ShellViewModel : ViewModelBase
     public bool IsAccountsSelected => SelectedSection == AppSection.Accounts;
 
     public bool IsTransactionsSelected => SelectedSection == AppSection.Transactions;
+
+    public bool IsStatementsSelected => SelectedSection == AppSection.Statements;
 
     public bool IsScheduledSelected => SelectedSection == AppSection.Scheduled;
 

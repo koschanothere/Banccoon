@@ -8,6 +8,7 @@ using Banccoon.Core.Repositories;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Savings;
+using Banccoon.Core.Statements;
 using Banccoon.Core.Transactions;
 using Banccoon.Infrastructure.Database;
 using Banccoon.Infrastructure.ImportExport;
@@ -36,6 +37,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAvailableToSpendService, AvailableToSpendService>();
         builder.Services.AddSingleton<ICreditCardForecastService, CreditCardForecastService>();
         builder.Services.AddSingleton<ITransactionBalanceService, TransactionBalanceService>();
+        builder.Services.AddSingleton<ICategorySuggestionService, CategorySuggestionService>();
+        builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
+        builder.Services.AddSingleton<IStatementImportService, StatementImportService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
         builder.Services.AddSingleton<ICheckInService, CheckInService>();
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
@@ -50,6 +54,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionRepository, SqliteScheduledTransactionRepository>();
         builder.Services.AddSingleton<ISavingsGoalRepository, SqliteSavingsGoalRepository>();
         builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
+        builder.Services.AddSingleton<IStatementImportRepository, SqliteStatementImportRepository>();
+        builder.Services.AddSingleton<ICategoryLearningRuleRepository, SqliteCategoryLearningRuleRepository>();
         builder.Services.AddSingleton<IExportValidator, ExportValidator>();
         builder.Services.AddSingleton<IExportService, RepositoryExportService>();
         builder.Services.AddSingleton<IImportService, RepositoryImportService>();

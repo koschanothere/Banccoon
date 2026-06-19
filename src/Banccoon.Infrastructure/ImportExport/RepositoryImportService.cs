@@ -12,6 +12,8 @@ public sealed class RepositoryImportService : IImportService
     private readonly ISavingsGoalRepository savingsGoalRepository;
     private readonly ISettingsRepository settingsRepository;
     private readonly IExportValidator exportValidator;
+    private readonly IStatementImportRepository statementImportRepository;
+    private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
 
     public RepositoryImportService(
         IAccountRepository accountRepository,
@@ -20,7 +22,9 @@ public sealed class RepositoryImportService : IImportService
         IScheduledTransactionRepository scheduledTransactionRepository,
         ISavingsGoalRepository savingsGoalRepository,
         ISettingsRepository settingsRepository,
-        IExportValidator exportValidator)
+        IExportValidator exportValidator,
+        IStatementImportRepository statementImportRepository,
+        ICategoryLearningRuleRepository categoryLearningRuleRepository)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -29,6 +33,8 @@ public sealed class RepositoryImportService : IImportService
         this.savingsGoalRepository = savingsGoalRepository;
         this.settingsRepository = settingsRepository;
         this.exportValidator = exportValidator;
+        this.statementImportRepository = statementImportRepository;
+        this.categoryLearningRuleRepository = categoryLearningRuleRepository;
     }
 
     public Task<ImportValidationResult> ValidateAsync(
@@ -68,6 +74,8 @@ public sealed class RepositoryImportService : IImportService
 
     private async Task DeleteAllDataAsync(CancellationToken cancellationToken)
     {
+        await statementImportRepository.DeleteAllAsync(cancellationToken);
+        await categoryLearningRuleRepository.DeleteAllAsync(cancellationToken);
         await transactionRepository.DeleteAllAsync(cancellationToken);
         await scheduledTransactionRepository.DeleteAllAsync(cancellationToken);
         await savingsGoalRepository.DeleteAllAsync(cancellationToken);
@@ -100,6 +108,21 @@ public sealed class RepositoryImportService : IImportService
         foreach (var savingsGoal in data.SavingsGoals)
         {
             await savingsGoalRepository.SaveAsync(savingsGoal, cancellationToken);
+        }
+
+        foreach (var batch in data.StatementImportBatches)
+        {
+            await statementImportRepository.SaveBatchAsync(batch, cancellationToken);
+        }
+
+        foreach (var row in data.StatementImportRows)
+        {
+            await statementImportRepository.SaveRowAsync(row, cancellationToken);
+        }
+
+        foreach (var rule in data.CategoryLearningRules)
+        {
+            await categoryLearningRuleRepository.SaveAsync(rule, cancellationToken);
         }
 
         await settingsRepository.SaveAsync(data.Settings, cancellationToken);

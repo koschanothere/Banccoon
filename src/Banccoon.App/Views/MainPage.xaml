@@ -97,6 +97,11 @@
                         Text="Transactions" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
+                        CommandParameter="{x:Static viewModels:AppSection.Statements}"
+                        Style="{StaticResource ShellButton}"
+                        Text="Statements" />
+                    <Button
+                        Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
                         Style="{StaticResource ShellButton}"
                         Text="Scheduled" />
@@ -231,6 +236,7 @@
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Dashboard}" Style="{StaticResource QuietButton}" Text="Dashboard" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Accounts}" Style="{StaticResource QuietButton}" Text="Accounts" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Transactions}" Style="{StaticResource QuietButton}" Text="Transactions" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Statements}" Style="{StaticResource QuietButton}" Text="Statements" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Scheduled}" Style="{StaticResource QuietButton}" Text="Scheduled" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Goals}" Style="{StaticResource QuietButton}" Text="Goals" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Forecast}" Style="{StaticResource QuietButton}" Text="Forecast" />
@@ -669,6 +675,88 @@
                                             IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
                                             Style="{StaticResource QuietButton}"
                                             Text="Delete" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsStatementsSelected}" Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Statements" />
+                    <Grid ColumnDefinitions="1.1*,1.4*" ColumnSpacing="18">
+                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Import bank statement" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.Accounts}"
+                                    SelectedItem="{Binding Data.StatementImportAccount}"
+                                    Title="Statement account" />
+                                <Entry Placeholder="Path to bank statement file" Text="{Binding Data.StatementImportPathText}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.AvailableStatementParsersText}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.StatementImportStatusText}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Command="{Binding Data.AnalyzeStatementCommand}" Style="{StaticResource PrimaryButton}" Text="Check statement" />
+                                    <Button Command="{Binding Data.RefreshStatementImportsCommand}" Style="{StaticResource QuietButton}" Text="Refresh" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label FontAttributes="Bold" Text="Review batch" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding DisplayTitle}"
+                                    ItemsSource="{Binding Data.StatementImportBatchSummaries}"
+                                    SelectedItem="{Binding Data.SelectedStatementImportBatch}"
+                                    Title="Statement import batch" />
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedStatementImportBatch.DetailText}" />
+                                <Picker
+                                    ItemDisplayBinding="{Binding Description}"
+                                    ItemsSource="{Binding Data.StatementImportRows}"
+                                    SelectedItem="{Binding Data.SelectedStatementImportRow}"
+                                    Title="Statement row" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <Picker
+                                        ItemDisplayBinding="{Binding Name}"
+                                        ItemsSource="{Binding Data.StatementImportCategoryChoices}"
+                                        SelectedItem="{Binding Data.SelectedStatementImportCategory}" />
+                                    <Entry
+                                        Grid.Column="1"
+                                        Placeholder="New category, optional"
+                                        Text="{Binding Data.StatementImportCategoryName}" />
+                                </Grid>
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedStatementImportRow.CategoryText}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Command="{Binding Data.ApproveStatementRowCommand}" Style="{StaticResource PrimaryButton}" Text="Import row" />
+                                    <Button Command="{Binding Data.SkipStatementRowCommand}" Style="{StaticResource QuietButton}" Text="Skip row" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <CollectionView HeightRequest="340" ItemsSource="{Binding Data.StatementImportRows}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource MutedLabel}" Text="No statement rows yet. Real row preview begins once a bank-specific parser is added." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold" Text="{Binding Description}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding DuplicateText}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                            <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding DateText}" />
+                                            <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding StatusText}" />
+                                        </VerticalStackLayout>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

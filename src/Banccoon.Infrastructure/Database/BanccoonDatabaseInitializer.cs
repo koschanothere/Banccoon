@@ -59,6 +59,58 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
             );
 
+            CREATE TABLE IF NOT EXISTS StatementImportBatches (
+                Id TEXT PRIMARY KEY,
+                AccountId TEXT NOT NULL,
+                ParserId TEXT NOT NULL,
+                ParserName TEXT NOT NULL,
+                SourceFileName TEXT NOT NULL,
+                SourceFilePath TEXT NULL,
+                ImportedAt TEXT NOT NULL,
+                Status TEXT NOT NULL,
+                RowCount INTEGER NOT NULL,
+                FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS StatementImportRows (
+                Id TEXT PRIMARY KEY,
+                BatchId TEXT NOT NULL,
+                Date TEXT NOT NULL,
+                Amount TEXT NOT NULL,
+                Type TEXT NOT NULL,
+                Description TEXT NOT NULL,
+                NormalizedDescription TEXT NOT NULL,
+                Counterparty TEXT NULL,
+                ExternalReference TEXT NULL,
+                RawText TEXT NULL,
+                SuggestedCategoryId TEXT NULL,
+                CategoryId TEXT NULL,
+                Status TEXT NOT NULL,
+                IsDuplicate INTEGER NOT NULL,
+                DuplicateTransactionId TEXT NULL,
+                CreatedTransactionId TEXT NULL,
+                FOREIGN KEY (BatchId) REFERENCES StatementImportBatches(Id) ON DELETE CASCADE,
+                FOREIGN KEY (SuggestedCategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
+                FOREIGN KEY (DuplicateTransactionId) REFERENCES Transactions(Id) ON DELETE SET NULL,
+                FOREIGN KEY (CreatedTransactionId) REFERENCES Transactions(Id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS CategoryLearningRules (
+                Id TEXT PRIMARY KEY,
+                MatchText TEXT NOT NULL,
+                NormalizedMatchText TEXT NOT NULL,
+                Type TEXT NOT NULL,
+                CategoryId TEXT NOT NULL,
+                AccountId TEXT NULL,
+                AmountHint TEXT NULL,
+                MatchCount INTEGER NOT NULL,
+                CreatedAt TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL,
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE CASCADE,
+                FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE
+            );
+
             CREATE TABLE IF NOT EXISTS ScheduledTransactions (
                 Id TEXT PRIMARY KEY,
                 Name TEXT NOT NULL,

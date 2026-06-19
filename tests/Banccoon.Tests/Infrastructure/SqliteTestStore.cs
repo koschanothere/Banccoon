@@ -23,6 +23,8 @@ public sealed class SqliteTestStore : IAsyncDisposable
         ScheduledTransactions = new SqliteScheduledTransactionRepository(ConnectionFactory, Initializer);
         SavingsGoals = new SqliteSavingsGoalRepository(ConnectionFactory, Initializer);
         Settings = new SqliteSettingsRepository(ConnectionFactory, Initializer);
+        StatementImports = new SqliteStatementImportRepository(ConnectionFactory, Initializer);
+        CategoryLearningRules = new SqliteCategoryLearningRuleRepository(ConnectionFactory, Initializer);
     }
 
     public SqliteConnectionFactory ConnectionFactory { get; }
@@ -40,6 +42,10 @@ public sealed class SqliteTestStore : IAsyncDisposable
     public SqliteSavingsGoalRepository SavingsGoals { get; }
 
     public SqliteSettingsRepository Settings { get; }
+
+    public SqliteStatementImportRepository StatementImports { get; }
+
+    public SqliteCategoryLearningRuleRepository CategoryLearningRules { get; }
 
     public ValueTask DisposeAsync()
     {
