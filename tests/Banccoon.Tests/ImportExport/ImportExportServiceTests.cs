@@ -214,7 +214,10 @@ public sealed class ImportExportServiceTests
             AccountType.DebitCard,
             1000m,
             "EUR",
-            new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
+            new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero),
+            IncludeInDashboardTotals: true,
+            AccountNumber: "ACC-EXPORT",
+            CardLastFourDigits: "9876");
     }
 
     private sealed record Services(

@@ -67,11 +67,19 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string availableToSpendText = "EUR 0.00";
     private string lowestForecastText = "EUR 0.00";
     private string upcomingObligationsText = "EUR 0.00";
+    private string dashboardCurrentBalanceText = "EUR 0.00";
+    private string dashboardAvailableToSpendText = "EUR 0.00";
+    private string dashboardLowestForecastText = "EUR 0.00";
+    private string dashboardUpcomingObligationsText = "EUR 0.00";
+    private string dashboardIncludedAccountsText = "No accounts included in dashboard totals yet.";
     private string forecastPeriodText = "30 days";
     private string newAccountName = string.Empty;
     private AccountType selectedAccountType = AccountType.DebitCard;
     private string newAccountBalanceText = "0";
     private string newAccountCurrency = "EUR";
+    private string newAccountNumber = string.Empty;
+    private string newCardLastFourDigits = string.Empty;
+    private bool newAccountIncludeInDashboardTotals = true;
     private string newCreditCardDebtText = string.Empty;
     private string newCreditCardMinimumPaymentText = string.Empty;
     private string newCreditCardPlannedPaymentText = string.Empty;
@@ -88,6 +96,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string selectedAccountName = string.Empty;
     private AccountType selectedAccountEditType = AccountType.DebitCard;
     private string selectedAccountCurrency = "EUR";
+    private string selectedAccountNumber = string.Empty;
+    private string selectedCardLastFourDigits = string.Empty;
+    private bool selectedAccountIncludeInDashboardTotals = true;
+    private ForecastChartPointViewModel? selectedDashboardForecastPoint;
     private Account? newTransactionAccount;
     private TransferDestinationKind selectedTransferDestinationKind = TransferDestinationKind.Account;
     private Account? newTransferDestinationAccount;
@@ -286,6 +298,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ObservableCollection<ForecastEventSummaryViewModel> ForecastEvents { get; } = new();
 
     public ObservableCollection<UpcomingObligationSummaryViewModel> UpcomingObligations { get; } = new();
+
+    public ObservableCollection<ForecastChartPointViewModel> DashboardForecastPoints { get; } = new();
 
     public ObservableCollection<ExpectedTransactionReviewViewModel> CheckInExpectedTransactions { get; } = new();
 
@@ -518,6 +532,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             if (SetProperty(ref selectedDateDisplayFormat, value))
             {
                 UpdateSummaries();
+                UpdateForecast();
                 OnPropertyChanged(nameof(DatePickerFormat));
                 OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
             }
@@ -550,6 +565,36 @@ public sealed class FinanceDataViewModel : ViewModelBase
         private set => SetProperty(ref upcomingObligationsText, value);
     }
 
+    public string DashboardCurrentBalanceText
+    {
+        get => dashboardCurrentBalanceText;
+        private set => SetProperty(ref dashboardCurrentBalanceText, value);
+    }
+
+    public string DashboardAvailableToSpendText
+    {
+        get => dashboardAvailableToSpendText;
+        private set => SetProperty(ref dashboardAvailableToSpendText, value);
+    }
+
+    public string DashboardLowestForecastText
+    {
+        get => dashboardLowestForecastText;
+        private set => SetProperty(ref dashboardLowestForecastText, value);
+    }
+
+    public string DashboardUpcomingObligationsText
+    {
+        get => dashboardUpcomingObligationsText;
+        private set => SetProperty(ref dashboardUpcomingObligationsText, value);
+    }
+
+    public string DashboardIncludedAccountsText
+    {
+        get => dashboardIncludedAccountsText;
+        private set => SetProperty(ref dashboardIncludedAccountsText, value);
+    }
+
     public string ForecastPeriodText
     {
         get => forecastPeriodText;
@@ -570,6 +615,22 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public bool HasUpcomingObligations => UpcomingObligations.Count > 0;
 
+    public bool HasDashboardForecastPoints => DashboardForecastPoints.Count > 0;
+
+    public ForecastChartPointViewModel? SelectedDashboardForecastPoint
+    {
+        get => selectedDashboardForecastPoint;
+        set
+        {
+            if (SetProperty(ref selectedDashboardForecastPoint, value))
+            {
+                OnPropertyChanged(nameof(HasSelectedDashboardForecastPoint));
+            }
+        }
+    }
+
+    public bool HasSelectedDashboardForecastPoint => SelectedDashboardForecastPoint is not null;
+
     public string NewAccountName
     {
         get => newAccountName;
@@ -584,11 +645,15 @@ public sealed class FinanceDataViewModel : ViewModelBase
             if (SetProperty(ref selectedAccountType, value))
             {
                 OnPropertyChanged(nameof(IsNewAccountCreditCard));
+                OnPropertyChanged(nameof(IsNewAccountCard));
+                NewAccountIncludeInDashboardTotals = value != AccountType.CreditCard;
             }
         }
     }
 
     public bool IsNewAccountCreditCard => SelectedAccountType == AccountType.CreditCard;
+
+    public bool IsNewAccountCard => SelectedAccountType is AccountType.DebitCard or AccountType.CreditCard;
 
     public string NewAccountBalanceText
     {
@@ -600,6 +665,24 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => newAccountCurrency;
         set => SetProperty(ref newAccountCurrency, NormalizeCurrency(value));
+    }
+
+    public string NewAccountNumber
+    {
+        get => newAccountNumber;
+        set => SetProperty(ref newAccountNumber, value);
+    }
+
+    public string NewCardLastFourDigits
+    {
+        get => newCardLastFourDigits;
+        set => SetProperty(ref newCardLastFourDigits, value);
+    }
+
+    public bool NewAccountIncludeInDashboardTotals
+    {
+        get => newAccountIncludeInDashboardTotals;
+        set => SetProperty(ref newAccountIncludeInDashboardTotals, value);
     }
 
     public string NewCreditCardDebtText
@@ -636,6 +719,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 LoadSelectedAccountEditor(value);
                 OnPropertyChanged(nameof(IsSelectedAccountCreditCard));
                 OnPropertyChanged(nameof(IsSelectedAccountEditCreditCard));
+                OnPropertyChanged(nameof(IsSelectedAccountEditCard));
                 RecalculateSelectedAccountPayoff();
             }
         }
@@ -657,16 +741,37 @@ public sealed class FinanceDataViewModel : ViewModelBase
             if (SetProperty(ref selectedAccountEditType, value))
             {
                 OnPropertyChanged(nameof(IsSelectedAccountEditCreditCard));
+                OnPropertyChanged(nameof(IsSelectedAccountEditCard));
             }
         }
     }
 
     public bool IsSelectedAccountEditCreditCard => SelectedAccountEditType == AccountType.CreditCard;
 
+    public bool IsSelectedAccountEditCard => SelectedAccountEditType is AccountType.DebitCard or AccountType.CreditCard;
+
     public string SelectedAccountCurrency
     {
         get => selectedAccountCurrency;
         set => SetProperty(ref selectedAccountCurrency, NormalizeCurrency(value));
+    }
+
+    public string SelectedAccountNumber
+    {
+        get => selectedAccountNumber;
+        set => SetProperty(ref selectedAccountNumber, value);
+    }
+
+    public string SelectedCardLastFourDigits
+    {
+        get => selectedCardLastFourDigits;
+        set => SetProperty(ref selectedCardLastFourDigits, value);
+    }
+
+    public bool SelectedAccountIncludeInDashboardTotals
+    {
+        get => selectedAccountIncludeInDashboardTotals;
+        set => SetProperty(ref selectedAccountIncludeInDashboardTotals, value);
     }
 
     public string SelectedAccountBalanceText
@@ -1383,6 +1488,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
+        if (!TryNormalizeCardLastFour(NewCardLastFourDigits, out var cardLastFourDigits))
+        {
+            SetStatus("Card last four must be exactly four digits when entered.");
+            return;
+        }
+
         var creditCardDetails = CreateCreditCardDetailsForNewAccount();
         var account = new Account(
             Guid.NewGuid(),
@@ -1392,11 +1503,17 @@ public sealed class FinanceDataViewModel : ViewModelBase
             NormalizeCurrency(NewAccountCurrency),
             DateTimeOffset.UtcNow,
             IsArchived: false,
-            creditCardDetails);
+            creditCardDetails,
+            NewAccountIncludeInDashboardTotals,
+            CleanOptionalText(NewAccountNumber),
+            IsCardAccountType(SelectedAccountType) ? cardLastFourDigits : null);
 
         await accountRepository.SaveAsync(account);
         NewAccountName = string.Empty;
         NewAccountBalanceText = "0";
+        NewAccountNumber = string.Empty;
+        NewCardLastFourDigits = string.Empty;
+        NewAccountIncludeInDashboardTotals = SelectedAccountType != AccountType.CreditCard;
         NewCreditCardDebtText = string.Empty;
         NewCreditCardMinimumPaymentText = string.Empty;
         NewCreditCardPlannedPaymentText = string.Empty;
@@ -1418,12 +1535,21 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
+        if (!TryNormalizeCardLastFour(SelectedCardLastFourDigits, out var cardLastFourDigits))
+        {
+            SetStatus("Card last four must be exactly four digits when entered.");
+            return;
+        }
+
         var updatedAccount = SelectedAccount with
         {
             Name = SelectedAccountName.Trim(),
             Type = SelectedAccountEditType,
             Currency = NormalizeCurrency(SelectedAccountCurrency),
-            CreditCardDetails = CreateCreditCardDetailsForSelectedAccount()
+            CreditCardDetails = CreateCreditCardDetailsForSelectedAccount(),
+            IncludeInDashboardTotals = SelectedAccountIncludeInDashboardTotals,
+            AccountNumber = CleanOptionalText(SelectedAccountNumber),
+            CardLastFourDigits = IsCardAccountType(SelectedAccountEditType) ? cardLastFourDigits : null
         };
 
         await accountRepository.SaveAsync(updatedAccount);
@@ -2545,6 +2671,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
             SelectedAccountPlannedPaymentText = string.Empty;
             SelectedAccountPaymentDueDayText = string.Empty;
             SelectedAccountPayoffPaymentText = string.Empty;
+            SelectedAccountNumber = string.Empty;
+            SelectedCardLastFourDigits = string.Empty;
+            SelectedAccountIncludeInDashboardTotals = true;
             return;
         }
 
@@ -2552,6 +2681,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
         SelectedAccountEditType = account.Type;
         SelectedAccountCurrency = account.Currency;
         SelectedAccountBalanceText = ToInputText(account.CurrentBalance);
+        SelectedAccountNumber = account.AccountNumber ?? string.Empty;
+        SelectedCardLastFourDigits = account.CardLastFourDigits ?? string.Empty;
+        SelectedAccountIncludeInDashboardTotals = account.IncludeInDashboardTotals;
         SelectedAccountDebtText = ToInputText(account.CreditCardDetails?.CurrentDebt);
         SelectedAccountMinimumPaymentText = ToInputText(account.CreditCardDetails?.MinimumPayment);
         SelectedAccountPlannedPaymentText = ToInputText(account.CreditCardDetails?.PlannedPaymentAmount);
@@ -2724,17 +2856,26 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private void UpdateForecast()
     {
+        ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
+
         if (Accounts.Count == 0)
         {
             CurrentBalanceText = FormatMoney(0m, DefaultCurrency);
             AvailableToSpendText = FormatMoney(0m, DefaultCurrency);
             LowestForecastText = FormatMoney(0m, DefaultCurrency);
             UpcomingObligationsText = FormatMoney(0m, DefaultCurrency);
-            ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
+            DashboardCurrentBalanceText = FormatMoney(0m, DefaultCurrency);
+            DashboardAvailableToSpendText = FormatMoney(0m, DefaultCurrency);
+            DashboardLowestForecastText = FormatMoney(0m, DefaultCurrency);
+            DashboardUpcomingObligationsText = FormatMoney(0m, DefaultCurrency);
+            DashboardIncludedAccountsText = "No accounts included in dashboard totals yet.";
             ForecastEvents.Clear();
             UpcomingObligations.Clear();
+            DashboardForecastPoints.Clear();
+            SelectedDashboardForecastPoint = null;
             OnPropertyChanged(nameof(HasForecastEvents));
             OnPropertyChanged(nameof(HasUpcomingObligations));
+            OnPropertyChanged(nameof(HasDashboardForecastPoints));
             return;
         }
 
@@ -2751,18 +2892,114 @@ public sealed class FinanceDataViewModel : ViewModelBase
         AvailableToSpendText = FormatMoney(forecast.AvailableToSpend, DefaultCurrency);
         LowestForecastText = FormatMoney(forecast.LowestForecastedBalance, DefaultCurrency);
         UpcomingObligationsText = FormatMoney(forecast.UpcomingObligations.Sum(obligation => obligation.Amount), DefaultCurrency);
-        ForecastPeriodText = GetForecastPeriodLabel(SelectedForecastPeriod);
 
         Replace(ForecastEvents, forecast.Events.Select(forecastEvent => new ForecastEventSummaryViewModel(
             forecastEvent,
             DefaultCurrency,
             SelectedDateDisplayFormat)));
-        Replace(UpcomingObligations, forecast.UpcomingObligations.Select(obligation => new UpcomingObligationSummaryViewModel(
+
+        var dashboardAccounts = Accounts
+            .Where(account => !account.IsArchived && account.IncludeInDashboardTotals)
+            .ToArray();
+        var activeAccountsCount = Accounts.Count(account => !account.IsArchived);
+        DashboardIncludedAccountsText = $"{dashboardAccounts.Length} of {activeAccountsCount} account(s) included in dashboard totals.";
+
+        if (dashboardAccounts.Length == 0)
+        {
+            DashboardCurrentBalanceText = FormatMoney(0m, DefaultCurrency);
+            DashboardAvailableToSpendText = FormatMoney(0m, DefaultCurrency);
+            DashboardLowestForecastText = FormatMoney(0m, DefaultCurrency);
+            DashboardUpcomingObligationsText = FormatMoney(0m, DefaultCurrency);
+            UpcomingObligations.Clear();
+            DashboardForecastPoints.Clear();
+            SelectedDashboardForecastPoint = null;
+            OnPropertyChanged(nameof(HasForecastEvents));
+            OnPropertyChanged(nameof(HasUpcomingObligations));
+            OnPropertyChanged(nameof(HasDashboardForecastPoints));
+            return;
+        }
+
+        var dashboardAccountIds = dashboardAccounts
+            .Select(account => account.Id)
+            .ToHashSet();
+        var dashboardScheduledTransactions = ScheduledTransactions
+            .Where(scheduledTransaction => dashboardAccountIds.Contains(scheduledTransaction.AccountId))
+            .ToArray();
+        var dashboardSavingsGoals = SavingsGoals
+            .Where(goal => goal.AccountId is null || dashboardAccountIds.Contains(goal.AccountId.Value))
+            .ToArray();
+        var dashboardForecast = forecastService.CreateForecast(new ForecastRequest(
+            startDate,
+            endDate,
+            dashboardAccounts,
+            dashboardScheduledTransactions,
+            dashboardSavingsGoals));
+
+        DashboardCurrentBalanceText = FormatMoney(dashboardForecast.CurrentBalance, DefaultCurrency);
+        DashboardAvailableToSpendText = FormatMoney(dashboardForecast.AvailableToSpend, DefaultCurrency);
+        DashboardLowestForecastText = FormatMoney(dashboardForecast.LowestForecastedBalance, DefaultCurrency);
+        DashboardUpcomingObligationsText = FormatMoney(dashboardForecast.UpcomingObligations.Sum(obligation => obligation.Amount), DefaultCurrency);
+
+        Replace(UpcomingObligations, dashboardForecast.UpcomingObligations.Select(obligation => new UpcomingObligationSummaryViewModel(
             obligation,
             DefaultCurrency,
             SelectedDateDisplayFormat)));
+        var selectedDate = SelectedDashboardForecastPoint?.Date;
+        var chartPoints = CreateForecastChartPoints(dashboardForecast, DefaultCurrency, SelectedDateDisplayFormat);
+        Replace(DashboardForecastPoints, chartPoints);
+        SelectedDashboardForecastPoint = selectedDate is null
+            ? SelectDefaultChartPoint(DashboardForecastPoints)
+            : DashboardForecastPoints.FirstOrDefault(point => point.Date == selectedDate.Value)
+                ?? SelectDefaultChartPoint(DashboardForecastPoints);
         OnPropertyChanged(nameof(HasForecastEvents));
         OnPropertyChanged(nameof(HasUpcomingObligations));
+        OnPropertyChanged(nameof(HasDashboardForecastPoints));
+    }
+
+    private static IReadOnlyList<ForecastChartPointViewModel> CreateForecastChartPoints(
+        ForecastResult forecast,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
+    {
+        var eventsByDate = forecast.Events
+            .GroupBy(forecastEvent => forecastEvent.Date)
+            .ToDictionary(group => group.Key, group => group
+                .OrderBy(forecastEvent => forecastEvent.SignedAmount)
+                .ThenBy(forecastEvent => forecastEvent.Name, StringComparer.OrdinalIgnoreCase)
+                .ToArray());
+        var points = new List<ForecastChartPointViewModel>();
+        var runningBalance = forecast.CurrentBalance;
+        var totalDays = forecast.EndDate.DayNumber - forecast.StartDate.DayNumber;
+
+        for (var offset = 0; offset <= totalDays; offset++)
+        {
+            var date = forecast.StartDate.AddDays(offset);
+            var dayEvents = eventsByDate.TryGetValue(date, out var eventsForDate)
+                ? eventsForDate
+                : Array.Empty<ForecastEvent>();
+
+            foreach (var dayEvent in dayEvents)
+            {
+                runningBalance += dayEvent.SignedAmount;
+            }
+
+            points.Add(new ForecastChartPointViewModel(
+                date,
+                runningBalance,
+                dayEvents.Select(dayEvent => $"{dayEvent.Name}: {FormatMoney(dayEvent.SignedAmount, currency)}").ToArray(),
+                currency,
+                dateDisplayFormat));
+        }
+
+        return points;
+    }
+
+    private static ForecastChartPointViewModel? SelectDefaultChartPoint(IEnumerable<ForecastChartPointViewModel> points)
+    {
+        return points
+            .OrderBy(point => point.Balance)
+            .ThenBy(point => point.Date)
+            .FirstOrDefault();
     }
 
     private static RecurrenceRule CreateRecurrenceRule(
@@ -2855,6 +3092,28 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return value?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
+    private static string? CleanOptionalText(string text)
+    {
+        return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+    }
+
+    private static bool IsCardAccountType(AccountType accountType)
+    {
+        return accountType is AccountType.DebitCard or AccountType.CreditCard;
+    }
+
+    private static bool TryNormalizeCardLastFour(string text, out string? cardLastFourDigits)
+    {
+        cardLastFourDigits = CleanOptionalText(text);
+        if (cardLastFourDigits is null)
+        {
+            return true;
+        }
+
+        return cardLastFourDigits.Length == 4
+            && cardLastFourDigits.All(char.IsDigit);
+    }
+
     private static string NormalizeCurrency(string? currency)
     {
         return string.IsNullOrWhiteSpace(currency)
@@ -2866,6 +3125,41 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         return $"{(int)period} days";
     }
+}
+
+public sealed class ForecastChartPointViewModel
+{
+    public ForecastChartPointViewModel(
+        DateOnly date,
+        decimal balance,
+        IReadOnlyList<string> eventSummaries,
+        string currency,
+        DateDisplayFormat dateDisplayFormat)
+    {
+        Date = date;
+        Balance = balance;
+        EventSummaries = eventSummaries;
+        DateText = DateDisplay.Format(date, dateDisplayFormat);
+        ShortDateText = DateDisplay.FormatShortWithoutYear(date, dateDisplayFormat);
+        BalanceText = $"{currency} {balance:N2}";
+        EventsText = eventSummaries.Count == 0
+            ? "No planned events"
+            : string.Join(" | ", eventSummaries);
+    }
+
+    public DateOnly Date { get; }
+
+    public decimal Balance { get; }
+
+    public IReadOnlyList<string> EventSummaries { get; }
+
+    public string DateText { get; }
+
+    public string ShortDateText { get; }
+
+    public string BalanceText { get; }
+
+    public string EventsText { get; }
 }
 
 public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
@@ -2952,6 +3246,31 @@ public sealed class AccountSummaryViewModel
     public string TypeText => DisplayText.Format(Source.Type);
 
     public string BalanceText => $"{Source.Currency} {Source.CurrentBalance:N2}";
+
+    public string IdentifierText
+    {
+        get
+        {
+            var accountNumber = string.IsNullOrWhiteSpace(Source.AccountNumber)
+                ? null
+                : $"Account {Source.AccountNumber}";
+            var card = string.IsNullOrWhiteSpace(Source.CardLastFourDigits)
+                ? null
+                : $"Card ending {Source.CardLastFourDigits}";
+
+            return (accountNumber, card) switch
+            {
+                (not null, not null) => $"{accountNumber} - {card}",
+                (not null, null) => accountNumber,
+                (null, not null) => card,
+                _ => "No identifier saved"
+            };
+        }
+    }
+
+    public string DashboardText => Source.IncludeInDashboardTotals
+        ? "Included in dashboard total"
+        : "Excluded from dashboard total";
 
     public string CreditText
     {
@@ -3256,6 +3575,11 @@ internal static class DateDisplay
         return date.ToString(GetPattern(format), CultureInfo.InvariantCulture);
     }
 
+    public static string FormatShortWithoutYear(DateOnly date, DateDisplayFormat format)
+    {
+        return date.ToString(GetShortPatternWithoutYear(format), CultureInfo.InvariantCulture);
+    }
+
     public static string GetPattern(DateDisplayFormat format)
     {
         return format switch
@@ -3263,6 +3587,16 @@ internal static class DateDisplay
             DateDisplayFormat.MonthDayYear => "MM/dd/yyyy",
             DateDisplayFormat.YearMonthDay => "yyyy-MM-dd",
             _ => "dd/MM/yyyy"
+        };
+    }
+
+    private static string GetShortPatternWithoutYear(DateDisplayFormat format)
+    {
+        return format switch
+        {
+            DateDisplayFormat.MonthDayYear => "MM/dd",
+            DateDisplayFormat.YearMonthDay => "MM-dd",
+            _ => "dd/MM"
         };
     }
 }

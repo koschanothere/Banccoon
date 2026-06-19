@@ -32,7 +32,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits
             FROM Accounts
             ORDER BY Name;
             """;
@@ -66,7 +69,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits
             FROM Accounts
             WHERE Id = @Id;
             """;
@@ -95,7 +101,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits
             )
             VALUES (
                 @Id,
@@ -109,7 +118,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 @StatementDayOfMonth,
                 @PaymentDueDayOfMonth,
                 @MinimumPayment,
-                @PlannedPaymentAmount
+                @PlannedPaymentAmount,
+                @IncludeInDashboardTotals,
+                @AccountNumber,
+                @CardLastFourDigits
             )
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
@@ -122,7 +134,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth = excluded.StatementDayOfMonth,
                 PaymentDueDayOfMonth = excluded.PaymentDueDayOfMonth,
                 MinimumPayment = excluded.MinimumPayment,
-                PlannedPaymentAmount = excluded.PlannedPaymentAmount;
+                PlannedPaymentAmount = excluded.PlannedPaymentAmount,
+                IncludeInDashboardTotals = excluded.IncludeInDashboardTotals,
+                AccountNumber = excluded.AccountNumber,
+                CardLastFourDigits = excluded.CardLastFourDigits;
             """;
 
         AddParameter(command, "@Id", account.Id.ToString());
@@ -137,6 +152,9 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         AddParameter(command, "@PaymentDueDayOfMonth", account.CreditCardDetails?.PaymentDueDayOfMonth ?? (object)DBNull.Value);
         AddParameter(command, "@MinimumPayment", SqliteData.ToDbValue(account.CreditCardDetails?.MinimumPayment));
         AddParameter(command, "@PlannedPaymentAmount", SqliteData.ToDbValue(account.CreditCardDetails?.PlannedPaymentAmount));
+        AddParameter(command, "@IncludeInDashboardTotals", account.IncludeInDashboardTotals ? 1 : 0);
+        AddParameter(command, "@AccountNumber", SqliteData.ToDbValue(account.AccountNumber));
+        AddParameter(command, "@CardLastFourDigits", SqliteData.ToDbValue(account.CardLastFourDigits));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -190,6 +208,9 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
             SqliteData.ReadString(reader, "Currency"),
             DateTimeOffset.Parse(SqliteData.ReadString(reader, "CreatedDate"), System.Globalization.CultureInfo.InvariantCulture),
             SqliteData.ReadBoolean(reader, "IsArchived"),
-            creditCardDetails);
+            creditCardDetails,
+            SqliteData.ReadBoolean(reader, "IncludeInDashboardTotals"),
+            SqliteData.ReadNullableString(reader, "AccountNumber"),
+            SqliteData.ReadNullableString(reader, "CardLastFourDigits"));
     }
 }

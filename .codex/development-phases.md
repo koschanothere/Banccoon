@@ -674,6 +674,8 @@ This branch implements the first engineering slice of Banccoon: a clean solution
 - Transactions UI wired to `ITransactionRepository`.
 - Scheduled transactions UI wired to recurrence editor and `IScheduledTransactionRepository`.
 - Dashboard and forecast screens reading real stored data.
+- Dashboard totals respect account-level inclusion settings for emergency, hidden, or excluded accounts.
+- Dashboard and Analytics show an interactive projected-balance line graph for included accounts.
 - Preferences screen wired to `ISettingsRepository` and appearance preference storage.
 - Import/export screen wired to backup services with path-based JSON files first; native file pickers can be polished later.
 - Brand asset folder for Banccoon logos and rotating mascot art.
@@ -750,6 +752,7 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Desktop notification scheduling once the app can keep a background/tray presence.
 - Category management moved into Preferences with type-aware defaults, editing, deletion safeguards, and optional archive behavior.
 - User-selectable sorting and filtering for transactions, scheduled items, goals, and analytics views.
+- Analytics graph expansion with per-account lines, toggled series, richer tooltips, and category overlays.
 - Error and validation presentation.
 - Empty states.
 - Import/export safety confirmations.

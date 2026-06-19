@@ -4,6 +4,7 @@
     x:Name="Page"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     BackgroundColor="{StaticResource PageBackgroundColor}"
     Title="Banccoon">
@@ -273,10 +274,10 @@
                                 <Label
                                     FontAttributes="Bold"
                                     FontSize="30"
-                                    Text="{Binding Data.AvailableToSpendText, StringFormat='You can safely spend {0}.'}" />
+                                    Text="{Binding Data.DashboardAvailableToSpendText, StringFormat='You can safely spend {0}.'}" />
                                 <Label
                                     Style="{StaticResource MutedLabel}"
-                                    Text="This uses saved local accounts, scheduled obligations, credit card payments, and savings reservations." />
+                                    Text="{Binding Data.DashboardIncludedAccountsText}" />
                                 <HorizontalStackLayout Spacing="10">
                                     <Button
                                         Command="{Binding SelectSectionCommand}"
@@ -337,21 +338,21 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Current balance" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.CurrentBalanceText}" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardCurrentBalanceText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Upcoming obligations" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.UpcomingObligationsText}" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardUpcomingObligationsText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Lowest forecast" />
-                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.LowestForecastText}" />
+                                <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardLowestForecastText}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="3" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
@@ -362,6 +363,27 @@
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
+
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label FontAttributes="Bold" Text="Projected dashboard balance" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Forecasted values for accounts included in dashboard totals." />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                    <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.BalanceText}" />
+                                    <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.DateText}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <controls:ForecastChartView
+                                HeightRequest="250"
+                                Points="{Binding Data.DashboardForecastPoints}"
+                                SelectedPoint="{Binding Data.SelectedDashboardForecastPoint, Mode=TwoWay}" />
+                            <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedDashboardForecastPoint.EventsText}" />
+                        </VerticalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="16">
@@ -387,6 +409,20 @@
                                     <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
                                     <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
                                 </Grid>
+                                <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
+                                    <Entry Placeholder="Account number, optional" Text="{Binding Data.NewAccountNumber}" />
+                                    <Entry
+                                        Grid.Column="1"
+                                        IsVisible="{Binding Data.IsNewAccountCard}"
+                                        Keyboard="Numeric"
+                                        MaxLength="4"
+                                        Placeholder="Card last 4"
+                                        Text="{Binding Data.NewCardLastFourDigits}" />
+                                </Grid>
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding Data.NewAccountIncludeInDashboardTotals}" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
                                 <VerticalStackLayout IsVisible="{Binding Data.IsNewAccountCreditCard}" Spacing="8">
                                     <Label FontAttributes="Bold" FontSize="13" Text="Credit card details" />
                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
@@ -419,6 +455,20 @@
                                     <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.SelectedAccountCurrency}" />
                                 </Grid>
                                 <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountBalanceText, StringFormat='Balance from transactions: {0}'}" />
+                                <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
+                                    <Entry Placeholder="Account number, optional" Text="{Binding Data.SelectedAccountNumber}" />
+                                    <Entry
+                                        Grid.Column="1"
+                                        IsVisible="{Binding Data.IsSelectedAccountEditCard}"
+                                        Keyboard="Numeric"
+                                        MaxLength="4"
+                                        Placeholder="Card last 4"
+                                        Text="{Binding Data.SelectedCardLastFourDigits}" />
+                                </Grid>
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding Data.SelectedAccountIncludeInDashboardTotals}" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
                                 <VerticalStackLayout IsVisible="{Binding Data.IsSelectedAccountEditCreditCard}" Spacing="8">
                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                         <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.SelectedAccountDebtText}" />
@@ -451,6 +501,8 @@
                                         <VerticalStackLayout Spacing="2">
                                             <Label FontAttributes="Bold" Text="{Binding Name}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding CreditText}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding IdentifierText}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding DashboardText}" />
                                         </VerticalStackLayout>
                                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding BalanceText}" />
@@ -1009,7 +1061,27 @@
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
-                    <Label Style="{StaticResource MutedLabel}" Text="Richer trend and category analytics can build on these saved local transactions once category management is wired." />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label FontAttributes="Bold" Text="Projected value trend" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Forecasted values for accounts included in dashboard totals." />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                    <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.BalanceText}" />
+                                    <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.DateText}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <controls:ForecastChartView
+                                HeightRequest="330"
+                                Points="{Binding Data.DashboardForecastPoints}"
+                                SelectedPoint="{Binding Data.SelectedDashboardForecastPoint, Mode=TwoWay}" />
+                            <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedDashboardForecastPoint.EventsText}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Label Style="{StaticResource MutedLabel}" Text="Next analytics work: per-account lines, transaction sorting/filtering, and category management in Preferences." />
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsDataSelected}" Spacing="16">

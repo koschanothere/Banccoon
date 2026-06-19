@@ -31,7 +31,10 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 StatementDayOfMonth INTEGER NULL,
                 PaymentDueDayOfMonth INTEGER NULL,
                 MinimumPayment TEXT NULL,
-                PlannedPaymentAmount TEXT NULL
+                PlannedPaymentAmount TEXT NULL,
+                IncludeInDashboardTotals INTEGER NOT NULL DEFAULT 1,
+                AccountNumber TEXT NULL,
+                CardLastFourDigits TEXT NULL
             );
 
             CREATE TABLE IF NOT EXISTS Categories (
@@ -119,6 +122,24 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "ScheduledTransactions",
             "Notes",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Accounts",
+            "IncludeInDashboardTotals",
+            "INTEGER NOT NULL DEFAULT 1",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Accounts",
+            "AccountNumber",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Accounts",
+            "CardLastFourDigits",
             "TEXT NULL",
             cancellationToken);
         await AddMissingColumnAsync(

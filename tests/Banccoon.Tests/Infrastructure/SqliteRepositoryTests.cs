@@ -24,7 +24,10 @@ public sealed class SqliteRepositoryTests
                 StatementDayOfMonth: 10,
                 PaymentDueDayOfMonth: 25,
                 MinimumPayment: 25m,
-                PlannedPaymentAmount: 100m));
+                PlannedPaymentAmount: 100m),
+            IncludeInDashboardTotals: false,
+            AccountNumber: "ACC-001",
+            CardLastFourDigits: "1234");
 
         await store.Accounts.SaveAsync(account);
 
