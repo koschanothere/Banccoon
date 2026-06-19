@@ -45,10 +45,14 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 Date TEXT NOT NULL,
                 Amount TEXT NOT NULL,
                 AccountId TEXT NOT NULL,
+                DestinationAccountId TEXT NULL,
+                DestinationGoalId TEXT NULL,
                 CategoryId TEXT NULL,
                 Notes TEXT NULL,
                 Type TEXT NOT NULL,
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE,
+                FOREIGN KEY (DestinationAccountId) REFERENCES Accounts(Id) ON DELETE SET NULL,
+                FOREIGN KEY (DestinationGoalId) REFERENCES SavingsGoals(Id) ON DELETE SET NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
             );
 
@@ -68,6 +72,7 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 RecurrenceMonthlyMode TEXT NOT NULL,
                 NextOccurrence TEXT NOT NULL,
                 Active INTEGER NOT NULL,
+                Notes TEXT NULL,
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
             );
@@ -96,6 +101,24 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "Categories",
             "Type",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
+            "DestinationAccountId",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
+            "DestinationGoalId",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "ScheduledTransactions",
+            "Notes",
             "TEXT NULL",
             cancellationToken);
         await AddMissingColumnAsync(

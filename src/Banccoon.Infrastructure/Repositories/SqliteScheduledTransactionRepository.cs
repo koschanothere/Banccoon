@@ -36,7 +36,8 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
                 RecurrenceDayOfMonth,
                 RecurrenceMonthlyMode,
                 NextOccurrence,
-                Active
+                Active,
+                Notes
             FROM ScheduledTransactions
             ORDER BY NextOccurrence, Name;
             """;
@@ -73,7 +74,8 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
                 RecurrenceDayOfMonth,
                 RecurrenceMonthlyMode,
                 NextOccurrence,
-                Active
+                Active,
+                Notes
             FROM ScheduledTransactions
             WHERE Id = @Id;
             """;
@@ -105,7 +107,8 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
                 RecurrenceDayOfMonth,
                 RecurrenceMonthlyMode,
                 NextOccurrence,
-                Active
+                Active,
+                Notes
             )
             VALUES (
                 @Id,
@@ -122,7 +125,8 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
                 @RecurrenceDayOfMonth,
                 @RecurrenceMonthlyMode,
                 @NextOccurrence,
-                @Active
+                @Active,
+                @Notes
             )
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
@@ -138,7 +142,8 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
                 RecurrenceDayOfMonth = excluded.RecurrenceDayOfMonth,
                 RecurrenceMonthlyMode = excluded.RecurrenceMonthlyMode,
                 NextOccurrence = excluded.NextOccurrence,
-                Active = excluded.Active;
+                Active = excluded.Active,
+                Notes = excluded.Notes;
             """;
 
         AddParameter(command, "@Id", scheduledTransaction.Id.ToString());
@@ -156,6 +161,7 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
         AddParameter(command, "@RecurrenceMonthlyMode", scheduledTransaction.RecurrenceRule.MonthlyMode.ToString());
         AddParameter(command, "@NextOccurrence", SqliteData.DateToText(scheduledTransaction.NextOccurrence));
         AddParameter(command, "@Active", scheduledTransaction.Active ? 1 : 0);
+        AddParameter(command, "@Notes", SqliteData.ToDbValue(scheduledTransaction.Notes));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -205,6 +211,7 @@ public sealed class SqliteScheduledTransactionRepository : SqliteRepositoryBase,
             Enum.Parse<TransactionType>(SqliteData.ReadString(reader, "Type")),
             recurrenceRule,
             SqliteData.ReadDate(reader, "NextOccurrence"),
-            SqliteData.ReadBoolean(reader, "Active"));
+            SqliteData.ReadBoolean(reader, "Active"),
+            SqliteData.ReadNullableString(reader, "Notes"));
     }
 }

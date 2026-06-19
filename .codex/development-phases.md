@@ -748,6 +748,8 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - Reminder configuration.
 - Tray/app lifecycle support for reminders.
 - Desktop notification scheduling once the app can keep a background/tray presence.
+- Category management moved into Preferences with type-aware defaults, editing, deletion safeguards, and optional archive behavior.
+- User-selectable sorting and filtering for transactions, scheduled items, goals, and analytics views.
 - Error and validation presentation.
 - Empty states.
 - Import/export safety confirmations.
@@ -768,6 +770,8 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 - `ISettingsService`
 - `IAppNotificationService`
 - `ITrayLifecycleService`
+- `ICategoryManagementService`
+- `IListViewPreferencesService`
 - `ILocalDiagnosticsService`
 - `ILocalDataResetService`
 
@@ -780,6 +784,8 @@ Use lowercase filenames with underscores so .NET MAUI can turn them into image r
 
 - Reminder configuration.
 - Tray/background behavior for Windows reminders.
+- Category management preferences.
+- Sorting and filtering preferences.
 - Diagnostics/export log option if needed.
 - Hardened import/export confirmations.
 - Delete-all-data confirmation flow with multiple checks and a focused Banccoon warning mascot.

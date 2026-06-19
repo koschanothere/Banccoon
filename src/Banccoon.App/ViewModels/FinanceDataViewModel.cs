@@ -13,6 +13,12 @@ using Banccoon.Core.Transactions;
 
 namespace Banccoon.App.ViewModels;
 
+public enum TransferDestinationKind
+{
+    Account,
+    Goal
+}
+
 public sealed class FinanceDataViewModel : ViewModelBase
 {
     private readonly IAccountRepository accountRepository;
@@ -79,25 +85,61 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string selectedAccountPayoffPaymentText = string.Empty;
     private string selectedAccountManualFinanceChargeText = "0";
     private string selectedAccountPayoffSummary = "Select a credit card to calculate payoff timing.";
+    private string selectedAccountName = string.Empty;
+    private AccountType selectedAccountEditType = AccountType.DebitCard;
+    private string selectedAccountCurrency = "EUR";
     private Account? newTransactionAccount;
+    private TransferDestinationKind selectedTransferDestinationKind = TransferDestinationKind.Account;
+    private Account? newTransferDestinationAccount;
+    private SavingsGoal? newTransferDestinationGoal;
     private CategoryChoiceViewModel? selectedTransactionCategory;
+    private string newTransactionCategoryName = string.Empty;
     private string newTransactionAmountText = string.Empty;
     private string newTransactionNotes = string.Empty;
     private DateTime newTransactionDate;
     private TransactionType selectedTransactionType = TransactionType.Expense;
+    private TransactionSummaryViewModel? selectedTransactionForEditing;
+    private Account? editTransactionAccount;
+    private TransferDestinationKind editTransferDestinationKind = TransferDestinationKind.Account;
+    private Account? editTransferDestinationAccount;
+    private SavingsGoal? editTransferDestinationGoal;
+    private CategoryChoiceViewModel? editTransactionCategory;
+    private string editTransactionCategoryName = string.Empty;
+    private string editTransactionAmountText = string.Empty;
+    private string editTransactionNotes = string.Empty;
+    private DateTime editTransactionDate;
+    private TransactionType editTransactionType = TransactionType.Expense;
     private Account? newScheduledAccount;
     private CategoryChoiceViewModel? selectedScheduledCategory;
     private string newScheduledName = string.Empty;
     private string newScheduledAmountText = string.Empty;
+    private string newScheduledNotes = string.Empty;
     private DateTime newScheduledDate;
     private TransactionType selectedScheduledType = TransactionType.Expense;
     private RecurrenceFrequency selectedScheduledFrequency = RecurrenceFrequency.Monthly;
     private string newScheduledIntervalText = "1";
+    private ScheduledTransactionSummaryViewModel? selectedScheduledForEditing;
+    private Account? editScheduledAccount;
+    private CategoryChoiceViewModel? editScheduledCategory;
+    private string editScheduledCategoryName = string.Empty;
+    private string editScheduledName = string.Empty;
+    private string editScheduledAmountText = string.Empty;
+    private string editScheduledNotes = string.Empty;
+    private DateTime editScheduledDate;
+    private TransactionType editScheduledType = TransactionType.Expense;
+    private RecurrenceFrequency editScheduledFrequency = RecurrenceFrequency.Monthly;
+    private string editScheduledIntervalText = "1";
     private Account? newGoalAccount;
     private string newGoalName = string.Empty;
     private string newGoalTargetAmountText = string.Empty;
     private string newGoalCurrentAmountText = string.Empty;
     private DateTime newGoalTargetDate;
+    private SavingsGoalSummaryViewModel? selectedGoalForEditing;
+    private Account? editGoalAccount;
+    private string editGoalName = string.Empty;
+    private string editGoalTargetAmountText = string.Empty;
+    private string editGoalCurrentAmountText = string.Empty;
+    private DateTime editGoalTargetDate;
     private string newCategoryName = string.Empty;
     private DateTime checkInFromDate;
     private DateTime checkInToDate;
@@ -111,7 +153,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private ReconciliationResult? latestReconciliationResult;
     private string groupedSpendingAmountText = string.Empty;
     private string groupedSpendingNotes = string.Empty;
+    private TransactionType selectedReconciliationTransactionType = TransactionType.Expense;
     private CategoryChoiceViewModel? selectedGroupedSpendingCategory;
+    private string reconciliationTransactionCategoryName = string.Empty;
+    private CancellationTokenSource? reconciliationComparisonCancellation;
     private string exportPathText = string.Empty;
     private string importPathText = string.Empty;
     private ImportMode selectedImportMode = ImportMode.Merge;
@@ -162,8 +207,11 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
         var today = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
         newTransactionDate = today;
+        editTransactionDate = today;
         newScheduledDate = today;
+        editScheduledDate = today;
         newGoalTargetDate = today.AddMonths(6);
+        editGoalTargetDate = today.AddMonths(6);
         checkInFromDate = today.AddDays(-7);
         checkInToDate = today;
         actualBalanceDate = today;
@@ -175,12 +223,15 @@ public sealed class FinanceDataViewModel : ViewModelBase
         SaveSelectedAccountCommand = new AsyncRelayCommand(SaveSelectedAccountAsync);
         DeleteAccountCommand = new AsyncRelayCommand<Account>(DeleteAccountAsync);
         AddTransactionCommand = new AsyncRelayCommand(AddTransactionAsync);
+        SaveEditedTransactionCommand = new AsyncRelayCommand(SaveEditedTransactionAsync);
         DeleteTransactionCommand = new AsyncRelayCommand<Transaction>(DeleteTransactionAsync);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
         DeleteCategoryCommand = new AsyncRelayCommand<Category>(DeleteCategoryAsync);
         AddScheduledTransactionCommand = new AsyncRelayCommand(AddScheduledTransactionAsync);
+        SaveEditedScheduledTransactionCommand = new AsyncRelayCommand(SaveEditedScheduledTransactionAsync);
         DeleteScheduledTransactionCommand = new AsyncRelayCommand<ScheduledTransaction>(DeleteScheduledTransactionAsync);
         AddSavingsGoalCommand = new AsyncRelayCommand(AddSavingsGoalAsync);
+        SaveEditedSavingsGoalCommand = new AsyncRelayCommand(SaveEditedSavingsGoalAsync);
         DeleteSavingsGoalCommand = new AsyncRelayCommand<SavingsGoal>(DeleteSavingsGoalAsync);
         CreateCheckInCommand = new AsyncRelayCommand(CreateCheckInAsync);
         ConfirmExpectedTransactionCommand = new AsyncRelayCommand<ExpectedTransactionReviewViewModel>(ConfirmExpectedTransactionAsync);
@@ -210,7 +261,11 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ObservableCollection<CategoryChoiceViewModel> TransactionCategoryChoices { get; } = new();
 
+    public ObservableCollection<CategoryChoiceViewModel> EditTransactionCategoryChoices { get; } = new();
+
     public ObservableCollection<CategoryChoiceViewModel> ScheduledCategoryChoices { get; } = new();
+
+    public ObservableCollection<CategoryChoiceViewModel> EditScheduledCategoryChoices { get; } = new();
 
     public ObservableCollection<CategoryChoiceViewModel> GroupedSpendingCategoryChoices { get; } = new();
 
@@ -237,6 +292,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public IReadOnlyList<AccountType> AccountTypes { get; } = Enum.GetValues<AccountType>();
 
     public IReadOnlyList<TransactionType> TransactionTypes { get; } = Enum.GetValues<TransactionType>();
+
+    public IReadOnlyList<TransactionType> ReconciliationTransactionTypes { get; } =
+    [
+        TransactionType.Expense,
+        TransactionType.Income
+    ];
+
+    public IReadOnlyList<TransferDestinationKind> TransferDestinationKinds { get; } = Enum.GetValues<TransferDestinationKind>();
 
     public IReadOnlyList<RecurrenceFrequency> RecurrenceFrequencies { get; } = Enum.GetValues<RecurrenceFrequency>();
 
@@ -282,6 +345,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ICommand AddTransactionCommand { get; }
 
+    public ICommand SaveEditedTransactionCommand { get; }
+
     public ICommand DeleteTransactionCommand { get; }
 
     public ICommand AddCategoryCommand { get; }
@@ -290,9 +355,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ICommand AddScheduledTransactionCommand { get; }
 
+    public ICommand SaveEditedScheduledTransactionCommand { get; }
+
     public ICommand DeleteScheduledTransactionCommand { get; }
 
     public ICommand AddSavingsGoalCommand { get; }
+
+    public ICommand SaveEditedSavingsGoalCommand { get; }
 
     public ICommand DeleteSavingsGoalCommand { get; }
 
@@ -566,12 +635,39 @@ public sealed class FinanceDataViewModel : ViewModelBase
             {
                 LoadSelectedAccountEditor(value);
                 OnPropertyChanged(nameof(IsSelectedAccountCreditCard));
+                OnPropertyChanged(nameof(IsSelectedAccountEditCreditCard));
                 RecalculateSelectedAccountPayoff();
             }
         }
     }
 
     public bool IsSelectedAccountCreditCard => SelectedAccount?.Type == AccountType.CreditCard;
+
+    public string SelectedAccountName
+    {
+        get => selectedAccountName;
+        set => SetProperty(ref selectedAccountName, value);
+    }
+
+    public AccountType SelectedAccountEditType
+    {
+        get => selectedAccountEditType;
+        set
+        {
+            if (SetProperty(ref selectedAccountEditType, value))
+            {
+                OnPropertyChanged(nameof(IsSelectedAccountEditCreditCard));
+            }
+        }
+    }
+
+    public bool IsSelectedAccountEditCreditCard => SelectedAccountEditType == AccountType.CreditCard;
+
+    public string SelectedAccountCurrency
+    {
+        get => selectedAccountCurrency;
+        set => SetProperty(ref selectedAccountCurrency, NormalizeCurrency(value));
+    }
 
     public string SelectedAccountBalanceText
     {
@@ -657,10 +753,45 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newTransactionAccount, value);
     }
 
+    public TransferDestinationKind SelectedTransferDestinationKind
+    {
+        get => selectedTransferDestinationKind;
+        set
+        {
+            if (SetProperty(ref selectedTransferDestinationKind, value))
+            {
+                OnPropertyChanged(nameof(IsNewTransferToAccount));
+                OnPropertyChanged(nameof(IsNewTransferToGoal));
+            }
+        }
+    }
+
+    public bool IsNewTransferToAccount => IsNewTransactionTransfer && SelectedTransferDestinationKind == TransferDestinationKind.Account;
+
+    public bool IsNewTransferToGoal => IsNewTransactionTransfer && SelectedTransferDestinationKind == TransferDestinationKind.Goal;
+
+    public Account? NewTransferDestinationAccount
+    {
+        get => newTransferDestinationAccount;
+        set => SetProperty(ref newTransferDestinationAccount, value);
+    }
+
+    public SavingsGoal? NewTransferDestinationGoal
+    {
+        get => newTransferDestinationGoal;
+        set => SetProperty(ref newTransferDestinationGoal, value);
+    }
+
     public CategoryChoiceViewModel? SelectedTransactionCategory
     {
         get => selectedTransactionCategory;
         set => SetProperty(ref selectedTransactionCategory, value);
+    }
+
+    public string NewTransactionCategoryName
+    {
+        get => newTransactionCategoryName;
+        set => SetProperty(ref newTransactionCategoryName, value);
     }
 
     public string NewTransactionAmountText
@@ -690,9 +821,115 @@ public sealed class FinanceDataViewModel : ViewModelBase
             {
                 UpdateCategoryChoices();
                 SelectedTransactionCategory = TransactionCategoryChoices.FirstOrDefault();
+                OnPropertyChanged(nameof(IsNewTransactionTransfer));
+                OnPropertyChanged(nameof(IsNewTransactionNotTransfer));
+                OnPropertyChanged(nameof(IsNewTransferToAccount));
+                OnPropertyChanged(nameof(IsNewTransferToGoal));
             }
         }
     }
+
+    public bool IsNewTransactionTransfer => SelectedTransactionType == TransactionType.Transfer;
+
+    public bool IsNewTransactionNotTransfer => !IsNewTransactionTransfer;
+
+    public TransactionSummaryViewModel? SelectedTransactionForEditing
+    {
+        get => selectedTransactionForEditing;
+        set
+        {
+            if (SetProperty(ref selectedTransactionForEditing, value))
+            {
+                LoadTransactionEditor(value?.Source);
+            }
+        }
+    }
+
+    public Account? EditTransactionAccount
+    {
+        get => editTransactionAccount;
+        set => SetProperty(ref editTransactionAccount, value);
+    }
+
+    public TransferDestinationKind EditTransferDestinationKind
+    {
+        get => editTransferDestinationKind;
+        set
+        {
+            if (SetProperty(ref editTransferDestinationKind, value))
+            {
+                OnPropertyChanged(nameof(IsEditTransferToAccount));
+                OnPropertyChanged(nameof(IsEditTransferToGoal));
+            }
+        }
+    }
+
+    public bool IsEditTransferToAccount => IsEditTransactionTransfer && EditTransferDestinationKind == TransferDestinationKind.Account;
+
+    public bool IsEditTransferToGoal => IsEditTransactionTransfer && EditTransferDestinationKind == TransferDestinationKind.Goal;
+
+    public Account? EditTransferDestinationAccount
+    {
+        get => editTransferDestinationAccount;
+        set => SetProperty(ref editTransferDestinationAccount, value);
+    }
+
+    public SavingsGoal? EditTransferDestinationGoal
+    {
+        get => editTransferDestinationGoal;
+        set => SetProperty(ref editTransferDestinationGoal, value);
+    }
+
+    public CategoryChoiceViewModel? EditTransactionCategory
+    {
+        get => editTransactionCategory;
+        set => SetProperty(ref editTransactionCategory, value);
+    }
+
+    public string EditTransactionCategoryName
+    {
+        get => editTransactionCategoryName;
+        set => SetProperty(ref editTransactionCategoryName, value);
+    }
+
+    public string EditTransactionAmountText
+    {
+        get => editTransactionAmountText;
+        set => SetProperty(ref editTransactionAmountText, value);
+    }
+
+    public string EditTransactionNotes
+    {
+        get => editTransactionNotes;
+        set => SetProperty(ref editTransactionNotes, value);
+    }
+
+    public DateTime EditTransactionDate
+    {
+        get => editTransactionDate;
+        set => SetProperty(ref editTransactionDate, value);
+    }
+
+    public TransactionType EditTransactionType
+    {
+        get => editTransactionType;
+        set
+        {
+            if (SetProperty(ref editTransactionType, value))
+            {
+                UpdateCategoryChoices();
+                EditTransactionCategory = EditTransactionCategoryChoices.FirstOrDefault();
+                OnPropertyChanged(nameof(IsEditTransactionTransfer));
+                OnPropertyChanged(nameof(IsEditTransactionNotTransfer));
+                OnPropertyChanged(nameof(IsEditTransferToAccount));
+                OnPropertyChanged(nameof(IsEditTransferToGoal));
+            }
+        }
+    }
+
+    public bool IsEditTransactionTransfer => EditTransactionType == TransactionType.Transfer;
+
+    public bool IsEditTransactionNotTransfer => !IsEditTransactionTransfer;
 
     public Account? NewScheduledAccount
     {
@@ -716,6 +953,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => newScheduledAmountText;
         set => SetProperty(ref newScheduledAmountText, value);
+    }
+
+    public string NewScheduledNotes
+    {
+        get => newScheduledNotes;
+        set => SetProperty(ref newScheduledNotes, value);
     }
 
     public DateTime NewScheduledDate
@@ -753,6 +996,85 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 OnPropertyChanged(nameof(ScheduledRecurrenceSentencePreview));
             }
         }
+    }
+
+    public ScheduledTransactionSummaryViewModel? SelectedScheduledForEditing
+    {
+        get => selectedScheduledForEditing;
+        set
+        {
+            if (SetProperty(ref selectedScheduledForEditing, value))
+            {
+                LoadScheduledEditor(value?.Source);
+            }
+        }
+    }
+
+    public Account? EditScheduledAccount
+    {
+        get => editScheduledAccount;
+        set => SetProperty(ref editScheduledAccount, value);
+    }
+
+    public CategoryChoiceViewModel? EditScheduledCategory
+    {
+        get => editScheduledCategory;
+        set => SetProperty(ref editScheduledCategory, value);
+    }
+
+    public string EditScheduledCategoryName
+    {
+        get => editScheduledCategoryName;
+        set => SetProperty(ref editScheduledCategoryName, value);
+    }
+
+    public string EditScheduledName
+    {
+        get => editScheduledName;
+        set => SetProperty(ref editScheduledName, value);
+    }
+
+    public string EditScheduledAmountText
+    {
+        get => editScheduledAmountText;
+        set => SetProperty(ref editScheduledAmountText, value);
+    }
+
+    public string EditScheduledNotes
+    {
+        get => editScheduledNotes;
+        set => SetProperty(ref editScheduledNotes, value);
+    }
+
+    public DateTime EditScheduledDate
+    {
+        get => editScheduledDate;
+        set => SetProperty(ref editScheduledDate, value);
+    }
+
+    public TransactionType EditScheduledType
+    {
+        get => editScheduledType;
+        set
+        {
+            if (SetProperty(ref editScheduledType, value))
+            {
+                UpdateCategoryChoices();
+                EditScheduledCategory = EditScheduledCategoryChoices.FirstOrDefault();
+            }
+        }
+    }
+
+    public RecurrenceFrequency EditScheduledFrequency
+    {
+        get => editScheduledFrequency;
+        set => SetProperty(ref editScheduledFrequency, value);
+    }
+
+    public string EditScheduledIntervalText
+    {
+        get => editScheduledIntervalText;
+        set => SetProperty(ref editScheduledIntervalText, value);
     }
 
     public string NewScheduledIntervalText
@@ -813,6 +1135,48 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newGoalTargetDate, value);
     }
 
+    public SavingsGoalSummaryViewModel? SelectedGoalForEditing
+    {
+        get => selectedGoalForEditing;
+        set
+        {
+            if (SetProperty(ref selectedGoalForEditing, value))
+            {
+                LoadGoalEditor(value?.Source);
+            }
+        }
+    }
+
+    public Account? EditGoalAccount
+    {
+        get => editGoalAccount;
+        set => SetProperty(ref editGoalAccount, value);
+    }
+
+    public string EditGoalName
+    {
+        get => editGoalName;
+        set => SetProperty(ref editGoalName, value);
+    }
+
+    public string EditGoalTargetAmountText
+    {
+        get => editGoalTargetAmountText;
+        set => SetProperty(ref editGoalTargetAmountText, value);
+    }
+
+    public string EditGoalCurrentAmountText
+    {
+        get => editGoalCurrentAmountText;
+        set => SetProperty(ref editGoalCurrentAmountText, value);
+    }
+
+    public DateTime EditGoalTargetDate
+    {
+        get => editGoalTargetDate;
+        set => SetProperty(ref editGoalTargetDate, value);
+    }
+
     public string NewCategoryName
     {
         get => newCategoryName;
@@ -836,19 +1200,38 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public Account? ReconciliationAccount
     {
         get => reconciliationAccount;
-        set => SetProperty(ref reconciliationAccount, value);
+        set
+        {
+            if (SetProperty(ref reconciliationAccount, value))
+            {
+                UpdateReconciliationAccountStatus();
+                QueueReconciliationComparison();
+            }
+        }
     }
 
     public string ActualBalanceText
     {
         get => actualBalanceText;
-        set => SetProperty(ref actualBalanceText, value);
+        set
+        {
+            if (SetProperty(ref actualBalanceText, value))
+            {
+                QueueReconciliationComparison();
+            }
+        }
     }
 
     public DateTime ActualBalanceDate
     {
         get => actualBalanceDate;
-        set => SetProperty(ref actualBalanceDate, value);
+        set
+        {
+            if (SetProperty(ref actualBalanceDate, value))
+            {
+                QueueReconciliationComparison();
+            }
+        }
     }
 
     public string ReconciliationExpectedText
@@ -887,10 +1270,29 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref groupedSpendingNotes, value);
     }
 
+    public TransactionType SelectedReconciliationTransactionType
+    {
+        get => selectedReconciliationTransactionType;
+        set
+        {
+            if (SetProperty(ref selectedReconciliationTransactionType, value))
+            {
+                UpdateCategoryChoices();
+                SelectedGroupedSpendingCategory = GroupedSpendingCategoryChoices.FirstOrDefault();
+            }
+        }
+    }
+
     public CategoryChoiceViewModel? SelectedGroupedSpendingCategory
     {
         get => selectedGroupedSpendingCategory;
         set => SetProperty(ref selectedGroupedSpendingCategory, value);
+    }
+
+    public string ReconciliationTransactionCategoryName
+    {
+        get => reconciliationTransactionCategoryName;
+        set => SetProperty(ref reconciliationTransactionCategoryName, value);
     }
 
     public string ExportPathText
@@ -1010,15 +1412,17 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        if (!TryReadDecimal(SelectedAccountBalanceText, out var balance))
+        if (string.IsNullOrWhiteSpace(SelectedAccountName))
         {
-            SetStatus("Updated balance must be a number.");
+            SetStatus("Give the account a name first.");
             return;
         }
 
         var updatedAccount = SelectedAccount with
         {
-            CurrentBalance = balance,
+            Name = SelectedAccountName.Trim(),
+            Type = SelectedAccountEditType,
+            Currency = NormalizeCurrency(SelectedAccountCurrency),
             CreditCardDetails = CreateCreditCardDetailsForSelectedAccount()
         };
 
@@ -1083,6 +1487,30 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return category.Id;
     }
 
+    private async Task<Guid?> ResolveCategoryAsync(
+        string newCategoryName,
+        CategoryChoiceViewModel? categoryChoice,
+        TransactionType type)
+    {
+        if (string.IsNullOrWhiteSpace(newCategoryName))
+        {
+            return await ResolveCategoryChoiceAsync(categoryChoice, type);
+        }
+
+        var trimmedName = newCategoryName.Trim();
+        var existing = Categories.FirstOrDefault(category =>
+            string.Equals(category.Name, trimmedName, StringComparison.OrdinalIgnoreCase)
+            && (category.Type is null || category.Type == type));
+        if (existing is not null)
+        {
+            return existing.Id;
+        }
+
+        var category = new Category(Guid.NewGuid(), trimmedName, type);
+        await categoryRepository.SaveAsync(category);
+        return category.Id;
+    }
+
     private async Task AddTransactionAsync()
     {
         if (NewTransactionAccount is null)
@@ -1097,7 +1525,41 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        var categoryId = await ResolveCategoryChoiceAsync(SelectedTransactionCategory, SelectedTransactionType);
+        Guid? destinationAccountId = null;
+        Guid? destinationGoalId = null;
+        if (SelectedTransactionType == TransactionType.Transfer)
+        {
+            if (SelectedTransferDestinationKind == TransferDestinationKind.Account)
+            {
+                if (NewTransferDestinationAccount is null)
+                {
+                    SetStatus("Choose a destination account for this transfer.");
+                    return;
+                }
+
+                if (NewTransferDestinationAccount.Id == NewTransactionAccount.Id)
+                {
+                    SetStatus("Transfer destination must be different from the source account.");
+                    return;
+                }
+
+                destinationAccountId = NewTransferDestinationAccount.Id;
+            }
+            else
+            {
+                if (NewTransferDestinationGoal is null)
+                {
+                    SetStatus("Choose a destination goal for this transfer.");
+                    return;
+                }
+
+                destinationGoalId = NewTransferDestinationGoal.Id;
+            }
+        }
+
+        var categoryId = SelectedTransactionType == TransactionType.Transfer
+            ? null
+            : await ResolveCategoryAsync(NewTransactionCategoryName, SelectedTransactionCategory, SelectedTransactionType);
         var transaction = new Transaction(
             Guid.NewGuid(),
             DateOnly.FromDateTime(NewTransactionDate),
@@ -1105,26 +1567,95 @@ public sealed class FinanceDataViewModel : ViewModelBase
             NewTransactionAccount.Id,
             categoryId,
             string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
-            SelectedTransactionType);
+            SelectedTransactionType,
+            destinationAccountId,
+            destinationGoalId);
 
-        var updatedAccount = transactionBalanceService.Apply(NewTransactionAccount, transaction);
-        await accountRepository.SaveAsync(updatedAccount);
-        await transactionRepository.SaveAsync(transaction);
+        await SaveAppliedTransactionAsync(transaction);
         NewTransactionAmountText = string.Empty;
         NewTransactionNotes = string.Empty;
+        NewTransactionCategoryName = string.Empty;
         await RefreshAfterMutationAsync("Transaction saved.");
     }
 
     private async Task DeleteTransactionAsync(Transaction transaction)
     {
-        var account = await accountRepository.GetByIdAsync(transaction.AccountId);
-        if (account is not null)
-        {
-            await accountRepository.SaveAsync(transactionBalanceService.Reverse(account, transaction));
-        }
-
+        await ReverseAppliedTransactionAsync(transaction);
         await transactionRepository.DeleteAsync(transaction.Id);
         await RefreshAfterMutationAsync("Transaction deleted.");
+    }
+
+    private async Task SaveEditedTransactionAsync()
+    {
+        var original = SelectedTransactionForEditing?.Source;
+        if (original is null)
+        {
+            SetStatus("Select a transaction to edit.");
+            return;
+        }
+
+        if (EditTransactionAccount is null)
+        {
+            SetStatus("Choose an account for the edited transaction.");
+            return;
+        }
+
+        if (!TryReadDecimal(EditTransactionAmountText, out var amount) || amount <= 0m)
+        {
+            SetStatus("Edited transaction amount must be greater than zero.");
+            return;
+        }
+
+        Guid? destinationAccountId = null;
+        Guid? destinationGoalId = null;
+        if (EditTransactionType == TransactionType.Transfer)
+        {
+            if (EditTransferDestinationKind == TransferDestinationKind.Account)
+            {
+                if (EditTransferDestinationAccount is null)
+                {
+                    SetStatus("Choose a destination account for this transfer.");
+                    return;
+                }
+
+                if (EditTransferDestinationAccount.Id == EditTransactionAccount.Id)
+                {
+                    SetStatus("Transfer destination must be different from the source account.");
+                    return;
+                }
+
+                destinationAccountId = EditTransferDestinationAccount.Id;
+            }
+            else
+            {
+                if (EditTransferDestinationGoal is null)
+                {
+                    SetStatus("Choose a destination goal for this transfer.");
+                    return;
+                }
+
+                destinationGoalId = EditTransferDestinationGoal.Id;
+            }
+        }
+
+        var categoryId = EditTransactionType == TransactionType.Transfer
+            ? null
+            : await ResolveCategoryAsync(EditTransactionCategoryName, EditTransactionCategory, EditTransactionType);
+        var updated = original with
+        {
+            Date = DateOnly.FromDateTime(EditTransactionDate),
+            Amount = amount,
+            AccountId = EditTransactionAccount.Id,
+            CategoryId = categoryId,
+            Notes = string.IsNullOrWhiteSpace(EditTransactionNotes) ? null : EditTransactionNotes.Trim(),
+            Type = EditTransactionType,
+            DestinationAccountId = destinationAccountId,
+            DestinationGoalId = destinationGoalId
+        };
+
+        await ReverseAppliedTransactionAsync(original);
+        await SaveAppliedTransactionAsync(updated);
+        await RefreshAfterMutationAsync("Transaction updated.");
     }
 
     private async Task AddScheduledTransactionAsync()
@@ -1165,11 +1696,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
             SelectedScheduledType,
             recurrenceRule,
             startDate,
-            Active: true);
+            Active: true,
+            string.IsNullOrWhiteSpace(NewScheduledNotes) ? null : NewScheduledNotes.Trim());
 
         await scheduledTransactionRepository.SaveAsync(scheduledTransaction);
         NewScheduledName = string.Empty;
         NewScheduledAmountText = string.Empty;
+        NewScheduledNotes = string.Empty;
         await RefreshAfterMutationAsync("Scheduled item saved.");
     }
 
@@ -1177,6 +1710,58 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         await scheduledTransactionRepository.DeleteAsync(scheduledTransaction.Id);
         await RefreshAfterMutationAsync("Scheduled item deleted.");
+    }
+
+    private async Task SaveEditedScheduledTransactionAsync()
+    {
+        var original = SelectedScheduledForEditing?.Source;
+        if (original is null)
+        {
+            SetStatus("Select a scheduled item to edit.");
+            return;
+        }
+
+        if (EditScheduledAccount is null)
+        {
+            SetStatus("Choose an account for the scheduled item.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditScheduledName))
+        {
+            SetStatus("Give the scheduled item a name.");
+            return;
+        }
+
+        if (!TryReadDecimal(EditScheduledAmountText, out var amount) || amount <= 0m)
+        {
+            SetStatus("Scheduled amount must be greater than zero.");
+            return;
+        }
+
+        if (!TryReadInt(EditScheduledIntervalText, out var interval) || interval < 1)
+        {
+            SetStatus("Recurrence interval must be at least 1.");
+            return;
+        }
+
+        var startDate = DateOnly.FromDateTime(EditScheduledDate);
+        var categoryId = await ResolveCategoryAsync(EditScheduledCategoryName, EditScheduledCategory, EditScheduledType);
+        var updated = original with
+        {
+            Name = EditScheduledName.Trim(),
+            Amount = amount,
+            AccountId = EditScheduledAccount.Id,
+            CategoryId = categoryId,
+            Type = EditScheduledType,
+            RecurrenceRule = CreateRecurrenceRule(EditScheduledFrequency, interval, startDate),
+            NextOccurrence = startDate,
+            Active = true,
+            Notes = string.IsNullOrWhiteSpace(EditScheduledNotes) ? null : EditScheduledNotes.Trim()
+        };
+
+        await scheduledTransactionRepository.SaveAsync(updated);
+        await RefreshAfterMutationAsync("Scheduled item updated.");
     }
 
     private async Task AddSavingsGoalAsync()
@@ -1220,6 +1805,44 @@ public sealed class FinanceDataViewModel : ViewModelBase
         await RefreshAfterMutationAsync("Savings goal deleted.");
     }
 
+    private async Task SaveEditedSavingsGoalAsync()
+    {
+        var original = SelectedGoalForEditing?.Source;
+        if (original is null)
+        {
+            SetStatus("Select a goal to edit.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditGoalName))
+        {
+            SetStatus("Give the goal a name.");
+            return;
+        }
+
+        if (!TryReadDecimal(EditGoalTargetAmountText, out var targetAmount) || targetAmount <= 0m)
+        {
+            SetStatus("Goal target must be greater than zero.");
+            return;
+        }
+
+        if (!TryReadDecimal(EditGoalCurrentAmountText, out var currentAmount) || currentAmount < 0m)
+        {
+            SetStatus("Goal current amount must be zero or more.");
+            return;
+        }
+
+        await savingsGoalRepository.SaveAsync(original with
+        {
+            Name = EditGoalName.Trim(),
+            TargetAmount = targetAmount,
+            CurrentAmount = currentAmount,
+            TargetDate = DateOnly.FromDateTime(EditGoalTargetDate),
+            AccountId = EditGoalAccount?.Id
+        });
+        await RefreshAfterMutationAsync("Savings goal updated.");
+    }
+
     private async Task CreateCheckInAsync()
     {
         await RunBusyAsync(() =>
@@ -1250,10 +1873,16 @@ public sealed class FinanceDataViewModel : ViewModelBase
         }
 
         var forecastEvent = item.Source.ExpectedEvent;
+        if (!TryReadDecimal(item.EditableAmountText, out var editedAmount) || editedAmount <= 0m)
+        {
+            SetStatus("Expected item amount must be greater than zero.");
+            return;
+        }
+
         var transaction = new Transaction(
             Guid.NewGuid(),
             forecastEvent.Date,
-            forecastEvent.Amount,
+            editedAmount,
             forecastEvent.AccountId,
             forecastEvent.CategoryId,
             forecastEvent.Name,
@@ -1308,53 +1937,143 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private async Task CompareRealityAsync()
     {
-        await RunBusyAsync(() =>
-        {
-            if (!TryReadDecimal(ActualBalanceText, out var actualBalance))
-            {
-                SetStatus("Actual balance must be a number.");
-                return Task.CompletedTask;
-            }
+        await CompareRealityNowAsync(showStatus: true);
+    }
 
-            var actualDate = DateOnly.FromDateTime(ActualBalanceDate);
-            var forecast = CreateForecastThrough(actualDate);
-            latestReconciliationResult = reconciliationService.Compare(forecast, actualBalance, actualDate);
-            ReconciliationExpectedText = FormatMoney(latestReconciliationResult.ExpectedBalance, DefaultCurrency);
-            ReconciliationActualText = FormatMoney(latestReconciliationResult.ActualBalance, DefaultCurrency);
-            ReconciliationDifferenceText = FormatMoney(latestReconciliationResult.Difference, DefaultCurrency);
-            ReconciliationStatusText = DisplayText.Format(latestReconciliationResult.Status);
-            SetStatus("Reality compared with forecast.", clearAutomatically: true);
-            return Task.CompletedTask;
-        });
+    private async Task CompareRealityNowAsync(bool showStatus)
+    {
+        await Task.Yield();
+
+        if (ReconciliationAccount is null)
+        {
+            latestReconciliationResult = null;
+            ReconciliationExpectedText = "Choose an account.";
+            ReconciliationActualText = "Not entered yet.";
+            ReconciliationDifferenceText = "Not compared yet.";
+            ReconciliationStatusText = "Waiting";
+            return;
+        }
+
+        ReconciliationExpectedText = FormatMoney(ReconciliationAccount.CurrentBalance, ReconciliationAccount.Currency);
+
+        if (string.IsNullOrWhiteSpace(ActualBalanceText))
+        {
+            latestReconciliationResult = null;
+            ReconciliationActualText = "Not entered yet.";
+            ReconciliationDifferenceText = "Not compared yet.";
+            ReconciliationStatusText = "Waiting for real balance";
+            return;
+        }
+
+        if (!TryReadDecimal(ActualBalanceText, out var actualBalance))
+        {
+            latestReconciliationResult = null;
+            ReconciliationActualText = "Invalid number";
+            ReconciliationDifferenceText = "Not compared yet.";
+            ReconciliationStatusText = "Check the real balance value";
+            return;
+        }
+
+        var actualDate = DateOnly.FromDateTime(ActualBalanceDate);
+        latestReconciliationResult = reconciliationService.Compare(
+            ReconciliationAccount.CurrentBalance,
+            actualBalance,
+            actualDate);
+        ReconciliationActualText = FormatMoney(latestReconciliationResult.ActualBalance, ReconciliationAccount.Currency);
+        ReconciliationDifferenceText = FormatMoney(latestReconciliationResult.Difference, ReconciliationAccount.Currency);
+        ReconciliationStatusText = DisplayText.Format(latestReconciliationResult.Status);
+        if (showStatus)
+        {
+            SetStatus("Reality compared with account balance.", clearAutomatically: true);
+        }
+    }
+
+    private void QueueReconciliationComparison()
+    {
+        reconciliationComparisonCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        reconciliationComparisonCancellation = cancellation;
+        _ = CompareRealityAfterDelayAsync(cancellation.Token);
+    }
+
+    private async Task CompareRealityAfterDelayAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(1200), cancellationToken);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await CompareRealityNowAsync(showStatus: false);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private void UpdateReconciliationAccountStatus()
+    {
+        if (ReconciliationAccount is null)
+        {
+            ReconciliationExpectedText = "Choose an account.";
+            ReconciliationActualText = "Not entered yet.";
+            ReconciliationDifferenceText = "Not compared yet.";
+            ReconciliationStatusText = "Waiting";
+            return;
+        }
+
+        ReconciliationExpectedText = FormatMoney(ReconciliationAccount.CurrentBalance, ReconciliationAccount.Currency);
+        ReconciliationActualText = string.IsNullOrWhiteSpace(ActualBalanceText)
+            ? "Not entered yet."
+            : ReconciliationActualText;
+        ReconciliationDifferenceText = string.IsNullOrWhiteSpace(ActualBalanceText)
+            ? "Not compared yet."
+            : ReconciliationDifferenceText;
+        ReconciliationStatusText = string.IsNullOrWhiteSpace(ActualBalanceText)
+            ? "Waiting for real balance"
+            : ReconciliationStatusText;
     }
 
     private async Task AddGroupedSpendingAsync()
     {
         if (ReconciliationAccount is null)
         {
-            SetStatus("Choose the account where the grouped spending happened.");
+            SetStatus("Choose the account for this reconciliation transaction.");
             return;
         }
 
         if (!TryReadDecimal(GroupedSpendingAmountText, out var amount) || amount <= 0m)
         {
-            SetStatus("Grouped spending amount must be greater than zero.");
+            SetStatus("Reconciliation transaction amount must be greater than zero.");
             return;
         }
 
-        var categoryId = await ResolveCategoryChoiceAsync(SelectedGroupedSpendingCategory, TransactionType.Expense);
-        var transaction = groupedSpendingService.CreateTransaction(new GroupedSpendingEntry(
+        if (SelectedReconciliationTransactionType == TransactionType.Transfer)
+        {
+            SetStatus("Use the Transactions tab for transfers.");
+            return;
+        }
+
+        var categoryId = await ResolveCategoryAsync(
+            ReconciliationTransactionCategoryName,
+            SelectedGroupedSpendingCategory,
+            SelectedReconciliationTransactionType);
+        var transaction = new Transaction(
+            Guid.NewGuid(),
             DateOnly.FromDateTime(ActualBalanceDate),
             amount,
             ReconciliationAccount.Id,
             categoryId,
-            string.IsNullOrWhiteSpace(GroupedSpendingNotes) ? null : GroupedSpendingNotes.Trim()));
+            string.IsNullOrWhiteSpace(GroupedSpendingNotes) ? "Reconciliation transaction" : GroupedSpendingNotes.Trim(),
+            SelectedReconciliationTransactionType);
 
         await SaveAppliedTransactionAsync(transaction);
         GroupedSpendingAmountText = string.Empty;
         GroupedSpendingNotes = string.Empty;
+        ReconciliationTransactionCategoryName = string.Empty;
         await RefreshAsync();
-        SetStatus("Grouped spending saved.", clearAutomatically: true);
+        QueueReconciliationComparison();
+        SetStatus("Reconciliation transaction saved.", clearAutomatically: true);
     }
 
     private async Task AddBalanceAdjustmentAsync()
@@ -1503,7 +2222,83 @@ public sealed class FinanceDataViewModel : ViewModelBase
         }
 
         await accountRepository.SaveAsync(transactionBalanceService.Apply(account, transaction));
+        await ApplyTransferDestinationAsync(transaction);
         await transactionRepository.SaveAsync(transaction);
+    }
+
+    private async Task ReverseAppliedTransactionAsync(Transaction transaction)
+    {
+        var account = await accountRepository.GetByIdAsync(transaction.AccountId);
+        if (account is not null)
+        {
+            await accountRepository.SaveAsync(transactionBalanceService.Reverse(account, transaction));
+        }
+
+        await ReverseTransferDestinationAsync(transaction);
+    }
+
+    private async Task ApplyTransferDestinationAsync(Transaction transaction)
+    {
+        if (transaction.Type != TransactionType.Transfer)
+        {
+            return;
+        }
+
+        if (transaction.DestinationAccountId is { } destinationAccountId)
+        {
+            var destinationAccount = await accountRepository.GetByIdAsync(destinationAccountId);
+            if (destinationAccount is not null)
+            {
+                await accountRepository.SaveAsync(destinationAccount with
+                {
+                    CurrentBalance = destinationAccount.CurrentBalance + Math.Abs(transaction.Amount)
+                });
+            }
+        }
+
+        if (transaction.DestinationGoalId is { } destinationGoalId)
+        {
+            var destinationGoal = await savingsGoalRepository.GetByIdAsync(destinationGoalId);
+            if (destinationGoal is not null)
+            {
+                await savingsGoalRepository.SaveAsync(destinationGoal with
+                {
+                    CurrentAmount = destinationGoal.CurrentAmount + Math.Abs(transaction.Amount)
+                });
+            }
+        }
+    }
+
+    private async Task ReverseTransferDestinationAsync(Transaction transaction)
+    {
+        if (transaction.Type != TransactionType.Transfer)
+        {
+            return;
+        }
+
+        if (transaction.DestinationAccountId is { } destinationAccountId)
+        {
+            var destinationAccount = await accountRepository.GetByIdAsync(destinationAccountId);
+            if (destinationAccount is not null)
+            {
+                await accountRepository.SaveAsync(destinationAccount with
+                {
+                    CurrentBalance = destinationAccount.CurrentBalance - Math.Abs(transaction.Amount)
+                });
+            }
+        }
+
+        if (transaction.DestinationGoalId is { } destinationGoalId)
+        {
+            var destinationGoal = await savingsGoalRepository.GetByIdAsync(destinationGoalId);
+            if (destinationGoal is not null)
+            {
+                await savingsGoalRepository.SaveAsync(destinationGoal with
+                {
+                    CurrentAmount = Math.Max(0m, destinationGoal.CurrentAmount - Math.Abs(transaction.Amount))
+                });
+            }
+        }
     }
 
     private async Task AdvanceScheduledTransactionAsync(Guid scheduledTransactionId, DateOnly completedDate)
@@ -1642,23 +2437,108 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private CreditCardDetails? CreateCreditCardDetailsForSelectedAccount()
     {
-        if (SelectedAccount?.Type != AccountType.CreditCard)
+        if (SelectedAccountEditType != AccountType.CreditCard)
         {
-            return SelectedAccount?.CreditCardDetails;
+            return null;
         }
 
         return new CreditCardDetails(
             ReadOptionalDecimal(SelectedAccountDebtText),
-            SelectedAccount.CreditCardDetails?.StatementDayOfMonth,
+            SelectedAccount?.CreditCardDetails?.StatementDayOfMonth,
             ReadOptionalPaymentDueDay(SelectedAccountPaymentDueDayText),
             ReadOptionalDecimal(SelectedAccountMinimumPaymentText),
             ReadOptionalDecimal(SelectedAccountPlannedPaymentText));
+    }
+
+    private void LoadTransactionEditor(Transaction? transaction)
+    {
+        if (transaction is null)
+        {
+            EditTransactionAccount = Accounts.FirstOrDefault();
+            EditTransactionType = TransactionType.Expense;
+            EditTransactionDate = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
+            EditTransactionAmountText = string.Empty;
+            EditTransactionNotes = string.Empty;
+            EditTransactionCategoryName = string.Empty;
+            EditTransferDestinationKind = TransferDestinationKind.Account;
+            EditTransferDestinationAccount = Accounts.FirstOrDefault();
+            EditTransferDestinationGoal = SavingsGoals.FirstOrDefault();
+            EditTransactionCategory = EditTransactionCategoryChoices.FirstOrDefault();
+            return;
+        }
+
+        EditTransactionAccount = Accounts.FirstOrDefault(account => account.Id == transaction.AccountId);
+        EditTransactionType = transaction.Type;
+        EditTransactionDate = transaction.Date.ToDateTime(TimeOnly.MinValue);
+        EditTransactionAmountText = ToInputText(transaction.Amount);
+        EditTransactionNotes = transaction.Notes ?? string.Empty;
+        EditTransactionCategoryName = string.Empty;
+        EditTransferDestinationKind = transaction.DestinationGoalId.HasValue
+            ? TransferDestinationKind.Goal
+            : TransferDestinationKind.Account;
+        EditTransferDestinationAccount = Accounts.FirstOrDefault(account => account.Id == transaction.DestinationAccountId);
+        EditTransferDestinationGoal = SavingsGoals.FirstOrDefault(goal => goal.Id == transaction.DestinationGoalId);
+        UpdateCategoryChoices();
+        EditTransactionCategory = EditTransactionCategoryChoices.FirstOrDefault(choice => choice.CategoryId == transaction.CategoryId)
+            ?? EditTransactionCategoryChoices.FirstOrDefault();
+    }
+
+    private void LoadScheduledEditor(ScheduledTransaction? scheduledTransaction)
+    {
+        if (scheduledTransaction is null)
+        {
+            EditScheduledAccount = Accounts.FirstOrDefault();
+            EditScheduledType = TransactionType.Expense;
+            EditScheduledDate = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
+            EditScheduledName = string.Empty;
+            EditScheduledAmountText = string.Empty;
+            EditScheduledNotes = string.Empty;
+            EditScheduledIntervalText = "1";
+            EditScheduledFrequency = RecurrenceFrequency.Monthly;
+            EditScheduledCategoryName = string.Empty;
+            EditScheduledCategory = EditScheduledCategoryChoices.FirstOrDefault();
+            return;
+        }
+
+        EditScheduledAccount = Accounts.FirstOrDefault(account => account.Id == scheduledTransaction.AccountId);
+        EditScheduledType = scheduledTransaction.Type;
+        EditScheduledDate = scheduledTransaction.NextOccurrence.ToDateTime(TimeOnly.MinValue);
+        EditScheduledName = scheduledTransaction.Name;
+        EditScheduledAmountText = ToInputText(scheduledTransaction.Amount);
+        EditScheduledNotes = scheduledTransaction.Notes ?? string.Empty;
+        EditScheduledIntervalText = scheduledTransaction.RecurrenceRule.Interval.ToString(CultureInfo.InvariantCulture);
+        EditScheduledFrequency = scheduledTransaction.RecurrenceRule.Frequency;
+        EditScheduledCategoryName = string.Empty;
+        UpdateCategoryChoices();
+        EditScheduledCategory = EditScheduledCategoryChoices.FirstOrDefault(choice => choice.CategoryId == scheduledTransaction.CategoryId)
+            ?? EditScheduledCategoryChoices.FirstOrDefault();
+    }
+
+    private void LoadGoalEditor(SavingsGoal? goal)
+    {
+        if (goal is null)
+        {
+            EditGoalAccount = Accounts.FirstOrDefault(account => account.Type == AccountType.Savings) ?? Accounts.FirstOrDefault();
+            EditGoalName = string.Empty;
+            EditGoalTargetAmountText = string.Empty;
+            EditGoalCurrentAmountText = string.Empty;
+            EditGoalTargetDate = dateProvider.Today.ToDateTime(TimeOnly.MinValue).AddMonths(6);
+            return;
+        }
+
+        EditGoalAccount = Accounts.FirstOrDefault(account => account.Id == goal.AccountId);
+        EditGoalName = goal.Name;
+        EditGoalTargetAmountText = ToInputText(goal.TargetAmount);
+        EditGoalCurrentAmountText = ToInputText(goal.CurrentAmount);
+        EditGoalTargetDate = (goal.TargetDate ?? dateProvider.Today).ToDateTime(TimeOnly.MinValue);
     }
 
     private void LoadSelectedAccountEditor(Account? account)
     {
         if (account is null)
         {
+            SelectedAccountName = string.Empty;
+            SelectedAccountCurrency = DefaultCurrency;
             SelectedAccountBalanceText = string.Empty;
             SelectedAccountDebtText = string.Empty;
             SelectedAccountMinimumPaymentText = string.Empty;
@@ -1668,6 +2548,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
+        SelectedAccountName = account.Name;
+        SelectedAccountEditType = account.Type;
+        SelectedAccountCurrency = account.Currency;
         SelectedAccountBalanceText = ToInputText(account.CurrentBalance);
         SelectedAccountDebtText = ToInputText(account.CreditCardDetails?.CurrentDebt);
         SelectedAccountMinimumPaymentText = ToInputText(account.CreditCardDetails?.MinimumPayment);
@@ -1722,15 +2605,32 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         SelectedAccount = FindFreshAccount(SelectedAccount) ?? Accounts.FirstOrDefault();
         NewTransactionAccount = FindFreshAccount(NewTransactionAccount) ?? Accounts.FirstOrDefault();
+        NewTransferDestinationAccount = FindFreshAccount(NewTransferDestinationAccount)
+            ?? Accounts.FirstOrDefault(account => account.Id != NewTransactionAccount?.Id)
+            ?? Accounts.FirstOrDefault();
+        NewTransferDestinationGoal = FindFreshGoal(NewTransferDestinationGoal) ?? SavingsGoals.FirstOrDefault();
+        EditTransactionAccount = FindFreshAccount(EditTransactionAccount) ?? Accounts.FirstOrDefault();
+        EditTransferDestinationAccount = FindFreshAccount(EditTransferDestinationAccount)
+            ?? Accounts.FirstOrDefault(account => account.Id != EditTransactionAccount?.Id)
+            ?? Accounts.FirstOrDefault();
+        EditTransferDestinationGoal = FindFreshGoal(EditTransferDestinationGoal) ?? SavingsGoals.FirstOrDefault();
         NewScheduledAccount = FindFreshAccount(NewScheduledAccount) ?? Accounts.FirstOrDefault();
+        EditScheduledAccount = FindFreshAccount(EditScheduledAccount) ?? Accounts.FirstOrDefault();
         NewGoalAccount = FindFreshAccount(NewGoalAccount)
+            ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
+            ?? Accounts.FirstOrDefault();
+        EditGoalAccount = FindFreshAccount(EditGoalAccount)
             ?? Accounts.FirstOrDefault(account => account.Type == AccountType.Savings)
             ?? Accounts.FirstOrDefault();
         ReconciliationAccount = FindFreshAccount(ReconciliationAccount) ?? Accounts.FirstOrDefault();
         SelectedTransactionCategory = FindFreshCategoryChoice(SelectedTransactionCategory, TransactionCategoryChoices)
             ?? TransactionCategoryChoices.FirstOrDefault();
+        EditTransactionCategory = FindFreshCategoryChoice(EditTransactionCategory, EditTransactionCategoryChoices)
+            ?? EditTransactionCategoryChoices.FirstOrDefault();
         SelectedScheduledCategory = FindFreshCategoryChoice(SelectedScheduledCategory, ScheduledCategoryChoices)
             ?? ScheduledCategoryChoices.FirstOrDefault();
+        EditScheduledCategory = FindFreshCategoryChoice(EditScheduledCategory, EditScheduledCategoryChoices)
+            ?? EditScheduledCategoryChoices.FirstOrDefault();
         SelectedGroupedSpendingCategory = FindFreshCategoryChoice(SelectedGroupedSpendingCategory, GroupedSpendingCategoryChoices)
             ?? GroupedSpendingCategoryChoices.FirstOrDefault();
     }
@@ -1740,6 +2640,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return account is null
             ? null
             : Accounts.FirstOrDefault(candidate => candidate.Id == account.Id);
+    }
+
+    private SavingsGoal? FindFreshGoal(SavingsGoal? goal)
+    {
+        return goal is null
+            ? null
+            : SavingsGoals.FirstOrDefault(candidate => candidate.Id == goal.Id);
     }
 
     private CategoryChoiceViewModel? FindFreshCategoryChoice(
@@ -1756,8 +2663,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private void UpdateCategoryChoices()
     {
         Replace(TransactionCategoryChoices, CreateCategoryChoices(SelectedTransactionType));
+        Replace(EditTransactionCategoryChoices, CreateCategoryChoices(EditTransactionType));
         Replace(ScheduledCategoryChoices, CreateCategoryChoices(SelectedScheduledType));
-        Replace(GroupedSpendingCategoryChoices, CreateCategoryChoices(TransactionType.Expense));
+        Replace(EditScheduledCategoryChoices, CreateCategoryChoices(EditScheduledType));
+        Replace(GroupedSpendingCategoryChoices, CreateCategoryChoices(SelectedReconciliationTransactionType));
     }
 
     private IEnumerable<CategoryChoiceViewModel> CreateCategoryChoices(TransactionType type)
@@ -1784,9 +2693,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(account)));
         Replace(CategorySummaries, Categories.Select(category => new CategorySummaryViewModel(category)));
-        Replace(TransactionSummaries, Transactions.Select(transaction => new TransactionSummaryViewModel(
+        Replace(TransactionSummaries, Transactions
+            .OrderByDescending(transaction => transaction.Date)
+            .Select(transaction => new TransactionSummaryViewModel(
             transaction,
             Accounts.FirstOrDefault(account => account.Id == transaction.AccountId)?.Name ?? "Unknown account",
+            Accounts.FirstOrDefault(account => account.Id == transaction.DestinationAccountId)?.Name,
+            SavingsGoals.FirstOrDefault(goal => goal.Id == transaction.DestinationGoalId)?.Name,
             Categories.FirstOrDefault(category => category.Id == transaction.CategoryId)?.Name,
             DefaultCurrency,
             SelectedDateDisplayFormat)));
@@ -1959,6 +2872,7 @@ public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
 {
     private ExpectedTransactionReview source;
     private string decisionText;
+    private string editableAmountText;
 
     public ExpectedTransactionReviewViewModel(
         ExpectedTransactionReview source,
@@ -1971,6 +2885,7 @@ public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
         AccountName = accountName;
         CategoryText = categoryName ?? "None";
         AmountText = $"{currency} {source.ExpectedEvent.Amount:N2}";
+        editableAmountText = source.ExpectedEvent.Amount.ToString("0.##", CultureInfo.InvariantCulture);
         DateText = DateDisplay.Format(source.ExpectedEvent.Date, dateDisplayFormat);
         TypeText = DisplayText.Format(source.ExpectedEvent.Type);
         decisionText = DisplayText.Format(source.Decision);
@@ -1985,6 +2900,12 @@ public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
     public string CategoryText { get; }
 
     public string AmountText { get; }
+
+    public string EditableAmountText
+    {
+        get => editableAmountText;
+        set => SetProperty(ref editableAmountText, value);
+    }
 
     public string DateText { get; }
 
@@ -2104,26 +3025,42 @@ public sealed class TransactionSummaryViewModel
     public TransactionSummaryViewModel(
         Transaction transaction,
         string accountName,
+        string? destinationAccountName,
+        string? destinationGoalName,
         string? categoryName,
         string currency,
         DateDisplayFormat dateDisplayFormat)
     {
         Source = transaction;
         AccountName = accountName;
-        CategoryText = categoryName ?? "None";
+        DestinationText = destinationAccountName is not null
+            ? $"to {destinationAccountName}"
+            : destinationGoalName is not null
+                ? $"to goal {destinationGoalName}"
+                : string.Empty;
+        CategoryText = transaction.Type == TransactionType.Transfer
+            ? string.IsNullOrWhiteSpace(DestinationText) ? "Transfer" : $"Transfer {DestinationText}"
+            : categoryName ?? "None";
         AmountText = $"{currency} {transaction.Amount:N2}";
         DateText = DateDisplay.Format(transaction.Date, dateDisplayFormat);
+        DisplayTitle = transaction.Type == TransactionType.Transfer
+            ? $"{accountName} -> {destinationAccountName ?? destinationGoalName ?? "Unknown destination"}"
+            : $"{accountName} - {CategoryText}";
     }
 
     public Transaction Source { get; }
 
     public string AccountName { get; }
 
+    public string DestinationText { get; }
+
     public string CategoryText { get; }
 
     public string AmountText { get; }
 
     public string DateText { get; }
+
+    public string DisplayTitle { get; }
 
     public string TypeText => DisplayText.Format(Source.Type);
 
@@ -2161,6 +3098,8 @@ public sealed class ScheduledTransactionSummaryViewModel
     public string NextText { get; }
 
     public string RecurrenceText => RecurrenceDisplay.Format(Source.RecurrenceRule);
+
+    public string NotesText => string.IsNullOrWhiteSpace(Source.Notes) ? "No notes" : Source.Notes;
 }
 
 public sealed class SavingsGoalSummaryViewModel

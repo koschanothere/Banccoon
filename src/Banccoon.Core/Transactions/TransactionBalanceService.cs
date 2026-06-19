@@ -11,7 +11,7 @@ public sealed class TransactionBalanceService : ITransactionBalanceService
 
         return account with
         {
-            CurrentBalance = account.CurrentBalance + MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type)
+            CurrentBalance = account.CurrentBalance + GetSourceSignedAmount(transaction)
         };
     }
 
@@ -21,8 +21,15 @@ public sealed class TransactionBalanceService : ITransactionBalanceService
 
         return account with
         {
-            CurrentBalance = account.CurrentBalance - MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type)
+            CurrentBalance = account.CurrentBalance - GetSourceSignedAmount(transaction)
         };
+    }
+
+    private static decimal GetSourceSignedAmount(Transaction transaction)
+    {
+        return transaction.Type == TransactionType.Transfer
+            ? -Math.Abs(transaction.Amount)
+            : MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type);
     }
 
     private static void ValidateAccountMatch(Account account, Transaction transaction)

@@ -31,6 +31,17 @@ public sealed class TransactionBalanceServiceTests
     }
 
     [Fact]
+    public void Apply_Transfer_DecreasesSourceAccountBalance()
+    {
+        var account = CreateAccount(100m);
+        var transaction = CreateTransaction(account.Id, 35m, TransactionType.Transfer);
+
+        var updated = service.Apply(account, transaction);
+
+        Assert.Equal(65m, updated.CurrentBalance);
+    }
+
+    [Fact]
     public void Reverse_ReversesTheOriginalTransactionEffect()
     {
         var account = CreateAccount(65m);

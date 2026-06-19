@@ -20,7 +20,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, CategoryId, Notes, Type
+            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
             FROM Transactions
             ORDER BY Date DESC;
             """;
@@ -35,7 +35,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, CategoryId, Notes, Type
+            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
             FROM Transactions
             WHERE AccountId = @AccountId
             ORDER BY Date DESC;
@@ -52,7 +52,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, CategoryId, Notes, Type
+            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
             FROM Transactions
             WHERE Id = @Id;
             """;
@@ -69,12 +69,14 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO Transactions (Id, Date, Amount, AccountId, CategoryId, Notes, Type)
-            VALUES (@Id, @Date, @Amount, @AccountId, @CategoryId, @Notes, @Type)
+            INSERT INTO Transactions (Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type)
+            VALUES (@Id, @Date, @Amount, @AccountId, @DestinationAccountId, @DestinationGoalId, @CategoryId, @Notes, @Type)
             ON CONFLICT(Id) DO UPDATE SET
                 Date = excluded.Date,
                 Amount = excluded.Amount,
                 AccountId = excluded.AccountId,
+                DestinationAccountId = excluded.DestinationAccountId,
+                DestinationGoalId = excluded.DestinationGoalId,
                 CategoryId = excluded.CategoryId,
                 Notes = excluded.Notes,
                 Type = excluded.Type;
@@ -127,6 +129,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         AddParameter(command, "@Date", SqliteData.DateToText(transaction.Date));
         AddParameter(command, "@Amount", SqliteData.DecimalToText(transaction.Amount));
         AddParameter(command, "@AccountId", transaction.AccountId.ToString());
+        AddParameter(command, "@DestinationAccountId", SqliteData.ToDbValue(transaction.DestinationAccountId));
+        AddParameter(command, "@DestinationGoalId", SqliteData.ToDbValue(transaction.DestinationGoalId));
         AddParameter(command, "@CategoryId", SqliteData.ToDbValue(transaction.CategoryId));
         AddParameter(command, "@Notes", SqliteData.ToDbValue(transaction.Notes));
         AddParameter(command, "@Type", transaction.Type.ToString());
@@ -141,6 +145,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
             SqliteData.ReadGuid(reader, "AccountId"),
             SqliteData.ReadNullableGuid(reader, "CategoryId"),
             SqliteData.ReadNullableString(reader, "Notes"),
-            Enum.Parse<TransactionType>(SqliteData.ReadString(reader, "Type")));
+            Enum.Parse<TransactionType>(SqliteData.ReadString(reader, "Type")),
+            SqliteData.ReadNullableGuid(reader, "DestinationAccountId"),
+            SqliteData.ReadNullableGuid(reader, "DestinationGoalId"));
     }
 }

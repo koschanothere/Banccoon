@@ -76,6 +76,31 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task TransactionRepository_SaveAndGetByAccountId_RoundTripsTransferDestination()
+    {
+        await using var store = new SqliteTestStore();
+        var source = CreateAccount("Checking");
+        var destination = CreateAccount("Savings");
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 11),
+            100m,
+            source.Id,
+            null,
+            "Transfer to savings",
+            TransactionType.Transfer,
+            destination.Id);
+
+        await store.Accounts.SaveAsync(source);
+        await store.Accounts.SaveAsync(destination);
+        await store.Transactions.SaveAsync(transaction);
+
+        var transactions = await store.Transactions.GetByAccountIdAsync(source.Id);
+
+        Assert.Equal(transaction, Assert.Single(transactions));
+    }
+
+    [Fact]
     public async Task ScheduledTransactionRepository_SaveAndGetById_RoundTripsRecurrenceRule()
     {
         await using var store = new SqliteTestStore();
@@ -93,7 +118,8 @@ public sealed class SqliteRepositoryTests
                 new DateOnly(2026, 6, 1),
                 DayOfMonth: 25),
             new DateOnly(2026, 6, 25),
-            Active: true);
+            Active: true,
+            "Landlord transfer");
 
         await store.Accounts.SaveAsync(account);
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);

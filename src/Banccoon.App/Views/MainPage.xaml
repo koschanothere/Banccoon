@@ -405,13 +405,21 @@
                         <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
-                                <Label FontAttributes="Bold" Text="Update selected account" />
+                                <Label FontAttributes="Bold" Text="Edit selected account" />
                                 <Picker
                                     ItemDisplayBinding="{Binding Name}"
                                     ItemsSource="{Binding Data.Accounts}"
                                     SelectedItem="{Binding Data.SelectedAccount}" />
-                                <Entry Keyboard="Numeric" Placeholder="Current balance" Text="{Binding Data.SelectedAccountBalanceText}" />
-                                <VerticalStackLayout IsVisible="{Binding Data.IsSelectedAccountCreditCard}" Spacing="8">
+                                <Entry Placeholder="Account name" Text="{Binding Data.SelectedAccountName}" />
+                                <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
+                                    <Picker
+                                        ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                        ItemsSource="{Binding Data.AccountTypes}"
+                                        SelectedItem="{Binding Data.SelectedAccountEditType}" />
+                                    <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.SelectedAccountCurrency}" />
+                                </Grid>
+                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountBalanceText, StringFormat='Balance from transactions: {0}'}" />
+                                <VerticalStackLayout IsVisible="{Binding Data.IsSelectedAccountEditCreditCard}" Spacing="8">
                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                         <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.SelectedAccountDebtText}" />
                                         <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.SelectedAccountPaymentDueDayText}" />
@@ -426,7 +434,7 @@
                                     </Grid>
                                     <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountPayoffSummary}" />
                                 </VerticalStackLayout>
-                                <Button Command="{Binding Data.SaveSelectedAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Update account" />
+                                <Button Command="{Binding Data.SaveSelectedAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
@@ -473,69 +481,117 @@
                     </Grid>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                        <Grid ColumnDefinitions="1.4*,*,*,*,Auto" ColumnSpacing="10">
-                            <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" />
-                            <Picker
-                                Grid.Column="1"
-                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
-                                ItemsSource="{Binding Data.TransactionTypes}"
-                                SelectedItem="{Binding Data.SelectedTransactionType}" />
-                            <DatePicker
-                                Grid.Column="2"
-                                Date="{Binding Data.NewTransactionDate}"
-                                Format="{Binding Data.DatePickerFormat}" />
-                            <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
-                            <Button Grid.Column="4" Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
-                        </Grid>
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="1.4*,*,*,*,Auto" ColumnSpacing="10">
+                                <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransactionTypes}"
+                                    SelectedItem="{Binding Data.SelectedTransactionType}" />
+                                <DatePicker
+                                    Grid.Column="2"
+                                    Date="{Binding Data.NewTransactionDate}"
+                                    Format="{Binding Data.DatePickerFormat}" />
+                                <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
+                                <Button Grid.Column="4" Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Add" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding Data.IsNewTransactionNotTransfer}">
+                                <Picker
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.TransactionCategoryChoices}"
+                                    SelectedItem="{Binding Data.SelectedTransactionCategory}" />
+                                <Entry
+                                    Grid.Column="1"
+                                    Placeholder="New category, optional"
+                                    Text="{Binding Data.NewTransactionCategoryName}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="160,*,*" ColumnSpacing="10" IsVisible="{Binding Data.IsNewTransactionTransfer}">
+                                <Picker
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransferDestinationKinds}"
+                                    SelectedItem="{Binding Data.SelectedTransferDestinationKind}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    IsVisible="{Binding Data.IsNewTransferToAccount}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.Accounts}"
+                                    SelectedItem="{Binding Data.NewTransferDestinationAccount}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    IsVisible="{Binding Data.IsNewTransferToGoal}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.SavingsGoals}"
+                                    SelectedItem="{Binding Data.NewTransferDestinationGoal}" />
+                                <Label
+                                    Grid.Column="2"
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Transfers show as one row and update both sides." />
+                            </Grid>
+                            <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
+                        </VerticalStackLayout>
                     </Border>
-                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
-                        <Picker
-                            ItemDisplayBinding="{Binding Name}"
-                            ItemsSource="{Binding Data.TransactionCategoryChoices}"
-                            SelectedItem="{Binding Data.SelectedTransactionCategory}" />
-                        <Entry
-                            Grid.Column="1"
-                            Placeholder="New category"
-                            Text="{Binding Data.NewCategoryName}" />
-                        <Button
-                            Grid.Column="2"
-                            Command="{Binding Data.AddCategoryCommand}"
-                            Style="{StaticResource QuietButton}"
-                            Text="Add category" />
-                    </Grid>
-                    <CollectionView
-                        HeightRequest="70"
-                        ItemsSource="{Binding Data.CategorySummaries}">
-                        <CollectionView.EmptyView>
-                            <Label Style="{StaticResource MutedLabel}" Text="No saved categories yet. Suggested categories are already available in the picker." />
-                        </CollectionView.EmptyView>
-                        <CollectionView.ItemsLayout>
-                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-                        </CollectionView.ItemsLayout>
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Padding="10,8"
-                                    BackgroundColor="{StaticResource SurfaceColor}"
-                                    Stroke="{StaticResource DividerColor}">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label VerticalTextAlignment="Center" Text="{Binding Name}" />
-                                        <Label Style="{StaticResource MutedLabel}" VerticalTextAlignment="Center" Text="{Binding TypeText}" />
-                                        <Button
-                                            Command="{Binding BindingContext.Data.DeleteCategoryCommand, Source={x:Reference Page}}"
-                                            CommandParameter="{Binding Source}"
-                                            IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
-                                            Style="{StaticResource QuietButton}"
-                                            Text="Delete" />
-                                    </HorizontalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-                    <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
+                    <Border
+                        Padding="16"
+                        BackgroundColor="{StaticResource SurfaceColor}"
+                        IsVisible="{Binding Data.IsTransactionsEditing}"
+                        Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label FontAttributes="Bold" Text="Edit transaction" />
+                            <Picker
+                                ItemDisplayBinding="{Binding DisplayTitle}"
+                                ItemsSource="{Binding Data.TransactionSummaries}"
+                                SelectedItem="{Binding Data.SelectedTransactionForEditing}" />
+                            <Grid ColumnDefinitions="1.4*,*,*,*" ColumnSpacing="10">
+                                <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.EditTransactionAccount}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransactionTypes}"
+                                    SelectedItem="{Binding Data.EditTransactionType}" />
+                                <DatePicker
+                                    Grid.Column="2"
+                                    Date="{Binding Data.EditTransactionDate}"
+                                    Format="{Binding Data.DatePickerFormat}" />
+                                <Entry Grid.Column="3" Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.EditTransactionAmountText}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding Data.IsEditTransactionNotTransfer}">
+                                <Picker
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.EditTransactionCategoryChoices}"
+                                    SelectedItem="{Binding Data.EditTransactionCategory}" />
+                                <Entry
+                                    Grid.Column="1"
+                                    Placeholder="New category, optional"
+                                    Text="{Binding Data.EditTransactionCategoryName}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="160,*,*" ColumnSpacing="10" IsVisible="{Binding Data.IsEditTransactionTransfer}">
+                                <Picker
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransferDestinationKinds}"
+                                    SelectedItem="{Binding Data.EditTransferDestinationKind}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    IsVisible="{Binding Data.IsEditTransferToAccount}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.Accounts}"
+                                    SelectedItem="{Binding Data.EditTransferDestinationAccount}" />
+                                <Picker
+                                    Grid.Column="1"
+                                    IsVisible="{Binding Data.IsEditTransferToGoal}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.SavingsGoals}"
+                                    SelectedItem="{Binding Data.EditTransferDestinationGoal}" />
+                                <Label
+                                    Grid.Column="2"
+                                    Style="{StaticResource MutedLabel}"
+                                    Text="Editing a transfer updates both sides." />
+                            </Grid>
+                            <Entry Placeholder="Notes" Text="{Binding Data.EditTransactionNotes}" />
+                            <Button Command="{Binding Data.SaveEditedTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save transaction" />
+                        </VerticalStackLayout>
+                    </Border>
                     <CollectionView ItemsSource="{Binding Data.TransactionSummaries}">
                         <CollectionView.EmptyView>
                             <Label Style="{StaticResource MutedLabel}" Text="No transactions yet." />
@@ -620,7 +676,62 @@
                                 ItemDisplayBinding="{Binding Name}"
                                 ItemsSource="{Binding Data.ScheduledCategoryChoices}"
                                 SelectedItem="{Binding Data.SelectedScheduledCategory}" />
+                            <Entry Placeholder="Notes" Text="{Binding Data.NewScheduledNotes}" />
                             <Button Command="{Binding Data.AddScheduledTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save scheduled item" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border
+                        Padding="16"
+                        BackgroundColor="{StaticResource SurfaceColor}"
+                        IsVisible="{Binding Data.IsScheduledEditing}"
+                        Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label FontAttributes="Bold" Text="Edit scheduled item" />
+                            <Picker
+                                ItemDisplayBinding="{Binding Name}"
+                                ItemsSource="{Binding Data.ScheduledTransactionSummaries}"
+                                SelectedItem="{Binding Data.SelectedScheduledForEditing}" />
+                            <Grid ColumnDefinitions="1.2*,*,*" ColumnSpacing="10">
+                                <Entry Placeholder="Name" Text="{Binding Data.EditScheduledName}" />
+                                <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.EditScheduledAccount}" />
+                                <Picker
+                                    Grid.Column="2"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.TransactionTypes}"
+                                    SelectedItem="{Binding Data.EditScheduledType}" />
+                            </Grid>
+                            <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.EditScheduledAmountText}" />
+                            <Grid ColumnDefinitions="Auto,70,170,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="Every" VerticalTextAlignment="Center" />
+                                <Entry
+                                    Grid.Column="1"
+                                    HorizontalTextAlignment="Center"
+                                    Keyboard="Numeric"
+                                    Text="{Binding Data.EditScheduledIntervalText}" />
+                                <Picker
+                                    Grid.Column="2"
+                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                    ItemsSource="{Binding Data.RecurrenceFrequencies}"
+                                    SelectedItem="{Binding Data.EditScheduledFrequency}" />
+                                <Label Grid.Column="3" Text="starting" VerticalTextAlignment="Center" />
+                                <DatePicker
+                                    Grid.Column="4"
+                                    Date="{Binding Data.EditScheduledDate}"
+                                    Format="{Binding Data.DatePickerFormat}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Picker
+                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemsSource="{Binding Data.EditScheduledCategoryChoices}"
+                                    SelectedItem="{Binding Data.EditScheduledCategory}" />
+                                <Entry
+                                    Grid.Column="1"
+                                    Placeholder="New category, optional"
+                                    Text="{Binding Data.EditScheduledCategoryName}" />
+                            </Grid>
+                            <Entry Placeholder="Notes" Text="{Binding Data.EditScheduledNotes}" />
+                            <Button Command="{Binding Data.SaveEditedScheduledTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save scheduled item" />
                         </VerticalStackLayout>
                     </Border>
                     <CollectionView ItemsSource="{Binding Data.ScheduledTransactionSummaries}">
@@ -636,6 +747,7 @@
                                             <Label FontAttributes="Bold" Text="{Binding Name}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding RecurrenceText}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding NotesText}" />
                                         </VerticalStackLayout>
                                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
@@ -678,6 +790,31 @@
                         </Grid>
                     </Border>
                     <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewGoalAccount}" Title="Optional linked savings account" />
+                    <Border
+                        Padding="16"
+                        BackgroundColor="{StaticResource SurfaceColor}"
+                        IsVisible="{Binding Data.IsGoalsEditing}"
+                        Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label FontAttributes="Bold" Text="Edit goal" />
+                            <Picker
+                                ItemDisplayBinding="{Binding Name}"
+                                ItemsSource="{Binding Data.SavingsGoalSummaries}"
+                                SelectedItem="{Binding Data.SelectedGoalForEditing}" />
+                            <Grid ColumnDefinitions="1.2*,*,*,*" ColumnSpacing="10">
+                                <Entry Placeholder="Goal name" Text="{Binding Data.EditGoalName}" />
+                                <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Target" Text="{Binding Data.EditGoalTargetAmountText}" />
+                                <Entry Grid.Column="2" Keyboard="Numeric" Placeholder="Current" Text="{Binding Data.EditGoalCurrentAmountText}" />
+                                <DatePicker
+                                    Grid.Column="3"
+                                    Date="{Binding Data.EditGoalTargetDate}"
+                                    Format="{Binding Data.DatePickerFormat}" />
+                            </Grid>
+                            <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.EditGoalAccount}" Title="Optional linked savings account" />
+                            <Button Command="{Binding Data.SaveEditedSavingsGoalCommand}" Style="{StaticResource PrimaryButton}" Text="Save goal" />
+                        </VerticalStackLayout>
+                    </Border>
                     <CollectionView ItemsSource="{Binding Data.SavingsGoalSummaries}">
                         <CollectionView.EmptyView>
                             <Label Style="{StaticResource MutedLabel}" Text="No savings goals yet." />
@@ -785,6 +922,7 @@
                                                         <Label Style="{StaticResource MutedLabel}" Text="{Binding DecisionText}" />
                                                     </VerticalStackLayout>
                                                     <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                                        <Entry Keyboard="Numeric" WidthRequest="90" Text="{Binding EditableAmountText}" />
                                                         <Button Command="{Binding BindingContext.Data.ConfirmExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Confirm" />
                                                         <Button Command="{Binding BindingContext.Data.DelayExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Delay" />
                                                         <Button Command="{Binding BindingContext.Data.CancelExpectedTransactionCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}" Style="{StaticResource QuietButton}" Text="Skip" />
@@ -801,18 +939,19 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Reality comparison" />
-                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
-                                    <Entry Keyboard="Numeric" Placeholder="Actual total balance" Text="{Binding Data.ActualBalanceText}" />
-                                    <DatePicker Grid.Column="1" Date="{Binding Data.ActualBalanceDate}" Format="{Binding Data.DatePickerFormat}" />
-                                    <Button Grid.Column="2" Command="{Binding Data.CompareRealityCommand}" Style="{StaticResource PrimaryButton}" Text="Compare" />
+                                <Grid ColumnDefinitions="1.2*,*,*" ColumnSpacing="10">
+                                    <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.ReconciliationAccount}" Title="Account to compare" />
+                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Real account balance" Text="{Binding Data.ActualBalanceText}" />
+                                    <DatePicker Grid.Column="2" Date="{Binding Data.ActualBalanceDate}" Format="{Binding Data.DatePickerFormat}" />
                                 </Grid>
+                                <Label Style="{StaticResource MutedLabel}" Text="Comparison updates automatically shortly after typing." />
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                     <VerticalStackLayout>
-                                        <Label Style="{StaticResource MutedLabel}" Text="Expected" />
+                                        <Label Style="{StaticResource MutedLabel}" Text="Banccoon balance" />
                                         <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationExpectedText}" />
                                     </VerticalStackLayout>
                                     <VerticalStackLayout Grid.Column="1">
-                                        <Label Style="{StaticResource MutedLabel}" Text="Actual" />
+                                        <Label Style="{StaticResource MutedLabel}" Text="Real balance" />
                                         <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationActualText}" />
                                     </VerticalStackLayout>
                                 </Grid>
@@ -826,13 +965,19 @@
                                         <Label FontAttributes="Bold" Text="{Binding Data.ReconciliationStatusText}" />
                                     </VerticalStackLayout>
                                 </Grid>
-                                <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.ReconciliationAccount}" Title="Account to update" />
-                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
-                                    <Entry Keyboard="Numeric" Placeholder="Grouped spending amount" Text="{Binding Data.GroupedSpendingAmountText}" />
-                                    <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.GroupedSpendingCategoryChoices}" SelectedItem="{Binding Data.SelectedGroupedSpendingCategory}" />
-                                    <Button Grid.Column="2" Command="{Binding Data.AddGroupedSpendingCommand}" Style="{StaticResource QuietButton}" Text="Add spending" />
+                                <Label FontAttributes="Bold" Text="Reconciliation transactions" />
+                                <Grid ColumnDefinitions="*,150,*,Auto" ColumnSpacing="10">
+                                    <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.GroupedSpendingAmountText}" />
+                                    <Picker
+                                        Grid.Column="1"
+                                        ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                        ItemsSource="{Binding Data.ReconciliationTransactionTypes}"
+                                        SelectedItem="{Binding Data.SelectedReconciliationTransactionType}" />
+                                    <Picker Grid.Column="2" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.GroupedSpendingCategoryChoices}" SelectedItem="{Binding Data.SelectedGroupedSpendingCategory}" />
+                                    <Button Grid.Column="3" Command="{Binding Data.AddGroupedSpendingCommand}" Style="{StaticResource QuietButton}" Text="Add" />
                                 </Grid>
-                                <Entry Placeholder="Grouped spending notes" Text="{Binding Data.GroupedSpendingNotes}" />
+                                <Entry Placeholder="New category, optional" Text="{Binding Data.ReconciliationTransactionCategoryName}" />
+                                <Entry Placeholder="Notes" Text="{Binding Data.GroupedSpendingNotes}" />
                                 <Button Command="{Binding Data.AddBalanceAdjustmentCommand}" Style="{StaticResource QuietButton}" Text="Add balance adjustment" />
                             </VerticalStackLayout>
                         </Border>
