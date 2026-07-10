@@ -62,6 +62,20 @@ public sealed class SqliteRepositoryTests
         await using var store = new SqliteTestStore();
         var account = CreateAccount("Checking");
         var category = new Category(Guid.NewGuid(), "Utilities");
+        var scheduledTransaction = new ScheduledTransaction(
+            Guid.NewGuid(),
+            "Power bill",
+            45.50m,
+            account.Id,
+            category.Id,
+            TransactionType.Expense,
+            new RecurrenceRule(
+                RecurrenceFrequency.Monthly,
+                1,
+                new DateOnly(2026, 6, 9),
+                DayOfMonth: 9),
+            new DateOnly(2026, 6, 9),
+            Active: true);
         var transaction = new Transaction(
             Guid.NewGuid(),
             new DateOnly(2026, 6, 10),
@@ -69,10 +83,14 @@ public sealed class SqliteRepositoryTests
             account.Id,
             category.Id,
             "Electricity",
-            TransactionType.Expense);
+            TransactionType.Expense,
+            PaidScheduledTransactionId: scheduledTransaction.Id,
+            PaidScheduledOccurrenceDate: new DateOnly(2026, 6, 9),
+            Name: "Power bill");
 
         await store.Accounts.SaveAsync(account);
         await store.Categories.SaveAsync(category);
+        await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
         await store.Transactions.SaveAsync(transaction);
 
         var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);

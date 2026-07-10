@@ -5,6 +5,7 @@ public enum AccountType
     Cash,
     DebitCard,
     CreditCard,
+    Goal,
     Savings,
     Investment,
     Other

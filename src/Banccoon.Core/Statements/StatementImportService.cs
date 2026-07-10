@@ -195,7 +195,8 @@ public sealed class StatementImportService : IStatementImportService
             batch.AccountId,
             finalCategoryId,
             CreateTransactionNotes(batch, row),
-            row.Type);
+            row.Type,
+            Name: CreateTransactionName(row));
 
         await accountRepository.SaveAsync(transactionBalanceService.Apply(account, transaction), cancellationToken);
         await transactionRepository.SaveAsync(transaction, cancellationToken);
@@ -396,6 +397,16 @@ public sealed class StatementImportService : IStatementImportService
         }
 
         return string.Join(" | ", parts);
+    }
+
+    private static string CreateTransactionName(StatementImportRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.Counterparty))
+        {
+            return row.Counterparty.Trim();
+        }
+
+        return row.Description.Trim();
     }
 
     private static string? CleanOptionalText(string? value)

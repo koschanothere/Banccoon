@@ -20,7 +20,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
+            SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
             FROM Transactions
             ORDER BY Date DESC;
             """;
@@ -35,7 +36,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
+            SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
             FROM Transactions
             WHERE AccountId = @AccountId
             ORDER BY Date DESC;
@@ -52,7 +54,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type
+            SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
             FROM Transactions
             WHERE Id = @Id;
             """;
@@ -69,9 +72,34 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO Transactions (Id, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type)
-            VALUES (@Id, @Date, @Amount, @AccountId, @DestinationAccountId, @DestinationGoalId, @CategoryId, @Notes, @Type)
+            INSERT INTO Transactions (
+                Id,
+                Name,
+                Date,
+                Amount,
+                AccountId,
+                DestinationAccountId,
+                DestinationGoalId,
+                CategoryId,
+                Notes,
+                Type,
+                PaidScheduledTransactionId,
+                PaidScheduledOccurrenceDate)
+            VALUES (
+                @Id,
+                @Name,
+                @Date,
+                @Amount,
+                @AccountId,
+                @DestinationAccountId,
+                @DestinationGoalId,
+                @CategoryId,
+                @Notes,
+                @Type,
+                @PaidScheduledTransactionId,
+                @PaidScheduledOccurrenceDate)
             ON CONFLICT(Id) DO UPDATE SET
+                Name = excluded.Name,
                 Date = excluded.Date,
                 Amount = excluded.Amount,
                 AccountId = excluded.AccountId,
@@ -79,7 +107,9 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
                 DestinationGoalId = excluded.DestinationGoalId,
                 CategoryId = excluded.CategoryId,
                 Notes = excluded.Notes,
-                Type = excluded.Type;
+                Type = excluded.Type,
+                PaidScheduledTransactionId = excluded.PaidScheduledTransactionId,
+                PaidScheduledOccurrenceDate = excluded.PaidScheduledOccurrenceDate;
             """;
         AddTransactionParameters(command, transaction);
 
@@ -126,6 +156,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
     private static void AddTransactionParameters(Microsoft.Data.Sqlite.SqliteCommand command, Transaction transaction)
     {
         AddParameter(command, "@Id", transaction.Id.ToString());
+        AddParameter(command, "@Name", transaction.Name);
         AddParameter(command, "@Date", SqliteData.DateToText(transaction.Date));
         AddParameter(command, "@Amount", SqliteData.DecimalToText(transaction.Amount));
         AddParameter(command, "@AccountId", transaction.AccountId.ToString());
@@ -134,6 +165,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         AddParameter(command, "@CategoryId", SqliteData.ToDbValue(transaction.CategoryId));
         AddParameter(command, "@Notes", SqliteData.ToDbValue(transaction.Notes));
         AddParameter(command, "@Type", transaction.Type.ToString());
+        AddParameter(command, "@PaidScheduledTransactionId", SqliteData.ToDbValue(transaction.PaidScheduledTransactionId));
+        AddParameter(command, "@PaidScheduledOccurrenceDate", SqliteData.ToDbValue(transaction.PaidScheduledOccurrenceDate));
     }
 
     private static Transaction ReadTransaction(System.Data.Common.DbDataReader reader)
@@ -147,6 +180,9 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
             SqliteData.ReadNullableString(reader, "Notes"),
             Enum.Parse<TransactionType>(SqliteData.ReadString(reader, "Type")),
             SqliteData.ReadNullableGuid(reader, "DestinationAccountId"),
-            SqliteData.ReadNullableGuid(reader, "DestinationGoalId"));
+            SqliteData.ReadNullableGuid(reader, "DestinationGoalId"),
+            SqliteData.ReadNullableGuid(reader, "PaidScheduledTransactionId"),
+            SqliteData.ReadNullableDate(reader, "PaidScheduledOccurrenceDate"),
+            SqliteData.ReadString(reader, "Name"));
     }
 }

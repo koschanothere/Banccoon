@@ -45,6 +45,7 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
 
             CREATE TABLE IF NOT EXISTS Transactions (
                 Id TEXT PRIMARY KEY,
+                Name TEXT NOT NULL DEFAULT '',
                 Date TEXT NOT NULL,
                 Amount TEXT NOT NULL,
                 AccountId TEXT NOT NULL,
@@ -53,10 +54,13 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 CategoryId TEXT NULL,
                 Notes TEXT NULL,
                 Type TEXT NOT NULL,
+                PaidScheduledTransactionId TEXT NULL,
+                PaidScheduledOccurrenceDate TEXT NULL,
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE,
                 FOREIGN KEY (DestinationAccountId) REFERENCES Accounts(Id) ON DELETE SET NULL,
                 FOREIGN KEY (DestinationGoalId) REFERENCES SavingsGoals(Id) ON DELETE SET NULL,
-                FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
+                FOREIGN KEY (PaidScheduledTransactionId) REFERENCES ScheduledTransactions(Id) ON DELETE SET NULL
             );
 
             CREATE TABLE IF NOT EXISTS StatementImportBatches (
@@ -165,6 +169,12 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
         await AddMissingColumnAsync(
             connection,
             "Transactions",
+            "Name",
+            "TEXT NOT NULL DEFAULT ''",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
             "DestinationAccountId",
             "TEXT NULL",
             cancellationToken);
@@ -172,6 +182,18 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "Transactions",
             "DestinationGoalId",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
+            "PaidScheduledTransactionId",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
+            "PaidScheduledOccurrenceDate",
             "TEXT NULL",
             cancellationToken);
         await AddMissingColumnAsync(

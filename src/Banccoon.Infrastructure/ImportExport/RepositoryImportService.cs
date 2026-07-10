@@ -95,14 +95,14 @@ public sealed class RepositoryImportService : IImportService
             await categoryRepository.SaveAsync(category, cancellationToken);
         }
 
-        foreach (var transaction in data.Transactions)
-        {
-            await transactionRepository.SaveAsync(transaction, cancellationToken);
-        }
-
         foreach (var scheduledTransaction in data.ScheduledTransactions)
         {
             await scheduledTransactionRepository.SaveAsync(scheduledTransaction, cancellationToken);
+        }
+
+        foreach (var transaction in data.Transactions)
+        {
+            await transactionRepository.SaveAsync(transaction, cancellationToken);
         }
 
         foreach (var savingsGoal in data.SavingsGoals)

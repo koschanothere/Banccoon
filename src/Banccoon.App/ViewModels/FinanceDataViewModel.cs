@@ -22,6 +22,18 @@ public enum TransferDestinationKind
     Goal
 }
 
+public enum TransactionWorkflowKind
+{
+    None,
+    Expense,
+    Income,
+    Transfer,
+    Scheduled,
+    StatementImport,
+    ManualSetup,
+    BackupRestore
+}
+
 public sealed class FinanceDataViewModel : ViewModelBase
 {
     private readonly IAccountRepository accountRepository;
@@ -108,6 +120,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private bool selectedAccountIncludeInDashboardTotals = true;
     private ForecastChartPointViewModel? selectedDashboardForecastPoint;
     private Account? newTransactionAccount;
+    private string newTransactionName = string.Empty;
     private TransferDestinationKind selectedTransferDestinationKind = TransferDestinationKind.Account;
     private Account? newTransferDestinationAccount;
     private SavingsGoal? newTransferDestinationGoal;
@@ -116,18 +129,28 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newTransactionAmountText = string.Empty;
     private string newTransactionNotes = string.Empty;
     private DateTime newTransactionDate;
+    private ScheduledTransactionSummaryViewModel? newTransactionScheduledOccurrence;
+    private DateTime newTransactionScheduledOccurrenceDate;
     private TransactionType selectedTransactionType = TransactionType.Expense;
+    private TransactionWorkflowKind activeTransactionWorkflow = TransactionWorkflowKind.None;
     private TransactionSummaryViewModel? selectedTransactionForEditing;
     private Account? editTransactionAccount;
+    private string editTransactionName = string.Empty;
     private TransferDestinationKind editTransferDestinationKind = TransferDestinationKind.Account;
     private Account? editTransferDestinationAccount;
     private SavingsGoal? editTransferDestinationGoal;
     private CategoryChoiceViewModel? editTransactionCategory;
     private string editTransactionCategoryName = string.Empty;
     private string editTransactionAmountText = string.Empty;
+    private string editTransactionBalanceAfterText = string.Empty;
     private string editTransactionNotes = string.Empty;
     private DateTime editTransactionDate;
+    private ScheduledTransactionSummaryViewModel? editTransactionScheduledOccurrence;
+    private DateTime editTransactionScheduledOccurrenceDate;
     private TransactionType editTransactionType = TransactionType.Expense;
+    private Category? bulkTransactionCategory;
+    private ScheduledTransactionSummaryViewModel? bulkTransactionScheduledOccurrence;
+    private DateTime bulkTransactionScheduledOccurrenceDate;
     private Account? newScheduledAccount;
     private CategoryChoiceViewModel? selectedScheduledCategory;
     private string newScheduledName = string.Empty;
@@ -261,6 +284,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
         checkInFromDate = today.AddDays(-7);
         checkInToDate = today;
         actualBalanceDate = today;
+        newTransactionScheduledOccurrenceDate = today;
+        editTransactionScheduledOccurrenceDate = today;
+        bulkTransactionScheduledOccurrenceDate = today;
         exportPathText = CreateDefaultBackupPath();
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
@@ -271,6 +297,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         AddTransactionCommand = new AsyncRelayCommand(AddTransactionAsync);
         SaveEditedTransactionCommand = new AsyncRelayCommand(SaveEditedTransactionAsync);
         DeleteTransactionCommand = new AsyncRelayCommand<Transaction>(DeleteTransactionAsync);
+        SaveTransactionSummaryCommand = new AsyncRelayCommand<TransactionSummaryViewModel>(SaveTransactionSummaryAsync);
+        BulkDeleteTransactionsCommand = new AsyncRelayCommand(BulkDeleteTransactionsAsync);
+        BulkAssignTransactionCategoryCommand = new AsyncRelayCommand(BulkAssignTransactionCategoryAsync);
+        BulkAssignScheduledOccurrenceCommand = new AsyncRelayCommand(BulkAssignScheduledOccurrenceAsync);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
         DeleteCategoryCommand = new AsyncRelayCommand<Category>(DeleteCategoryAsync);
         AddScheduledTransactionCommand = new AsyncRelayCommand(AddScheduledTransactionAsync);
@@ -363,7 +393,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         TransactionType.Income
     ];
 
-    public IReadOnlyList<TransferDestinationKind> TransferDestinationKinds { get; } = Enum.GetValues<TransferDestinationKind>();
+    public IReadOnlyList<TransferDestinationKind> TransferDestinationKinds { get; } =
+    [
+        TransferDestinationKind.Account
+    ];
 
     public IReadOnlyList<RecurrenceFrequency> RecurrenceFrequencies { get; } = Enum.GetValues<RecurrenceFrequency>();
 
@@ -412,6 +445,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public ICommand SaveEditedTransactionCommand { get; }
 
     public ICommand DeleteTransactionCommand { get; }
+
+    public ICommand SaveTransactionSummaryCommand { get; }
+
+    public ICommand BulkDeleteTransactionsCommand { get; }
+
+    public ICommand BulkAssignTransactionCategoryCommand { get; }
+
+    public ICommand BulkAssignScheduledOccurrenceCommand { get; }
 
     public ICommand AddCategoryCommand { get; }
 
@@ -566,6 +607,38 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public string TransactionsEditModeText => IsTransactionsEditing ? "Done" : "✎";
 
+    public void PrepareTransactionWorkflow(TransactionWorkflowKind workflowKind)
+    {
+        ActiveTransactionWorkflow = workflowKind;
+        switch (workflowKind)
+        {
+            case TransactionWorkflowKind.Expense:
+                SelectedTransactionType = TransactionType.Expense;
+                NewTransactionName = string.Empty;
+                NewTransactionAmountText = string.Empty;
+                NewTransactionNotes = string.Empty;
+                NewTransactionCategoryName = string.Empty;
+                NewTransactionScheduledOccurrence = null;
+                break;
+            case TransactionWorkflowKind.Income:
+                SelectedTransactionType = TransactionType.Income;
+                NewTransactionName = string.Empty;
+                NewTransactionAmountText = string.Empty;
+                NewTransactionNotes = string.Empty;
+                NewTransactionCategoryName = string.Empty;
+                NewTransactionScheduledOccurrence = null;
+                break;
+            case TransactionWorkflowKind.Transfer:
+                SelectedTransactionType = TransactionType.Transfer;
+                SelectedTransferDestinationKind = TransferDestinationKind.Account;
+                NewTransactionName = string.Empty;
+                NewTransactionAmountText = string.Empty;
+                NewTransactionNotes = string.Empty;
+                NewTransactionScheduledOccurrence = null;
+                break;
+        }
+    }
+
     public string ScheduledEditModeText => IsScheduledEditing ? "Done" : "✎";
 
     public string GoalsEditModeText => IsGoalsEditing ? "Done" : "✎";
@@ -706,6 +779,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public bool HasTransactions => Transactions.Count > 0;
 
+    public bool IsBlankDataset =>
+        Accounts.Count == 0
+        && Transactions.Count == 0
+        && ScheduledTransactions.Count == 0
+        && SavingsGoals.Count == 0
+        && StatementImportBatchSummaries.Count == 0;
+
     public bool HasScheduledTransactions => ScheduledTransactions.Count > 0;
 
     public bool HasSavingsGoals => SavingsGoals.Count > 0;
@@ -745,7 +825,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsNewAccountCreditCard));
                 OnPropertyChanged(nameof(IsNewAccountCard));
-                NewAccountIncludeInDashboardTotals = value != AccountType.CreditCard;
+                NewAccountIncludeInDashboardTotals = value is not AccountType.CreditCard and not AccountType.Goal;
             }
         }
     }
@@ -957,6 +1037,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newTransactionAccount, value);
     }
 
+    public string NewTransactionName
+    {
+        get => newTransactionName;
+        set => SetProperty(ref newTransactionName, value);
+    }
+
     public TransferDestinationKind SelectedTransferDestinationKind
     {
         get => selectedTransferDestinationKind;
@@ -1016,6 +1102,48 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref newTransactionDate, value);
     }
 
+    public ScheduledTransactionSummaryViewModel? NewTransactionScheduledOccurrence
+    {
+        get => newTransactionScheduledOccurrence;
+        set => SetProperty(ref newTransactionScheduledOccurrence, value);
+    }
+
+    public DateTime NewTransactionScheduledOccurrenceDate
+    {
+        get => newTransactionScheduledOccurrenceDate;
+        set => SetProperty(ref newTransactionScheduledOccurrenceDate, value);
+    }
+
+    public TransactionWorkflowKind ActiveTransactionWorkflow
+    {
+        get => activeTransactionWorkflow;
+        set
+        {
+            if (SetProperty(ref activeTransactionWorkflow, value))
+            {
+                OnPropertyChanged(nameof(IsExpenseIncomeTransactionWorkflow));
+                OnPropertyChanged(nameof(IsTransferTransactionWorkflow));
+                OnPropertyChanged(nameof(IsScheduledTransactionWorkflow));
+                OnPropertyChanged(nameof(IsStatementImportTransactionWorkflow));
+                OnPropertyChanged(nameof(IsManualSetupWorkflow));
+                OnPropertyChanged(nameof(IsBackupRestoreWorkflow));
+            }
+        }
+    }
+
+    public bool IsExpenseIncomeTransactionWorkflow =>
+        ActiveTransactionWorkflow is TransactionWorkflowKind.Expense or TransactionWorkflowKind.Income;
+
+    public bool IsTransferTransactionWorkflow => ActiveTransactionWorkflow == TransactionWorkflowKind.Transfer;
+
+    public bool IsScheduledTransactionWorkflow => ActiveTransactionWorkflow == TransactionWorkflowKind.Scheduled;
+
+    public bool IsStatementImportTransactionWorkflow => ActiveTransactionWorkflow == TransactionWorkflowKind.StatementImport;
+
+    public bool IsManualSetupWorkflow => ActiveTransactionWorkflow == TransactionWorkflowKind.ManualSetup;
+
+    public bool IsBackupRestoreWorkflow => ActiveTransactionWorkflow == TransactionWorkflowKind.BackupRestore;
+
     public TransactionType SelectedTransactionType
     {
         get => selectedTransactionType;
@@ -1053,6 +1181,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => editTransactionAccount;
         set => SetProperty(ref editTransactionAccount, value);
+    }
+
+    public string EditTransactionName
+    {
+        get => editTransactionName;
+        private set => SetProperty(ref editTransactionName, value);
     }
 
     public TransferDestinationKind EditTransferDestinationKind
@@ -1102,6 +1236,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         set => SetProperty(ref editTransactionAmountText, value);
     }
 
+    public string EditTransactionBalanceAfterText
+    {
+        get => editTransactionBalanceAfterText;
+        set => SetProperty(ref editTransactionBalanceAfterText, value);
+    }
+
     public string EditTransactionNotes
     {
         get => editTransactionNotes;
@@ -1112,6 +1252,18 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => editTransactionDate;
         set => SetProperty(ref editTransactionDate, value);
+    }
+
+    public ScheduledTransactionSummaryViewModel? EditTransactionScheduledOccurrence
+    {
+        get => editTransactionScheduledOccurrence;
+        set => SetProperty(ref editTransactionScheduledOccurrence, value);
+    }
+
+    public DateTime EditTransactionScheduledOccurrenceDate
+    {
+        get => editTransactionScheduledOccurrenceDate;
+        set => SetProperty(ref editTransactionScheduledOccurrenceDate, value);
     }
 
     public TransactionType EditTransactionType
@@ -1134,6 +1286,24 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public bool IsEditTransactionTransfer => EditTransactionType == TransactionType.Transfer;
 
     public bool IsEditTransactionNotTransfer => !IsEditTransactionTransfer;
+
+    public Category? BulkTransactionCategory
+    {
+        get => bulkTransactionCategory;
+        set => SetProperty(ref bulkTransactionCategory, value);
+    }
+
+    public ScheduledTransactionSummaryViewModel? BulkTransactionScheduledOccurrence
+    {
+        get => bulkTransactionScheduledOccurrence;
+        set => SetProperty(ref bulkTransactionScheduledOccurrence, value);
+    }
+
+    public DateTime BulkTransactionScheduledOccurrenceDate
+    {
+        get => bulkTransactionScheduledOccurrenceDate;
+        set => SetProperty(ref bulkTransactionScheduledOccurrenceDate, value);
+    }
 
     public Account? NewScheduledAccount
     {
@@ -1700,6 +1870,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             UpdateSummaries();
             UpdateForecast();
             await RefreshStatementImportsCoreAsync();
+            OnPropertyChanged(nameof(IsBlankDataset));
             SetStatus("Loaded saved local data.", clearAutomatically: true);
         });
     }
@@ -1743,7 +1914,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         NewAccountBalanceText = "0";
         NewAccountNumber = string.Empty;
         NewCardLastFourDigits = string.Empty;
-        NewAccountIncludeInDashboardTotals = SelectedAccountType != AccountType.CreditCard;
+        NewAccountIncludeInDashboardTotals = SelectedAccountType is not AccountType.CreditCard and not AccountType.Goal;
         NewCreditCardDebtText = string.Empty;
         NewCreditCardMinimumPaymentText = string.Empty;
         NewCreditCardPlannedPaymentText = string.Empty;
@@ -1925,12 +2096,21 @@ public sealed class FinanceDataViewModel : ViewModelBase
             string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
             SelectedTransactionType,
             destinationAccountId,
-            destinationGoalId);
+            destinationGoalId,
+            NewTransactionScheduledOccurrence?.Source.Id,
+            NewTransactionScheduledOccurrence is null ? null : DateOnly.FromDateTime(NewTransactionScheduledOccurrenceDate),
+            CreateTransactionName(
+                NewTransactionName,
+                SelectedTransactionType,
+                SelectedTransactionCategory?.Name,
+                NewTransferDestinationAccount?.Name));
 
         await SaveAppliedTransactionAsync(transaction);
+        NewTransactionName = string.Empty;
         NewTransactionAmountText = string.Empty;
         NewTransactionNotes = string.Empty;
         NewTransactionCategoryName = string.Empty;
+        NewTransactionScheduledOccurrence = null;
         await RefreshAfterMutationAsync("Transaction saved.");
     }
 
@@ -1960,6 +2140,16 @@ public sealed class FinanceDataViewModel : ViewModelBase
         {
             SetStatus("Edited transaction amount must be greater than zero.");
             return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(EditTransactionBalanceAfterText)
+            && TryReadDecimal(EditTransactionBalanceAfterText, out var editedBalanceAfter)
+            && SelectedTransactionForEditing is not null)
+        {
+            amount = CalculateAmountFromBalanceAfter(
+                EditTransactionType,
+                SelectedTransactionForEditing.BalanceBefore,
+                editedBalanceAfter);
         }
 
         Guid? destinationAccountId = null;
@@ -2006,12 +2196,125 @@ public sealed class FinanceDataViewModel : ViewModelBase
             Notes = string.IsNullOrWhiteSpace(EditTransactionNotes) ? null : EditTransactionNotes.Trim(),
             Type = EditTransactionType,
             DestinationAccountId = destinationAccountId,
-            DestinationGoalId = destinationGoalId
+            DestinationGoalId = destinationGoalId,
+            PaidScheduledTransactionId = EditTransactionScheduledOccurrence?.Source.Id,
+            PaidScheduledOccurrenceDate = EditTransactionScheduledOccurrence is null
+                ? null
+                : DateOnly.FromDateTime(EditTransactionScheduledOccurrenceDate)
         };
 
         await ReverseAppliedTransactionAsync(original);
         await SaveAppliedTransactionAsync(updated);
         await RefreshAfterMutationAsync("Transaction updated.");
+    }
+
+    private async Task SaveTransactionSummaryAsync(TransactionSummaryViewModel summary)
+    {
+        if (!TryReadDecimal(summary.EditAmountText, out var amount) || amount <= 0m)
+        {
+            SetStatus("Transaction amount must be greater than zero.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(summary.EditAccountValueAfterText)
+            && TryReadDecimal(summary.EditAccountValueAfterText, out var editedBalanceAfter))
+        {
+            amount = CalculateAmountFromBalanceAfter(
+                summary.Source.Type,
+                summary.BalanceBefore,
+                editedBalanceAfter);
+        }
+
+        var categoryId = summary.Source.Type == TransactionType.Transfer
+            ? null
+            : await ResolveCategoryChoiceAsync(summary.SelectedCategory, summary.Source.Type);
+        var updated = summary.Source with
+        {
+            Amount = amount,
+            CategoryId = categoryId,
+            PaidScheduledTransactionId = summary.SelectedScheduledTransaction?.Source.Id,
+            PaidScheduledOccurrenceDate = summary.SelectedScheduledTransaction is null
+                ? null
+                : DateOnly.FromDateTime(summary.ScheduledOccurrenceDate)
+        };
+
+        await ReverseAppliedTransactionAsync(summary.Source);
+        await SaveAppliedTransactionAsync(updated);
+        await RefreshAfterMutationAsync("Transaction updated.");
+    }
+
+    private async Task BulkDeleteTransactionsAsync()
+    {
+        var selected = TransactionSummaries.Where(summary => summary.IsSelected).Select(summary => summary.Source).ToArray();
+        if (selected.Length == 0)
+        {
+            SetStatus("Select at least one transaction.");
+            return;
+        }
+
+        foreach (var transaction in selected)
+        {
+            await ReverseAppliedTransactionAsync(transaction);
+            await transactionRepository.DeleteAsync(transaction.Id);
+        }
+
+        await RefreshAfterMutationAsync($"{selected.Length} transaction(s) deleted.");
+    }
+
+    private async Task BulkAssignTransactionCategoryAsync()
+    {
+        if (BulkTransactionCategory is null)
+        {
+            SetStatus("Choose a category for the selected transactions.");
+            return;
+        }
+
+        var selected = TransactionSummaries
+            .Where(summary => summary.IsSelected && summary.Source.Type != TransactionType.Transfer)
+            .ToArray();
+        if (selected.Length == 0)
+        {
+            SetStatus("Select at least one non-transfer transaction.");
+            return;
+        }
+
+        foreach (var summary in selected)
+        {
+            await transactionRepository.SaveAsync(summary.Source with
+            {
+                CategoryId = BulkTransactionCategory.Id
+            });
+        }
+
+        await RefreshAfterMutationAsync($"{selected.Length} transaction(s) categorized.");
+    }
+
+    private async Task BulkAssignScheduledOccurrenceAsync()
+    {
+        if (BulkTransactionScheduledOccurrence is null)
+        {
+            SetStatus("Choose a scheduled item for the selected transactions.");
+            return;
+        }
+
+        var selected = TransactionSummaries.Where(summary => summary.IsSelected).ToArray();
+        if (selected.Length == 0)
+        {
+            SetStatus("Select at least one transaction.");
+            return;
+        }
+
+        var occurrenceDate = DateOnly.FromDateTime(BulkTransactionScheduledOccurrenceDate);
+        foreach (var summary in selected)
+        {
+            await transactionRepository.SaveAsync(summary.Source with
+            {
+                PaidScheduledTransactionId = BulkTransactionScheduledOccurrence.Source.Id,
+                PaidScheduledOccurrenceDate = occurrenceDate
+            });
+        }
+
+        await RefreshAfterMutationAsync($"{selected.Length} transaction(s) linked to a scheduled occurrence.");
     }
 
     private async Task AddScheduledTransactionAsync()
@@ -2242,7 +2545,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
             forecastEvent.AccountId,
             forecastEvent.CategoryId,
             forecastEvent.Name,
-            forecastEvent.Type);
+            forecastEvent.Type,
+            PaidScheduledTransactionId: forecastEvent.SourceId,
+            PaidScheduledOccurrenceDate: forecastEvent.Date,
+            Name: forecastEvent.Name);
 
         await SaveAppliedTransactionAsync(transaction);
         await AdvanceScheduledTransactionAsync(forecastEvent.SourceId, forecastEvent.Date);
@@ -2421,7 +2727,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
             ReconciliationAccount.Id,
             categoryId,
             string.IsNullOrWhiteSpace(GroupedSpendingNotes) ? "Reconciliation transaction" : GroupedSpendingNotes.Trim(),
-            SelectedReconciliationTransactionType);
+            SelectedReconciliationTransactionType,
+            Name: string.IsNullOrWhiteSpace(GroupedSpendingNotes)
+                ? "Reconciliation transaction"
+                : GroupedSpendingNotes.Trim());
 
         await SaveAppliedTransactionAsync(transaction);
         GroupedSpendingAmountText = string.Empty;
@@ -2456,7 +2765,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
             latestReconciliationResult.Date,
             ReconciliationAccount.Id,
             latestReconciliationResult.Difference,
-            "Reconciliation balance adjustment"));
+            "Reconciliation balance adjustment")) with
+        {
+            Name = "Reconciliation balance adjustment"
+        };
 
         await SaveAppliedTransactionAsync(transaction);
         latestReconciliationResult = null;
@@ -3032,7 +3344,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             endDate,
             Accounts.ToArray(),
             ScheduledTransactions.ToArray(),
-            SavingsGoals.ToArray()));
+            SavingsGoals.ToArray(),
+            Transactions.ToArray()));
     }
 
     private async Task DeleteAllRepositoryDataAsync()
@@ -3163,21 +3476,32 @@ public sealed class FinanceDataViewModel : ViewModelBase
         {
             EditTransactionAccount = Accounts.FirstOrDefault();
             EditTransactionType = TransactionType.Expense;
+            EditTransactionName = string.Empty;
             EditTransactionDate = dateProvider.Today.ToDateTime(TimeOnly.MinValue);
             EditTransactionAmountText = string.Empty;
+            EditTransactionBalanceAfterText = string.Empty;
             EditTransactionNotes = string.Empty;
             EditTransactionCategoryName = string.Empty;
             EditTransferDestinationKind = TransferDestinationKind.Account;
             EditTransferDestinationAccount = Accounts.FirstOrDefault();
             EditTransferDestinationGoal = SavingsGoals.FirstOrDefault();
             EditTransactionCategory = EditTransactionCategoryChoices.FirstOrDefault();
+            EditTransactionScheduledOccurrence = null;
             return;
         }
 
         EditTransactionAccount = Accounts.FirstOrDefault(account => account.Id == transaction.AccountId);
         EditTransactionType = transaction.Type;
+        EditTransactionName = CreateTransactionName(
+            transaction.Name,
+            transaction.Type,
+            Categories.FirstOrDefault(category => category.Id == transaction.CategoryId)?.Name,
+            Accounts.FirstOrDefault(account => account.Id == transaction.DestinationAccountId)?.Name);
         EditTransactionDate = transaction.Date.ToDateTime(TimeOnly.MinValue);
         EditTransactionAmountText = ToInputText(transaction.Amount);
+        EditTransactionBalanceAfterText = SelectedTransactionForEditing is null
+            ? string.Empty
+            : ToInputText(SelectedTransactionForEditing.BalanceAfter);
         EditTransactionNotes = transaction.Notes ?? string.Empty;
         EditTransactionCategoryName = string.Empty;
         EditTransferDestinationKind = transaction.DestinationGoalId.HasValue
@@ -3188,6 +3512,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
         UpdateCategoryChoices();
         EditTransactionCategory = EditTransactionCategoryChoices.FirstOrDefault(choice => choice.CategoryId == transaction.CategoryId)
             ?? EditTransactionCategoryChoices.FirstOrDefault();
+        EditTransactionScheduledOccurrence = ScheduledTransactionSummaries
+            .FirstOrDefault(scheduled => scheduled.Source.Id == transaction.PaidScheduledTransactionId);
+        EditTransactionScheduledOccurrenceDate = transaction.PaidScheduledOccurrenceDate?.ToDateTime(TimeOnly.MinValue)
+            ?? transaction.Date.ToDateTime(TimeOnly.MinValue);
     }
 
     private void LoadScheduledEditor(ScheduledTransaction? scheduledTransaction)
@@ -3348,6 +3676,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
             ?? TransactionCategoryChoices.FirstOrDefault();
         EditTransactionCategory = FindFreshCategoryChoice(EditTransactionCategory, EditTransactionCategoryChoices)
             ?? EditTransactionCategoryChoices.FirstOrDefault();
+        NewTransactionScheduledOccurrence = FindFreshScheduledSummary(NewTransactionScheduledOccurrence);
+        EditTransactionScheduledOccurrence = FindFreshScheduledSummary(EditTransactionScheduledOccurrence);
+        BulkTransactionCategory = BulkTransactionCategory is null
+            ? null
+            : Categories.FirstOrDefault(category => category.Id == BulkTransactionCategory.Id);
+        BulkTransactionScheduledOccurrence = FindFreshScheduledSummary(BulkTransactionScheduledOccurrence);
         SelectedScheduledCategory = FindFreshCategoryChoice(SelectedScheduledCategory, ScheduledCategoryChoices)
             ?? ScheduledCategoryChoices.FirstOrDefault();
         EditScheduledCategory = FindFreshCategoryChoice(EditScheduledCategory, EditScheduledCategoryChoices)
@@ -3370,6 +3704,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return goal is null
             ? null
             : SavingsGoals.FirstOrDefault(candidate => candidate.Id == goal.Id);
+    }
+
+    private ScheduledTransactionSummaryViewModel? FindFreshScheduledSummary(ScheduledTransactionSummaryViewModel? scheduledTransaction)
+    {
+        return scheduledTransaction is null
+            ? null
+            : ScheduledTransactionSummaries.FirstOrDefault(candidate => candidate.Source.Id == scheduledTransaction.Source.Id);
     }
 
     private CategoryChoiceViewModel? FindFreshCategoryChoice(
@@ -3426,14 +3767,30 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private void UpdateSummaries()
     {
         var selectedAccountId = SelectedAccount?.Id;
-        Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(
-            account,
-            AreAccountNumbersRevealed,
-            IsAccountsEditing,
-            selectedAccountId == account.Id)));
+        var accountSummaries = Accounts.Select(account => new AccountSummaryViewModel(
+                account,
+                AreAccountNumbersRevealed,
+                IsAccountsEditing,
+                selectedAccountId == account.Id))
+            .Concat(SavingsGoals
+                .Where(goal => Accounts.All(account => account.Id != goal.Id))
+                .Select(goal => AccountSummaryViewModel.FromLegacySavingsGoal(
+                    goal,
+                    DefaultCurrency,
+                    AreAccountNumbersRevealed,
+                    IsAccountsEditing,
+                    selectedAccountId == goal.Id)));
+        Replace(AccountSummaries, accountSummaries);
         selectedAccountSummary = AccountSummaries.FirstOrDefault(summary => summary.Source.Id == selectedAccountId);
         OnPropertyChanged(nameof(SelectedAccountSummary));
         Replace(CategorySummaries, Categories.Select(category => new CategorySummaryViewModel(category)));
+        Replace(ScheduledTransactionSummaries, ScheduledTransactions.Select(item => new ScheduledTransactionSummaryViewModel(
+            item,
+            Accounts.FirstOrDefault(account => account.Id == item.AccountId)?.Name ?? "Unknown account",
+            Categories.FirstOrDefault(category => category.Id == item.CategoryId)?.Name,
+            DefaultCurrency,
+            SelectedDateDisplayFormat)));
+        var transactionBalanceContexts = CreateTransactionBalanceContexts();
         Replace(TransactionSummaries, Transactions
             .OrderByDescending(transaction => transaction.Date)
             .Select(transaction => new TransactionSummaryViewModel(
@@ -3442,12 +3799,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
             Accounts.FirstOrDefault(account => account.Id == transaction.DestinationAccountId)?.Name,
             SavingsGoals.FirstOrDefault(goal => goal.Id == transaction.DestinationGoalId)?.Name,
             Categories.FirstOrDefault(category => category.Id == transaction.CategoryId)?.Name,
-            DefaultCurrency,
-            SelectedDateDisplayFormat)));
-        Replace(ScheduledTransactionSummaries, ScheduledTransactions.Select(item => new ScheduledTransactionSummaryViewModel(
-            item,
-            Accounts.FirstOrDefault(account => account.Id == item.AccountId)?.Name ?? "Unknown account",
-            Categories.FirstOrDefault(category => category.Id == item.CategoryId)?.Name,
+            CreateCategoryChoices(transaction.Type),
+            ScheduledTransactionSummaries,
+            transactionBalanceContexts.TryGetValue(transaction.Id, out var context)
+                ? context.BalanceBefore
+                : 0m,
+            transactionBalanceContexts.TryGetValue(transaction.Id, out context)
+                ? context.BalanceAfter
+                : 0m,
             DefaultCurrency,
             SelectedDateDisplayFormat)));
         Replace(SavingsGoalSummaries, SavingsGoals.Select(goal => new SavingsGoalSummaryViewModel(
@@ -3461,6 +3820,40 @@ public sealed class FinanceDataViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasTransactions));
         OnPropertyChanged(nameof(HasScheduledTransactions));
         OnPropertyChanged(nameof(HasSavingsGoals));
+        OnPropertyChanged(nameof(IsBlankDataset));
+    }
+
+    private Dictionary<Guid, TransactionBalanceContext> CreateTransactionBalanceContexts()
+    {
+        var runningBalances = Accounts.ToDictionary(account => account.Id, account => account.CurrentBalance);
+        var contexts = new Dictionary<Guid, TransactionBalanceContext>();
+        foreach (var transaction in Transactions
+            .OrderByDescending(transaction => transaction.Date)
+            .ThenByDescending(transaction => transaction.Id))
+        {
+            var balanceAfter = runningBalances.TryGetValue(transaction.AccountId, out var runningBalance)
+                ? runningBalance
+                : 0m;
+            var balanceBefore = transaction.Type switch
+            {
+                TransactionType.Income => balanceAfter - transaction.Amount,
+                TransactionType.Expense => balanceAfter + transaction.Amount,
+                TransactionType.Transfer => balanceAfter + transaction.Amount,
+                _ => balanceAfter
+            };
+            contexts[transaction.Id] = new TransactionBalanceContext(balanceBefore, balanceAfter);
+            runningBalances[transaction.AccountId] = balanceBefore;
+
+            if (transaction.Type == TransactionType.Transfer && transaction.DestinationAccountId is { } destinationAccountId)
+            {
+                var destinationAfter = runningBalances.TryGetValue(destinationAccountId, out var destinationRunningBalance)
+                    ? destinationRunningBalance
+                    : 0m;
+                runningBalances[destinationAccountId] = destinationAfter - transaction.Amount;
+            }
+        }
+
+        return contexts;
     }
 
     private void UpdateForecast()
@@ -3495,7 +3888,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             endDate,
             Accounts.ToArray(),
             ScheduledTransactions.ToArray(),
-            SavingsGoals.ToArray()));
+            SavingsGoals.ToArray(),
+            Transactions.ToArray()));
 
         CurrentBalanceText = FormatMoney(forecast.CurrentBalance, DefaultCurrency);
         AvailableToSpendText = FormatMoney(forecast.AvailableToSpend, DefaultCurrency);
@@ -3534,6 +3928,9 @@ public sealed class FinanceDataViewModel : ViewModelBase
         var dashboardScheduledTransactions = ScheduledTransactions
             .Where(scheduledTransaction => dashboardAccountIds.Contains(scheduledTransaction.AccountId))
             .ToArray();
+        var dashboardTransactions = Transactions
+            .Where(transaction => dashboardAccountIds.Contains(transaction.AccountId))
+            .ToArray();
         var dashboardSavingsGoals = SavingsGoals
             .Where(goal => goal.AccountId is null || dashboardAccountIds.Contains(goal.AccountId.Value))
             .ToArray();
@@ -3542,7 +3939,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             endDate,
             dashboardAccounts,
             dashboardScheduledTransactions,
-            dashboardSavingsGoals));
+            dashboardSavingsGoals,
+            dashboardTransactions));
 
         DashboardCurrentBalanceText = FormatMoney(dashboardForecast.CurrentBalance, DefaultCurrency);
         DashboardAvailableToSpendText = FormatMoney(dashboardForecast.AvailableToSpend, DefaultCurrency);
@@ -3895,6 +4293,40 @@ public sealed class FinanceDataViewModel : ViewModelBase
         }
     }
 
+    private static decimal CalculateAmountFromBalanceAfter(
+        TransactionType type,
+        decimal balanceBefore,
+        decimal balanceAfter)
+    {
+        return type switch
+        {
+            TransactionType.Income => Math.Abs(balanceAfter - balanceBefore),
+            TransactionType.Expense => Math.Abs(balanceBefore - balanceAfter),
+            TransactionType.Transfer => Math.Abs(balanceBefore - balanceAfter),
+            _ => Math.Abs(balanceAfter - balanceBefore)
+        };
+    }
+
+    internal static string CreateTransactionName(
+        string? requestedName,
+        TransactionType type,
+        string? categoryName,
+        string? destinationName)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedName))
+        {
+            return requestedName.Trim();
+        }
+
+        return type switch
+        {
+            TransactionType.Income => categoryName is null ? "Income" : $"{categoryName} income",
+            TransactionType.Expense => categoryName is null ? "Expense" : $"{categoryName} expense",
+            TransactionType.Transfer => destinationName is null ? "Transfer" : $"Transfer to {destinationName}",
+            _ => "Transaction"
+        };
+    }
+
     private static bool TryReadDecimal(string text, out decimal value)
     {
         return decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out value)
@@ -4094,15 +4526,45 @@ public sealed class AccountSummaryViewModel
         Account account,
         bool showFullIdentifier,
         bool isAccountsEditing,
-        bool isSelected)
+        bool isSelected,
+        bool isLegacySavingsGoal = false,
+        string? legacyGoalDetail = null)
     {
         Source = account;
         ShowFullIdentifier = showFullIdentifier;
         IsAccountsEditing = isAccountsEditing;
         IsSelected = isSelected;
+        IsLegacySavingsGoal = isLegacySavingsGoal;
+        LegacyGoalDetail = legacyGoalDetail;
     }
 
     public Account Source { get; }
+
+    public static AccountSummaryViewModel FromLegacySavingsGoal(
+        SavingsGoal goal,
+        string currency,
+        bool showFullIdentifier,
+        bool isAccountsEditing,
+        bool isSelected)
+    {
+        var syntheticAccount = new Account(
+            goal.Id,
+            goal.Name,
+            AccountType.Goal,
+            goal.CurrentAmount,
+            currency,
+            DateTimeOffset.MinValue,
+            IncludeInDashboardTotals: false);
+        var target = $"{currency} {goal.TargetAmount:N2}";
+        var targetDate = goal.TargetDate is null ? "no target date" : DateDisplay.Format(goal.TargetDate.Value, DateDisplayFormat.DayMonthYear);
+        return new AccountSummaryViewModel(
+            syntheticAccount,
+            showFullIdentifier,
+            isAccountsEditing,
+            isSelected,
+            isLegacySavingsGoal: true,
+            legacyGoalDetail: $"Legacy goal, target {target}, {targetDate}");
+    }
 
     public bool ShowFullIdentifier { get; }
 
@@ -4110,9 +4572,15 @@ public sealed class AccountSummaryViewModel
 
     public bool IsSelected { get; }
 
-    public bool IsReadOnlyVisible => !IsAccountsEditing || !IsSelected;
+    public bool IsLegacySavingsGoal { get; }
 
-    public bool IsEditFormVisible => IsAccountsEditing && IsSelected;
+    public string? LegacyGoalDetail { get; }
+
+    public bool IsReadOnlyVisible => IsLegacySavingsGoal || !IsAccountsEditing || !IsSelected;
+
+    public bool IsEditFormVisible => IsAccountsEditing && IsSelected && !IsLegacySavingsGoal;
+
+    public bool CanShowAccountActions => IsAccountsEditing && !IsLegacySavingsGoal;
 
     public string Name => Source.Name;
 
@@ -4149,9 +4617,16 @@ public sealed class AccountSummaryViewModel
     {
         get
         {
+            if (IsLegacySavingsGoal)
+            {
+                return LegacyGoalDetail ?? "Legacy savings goal";
+            }
+
             if (Source.Type != AccountType.CreditCard)
             {
-                return "Standard account";
+                return Source.Type == AccountType.Goal
+                    ? "Goal account"
+                    : "Standard account";
             }
 
             var details = Source.CreditCardDetails;
@@ -4246,14 +4721,27 @@ public sealed class CategorySummaryViewModel
 
 internal sealed record DefaultCategoryDefinition(TransactionType Type, string Name);
 
-public sealed class TransactionSummaryViewModel
+internal sealed record TransactionBalanceContext(decimal BalanceBefore, decimal BalanceAfter);
+
+public sealed class TransactionSummaryViewModel : ViewModelBase
 {
+    private bool isSelected;
+    private CategoryChoiceViewModel? selectedCategory;
+    private ScheduledTransactionSummaryViewModel? selectedScheduledTransaction;
+    private string editAmountText;
+    private string editAccountValueAfterText;
+    private DateTime scheduledOccurrenceDate;
+
     public TransactionSummaryViewModel(
         Transaction transaction,
         string accountName,
         string? destinationAccountName,
         string? destinationGoalName,
         string? categoryName,
+        IEnumerable<CategoryChoiceViewModel> categoryChoices,
+        IEnumerable<ScheduledTransactionSummaryViewModel> scheduledTransactions,
+        decimal balanceBefore,
+        decimal balanceAfter,
         string currency,
         DateDisplayFormat dateDisplayFormat)
     {
@@ -4268,13 +4756,29 @@ public sealed class TransactionSummaryViewModel
             ? string.IsNullOrWhiteSpace(DestinationText) ? "Transfer" : $"Transfer {DestinationText}"
             : categoryName ?? "None";
         AmountText = $"{currency} {transaction.Amount:N2}";
+        BalanceBefore = balanceBefore;
+        BalanceAfter = balanceAfter;
+        AccountValueAfterText = $"{currency} {balanceAfter:N2}";
         DateText = DateDisplay.Format(transaction.Date, dateDisplayFormat);
+        Name = FinanceDataViewModel.CreateTransactionName(transaction.Name, transaction.Type, categoryName, destinationAccountName ?? destinationGoalName);
         DisplayTitle = transaction.Type == TransactionType.Transfer
             ? $"{accountName} -> {destinationAccountName ?? destinationGoalName ?? "Unknown destination"}"
-            : $"{accountName} - {CategoryText}";
+            : Name;
+        ScheduledMark = transaction.PaidScheduledTransactionId.HasValue ? "Scheduled" : string.Empty;
+        CategoryChoices = new ObservableCollection<CategoryChoiceViewModel>(categoryChoices);
+        selectedCategory = CategoryChoices.FirstOrDefault(choice => choice.CategoryId == transaction.CategoryId)
+            ?? CategoryChoices.FirstOrDefault();
+        ScheduledTransactions = new ObservableCollection<ScheduledTransactionSummaryViewModel>(scheduledTransactions);
+        selectedScheduledTransaction = ScheduledTransactions.FirstOrDefault(scheduled => scheduled.Source.Id == transaction.PaidScheduledTransactionId);
+        scheduledOccurrenceDate = transaction.PaidScheduledOccurrenceDate?.ToDateTime(TimeOnly.MinValue)
+            ?? transaction.Date.ToDateTime(TimeOnly.MinValue);
+        editAmountText = transaction.Amount.ToString(CultureInfo.CurrentCulture);
+        editAccountValueAfterText = balanceAfter.ToString(CultureInfo.CurrentCulture);
     }
 
     public Transaction Source { get; }
+
+    public string Name { get; }
 
     public string AccountName { get; }
 
@@ -4284,9 +4788,59 @@ public sealed class TransactionSummaryViewModel
 
     public string AmountText { get; }
 
+    public decimal BalanceBefore { get; }
+
+    public decimal BalanceAfter { get; }
+
+    public string AccountValueAfterText { get; }
+
     public string DateText { get; }
 
     public string DisplayTitle { get; }
+
+    public string ScheduledMark { get; }
+
+    public bool HasScheduledMark => !string.IsNullOrWhiteSpace(ScheduledMark);
+
+    public ObservableCollection<CategoryChoiceViewModel> CategoryChoices { get; }
+
+    public CategoryChoiceViewModel? SelectedCategory
+    {
+        get => selectedCategory;
+        set => SetProperty(ref selectedCategory, value);
+    }
+
+    public ObservableCollection<ScheduledTransactionSummaryViewModel> ScheduledTransactions { get; }
+
+    public ScheduledTransactionSummaryViewModel? SelectedScheduledTransaction
+    {
+        get => selectedScheduledTransaction;
+        set => SetProperty(ref selectedScheduledTransaction, value);
+    }
+
+    public DateTime ScheduledOccurrenceDate
+    {
+        get => scheduledOccurrenceDate;
+        set => SetProperty(ref scheduledOccurrenceDate, value);
+    }
+
+    public string EditAmountText
+    {
+        get => editAmountText;
+        set => SetProperty(ref editAmountText, value);
+    }
+
+    public string EditAccountValueAfterText
+    {
+        get => editAccountValueAfterText;
+        set => SetProperty(ref editAccountValueAfterText, value);
+    }
+
+    public bool IsSelected
+    {
+        get => isSelected;
+        set => SetProperty(ref isSelected, value);
+    }
 
     public string TypeText => DisplayText.Format(Source.Type);
 

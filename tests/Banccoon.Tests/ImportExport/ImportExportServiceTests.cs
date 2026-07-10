@@ -176,14 +176,6 @@ public sealed class ImportExportServiceTests
     {
         var account = CreateAccount("Checking");
         var category = new Category(Guid.NewGuid(), "Rent");
-        var transaction = new Transaction(
-            Guid.NewGuid(),
-            new DateOnly(2026, 6, 8),
-            25m,
-            account.Id,
-            category.Id,
-            "Lunch",
-            TransactionType.Expense);
         var scheduledTransaction = new ScheduledTransaction(
             Guid.NewGuid(),
             "Salary",
@@ -198,6 +190,17 @@ public sealed class ImportExportServiceTests
                 DayOfMonth: 10),
             new DateOnly(2026, 6, 10),
             Active: true);
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 8),
+            25m,
+            account.Id,
+            category.Id,
+            "Lunch",
+            TransactionType.Expense,
+            PaidScheduledTransactionId: scheduledTransaction.Id,
+            PaidScheduledOccurrenceDate: new DateOnly(2026, 6, 8),
+            Name: "Cafe lunch");
         var savingsGoal = new SavingsGoal(
             Guid.NewGuid(),
             "Trip",
@@ -247,8 +250,8 @@ public sealed class ImportExportServiceTests
 
         await store.Accounts.SaveAsync(account);
         await store.Categories.SaveAsync(category);
-        await store.Transactions.SaveAsync(transaction);
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
+        await store.Transactions.SaveAsync(transaction);
         await store.SavingsGoals.SaveAsync(savingsGoal);
         await store.Settings.SaveAsync(settings);
         await store.StatementImports.SaveBatchAsync(statementImportBatch);
