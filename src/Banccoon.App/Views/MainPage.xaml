@@ -87,54 +87,19 @@
                         Text="Dashboard" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Accounts}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Accounts" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
                         CommandParameter="{x:Static viewModels:AppSection.Transactions}"
                         Style="{StaticResource ShellButton}"
                         Text="Transactions" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Statements}"
+                        CommandParameter="{x:Static viewModels:AppSection.Accounts}"
                         Style="{StaticResource ShellButton}"
-                        Text="Statements" />
+                        Text="Accounts" />
                     <Button
                         Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                        CommandParameter="{x:Static viewModels:AppSection.Settings}"
                         Style="{StaticResource ShellButton}"
-                        Text="Scheduled" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Goals}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Goals" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Forecast}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Forecast" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Reconciliation}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Reconciliation" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Analytics}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Analytics" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Data}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Data" />
-                    <Button
-                        Command="{Binding SelectSectionCommand}"
-                        CommandParameter="{x:Static viewModels:AppSection.Preferences}"
-                        Style="{StaticResource ShellButton}"
-                        Text="Preferences" />
+                        Text="Settings" />
                 </VerticalStackLayout>
 
                 <Border
@@ -216,14 +181,6 @@
                         Command="{Binding Data.RefreshCommand}"
                         Style="{StaticResource QuietButton}"
                         Text="Refresh" />
-                    <Button
-                        Command="{Binding UseRailNavigationCommand}"
-                        Style="{StaticResource QuietButton}"
-                        Text="Rail" />
-                    <Button
-                        Command="{Binding UseTopTabsCommand}"
-                        Style="{StaticResource QuietButton}"
-                        Text="Tabs" />
                 </HorizontalStackLayout>
 
                 <ScrollView
@@ -234,16 +191,9 @@
                     Orientation="Horizontal">
                     <HorizontalStackLayout Spacing="8">
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Dashboard}" Style="{StaticResource QuietButton}" Text="Dashboard" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Accounts}" Style="{StaticResource QuietButton}" Text="Accounts" />
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Transactions}" Style="{StaticResource QuietButton}" Text="Transactions" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Statements}" Style="{StaticResource QuietButton}" Text="Statements" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Scheduled}" Style="{StaticResource QuietButton}" Text="Scheduled" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Goals}" Style="{StaticResource QuietButton}" Text="Goals" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Forecast}" Style="{StaticResource QuietButton}" Text="Forecast" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Reconciliation}" Style="{StaticResource QuietButton}" Text="Reconciliation" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Analytics}" Style="{StaticResource QuietButton}" Text="Analytics" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Data}" Style="{StaticResource QuietButton}" Text="Data" />
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Preferences}" Style="{StaticResource QuietButton}" Text="Preferences" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Accounts}" Style="{StaticResource QuietButton}" Text="Accounts" />
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="{x:Static viewModels:AppSection.Settings}" Style="{StaticResource QuietButton}" Text="Settings" />
                     </HorizontalStackLayout>
                 </ScrollView>
             </Grid>
@@ -292,12 +242,17 @@
                                         Text="Add account" />
                                     <Button
                                         Command="{Binding SelectSectionCommand}"
-                                        CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Reconciliation}"
+                                        Style="{StaticResource QuietButton}"
+                                        Text="Check in" />
+                                    <Button
+                                        Command="{Binding SelectSectionCommand}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Transactions}"
                                         Style="{StaticResource QuietButton}"
                                         Text="Add scheduled item" />
                                     <Button
                                         Command="{Binding SelectSectionCommand}"
-                                        CommandParameter="{x:Static viewModels:AppSection.Goals}"
+                                        CommandParameter="{x:Static viewModels:AppSection.Accounts}"
                                         Style="{StaticResource QuietButton}"
                                         Text="Add goal" />
                                 </HorizontalStackLayout>
@@ -349,7 +304,6 @@
                         </Border>
                         <Border
                             Grid.Column="1"
-                            IsVisible="{Binding Data.IsAccountsEditing}"
                             Padding="16"
                             BackgroundColor="{StaticResource SurfaceColor}"
                             Stroke="{StaticResource DividerColor}">
@@ -380,12 +334,24 @@
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                 <VerticalStackLayout Spacing="2">
-                                    <Label FontAttributes="Bold" Text="Projected dashboard balance" />
-                                    <Label Style="{StaticResource MutedLabel}" Text="Forecasted values for accounts included in dashboard totals." />
+                                    <Label FontAttributes="Bold" Text="Dashboard balance trend" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Past 7 days of account changes and upcoming projected balances." />
                                 </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="6">
                                     <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.BalanceText}" />
                                     <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding Data.SelectedDashboardForecastPoint.DateText}" />
+                                    <HorizontalStackLayout HorizontalOptions="End" Spacing="6">
+                                        <Button
+                                            Command="{Binding SelectSectionCommand}"
+                                            CommandParameter="{x:Static viewModels:AppSection.Forecast}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Forecast" />
+                                        <Button
+                                            Command="{Binding SelectSectionCommand}"
+                                            CommandParameter="{x:Static viewModels:AppSection.Analytics}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="Analytics" />
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </Grid>
                             <controls:ForecastChartView
@@ -398,107 +364,66 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsAccountsSelected}" Spacing="16">
-                    <Grid ColumnDefinitions="*,Auto">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                         <Label Style="{StaticResource SectionTitleLabel}" Text="Accounts" />
                         <Button
                             Grid.Column="1"
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Goals}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Goals" />
+                        <Button
+                            Grid.Column="2"
+                            Command="{Binding Data.ToggleAccountNumberRevealCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="{Binding Data.AccountNumberRevealText}" />
+                        <Button
+                            Grid.Column="3"
                             Command="{Binding Data.ToggleAccountsEditingCommand}"
                             Style="{StaticResource QuietButton}"
                             Text="{Binding Data.AccountsEditModeText}" />
                     </Grid>
-                    <Grid ColumnDefinitions="1.1*,1.2*" ColumnSpacing="18">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                            <VerticalStackLayout Spacing="10">
-                                <Label FontAttributes="Bold" Text="New account" />
-                                <Entry Placeholder="Name" Text="{Binding Data.NewAccountName}" />
-                                <Picker
-                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
-                                    ItemsSource="{Binding Data.AccountTypes}"
-                                    SelectedItem="{Binding Data.SelectedAccountType}" />
-                                <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
-                                    <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
-                                    <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label FontAttributes="Bold" Text="New account" />
+                            <Entry Placeholder="Name" Text="{Binding Data.NewAccountName}" />
+                            <Picker
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding Data.AccountTypes}"
+                                SelectedItem="{Binding Data.SelectedAccountType}" />
+                            <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
+                                <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
+                                <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
+                                <Entry Placeholder="Account number, optional" Text="{Binding Data.NewAccountNumber}" />
+                                <Entry
+                                    Grid.Column="1"
+                                    IsVisible="{Binding Data.IsNewAccountCard}"
+                                    Keyboard="Numeric"
+                                    MaxLength="4"
+                                    Placeholder="Card last 4"
+                                    Text="{Binding Data.NewCardLastFourDigits}" />
+                            </Grid>
+                            <HorizontalStackLayout Spacing="8">
+                                <CheckBox IsChecked="{Binding Data.NewAccountIncludeInDashboardTotals}" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <VerticalStackLayout IsVisible="{Binding Data.IsNewAccountCreditCard}" Spacing="8">
+                                <Label FontAttributes="Bold" FontSize="13" Text="Credit card details" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.NewCreditCardDebtText}" />
+                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.NewCreditCardPaymentDueDayText}" />
                                 </Grid>
-                                <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
-                                    <Entry Placeholder="Account number, optional" Text="{Binding Data.NewAccountNumber}" />
-                                    <Entry
-                                        Grid.Column="1"
-                                        IsVisible="{Binding Data.IsNewAccountCard}"
-                                        Keyboard="Numeric"
-                                        MaxLength="4"
-                                        Placeholder="Card last 4"
-                                        Text="{Binding Data.NewCardLastFourDigits}" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding Data.NewCreditCardMinimumPaymentText}" />
+                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding Data.NewCreditCardPlannedPaymentText}" />
                                 </Grid>
-                                <HorizontalStackLayout Spacing="8">
-                                    <CheckBox IsChecked="{Binding Data.NewAccountIncludeInDashboardTotals}" />
-                                    <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
-                                </HorizontalStackLayout>
-                                <VerticalStackLayout IsVisible="{Binding Data.IsNewAccountCreditCard}" Spacing="8">
-                                    <Label FontAttributes="Bold" FontSize="13" Text="Credit card details" />
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.NewCreditCardDebtText}" />
-                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.NewCreditCardPaymentDueDayText}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding Data.NewCreditCardMinimumPaymentText}" />
-                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding Data.NewCreditCardPlannedPaymentText}" />
-                                    </Grid>
-                                </VerticalStackLayout>
-                                <Button Command="{Binding Data.AddAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
                             </VerticalStackLayout>
-                        </Border>
-
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                            <VerticalStackLayout Spacing="10">
-                                <Label FontAttributes="Bold" Text="Edit selected account" />
-                                <Picker
-                                    ItemDisplayBinding="{Binding Name}"
-                                    ItemsSource="{Binding Data.Accounts}"
-                                    SelectedItem="{Binding Data.SelectedAccount}" />
-                                <Entry Placeholder="Account name" Text="{Binding Data.SelectedAccountName}" />
-                                <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
-                                    <Picker
-                                        ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
-                                        ItemsSource="{Binding Data.AccountTypes}"
-                                        SelectedItem="{Binding Data.SelectedAccountEditType}" />
-                                    <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.SelectedAccountCurrency}" />
-                                </Grid>
-                                <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountBalanceText, StringFormat='Balance from transactions: {0}'}" />
-                                <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
-                                    <Entry Placeholder="Account number, optional" Text="{Binding Data.SelectedAccountNumber}" />
-                                    <Entry
-                                        Grid.Column="1"
-                                        IsVisible="{Binding Data.IsSelectedAccountEditCard}"
-                                        Keyboard="Numeric"
-                                        MaxLength="4"
-                                        Placeholder="Card last 4"
-                                        Text="{Binding Data.SelectedCardLastFourDigits}" />
-                                </Grid>
-                                <HorizontalStackLayout Spacing="8">
-                                    <CheckBox IsChecked="{Binding Data.SelectedAccountIncludeInDashboardTotals}" />
-                                    <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
-                                </HorizontalStackLayout>
-                                <VerticalStackLayout IsVisible="{Binding Data.IsSelectedAccountEditCreditCard}" Spacing="8">
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding Data.SelectedAccountDebtText}" />
-                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding Data.SelectedAccountPaymentDueDayText}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding Data.SelectedAccountMinimumPaymentText}" />
-                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding Data.SelectedAccountPlannedPaymentText}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                        <Entry Keyboard="Numeric" Placeholder="Payoff calculator payment" Text="{Binding Data.SelectedAccountPayoffPaymentText}" />
-                                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Manual monthly finance charge" Text="{Binding Data.SelectedAccountManualFinanceChargeText}" />
-                                    </Grid>
-                                    <Label Style="{StaticResource MutedLabel}" Text="{Binding Data.SelectedAccountPayoffSummary}" />
-                                </VerticalStackLayout>
-                                <Button Command="{Binding Data.SaveSelectedAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
+                            <Button Command="{Binding Data.AddAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
+                        </VerticalStackLayout>
+                    </Border>
 
                     <CollectionView ItemsSource="{Binding Data.AccountSummaries}">
                         <CollectionView.EmptyView>
@@ -509,23 +434,72 @@
                                 <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
-                                        <VerticalStackLayout Spacing="2">
+                                        <VerticalStackLayout IsVisible="{Binding IsReadOnlyVisible}" Spacing="2">
                                             <Label FontAttributes="Bold" Text="{Binding Name}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding CreditText}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding IdentifierText}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding DashboardText}" />
                                         </VerticalStackLayout>
+                                        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible}" Spacing="10">
+                                            <Entry Placeholder="Account name" Text="{Binding BindingContext.Data.SelectedAccountName, Source={x:Reference Page}}" />
+                                            <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
+                                                <Picker
+                                                    ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                                    ItemsSource="{Binding BindingContext.Data.AccountTypes, Source={x:Reference Page}}"
+                                                    SelectedItem="{Binding BindingContext.Data.SelectedAccountEditType, Source={x:Reference Page}}" />
+                                                <Picker
+                                                    Grid.Column="1"
+                                                    ItemsSource="{Binding BindingContext.Data.SupportedCurrencies, Source={x:Reference Page}}"
+                                                    SelectedItem="{Binding BindingContext.Data.SelectedAccountCurrency, Source={x:Reference Page}}" />
+                                            </Grid>
+                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding BindingContext.Data.SelectedAccountBalanceText, Source={x:Reference Page}, StringFormat='Balance from transactions: {0}'}" />
+                                            <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
+                                                <Entry Placeholder="Account number, optional" Text="{Binding BindingContext.Data.SelectedAccountNumber, Source={x:Reference Page}}" />
+                                                <Entry
+                                                    Grid.Column="1"
+                                                    IsVisible="{Binding BindingContext.Data.IsSelectedAccountEditCard, Source={x:Reference Page}}"
+                                                    Keyboard="Numeric"
+                                                    MaxLength="4"
+                                                    Placeholder="Card last 4"
+                                                    Text="{Binding BindingContext.Data.SelectedCardLastFourDigits, Source={x:Reference Page}}" />
+                                            </Grid>
+                                            <HorizontalStackLayout Spacing="8">
+                                                <CheckBox IsChecked="{Binding BindingContext.Data.SelectedAccountIncludeInDashboardTotals, Source={x:Reference Page}}" />
+                                                <Label Style="{StaticResource MutedLabel}" Text="Include this account in dashboard totals" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                            <VerticalStackLayout IsVisible="{Binding BindingContext.Data.IsSelectedAccountEditCreditCard, Source={x:Reference Page}}" Spacing="8">
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                    <Entry Keyboard="Numeric" Placeholder="Current debt" Text="{Binding BindingContext.Data.SelectedAccountDebtText, Source={x:Reference Page}}" />
+                                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Due day, 1-31" Text="{Binding BindingContext.Data.SelectedAccountPaymentDueDayText, Source={x:Reference Page}}" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                    <Entry Keyboard="Numeric" Placeholder="Minimum payment" Text="{Binding BindingContext.Data.SelectedAccountMinimumPaymentText, Source={x:Reference Page}}" />
+                                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Planned payment" Text="{Binding BindingContext.Data.SelectedAccountPlannedPaymentText, Source={x:Reference Page}}" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                    <Entry Keyboard="Numeric" Placeholder="Payoff calculator payment" Text="{Binding BindingContext.Data.SelectedAccountPayoffPaymentText, Source={x:Reference Page}}" />
+                                                    <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="Manual monthly finance charge" Text="{Binding BindingContext.Data.SelectedAccountManualFinanceChargeText, Source={x:Reference Page}}" />
+                                                </Grid>
+                                                <Label Style="{StaticResource MutedLabel}" Text="{Binding BindingContext.Data.SelectedAccountPayoffSummary, Source={x:Reference Page}}" />
+                                            </VerticalStackLayout>
+                                            <Button Command="{Binding BindingContext.Data.SaveSelectedAccountCommand, Source={x:Reference Page}}" Style="{StaticResource PrimaryButton}" Text="Save account" />
+                                        </VerticalStackLayout>
                                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding BalanceText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding TypeText}" />
                                         </VerticalStackLayout>
-                                        <Button
-                                            Grid.Column="2"
-                                            Command="{Binding BindingContext.Data.DeleteAccountCommand, Source={x:Reference Page}}"
-                                            CommandParameter="{Binding Source}"
-                                            IsVisible="{Binding BindingContext.Data.IsAccountsEditing, Source={x:Reference Page}}"
-                                            Style="{StaticResource QuietButton}"
-                                            Text="Delete" />
+                                        <VerticalStackLayout Grid.Column="2" IsVisible="{Binding BindingContext.Data.IsAccountsEditing, Source={x:Reference Page}}" Spacing="6">
+                                            <Button
+                                                Command="{Binding BindingContext.Data.SelectAccountCommand, Source={x:Reference Page}}"
+                                                CommandParameter="{Binding .}"
+                                                Style="{StaticResource QuietButton}"
+                                                Text="Edit" />
+                                            <Button
+                                                Command="{Binding BindingContext.Data.DeleteAccountCommand, Source={x:Reference Page}}"
+                                                CommandParameter="{Binding Source}"
+                                                Style="{StaticResource QuietButton}"
+                                                Text="Delete" />
+                                        </VerticalStackLayout>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -542,6 +516,18 @@
                             Style="{StaticResource QuietButton}"
                             Text="{Binding Data.TransactionsEditModeText}" />
                     </Grid>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Statements}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Statement import" />
+                        <Button
+                            Command="{Binding SelectSectionCommand}"
+                            CommandParameter="{x:Static viewModels:AppSection.Scheduled}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Scheduled" />
+                    </HorizontalStackLayout>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
@@ -1189,7 +1175,7 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout IsVisible="{Binding IsDataSelected}" Spacing="16">
-                    <Label Style="{StaticResource SectionTitleLabel}" Text="Data" />
+                    <Label Style="{StaticResource SectionTitleLabel}" Text="Backup and local data" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
                         <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
@@ -1244,6 +1230,48 @@
 
                 <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Preferences" />
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Theme" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Stored for the app shell and future theme-aware surfaces." />
+                            </VerticalStackLayout>
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding ThemeModes}"
+                                SelectedItem="{Binding ThemeMode}" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Accent" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Stored now for the shared shell and overlay styling path." />
+                            </VerticalStackLayout>
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding AccentColors}"
+                                SelectedItem="{Binding AccentColor}" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label FontAttributes="Bold" Text="Navigation" />
+                                <Label Style="{StaticResource MutedLabel}" Text="Controls the shell style without adding header controls." />
+                            </VerticalStackLayout>
+                            <Picker
+                                Grid.Column="1"
+                                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
+                                ItemsSource="{Binding NavigationStyles}"
+                                SelectedItem="{Binding NavigationStyle}" />
+                        </Grid>
+                    </Border>
                     <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
@@ -1306,14 +1334,41 @@
                             <CheckBox Grid.Column="1" IsChecked="{Binding ShowPowerUserFeatures}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
-                        <Button Command="{Binding Data.SavePreferencesCommand}" Style="{StaticResource PrimaryButton}" Text="Save preferences" />
-                        <Button Grid.Column="1" Command="{Binding UseRailNavigationCommand}" Style="{StaticResource QuietButton}" Text="Use rail" />
-                        <Button Grid.Column="2" Command="{Binding UseCompactNavigationCommand}" Style="{StaticResource QuietButton}" Text="Compact rail" />
-                        <Button Grid.Column="3" Command="{Binding UseTopTabsCommand}" Style="{StaticResource QuietButton}" Text="Use tabs" />
-                    </Grid>
+                    <Button Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" Text="Save settings" />
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+
+        <Grid
+            Grid.RowSpan="2"
+            Grid.ColumnSpan="2"
+            BackgroundColor="#80000000"
+            IsVisible="{Binding IsWorkflowOverlayOpen}">
+            <Border
+                Padding="24"
+                BackgroundColor="{StaticResource SurfaceColor}"
+                HorizontalOptions="Center"
+                MaximumWidthRequest="620"
+                Stroke="{StaticResource DividerColor}"
+                VerticalOptions="Center"
+                WidthRequest="560">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="2">
+                            <Label FontAttributes="Bold" FontSize="20" Text="{Binding WorkflowOverlayTitle}" />
+                            <Label Style="{StaticResource MutedLabel}" Text="{Binding WorkflowOverlayMessage}" />
+                        </VerticalStackLayout>
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding CloseWorkflowOverlayCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="Close" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

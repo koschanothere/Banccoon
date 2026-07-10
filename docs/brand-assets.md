@@ -6,8 +6,8 @@ Place app-ready image assets in:
 
 Recommended logo variants:
 
-- `banccoon_logo_full_light.svg` or `.png`: full wordmark plus mascot for light UI.
-- `banccoon_logo_full_dark.svg` or `.png`: full wordmark plus mascot for dark UI.
+- `banccoon_logo_full_light.svg`: full wordmark plus mascot for light UI.
+- `banccoon_logo_full_dark.svg`: full wordmark plus mascot for dark UI.
 - `banccoon_mark.svg` or `.png`: compact app mark for navigation and small surfaces.
 - `banccoon_mascot_idle_01.png`: friendly default banking raccoon.
 - `banccoon_mascot_idle_02.png`: alternate expression or pose for occasional rotation.

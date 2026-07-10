@@ -33,6 +33,9 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Mask account numbers by default everywhere outside an active edit/reveal context.
 - Add a deliberate reveal/hide action for full account numbers (open/closed eye icon).
 - Avoid showing full account numbers in status text, summaries, dashboard cards, and import match messages.
+- Make the dashboard graph default to the past 7 days of account-balance history plus the saved default forecast period.
+- Draw a clear current-time marker between historical account changes and future projected balances.
+- Derive historical dashboard graph points from persisted transactions and dashboard-included accounts, including account totals after each relevant day or transaction.
 
 ## Phase 0.1: Navigation Simplification
 
@@ -43,7 +46,7 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Persist appearance/navigation preferences properly instead of keeping them as shell-only runtime state.
 - Goals should be treated as an account in the DB.
 - Keep Data functionality inside Settings.
-- Keep tab navigation focused on everyday destinations: Dashboard, Transactions, Accounts, and Settings. Scheduled and Statements tabs should go into transactions options (Scheduled into when creating a transaction). Forecast and Analytics go into dashboard as collapsable fields 
+- Keep tab navigation focused on everyday destinations: Dashboard, Transactions, Accounts, and Settings. Scheduled and Statements tabs should go into transaction options. Forecast and Analytics go into dashboard as collapsable fields.
 - Remove Statements and Reconciliation as permanent top-level tabs once their guided overlays exist.
 - Keep workflow launch buttons where users naturally need them rather than forcing users to hunt for special tabs.
 
@@ -62,6 +65,23 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Route bank-statement setup into the statement import workflow.
 - Route manual setup into account creation without exposing the full Accounts edit UI.
 - Route backup restore into the existing import/restore services with validation first.
+
+## Phase 2.5: Transaction Screen Redesign
+
+- Rebuild Transactions as a history-first screen after the shared overlay host exists.
+- Remove permanent create/edit transaction panels once their overlay replacements are available.
+- Add a plus action with Expense, Income, Transfer, Scheduled, and Statement import options.
+- Expense and Income overlays should collect transaction name, account, date, amount, category, and optional assignment to an existing scheduled occurrence.
+- Transfer overlay should collect transaction name, amount, date, outgoing account, incoming account or goal, and optional assignment to an existing scheduled occurrence.
+- Scheduled should open a schedule manager overlay for viewing and creating scheduled expense, income, and transfer templates.
+- Scheduled assignment from Expense, Income, or Transfer creates only an occurrence link to an existing scheduled transaction; it must not create a new scheduled template.
+- Statement import should route into the dedicated statement-import workflow.
+- Add a first-class `Transaction.Name` field and persist it through SQLite, import/export, statement-created transactions, and tests.
+- Persist `PaidScheduledTransactionId` and `PaidScheduledOccurrenceDate`; the model and forecast service already expect them, but SQLite persistence must read and write them.
+- Transaction history rows should show name, category or transfer destination, scheduled mark, amount, and account value immediately after the transaction.
+- In edit mode, keep name locked, make category a dropdown, make scheduled assignment editable, show a trash action, and allow amount and account-value-after edits.
+- Editing account value after a transaction should recalculate that transaction's amount.
+- Add multi-select actions for mass category assignment, mass scheduled-occurrence assignment, and mass deletion.
 
 ## Phase 3: Bank Statement Import Workflow Redesign
 
@@ -112,9 +132,25 @@ Use focused overlays for:
 
 ## Phase 7: Later Product Hardening
 
+- Add a zero-persistence dashboard graph calendar/date selector for arbitrary start and end dates.
+- Reset temporary dashboard graph date selection when the user leaves the dashboard or data reloads.
+- Keep the graph default as past 7 days plus the saved default forecast period.
 - Desktop reminders and notification lifecycle.
 - Better list sorting/filtering.
 - Richer analytics and category views.
 - Error presentation and diagnostics.
+- Database migration diagnostics, including clear failure messages for schema upgrades.
 - Database backup before risky operations.
+- Schema migration and backup/restore verification for new transaction fields.
+- Ledger and audit consistency checks for balance-after-transaction history, transfer edits, bulk deletion, and imported or scheduled occurrence links.
+- Accessibility, keyboard navigation, focus handling, and responsive-layout hardening for overlay workflows.
+- Diagnostics for statement parsing/import failures and destructive operations.
 - Optional encryption, OCR, or bank sync research, always disabled by default.
+
+## Test Plan Priorities
+
+- Dashboard graph tests for the 7-day historical default, forecast continuation, current-time marker, arbitrary temporary ranges, and reset-on-leave behavior.
+- Transaction persistence tests for `Name`, scheduled occurrence fields, import/export round trips, and old database migration defaults.
+- Forecast tests confirming paid scheduled occurrences remain suppressed after app reload.
+- Transaction UI/ViewModel tests for overlay type selection, scheduled occurrence assignment, transfer to account or goal, balance-after amount recalculation, and bulk edit/delete behavior.
+- Regression tests for statement import routing and statement-created transaction names.

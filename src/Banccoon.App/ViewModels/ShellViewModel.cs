@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.Core.Appearance;
+using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
 
@@ -12,31 +13,29 @@ public sealed class ShellViewModel : ViewModelBase
     private AccentColor accentColor = UiPreferences.Default.AccentColor;
     private bool showPowerUserFeatures = UiPreferences.Default.ShowPowerUserFeatures;
     private string defaultCurrency = "EUR";
+    private bool isLoaded;
+    private bool isWorkflowOverlayOpen;
+    private string workflowOverlayTitle = string.Empty;
+    private string workflowOverlayMessage = string.Empty;
+    private readonly ISettingsRepository settingsRepository;
 
-    public ShellViewModel(FinanceDataViewModel data)
+    public ShellViewModel(FinanceDataViewModel data, ISettingsRepository settingsRepository)
     {
         Data = data;
+        this.settingsRepository = settingsRepository;
 
         NavigationItems =
         [
             new(AppSection.Dashboard, "Dashboard", "D", "Today, obligations, and safe-to-spend."),
-            new(AppSection.Accounts, "Accounts", "A", "Balances, cards, cash, and savings."),
             new(AppSection.Transactions, "Transactions", "T", "Manual and grouped spending entries."),
-            new(AppSection.Statements, "Statements", "S", "Review bank statement imports before applying them."),
-            new(AppSection.Scheduled, "Scheduled", "S", "Recurring income, bills, and reminders."),
-            new(AppSection.Goals, "Goals", "G", "Savings reservations that reduce safe-to-spend."),
-            new(AppSection.Forecast, "Forecast", "F", "Future balances and lowest balance points."),
-            new(AppSection.Reconciliation, "Reconciliation", "R", "Check expected events against real balances."),
-            new(AppSection.Analytics, "Analytics", "N", "Trends, categories, and money patterns."),
-            new(AppSection.Data, "Data", "X", "Portable backups, restores, and local data control."),
-            new(AppSection.Preferences, "Preferences", "P", "Theme, navigation, privacy, and defaults.")
+            new(AppSection.Accounts, "Accounts", "A", "Balances, cards, cash, and savings."),
+            new(AppSection.Settings, "Settings", "S", "Preferences, backups, restores, and local data control.")
         ];
 
         SelectSectionCommand = new RelayCommand<AppSection>(SelectSection);
         ToggleNavigationCommand = new RelayCommand(ToggleNavigation);
-        UseRailNavigationCommand = new RelayCommand(() => NavigationStyle = NavigationStyle.Rail);
-        UseCompactNavigationCommand = new RelayCommand(() => NavigationStyle = NavigationStyle.CompactRail);
-        UseTopTabsCommand = new RelayCommand(() => NavigationStyle = NavigationStyle.TopTabs);
+        SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
+        CloseWorkflowOverlayCommand = new RelayCommand(CloseWorkflowOverlay);
 
         UpdateSelectedNavigationItem();
     }
@@ -44,6 +43,12 @@ public sealed class ShellViewModel : ViewModelBase
     public FinanceDataViewModel Data { get; }
 
     public IReadOnlyList<NavigationItemViewModel> NavigationItems { get; }
+
+    public IReadOnlyList<NavigationStyle> NavigationStyles { get; } = Enum.GetValues<NavigationStyle>();
+
+    public IReadOnlyList<AppThemeMode> ThemeModes { get; } = Enum.GetValues<AppThemeMode>();
+
+    public IReadOnlyList<AccentColor> AccentColors { get; } = Enum.GetValues<AccentColor>();
 
     public IReadOnlyList<string> SupportedCurrencies { get; } =
     [
@@ -66,11 +71,9 @@ public sealed class ShellViewModel : ViewModelBase
 
     public ICommand ToggleNavigationCommand { get; }
 
-    public ICommand UseRailNavigationCommand { get; }
+    public ICommand SaveSettingsCommand { get; }
 
-    public ICommand UseCompactNavigationCommand { get; }
-
-    public ICommand UseTopTabsCommand { get; }
+    public ICommand CloseWorkflowOverlayCommand { get; }
 
     public AppSection SelectedSection
     {
@@ -85,6 +88,7 @@ public sealed class ShellViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsDashboardSelected));
                 OnPropertyChanged(nameof(IsAccountsSelected));
                 OnPropertyChanged(nameof(IsTransactionsSelected));
+                OnPropertyChanged(nameof(IsSettingsSelected));
                 OnPropertyChanged(nameof(IsStatementsSelected));
                 OnPropertyChanged(nameof(IsScheduledSelected));
                 OnPropertyChanged(nameof(IsGoalsSelected));
@@ -150,6 +154,24 @@ public sealed class ShellViewModel : ViewModelBase
         set => SetProperty(ref defaultCurrency, value);
     }
 
+    public bool IsWorkflowOverlayOpen
+    {
+        get => isWorkflowOverlayOpen;
+        private set => SetProperty(ref isWorkflowOverlayOpen, value);
+    }
+
+    public string WorkflowOverlayTitle
+    {
+        get => workflowOverlayTitle;
+        private set => SetProperty(ref workflowOverlayTitle, value);
+    }
+
+    public string WorkflowOverlayMessage
+    {
+        get => workflowOverlayMessage;
+        private set => SetProperty(ref workflowOverlayMessage, value);
+    }
+
     public GridLength NavigationColumnWidth
     {
         get
@@ -169,15 +191,17 @@ public sealed class ShellViewModel : ViewModelBase
 
     public bool IsMenuButtonVisible => NavigationStyle != NavigationStyle.Rail;
 
-    public string SelectedTitle => SelectedItem.Title;
+    public string SelectedTitle => GetSectionTitle(SelectedSection);
 
-    public string SelectedDescription => SelectedItem.Description;
+    public string SelectedDescription => GetSectionDescription(SelectedSection);
 
     public bool IsDashboardSelected => SelectedSection == AppSection.Dashboard;
 
     public bool IsAccountsSelected => SelectedSection == AppSection.Accounts;
 
     public bool IsTransactionsSelected => SelectedSection == AppSection.Transactions;
+
+    public bool IsSettingsSelected => SelectedSection == AppSection.Settings;
 
     public bool IsStatementsSelected => SelectedSection == AppSection.Statements;
 
@@ -191,11 +215,56 @@ public sealed class ShellViewModel : ViewModelBase
 
     public bool IsAnalyticsSelected => SelectedSection == AppSection.Analytics;
 
-    public bool IsDataSelected => SelectedSection == AppSection.Data;
+    public bool IsDataSelected => SelectedSection == AppSection.Settings;
 
-    public bool IsPreferencesSelected => SelectedSection == AppSection.Preferences;
+    public bool IsPreferencesSelected => SelectedSection == AppSection.Settings;
 
-    private NavigationItemViewModel SelectedItem => NavigationItems.First(item => item.Section == SelectedSection);
+    public async Task LoadAsync()
+    {
+        if (isLoaded)
+        {
+            return;
+        }
+
+        await Data.LoadAsync();
+        await LoadSettingsAsync();
+        isLoaded = true;
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        var settings = await settingsRepository.GetAsync();
+        themeMode = settings.ThemeMode;
+        accentColor = settings.AccentColor;
+        showPowerUserFeatures = settings.ShowPowerUserFeatures;
+        NavigationStyle = settings.NavigationStyle;
+        OnPropertyChanged(nameof(ThemeMode));
+        OnPropertyChanged(nameof(AccentColor));
+        OnPropertyChanged(nameof(ShowPowerUserFeatures));
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        await Data.SavePreferencesAsync(
+            ThemeMode,
+            AccentColor,
+            NavigationStyle,
+            ShowPowerUserFeatures);
+    }
+
+    public void OpenWorkflowOverlay(string title, string message)
+    {
+        WorkflowOverlayTitle = title;
+        WorkflowOverlayMessage = message;
+        IsWorkflowOverlayOpen = true;
+    }
+
+    private void CloseWorkflowOverlay()
+    {
+        IsWorkflowOverlayOpen = false;
+        WorkflowOverlayTitle = string.Empty;
+        WorkflowOverlayMessage = string.Empty;
+    }
 
     private void SelectSection(AppSection section)
     {
@@ -215,5 +284,45 @@ public sealed class ShellViewModel : ViewModelBase
         {
             item.IsSelected = item.Section == SelectedSection;
         }
+    }
+
+    private static string GetSectionTitle(AppSection section)
+    {
+        return section switch
+        {
+            AppSection.Dashboard => "Dashboard",
+            AppSection.Transactions => "Transactions",
+            AppSection.Accounts => "Accounts",
+            AppSection.Settings => "Settings",
+            AppSection.Statements => "Statement import",
+            AppSection.Scheduled => "Scheduled",
+            AppSection.Goals => "Goals",
+            AppSection.Forecast => "Forecast",
+            AppSection.Reconciliation => "Reconciliation",
+            AppSection.Analytics => "Analytics",
+            AppSection.Data => "Settings",
+            AppSection.Preferences => "Settings",
+            _ => "Banccoon"
+        };
+    }
+
+    private static string GetSectionDescription(AppSection section)
+    {
+        return section switch
+        {
+            AppSection.Dashboard => "Today, obligations, and safe-to-spend.",
+            AppSection.Transactions => "Manual entries, scheduled items, imports, and transaction history.",
+            AppSection.Accounts => "Balances, cards, cash, savings, and goals.",
+            AppSection.Settings => "Preferences, backups, restores, and local data control.",
+            AppSection.Statements => "Review bank statement imports before applying them.",
+            AppSection.Scheduled => "Recurring income, bills, and reminders.",
+            AppSection.Goals => "Savings reservations that reduce safe-to-spend.",
+            AppSection.Forecast => "Future balances and lowest balance points.",
+            AppSection.Reconciliation => "Check expected events against real balances.",
+            AppSection.Analytics => "Trends, categories, and money patterns.",
+            AppSection.Data => "Portable backups, restores, and local data control.",
+            AppSection.Preferences => "Theme, navigation, privacy, and defaults.",
+            _ => string.Empty
+        };
     }
 }

@@ -160,6 +160,7 @@ internal sealed class ForecastChartDrawable : IDrawable
         maxBalance += padding;
 
         DrawGrid(canvas, plot, minBalance, maxBalance);
+        DrawCurrentDateMarker(canvas, plot);
         DrawProjectionLine(canvas, plot, minBalance, maxBalance);
         DrawEventDots(canvas, plot, minBalance, maxBalance);
         DrawSelectedPoint(canvas, plot, minBalance, maxBalance, dirtyRect);
@@ -234,6 +235,36 @@ internal sealed class ForecastChartDrawable : IDrawable
         canvas.StrokeColor = AccentColor;
         canvas.StrokeSize = 3f;
         canvas.DrawPath(path);
+    }
+
+    private void DrawCurrentDateMarker(ICanvas canvas, RectF plot)
+    {
+        var currentIndex = Points
+            .Select((point, index) => new { point, index })
+            .FirstOrDefault(pair => pair.point.IsCurrentDate)
+            ?.index;
+        if (currentIndex is null)
+        {
+            return;
+        }
+
+        var x = GetX(plot, currentIndex.Value);
+        canvas.StrokeColor = TextColor;
+        canvas.StrokeSize = 1.25f;
+        canvas.StrokeDashPattern = new[] { 4f, 4f };
+        canvas.DrawLine(x, plot.Y, x, plot.Y + plot.Height);
+        canvas.StrokeDashPattern = Array.Empty<float>();
+
+        canvas.FontColor = TextColor;
+        canvas.FontSize = 10f;
+        canvas.DrawString(
+            "Today",
+            x - 28f,
+            plot.Y,
+            56f,
+            16f,
+            HorizontalAlignment.Center,
+            VerticalAlignment.Center);
     }
 
     private void DrawEventDots(ICanvas canvas, RectF plot, decimal minBalance, decimal maxBalance)

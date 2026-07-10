@@ -5,6 +5,7 @@ public enum AppSection
     Dashboard,
     Accounts,
     Transactions,
+    Settings,
     Statements,
     Scheduled,
     Goals,

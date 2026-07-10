@@ -147,7 +147,11 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 DefaultCurrency TEXT NOT NULL,
                 DefaultForecastPeriod TEXT NOT NULL,
                 ReminderFrequency TEXT NOT NULL,
-                DateDisplayFormat TEXT NOT NULL DEFAULT 'DayMonthYear'
+                DateDisplayFormat TEXT NOT NULL DEFAULT 'DayMonthYear',
+                ThemeMode TEXT NOT NULL DEFAULT 'Light',
+                AccentColor TEXT NOT NULL DEFAULT 'Emerald',
+                NavigationStyle TEXT NOT NULL DEFAULT 'Rail',
+                ShowPowerUserFeatures INTEGER NOT NULL DEFAULT 0
             );
             """;
 
@@ -199,6 +203,30 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "Settings",
             "DateDisplayFormat",
             "TEXT NOT NULL DEFAULT 'DayMonthYear'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "ThemeMode",
+            "TEXT NOT NULL DEFAULT 'Light'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "AccentColor",
+            "TEXT NOT NULL DEFAULT 'Emerald'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "NavigationStyle",
+            "TEXT NOT NULL DEFAULT 'Rail'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "ShowPowerUserFeatures",
+            "INTEGER NOT NULL DEFAULT 0",
             cancellationToken);
     }
 

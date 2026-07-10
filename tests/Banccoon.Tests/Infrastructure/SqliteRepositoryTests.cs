@@ -1,4 +1,5 @@
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.Appearance;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Statements;
@@ -165,6 +166,10 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(ForecastPeriod.ThirtyDays, settings.DefaultForecastPeriod);
         Assert.Equal(ReminderFrequency.Weekly, settings.ReminderFrequency);
         Assert.Equal(DateDisplayFormat.DayMonthYear, settings.DateDisplayFormat);
+        Assert.Equal(AppThemeMode.Light, settings.ThemeMode);
+        Assert.Equal(AccentColor.Emerald, settings.AccentColor);
+        Assert.Equal(NavigationStyle.Rail, settings.NavigationStyle);
+        Assert.False(settings.ShowPowerUserFeatures);
     }
 
     [Fact]
@@ -175,7 +180,11 @@ public sealed class SqliteRepositoryTests
             "USD",
             ForecastPeriod.NinetyDays,
             ReminderFrequency.Biweekly,
-            DateDisplayFormat.MonthDayYear);
+            DateDisplayFormat.MonthDayYear,
+            AppThemeMode.Dark,
+            AccentColor.Blue,
+            NavigationStyle.TopTabs,
+            ShowPowerUserFeatures: true);
 
         await store.Settings.SaveAsync(settings);
 

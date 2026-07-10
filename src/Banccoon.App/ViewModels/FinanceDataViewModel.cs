@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Appearance;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
@@ -199,6 +200,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string deleteAllConfirmationText = string.Empty;
     private bool deleteAllBackupAcknowledged;
     private bool isAccountsEditing;
+    private bool areAccountNumbersRevealed;
+    private AccountSummaryViewModel? selectedAccountSummary;
     private bool isTransactionsEditing;
     private bool isScheduledEditing;
     private bool isGoalsEditing;
@@ -299,6 +302,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
         DeleteAllDataCommand = new AsyncRelayCommand(DeleteAllDataAsync);
         SavePreferencesCommand = new AsyncRelayCommand(SavePreferencesAsync);
         ToggleAccountsEditingCommand = new RelayCommand(() => IsAccountsEditing = !IsAccountsEditing);
+        ToggleAccountNumberRevealCommand = new RelayCommand(() => AreAccountNumbersRevealed = !AreAccountNumbersRevealed);
+        SelectAccountCommand = new RelayCommand<AccountSummaryViewModel>(SelectAccountForEditing);
         ToggleTransactionsEditingCommand = new RelayCommand(() => IsTransactionsEditing = !IsTransactionsEditing);
         ToggleScheduledEditingCommand = new RelayCommand(() => IsScheduledEditing = !IsScheduledEditing);
         ToggleGoalsEditingCommand = new RelayCommand(() => IsGoalsEditing = !IsGoalsEditing);
@@ -470,6 +475,10 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public ICommand ToggleAccountsEditingCommand { get; }
 
+    public ICommand ToggleAccountNumberRevealCommand { get; }
+
+    public ICommand SelectAccountCommand { get; }
+
     public ICommand ToggleTransactionsEditingCommand { get; }
 
     public ICommand ToggleScheduledEditingCommand { get; }
@@ -484,6 +493,35 @@ public sealed class FinanceDataViewModel : ViewModelBase
             if (SetProperty(ref isAccountsEditing, value))
             {
                 OnPropertyChanged(nameof(AccountsEditModeText));
+                UpdateSummaries();
+            }
+        }
+    }
+
+    public bool AreAccountNumbersRevealed
+    {
+        get => areAccountNumbersRevealed;
+        set
+        {
+            if (SetProperty(ref areAccountNumbersRevealed, value))
+            {
+                OnPropertyChanged(nameof(AccountNumberRevealText));
+                UpdateSummaries();
+            }
+        }
+    }
+
+    public string AccountNumberRevealText => AreAccountNumbersRevealed ? "Hide identifiers" : "Show identifiers";
+
+    public AccountSummaryViewModel? SelectedAccountSummary
+    {
+        get => selectedAccountSummary;
+        set
+        {
+            if (SetProperty(ref selectedAccountSummary, value))
+            {
+                SelectedAccount = value?.Source;
+                UpdateSummaries();
             }
         }
     }
@@ -731,7 +769,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public string NewAccountNumber
     {
         get => newAccountNumber;
-        set => SetProperty(ref newAccountNumber, value);
+        set => SetProperty(ref newAccountNumber, FormatAccountNumber(value));
     }
 
     public string NewCardLastFourDigits
@@ -820,7 +858,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public string SelectedAccountNumber
     {
         get => selectedAccountNumber;
-        set => SetProperty(ref selectedAccountNumber, value);
+        set => SetProperty(ref selectedAccountNumber, FormatAccountNumber(value));
     }
 
     public string SelectedCardLastFourDigits
@@ -1697,7 +1735,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             IsArchived: false,
             creditCardDetails,
             NewAccountIncludeInDashboardTotals,
-            CleanOptionalText(NewAccountNumber),
+            CleanOptionalAccountNumber(NewAccountNumber),
             IsCardAccountType(SelectedAccountType) ? cardLastFourDigits : null);
 
         await accountRepository.SaveAsync(account);
@@ -1740,7 +1778,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             Currency = NormalizeCurrency(SelectedAccountCurrency),
             CreditCardDetails = CreateCreditCardDetailsForSelectedAccount(),
             IncludeInDashboardTotals = SelectedAccountIncludeInDashboardTotals,
-            AccountNumber = CleanOptionalText(SelectedAccountNumber),
+            AccountNumber = CleanOptionalAccountNumber(SelectedAccountNumber),
             CardLastFourDigits = IsCardAccountType(SelectedAccountEditType) ? cardLastFourDigits : null
         };
 
@@ -2844,11 +2882,28 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private async Task SavePreferencesAsync()
     {
+        await SavePreferencesAsync(
+            AppThemeMode.Light,
+            AccentColor.Emerald,
+            NavigationStyle.Rail,
+            showPowerUserFeatures: false);
+    }
+
+    public async Task SavePreferencesAsync(
+        AppThemeMode themeMode,
+        AccentColor accentColor,
+        NavigationStyle navigationStyle,
+        bool showPowerUserFeatures)
+    {
         var settings = new AppSettings(
             NormalizeCurrency(DefaultCurrency),
             SelectedForecastPeriod,
             SelectedReminderFrequency,
-            SelectedDateDisplayFormat);
+            SelectedDateDisplayFormat,
+            themeMode,
+            accentColor,
+            navigationStyle,
+            showPowerUserFeatures);
 
         await settingsRepository.SaveAsync(settings);
         DefaultCurrency = settings.DefaultCurrency;
@@ -3206,7 +3261,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         SelectedAccountName = account.Name;
         SelectedAccountEditType = account.Type;
         SelectedAccountCurrency = account.Currency;
-        SelectedAccountBalanceText = ToInputText(account.CurrentBalance);
+        SelectedAccountBalanceText = FormatMoney(account.CurrentBalance, account.Currency);
         SelectedAccountNumber = account.AccountNumber ?? string.Empty;
         SelectedCardLastFourDigits = account.CardLastFourDigits ?? string.Empty;
         SelectedAccountIncludeInDashboardTotals = account.IncludeInDashboardTotals;
@@ -3217,6 +3272,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         SelectedAccountPayoffPaymentText = ToInputText(
             account.CreditCardDetails?.PlannedPaymentAmount
             ?? account.CreditCardDetails?.MinimumPayment);
+    }
+
+    private void SelectAccountForEditing(AccountSummaryViewModel summary)
+    {
+        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == summary.Source.Id) ?? summary.Source;
+        UpdateSummaries();
     }
 
     private void RecalculateSelectedAccountPayoff()
@@ -3364,7 +3425,14 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     private void UpdateSummaries()
     {
-        Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(account)));
+        var selectedAccountId = SelectedAccount?.Id;
+        Replace(AccountSummaries, Accounts.Select(account => new AccountSummaryViewModel(
+            account,
+            AreAccountNumbersRevealed,
+            IsAccountsEditing,
+            selectedAccountId == account.Id)));
+        selectedAccountSummary = AccountSummaries.FirstOrDefault(summary => summary.Source.Id == selectedAccountId);
+        OnPropertyChanged(nameof(SelectedAccountSummary));
         Replace(CategorySummaries, Categories.Select(category => new CategorySummaryViewModel(category)));
         Replace(TransactionSummaries, Transactions
             .OrderByDescending(transaction => transaction.Date)
@@ -3486,7 +3554,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
             DefaultCurrency,
             SelectedDateDisplayFormat)));
         var selectedDate = SelectedDashboardForecastPoint?.Date;
-        var chartPoints = CreateForecastChartPoints(dashboardForecast, DefaultCurrency, SelectedDateDisplayFormat);
+        var chartPoints = CreateDashboardChartPoints(
+            dashboardForecast,
+            dashboardAccounts,
+            Transactions.ToArray(),
+            DefaultCurrency,
+            SelectedDateDisplayFormat,
+            dateProvider.Today);
         Replace(DashboardForecastPoints, chartPoints);
         SelectedDashboardForecastPoint = selectedDate is null
             ? SelectDefaultChartPoint(DashboardForecastPoints)
@@ -3535,9 +3609,117 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return points;
     }
 
+    private static IReadOnlyList<ForecastChartPointViewModel> CreateDashboardChartPoints(
+        ForecastResult forecast,
+        IReadOnlyCollection<Account> dashboardAccounts,
+        IReadOnlyCollection<Transaction> transactions,
+        string currency,
+        DateDisplayFormat dateDisplayFormat,
+        DateOnly today)
+    {
+        var dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
+        var historyStart = today.AddDays(-7);
+        var historicalTransactions = transactions
+            .Where(transaction => transaction.Date >= historyStart && transaction.Date <= today)
+            .Select(transaction => new
+            {
+                Transaction = transaction,
+                Effect = GetDashboardTransactionEffect(transaction, dashboardAccountIds)
+            })
+            .Where(item => item.Effect != 0m)
+            .ToArray();
+        var historicalEventsByDate = historicalTransactions
+            .GroupBy(item => item.Transaction.Date)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderBy(item => item.Transaction.Amount)
+                    .Select(item => $"{DisplayText.Format(item.Transaction.Type)}: {FormatMoney(item.Effect, currency)}")
+                    .ToArray());
+
+        var balancesByDate = new Dictionary<DateOnly, decimal>();
+        var runningHistoricalBalance = forecast.CurrentBalance;
+        for (var date = today; date >= historyStart; date = date.AddDays(-1))
+        {
+            balancesByDate[date] = runningHistoricalBalance;
+            runningHistoricalBalance -= historicalTransactions
+                .Where(item => item.Transaction.Date == date)
+                .Sum(item => item.Effect);
+        }
+
+        var points = new List<ForecastChartPointViewModel>();
+        for (var date = historyStart; date <= today; date = date.AddDays(1))
+        {
+            var eventSummaries = historicalEventsByDate.TryGetValue(date, out var summaries)
+                ? summaries
+                : Array.Empty<string>();
+            points.Add(new ForecastChartPointViewModel(
+                date,
+                balancesByDate[date],
+                eventSummaries,
+                currency,
+                dateDisplayFormat,
+                isCurrentDate: date == today,
+                isHistorical: date < today));
+        }
+
+        var forecastEventsByDate = forecast.Events
+            .Where(forecastEvent => forecastEvent.Date > today)
+            .GroupBy(forecastEvent => forecastEvent.Date)
+            .ToDictionary(group => group.Key, group => group
+                .OrderBy(forecastEvent => forecastEvent.SignedAmount)
+                .ThenBy(forecastEvent => forecastEvent.Name, StringComparer.OrdinalIgnoreCase)
+                .ToArray());
+        var runningForecastBalance = forecast.CurrentBalance;
+        for (var date = today.AddDays(1); date <= forecast.EndDate; date = date.AddDays(1))
+        {
+            var dayEvents = forecastEventsByDate.TryGetValue(date, out var eventsForDate)
+                ? eventsForDate
+                : Array.Empty<ForecastEvent>();
+
+            foreach (var dayEvent in dayEvents)
+            {
+                runningForecastBalance += dayEvent.SignedAmount;
+            }
+
+            points.Add(new ForecastChartPointViewModel(
+                date,
+                runningForecastBalance,
+                dayEvents.Select(dayEvent => $"{dayEvent.Name}: {FormatMoney(dayEvent.SignedAmount, currency)}").ToArray(),
+                currency,
+                dateDisplayFormat));
+        }
+
+        return points;
+    }
+
+    private static decimal GetDashboardTransactionEffect(Transaction transaction, IReadOnlySet<Guid> dashboardAccountIds)
+    {
+        var effect = dashboardAccountIds.Contains(transaction.AccountId)
+            ? GetSourceSignedAmount(transaction)
+            : 0m;
+
+        if (transaction.Type == TransactionType.Transfer
+            && transaction.DestinationAccountId is { } destinationAccountId
+            && dashboardAccountIds.Contains(destinationAccountId))
+        {
+            effect += Math.Abs(transaction.Amount);
+        }
+
+        return effect;
+    }
+
+    private static decimal GetSourceSignedAmount(Transaction transaction)
+    {
+        return transaction.Type == TransactionType.Transfer
+            ? -Math.Abs(transaction.Amount)
+            : MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type);
+    }
+
     private static ForecastChartPointViewModel? SelectDefaultChartPoint(IEnumerable<ForecastChartPointViewModel> points)
     {
-        return points
+        return points.FirstOrDefault(point => point.IsCurrentDate)
+            ?? points
             .OrderBy(point => point.Balance)
             .ThenBy(point => point.Date)
             .FirstOrDefault();
@@ -3604,7 +3786,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         var normalized = NormalizeAccountNumber(accountNumber);
         return string.IsNullOrWhiteSpace(normalized)
             ? "Account number was not found in the statement."
-            : $"Statement account {FormatAccountNumber(normalized)}";
+            : $"Statement account {MaskAccountNumber(normalized)}";
     }
 
     private static string FormatDetectedCardText(string? cardLastFourDigits)
@@ -3638,6 +3820,21 @@ public sealed class FinanceDataViewModel : ViewModelBase
                     var length = Math.Min(4, normalized.Length - start);
                     return normalized.Substring(start, length);
                 }));
+    }
+
+    private static string MaskAccountNumber(string? value)
+    {
+        var normalized = NormalizeAccountNumber(value);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return "hidden";
+        }
+
+        var visibleDigits = normalized.Length <= 4
+            ? normalized
+            : normalized[^4..];
+
+        return $"**** {visibleDigits}";
     }
 
     private static string NormalizeAccountNumber(string? value)
@@ -3742,6 +3939,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
     }
 
+    private static string? CleanOptionalAccountNumber(string? text)
+    {
+        var formatted = FormatAccountNumber(text);
+        return string.IsNullOrWhiteSpace(formatted) ? null : formatted;
+    }
+
     private static bool IsCardAccountType(AccountType accountType)
     {
         return accountType is AccountType.DebitCard or AccountType.CreditCard;
@@ -3779,16 +3982,20 @@ public sealed class ForecastChartPointViewModel
         decimal balance,
         IReadOnlyList<string> eventSummaries,
         string currency,
-        DateDisplayFormat dateDisplayFormat)
+        DateDisplayFormat dateDisplayFormat,
+        bool isCurrentDate = false,
+        bool isHistorical = false)
     {
         Date = date;
         Balance = balance;
         EventSummaries = eventSummaries;
+        IsCurrentDate = isCurrentDate;
+        IsHistorical = isHistorical;
         DateText = DateDisplay.Format(date, dateDisplayFormat);
         ShortDateText = DateDisplay.FormatShortWithoutYear(date, dateDisplayFormat);
         BalanceText = $"{currency} {balance:N2}";
         EventsText = eventSummaries.Count == 0
-            ? "No planned events"
+            ? isCurrentDate ? "Current balance" : isHistorical ? "No account changes" : "No planned events"
             : string.Join(" | ", eventSummaries);
     }
 
@@ -3797,6 +4004,10 @@ public sealed class ForecastChartPointViewModel
     public decimal Balance { get; }
 
     public IReadOnlyList<string> EventSummaries { get; }
+
+    public bool IsCurrentDate { get; }
+
+    public bool IsHistorical { get; }
 
     public string DateText { get; }
 
@@ -3879,12 +4090,29 @@ public sealed class ExpectedTransactionReviewViewModel : ViewModelBase
 
 public sealed class AccountSummaryViewModel
 {
-    public AccountSummaryViewModel(Account account)
+    public AccountSummaryViewModel(
+        Account account,
+        bool showFullIdentifier,
+        bool isAccountsEditing,
+        bool isSelected)
     {
         Source = account;
+        ShowFullIdentifier = showFullIdentifier;
+        IsAccountsEditing = isAccountsEditing;
+        IsSelected = isSelected;
     }
 
     public Account Source { get; }
+
+    public bool ShowFullIdentifier { get; }
+
+    public bool IsAccountsEditing { get; }
+
+    public bool IsSelected { get; }
+
+    public bool IsReadOnlyVisible => !IsAccountsEditing || !IsSelected;
+
+    public bool IsEditFormVisible => IsAccountsEditing && IsSelected;
 
     public string Name => Source.Name;
 
@@ -3898,7 +4126,7 @@ public sealed class AccountSummaryViewModel
         {
             var accountNumber = string.IsNullOrWhiteSpace(Source.AccountNumber)
                 ? null
-                : $"Account {FormatAccountNumber(Source.AccountNumber)}";
+                : $"Account {(ShowFullIdentifier ? FormatAccountNumber(Source.AccountNumber) : MaskAccountNumber(Source.AccountNumber))}";
             var card = string.IsNullOrWhiteSpace(Source.CardLastFourDigits)
                 ? null
                 : $"Card ending {Source.CardLastFourDigits}";
@@ -3950,6 +4178,21 @@ public sealed class AccountSummaryViewModel
                     var length = Math.Min(4, normalized.Length - start);
                     return normalized.Substring(start, length);
                 }));
+    }
+
+    private static string MaskAccountNumber(string value)
+    {
+        var normalized = string.Concat(value.Where(char.IsDigit));
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return "hidden";
+        }
+
+        var visibleDigits = normalized.Length <= 4
+            ? normalized
+            : normalized[^4..];
+
+        return $"**** {visibleDigits}";
     }
 }
 
