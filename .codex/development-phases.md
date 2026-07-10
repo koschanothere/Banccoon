@@ -19,9 +19,33 @@ The roadmap now shifts from “build the primitives” to “make the app guide 
 
 ## Current Product Direction
 
-The app should no longer assume users manually build everything first. In a blank state, Banccoon should guide the user into setup through a focused in-app overlay. The first useful setup paths should be bank-statement import, manual setup, and likely backup restore.
+The app should no longer assume users manually build everything first. On first startup (empty db), Banccoon should guide the user into setup through a focused in-app overlay. The first useful setup paths should be bank-statement import, manual setup, and backup restore from exports.
 
 Large workflows should become app-guided modal panels rather than permanent top-level tabs. These overlays must feel calm, clear, and hard to misuse.
+
+## Phase 0: Navigation Simplification
+
+- Remove the account edit panel
+- Make account fields editable when the user enters editing mode and selects an account to edit.
+- Show per-account edit actions only in edit mode or as clear row actions.
+- Format money and other numeric amounts with three-digit separators in display and sensible numeric parsing in inputs.
+- Format account numbers (and in their input fields) in four-digit groups.
+- Mask account numbers by default everywhere outside an active edit/reveal context.
+- Add a deliberate reveal/hide action for full account numbers (open/closed eye icon).
+- Avoid showing full account numbers in status text, summaries, dashboard cards, and import match messages.
+
+## Phase 0.1: Navigation Simplification
+
+- Combine Preferences and Data into one Settings section.
+- Preserve all existing preferences, backup/export, import/restore, and delete-all-local-data options.
+- Move navigation tab/rail style controls into Settings only.
+- Remove the always-present Rail/Tabs controls from the global header.
+- Persist appearance/navigation preferences properly instead of keeping them as shell-only runtime state.
+- Goals should be treated as an account in the DB.
+- Keep Data functionality inside Settings.
+- Keep tab navigation focused on everyday destinations: Dashboard, Transactions, Accounts, and Settings. Scheduled and Statements tabs should go into transactions options (Scheduled into when creating a transaction). Forecast and Analytics go into dashboard as collapsable fields 
+- Remove Statements and Reconciliation as permanent top-level tabs once their guided overlays exist.
+- Keep workflow launch buttons where users naturally need them rather than forcing users to hunt for special tabs.
 
 ## Phase 1: Shared Workflow Overlay Architecture
 
@@ -68,32 +92,7 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Keep actual-balance comparison, grouped spending, and balance adjustment as focused steps in the workflow.
 - Keep explicit adjustment transactions for auditability.
 
-## Phase 6: Accounts And Sensitive Number Polish
-
-- Hide the account edit panel until the user explicitly chooses to edit a specific account.
-- Show per-account edit actions only in edit mode or as clear row actions.
-- Format money and other numeric amounts with three-digit separators in display and sensible numeric parsing in inputs.
-- Format account numbers in four-digit groups.
-- Mask account numbers by default everywhere outside an active edit/reveal context.
-- Add a deliberate reveal/hide action for full account numbers.
-- Avoid showing full account numbers in status text, summaries, dashboard cards, and import match messages.
-
-## Phase 7: Settings Consolidation
-
-- Combine Preferences and Data into one Settings section.
-- Preserve all existing preferences, backup/export, import/restore, and delete-all-local-data options.
-- Move navigation style controls into Settings only.
-- Remove the always-present Rail/Tabs controls from the global header.
-- Persist appearance/navigation preferences properly instead of keeping them as shell-only runtime state.
-
-## Phase 8: Navigation Simplification
-
-- Keep normal navigation focused on everyday destinations: Dashboard, Accounts, Transactions, Scheduled, Goals, Forecast, Analytics, and Settings.
-- Remove Statements and Reconciliation as permanent top-level tabs once their guided overlays exist.
-- Keep Data functionality inside Settings.
-- Keep workflow launch buttons where users naturally need them rather than forcing users to hunt for special tabs.
-
-## Phase 9: UX Hardening And Expected Pop-Ups
+## Phase 6: UX Hardening And Expected Overlay Windows
 
 Use focused overlays for:
 
@@ -111,7 +110,7 @@ Use focused overlays for:
 - possible duplicate transaction review;
 - credit-card payoff details.
 
-## Phase 10: Later Product Hardening
+## Phase 7: Later Product Hardening
 
 - Desktop reminders and notification lifecycle.
 - Better list sorting/filtering.
