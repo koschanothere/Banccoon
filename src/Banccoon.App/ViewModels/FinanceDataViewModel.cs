@@ -98,6 +98,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newAccountCurrency = "EUR";
     private string newAccountNumber = string.Empty;
     private string newCardLastFourDigits = string.Empty;
+    private string newAccountPlanningValueText = string.Empty;
     private bool newAccountIncludeInDashboardTotals = true;
     private string newCreditCardDebtText = string.Empty;
     private string newCreditCardMinimumPaymentText = string.Empty;
@@ -117,6 +118,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string selectedAccountCurrency = "EUR";
     private string selectedAccountNumber = string.Empty;
     private string selectedCardLastFourDigits = string.Empty;
+    private string selectedAccountPlanningValueText = string.Empty;
     private bool selectedAccountIncludeInDashboardTotals = true;
     private ForecastChartPointViewModel? selectedDashboardForecastPoint;
     private Account? newTransactionAccount;
@@ -129,6 +131,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     private string newTransactionAmountText = string.Empty;
     private string newTransactionNotes = string.Empty;
     private DateTime newTransactionDate;
+    private bool isNewTransactionScheduledOccurrenceEnabled;
     private ScheduledTransactionSummaryViewModel? newTransactionScheduledOccurrence;
     private DateTime newTransactionScheduledOccurrenceDate;
     private TransactionType selectedTransactionType = TransactionType.Expense;
@@ -618,6 +621,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 NewTransactionAmountText = string.Empty;
                 NewTransactionNotes = string.Empty;
                 NewTransactionCategoryName = string.Empty;
+                IsNewTransactionScheduledOccurrenceEnabled = false;
                 NewTransactionScheduledOccurrence = null;
                 break;
             case TransactionWorkflowKind.Income:
@@ -626,6 +630,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 NewTransactionAmountText = string.Empty;
                 NewTransactionNotes = string.Empty;
                 NewTransactionCategoryName = string.Empty;
+                IsNewTransactionScheduledOccurrenceEnabled = false;
                 NewTransactionScheduledOccurrence = null;
                 break;
             case TransactionWorkflowKind.Transfer:
@@ -634,6 +639,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 NewTransactionName = string.Empty;
                 NewTransactionAmountText = string.Empty;
                 NewTransactionNotes = string.Empty;
+                IsNewTransactionScheduledOccurrenceEnabled = false;
                 NewTransactionScheduledOccurrence = null;
                 break;
         }
@@ -825,6 +831,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsNewAccountCreditCard));
                 OnPropertyChanged(nameof(IsNewAccountCard));
+                OnPropertyChanged(nameof(IsNewAccountPlanningValueVisible));
+                OnPropertyChanged(nameof(NewAccountPlanningValueLabel));
                 NewAccountIncludeInDashboardTotals = value is not AccountType.CreditCard and not AccountType.Goal;
             }
         }
@@ -833,6 +841,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public bool IsNewAccountCreditCard => SelectedAccountType == AccountType.CreditCard;
 
     public bool IsNewAccountCard => SelectedAccountType is AccountType.DebitCard or AccountType.CreditCard;
+
+    public bool IsNewAccountPlanningValueVisible => SelectedAccountType is AccountType.Goal or AccountType.Investment;
+
+    public string NewAccountPlanningValueLabel => SelectedAccountType == AccountType.Goal
+        ? "Goal amount"
+        : "Interest rate";
 
     public string NewAccountBalanceText
     {
@@ -856,6 +870,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => newCardLastFourDigits;
         set => SetProperty(ref newCardLastFourDigits, value);
+    }
+
+    public string NewAccountPlanningValueText
+    {
+        get => newAccountPlanningValueText;
+        set => SetProperty(ref newAccountPlanningValueText, FormatNumericInput(value));
     }
 
     public bool NewAccountIncludeInDashboardTotals
@@ -899,6 +919,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsSelectedAccountCreditCard));
                 OnPropertyChanged(nameof(IsSelectedAccountEditCreditCard));
                 OnPropertyChanged(nameof(IsSelectedAccountEditCard));
+                OnPropertyChanged(nameof(IsSelectedAccountPlanningValueVisible));
+                OnPropertyChanged(nameof(SelectedAccountPlanningValueLabel));
                 RecalculateSelectedAccountPayoff();
             }
         }
@@ -929,6 +951,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
     public bool IsSelectedAccountEditCard => SelectedAccountEditType is AccountType.DebitCard or AccountType.CreditCard;
 
+    public bool IsSelectedAccountPlanningValueVisible => SelectedAccountEditType is AccountType.Goal or AccountType.Investment;
+
+    public string SelectedAccountPlanningValueLabel => SelectedAccountEditType == AccountType.Goal
+        ? "Goal amount"
+        : "Interest rate";
+
     public string SelectedAccountCurrency
     {
         get => selectedAccountCurrency;
@@ -945,6 +973,12 @@ public sealed class FinanceDataViewModel : ViewModelBase
     {
         get => selectedCardLastFourDigits;
         set => SetProperty(ref selectedCardLastFourDigits, value);
+    }
+
+    public string SelectedAccountPlanningValueText
+    {
+        get => selectedAccountPlanningValueText;
+        set => SetProperty(ref selectedAccountPlanningValueText, FormatNumericInput(value));
     }
 
     public bool SelectedAccountIncludeInDashboardTotals
@@ -1087,7 +1121,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
     public string NewTransactionAmountText
     {
         get => newTransactionAmountText;
-        set => SetProperty(ref newTransactionAmountText, value);
+        set => SetProperty(ref newTransactionAmountText, FormatNumericInput(value));
     }
 
     public string NewTransactionNotes
@@ -1101,6 +1135,23 @@ public sealed class FinanceDataViewModel : ViewModelBase
         get => newTransactionDate;
         set => SetProperty(ref newTransactionDate, value);
     }
+
+    public bool IsNewTransactionScheduledOccurrenceEnabled
+    {
+        get => isNewTransactionScheduledOccurrenceEnabled;
+        set
+        {
+            if (SetProperty(ref isNewTransactionScheduledOccurrenceEnabled, value))
+            {
+                OnPropertyChanged(nameof(IsNewTransactionAdHocVisible));
+                OnPropertyChanged(nameof(IsNewTransactionScheduledVisible));
+            }
+        }
+    }
+
+    public bool IsNewTransactionAdHocVisible => !IsNewTransactionScheduledOccurrenceEnabled;
+
+    public bool IsNewTransactionScheduledVisible => IsNewTransactionScheduledOccurrenceEnabled;
 
     public ScheduledTransactionSummaryViewModel? NewTransactionScheduledOccurrence
     {
@@ -1907,13 +1958,15 @@ public sealed class FinanceDataViewModel : ViewModelBase
             creditCardDetails,
             NewAccountIncludeInDashboardTotals,
             CleanOptionalAccountNumber(NewAccountNumber),
-            IsCardAccountType(SelectedAccountType) ? cardLastFourDigits : null);
+            IsCardAccountType(SelectedAccountType) ? cardLastFourDigits : null,
+            ReadPlanningValue(SelectedAccountType, NewAccountPlanningValueText));
 
         await accountRepository.SaveAsync(account);
         NewAccountName = string.Empty;
         NewAccountBalanceText = "0";
         NewAccountNumber = string.Empty;
         NewCardLastFourDigits = string.Empty;
+        NewAccountPlanningValueText = string.Empty;
         NewAccountIncludeInDashboardTotals = SelectedAccountType is not AccountType.CreditCard and not AccountType.Goal;
         NewCreditCardDebtText = string.Empty;
         NewCreditCardMinimumPaymentText = string.Empty;
@@ -1950,7 +2003,8 @@ public sealed class FinanceDataViewModel : ViewModelBase
             CreditCardDetails = CreateCreditCardDetailsForSelectedAccount(),
             IncludeInDashboardTotals = SelectedAccountIncludeInDashboardTotals,
             AccountNumber = CleanOptionalAccountNumber(SelectedAccountNumber),
-            CardLastFourDigits = IsCardAccountType(SelectedAccountEditType) ? cardLastFourDigits : null
+            CardLastFourDigits = IsCardAccountType(SelectedAccountEditType) ? cardLastFourDigits : null,
+            PlanningValue = ReadPlanningValue(SelectedAccountEditType, SelectedAccountPlanningValueText)
         };
 
         await accountRepository.SaveAsync(updatedAccount);
@@ -2046,7 +2100,20 @@ public sealed class FinanceDataViewModel : ViewModelBase
             return;
         }
 
-        if (!TryReadDecimal(NewTransactionAmountText, out var amount) || amount <= 0m)
+        var scheduledOccurrence = IsNewTransactionScheduledOccurrenceEnabled
+            ? NewTransactionScheduledOccurrence?.Source
+            : null;
+        var effectiveType = scheduledOccurrence?.Type ?? SelectedTransactionType;
+
+        if (IsNewTransactionScheduledOccurrenceEnabled && scheduledOccurrence is null)
+        {
+            SetStatus("Choose the scheduled transaction this payment belongs to.");
+            return;
+        }
+
+        var amount = scheduledOccurrence?.Amount ?? 0m;
+        if (scheduledOccurrence is null
+            && (!TryReadDecimal(NewTransactionAmountText, out amount) || amount <= 0m))
         {
             SetStatus("Transaction amount must be greater than zero.");
             return;
@@ -2054,7 +2121,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
 
         Guid? destinationAccountId = null;
         Guid? destinationGoalId = null;
-        if (SelectedTransactionType == TransactionType.Transfer)
+        if (effectiveType == TransactionType.Transfer)
         {
             if (SelectedTransferDestinationKind == TransferDestinationKind.Account)
             {
@@ -2084,24 +2151,24 @@ public sealed class FinanceDataViewModel : ViewModelBase
             }
         }
 
-        var categoryId = SelectedTransactionType == TransactionType.Transfer
+        var categoryId = scheduledOccurrence?.CategoryId ?? (effectiveType == TransactionType.Transfer
             ? null
-            : await ResolveCategoryAsync(NewTransactionCategoryName, SelectedTransactionCategory, SelectedTransactionType);
+            : await ResolveCategoryAsync(NewTransactionCategoryName, SelectedTransactionCategory, effectiveType));
         var transaction = new Transaction(
             Guid.NewGuid(),
             DateOnly.FromDateTime(NewTransactionDate),
             amount,
             NewTransactionAccount.Id,
             categoryId,
-            string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim(),
-            SelectedTransactionType,
+            scheduledOccurrence?.Notes ?? (string.IsNullOrWhiteSpace(NewTransactionNotes) ? null : NewTransactionNotes.Trim()),
+            effectiveType,
             destinationAccountId,
             destinationGoalId,
-            NewTransactionScheduledOccurrence?.Source.Id,
-            NewTransactionScheduledOccurrence is null ? null : DateOnly.FromDateTime(NewTransactionScheduledOccurrenceDate),
+            scheduledOccurrence?.Id,
+            scheduledOccurrence is null ? null : DateOnly.FromDateTime(NewTransactionDate),
             CreateTransactionName(
-                NewTransactionName,
-                SelectedTransactionType,
+                scheduledOccurrence?.Name ?? NewTransactionName,
+                effectiveType,
                 SelectedTransactionCategory?.Name,
                 NewTransferDestinationAccount?.Name));
 
@@ -2110,6 +2177,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         NewTransactionAmountText = string.Empty;
         NewTransactionNotes = string.Empty;
         NewTransactionCategoryName = string.Empty;
+        IsNewTransactionScheduledOccurrenceEnabled = false;
         NewTransactionScheduledOccurrence = null;
         await RefreshAfterMutationAsync("Transaction saved.");
     }
@@ -3582,6 +3650,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
             SelectedAccountPayoffPaymentText = string.Empty;
             SelectedAccountNumber = string.Empty;
             SelectedCardLastFourDigits = string.Empty;
+            SelectedAccountPlanningValueText = string.Empty;
             SelectedAccountIncludeInDashboardTotals = true;
             return;
         }
@@ -3592,6 +3661,7 @@ public sealed class FinanceDataViewModel : ViewModelBase
         SelectedAccountBalanceText = FormatMoney(account.CurrentBalance, account.Currency);
         SelectedAccountNumber = account.AccountNumber ?? string.Empty;
         SelectedCardLastFourDigits = account.CardLastFourDigits ?? string.Empty;
+        SelectedAccountPlanningValueText = ToInputText(account.PlanningValue);
         SelectedAccountIncludeInDashboardTotals = account.IncludeInDashboardTotals;
         SelectedAccountDebtText = ToInputText(account.CreditCardDetails?.CurrentDebt);
         SelectedAccountMinimumPaymentText = ToInputText(account.CreditCardDetails?.MinimumPayment);
@@ -4333,6 +4403,53 @@ public sealed class FinanceDataViewModel : ViewModelBase
             || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
     }
 
+    private static string FormatNumericInput(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var culture = CultureInfo.CurrentCulture;
+        var numberFormat = culture.NumberFormat;
+        var text = value.Trim()
+            .Replace(numberFormat.NumberGroupSeparator, string.Empty, StringComparison.Ordinal)
+            .Replace(" ", string.Empty, StringComparison.Ordinal)
+            .Replace("\u00A0", string.Empty, StringComparison.Ordinal);
+        var decimalSeparator = text.Contains(numberFormat.NumberDecimalSeparator, StringComparison.Ordinal)
+            ? numberFormat.NumberDecimalSeparator
+            : text.Contains('.', StringComparison.Ordinal)
+                ? "."
+                : text.Contains(',', StringComparison.Ordinal)
+                    ? ","
+                    : string.Empty;
+        var endsWithDecimal = !string.IsNullOrEmpty(decimalSeparator)
+            && text.EndsWith(decimalSeparator, StringComparison.Ordinal);
+        var parts = string.IsNullOrEmpty(decimalSeparator)
+            ? [text]
+            : text.Split(decimalSeparator, 2, StringSplitOptions.None);
+        var integerPart = parts[0];
+        var isNegative = integerPart.StartsWith("-", StringComparison.Ordinal);
+        integerPart = integerPart.TrimStart('-');
+        if (!decimal.TryParse(integerPart, NumberStyles.None, CultureInfo.InvariantCulture, out var integerValue))
+        {
+            return value;
+        }
+
+        var formatted = integerValue.ToString("N0", culture);
+        if (isNegative)
+        {
+            formatted = "-" + formatted;
+        }
+
+        if (parts.Length == 1)
+        {
+            return formatted;
+        }
+
+        return formatted + numberFormat.NumberDecimalSeparator + parts[1] + (endsWithDecimal && parts[1].Length == 0 ? string.Empty : string.Empty);
+    }
+
     private static bool TryReadInt(string text, out int value)
     {
         return int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out value)
@@ -4344,6 +4461,13 @@ public sealed class FinanceDataViewModel : ViewModelBase
         return string.IsNullOrWhiteSpace(text)
             ? null
             : TryReadDecimal(text, out var value) ? Math.Max(0m, value) : null;
+    }
+
+    private static decimal? ReadPlanningValue(AccountType accountType, string text)
+    {
+        return accountType is AccountType.Goal or AccountType.Investment
+            ? ReadOptionalDecimal(text)
+            : null;
     }
 
     private static int? ReadOptionalPaymentDueDay(string text)
@@ -4555,6 +4679,10 @@ public sealed class AccountSummaryViewModel
             currency,
             DateTimeOffset.MinValue,
             IncludeInDashboardTotals: false);
+        syntheticAccount = syntheticAccount with
+        {
+            PlanningValue = goal.TargetAmount
+        };
         var target = $"{currency} {goal.TargetAmount:N2}";
         var targetDate = goal.TargetDate is null ? "no target date" : DateDisplay.Format(goal.TargetDate.Value, DateDisplayFormat.DayMonthYear);
         return new AccountSummaryViewModel(
@@ -4624,9 +4752,23 @@ public sealed class AccountSummaryViewModel
 
             if (Source.Type != AccountType.CreditCard)
             {
-                return Source.Type == AccountType.Goal
-                    ? "Goal account"
-                    : "Standard account";
+                if (Source.Type == AccountType.Goal)
+                {
+                    if (Source.PlanningValue is > 0m)
+                    {
+                        var progress = Math.Clamp(Source.CurrentBalance / Source.PlanningValue.Value, 0m, 1m);
+                        return $"Goal account - {progress:P0} of target";
+                    }
+
+                    return "Goal account";
+                }
+
+                if (Source.Type == AccountType.Investment && Source.PlanningValue is > 0m)
+                {
+                    return $"Investment account - {Source.PlanningValue:N2}% interest";
+                }
+
+                return "Standard account";
             }
 
             var details = Source.CreditCardDetails;
@@ -4726,6 +4868,7 @@ internal sealed record TransactionBalanceContext(decimal BalanceBefore, decimal 
 public sealed class TransactionSummaryViewModel : ViewModelBase
 {
     private bool isSelected;
+    private bool isDetailsExpanded;
     private CategoryChoiceViewModel? selectedCategory;
     private ScheduledTransactionSummaryViewModel? selectedScheduledTransaction;
     private string editAmountText;
@@ -4774,9 +4917,12 @@ public sealed class TransactionSummaryViewModel : ViewModelBase
             ?? transaction.Date.ToDateTime(TimeOnly.MinValue);
         editAmountText = transaction.Amount.ToString(CultureInfo.CurrentCulture);
         editAccountValueAfterText = balanceAfter.ToString(CultureInfo.CurrentCulture);
+        ToggleDetailsCommand = new RelayCommand(() => IsDetailsExpanded = !IsDetailsExpanded);
     }
 
     public Transaction Source { get; }
+
+    public ICommand ToggleDetailsCommand { get; }
 
     public string Name { get; }
 
@@ -4801,6 +4947,20 @@ public sealed class TransactionSummaryViewModel : ViewModelBase
     public string ScheduledMark { get; }
 
     public bool HasScheduledMark => !string.IsNullOrWhiteSpace(ScheduledMark);
+
+    public bool IsDetailsExpanded
+    {
+        get => isDetailsExpanded;
+        set
+        {
+            if (SetProperty(ref isDetailsExpanded, value))
+            {
+                OnPropertyChanged(nameof(DetailsToggleText));
+            }
+        }
+    }
+
+    public string DetailsToggleText => IsDetailsExpanded ? "⌃" : "⌄";
 
     public ObservableCollection<CategoryChoiceViewModel> CategoryChoices { get; }
 
@@ -4845,6 +5005,8 @@ public sealed class TransactionSummaryViewModel : ViewModelBase
     public string TypeText => DisplayText.Format(Source.Type);
 
     public string NotesText => string.IsNullOrWhiteSpace(Source.Notes) ? "No notes" : Source.Notes;
+
+    public bool HasDetails => !string.IsNullOrWhiteSpace(Source.Notes);
 }
 
 public sealed class ScheduledTransactionSummaryViewModel

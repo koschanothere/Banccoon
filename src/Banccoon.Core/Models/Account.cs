@@ -11,4 +11,5 @@ public sealed record Account(
     CreditCardDetails? CreditCardDetails = null,
     bool IncludeInDashboardTotals = true,
     string? AccountNumber = null,
-    string? CardLastFourDigits = null);
+    string? CardLastFourDigits = null,
+    decimal? PlanningValue = null);

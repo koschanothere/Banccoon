@@ -29,7 +29,8 @@ public sealed class SqliteRepositoryTests
                 PlannedPaymentAmount: 100m),
             IncludeInDashboardTotals: false,
             AccountNumber: "ACC-001",
-            CardLastFourDigits: "1234");
+            CardLastFourDigits: "1234",
+            PlanningValue: 12.5m);
 
         await store.Accounts.SaveAsync(account);
 

@@ -6,7 +6,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
-    BackgroundColor="{StaticResource PageBackgroundColor}"
+    BackgroundColor="{DynamicResource PageBackgroundColor}"
     Title="Banccoon">
     <Grid RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>
@@ -16,13 +16,13 @@
 
         <Border
             Grid.RowSpan="2"
-            BackgroundColor="{StaticResource ShellBackgroundColor}"
+            BackgroundColor="{DynamicResource ShellBackgroundColor}"
             IsVisible="{Binding IsRailMode}"
             StrokeThickness="0">
             <Grid Padding="12,14" RowDefinitions="Auto,*,Auto">
                 <Grid ColumnDefinitions="36,*,38" ColumnSpacing="9">
                     <Border
-                        BackgroundColor="{StaticResource AccentColor}"
+                        BackgroundColor="{DynamicResource AccentColor}"
                         HeightRequest="34"
                         StrokeThickness="0"
                         WidthRequest="34">
@@ -39,7 +39,7 @@
                             FontAttributes="Bold"
                             FontSize="16"
                             Text="Banccoon"
-                            TextColor="{StaticResource ShellTextColor}" />
+                            TextColor="{DynamicResource ShellTextColor}" />
                         <Label
                             FontSize="11"
                             Text="Private forecast"
@@ -47,7 +47,7 @@
                     </VerticalStackLayout>
                     <Border
                         Grid.Column="2"
-                        BackgroundColor="{StaticResource ShellPanelColor}"
+                        BackgroundColor="{DynamicResource ShellPanelColor}"
                         HeightRequest="34"
                         HorizontalOptions="End"
                         StrokeThickness="0"
@@ -64,15 +64,15 @@
                             Spacing="4"
                             VerticalOptions="Center">
                             <BoxView
-                                Color="{StaticResource ShellTextColor}"
+                                Color="{DynamicResource ShellTextColor}"
                                 HeightRequest="2"
                                 WidthRequest="16" />
                             <BoxView
-                                Color="{StaticResource ShellTextColor}"
+                                Color="{DynamicResource ShellTextColor}"
                                 HeightRequest="2"
                                 WidthRequest="16" />
                             <BoxView
-                                Color="{StaticResource ShellTextColor}"
+                                Color="{DynamicResource ShellTextColor}"
                                 HeightRequest="2"
                                 WidthRequest="16" />
                         </VerticalStackLayout>
@@ -105,7 +105,7 @@
                 <Border
                     Grid.Row="2"
                     Padding="12"
-                    BackgroundColor="{StaticResource ShellPanelColor}"
+                    BackgroundColor="{DynamicResource ShellPanelColor}"
                     StrokeThickness="0">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
@@ -115,7 +115,7 @@
                             FontAttributes="Bold"
                             FontSize="12"
                             Text="Logo folder"
-                            TextColor="{StaticResource ShellTextColor}" />
+                            TextColor="{DynamicResource ShellTextColor}" />
                         <Label
                             FontSize="11"
                             Text="Resources/Images/banccoon"
@@ -127,12 +127,12 @@
 
         <Border
             Grid.Column="1"
-            BackgroundColor="{StaticResource SurfaceColor}"
-            Stroke="{StaticResource DividerColor}"
+            BackgroundColor="{DynamicResource SurfaceColor}"
+            Stroke="{DynamicResource DividerColor}"
             StrokeThickness="0">
             <Grid Padding="22,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
                 <Border
-                    BackgroundColor="{StaticResource SurfaceMutedColor}"
+                    BackgroundColor="{DynamicResource SurfaceMutedColor}"
                     HeightRequest="38"
                     IsVisible="{Binding IsMenuButtonVisible}"
                     StrokeThickness="0"
@@ -149,15 +149,15 @@
                         Spacing="4"
                         VerticalOptions="Center">
                         <BoxView
-                            Color="{StaticResource PrimaryTextColor}"
+                            Color="{DynamicResource PrimaryTextColor}"
                             HeightRequest="2"
                             WidthRequest="18" />
                         <BoxView
-                            Color="{StaticResource PrimaryTextColor}"
+                            Color="{DynamicResource PrimaryTextColor}"
                             HeightRequest="2"
                             WidthRequest="18" />
                         <BoxView
-                            Color="{StaticResource PrimaryTextColor}"
+                            Color="{DynamicResource PrimaryTextColor}"
                             HeightRequest="2"
                             WidthRequest="18" />
                     </VerticalStackLayout>
@@ -203,7 +203,7 @@
             <VerticalStackLayout Padding="28" Spacing="18">
                 <Border
                     Padding="12,10"
-                    BackgroundColor="{StaticResource AccentSoftColor}"
+                    BackgroundColor="{DynamicResource AccentSoftColor}"
                     IsVisible="{Binding Data.HasStatusMessage}"
                     StrokeThickness="0">
                     <Border.StrokeShape>
@@ -212,7 +212,7 @@
                     <Label
                         FontSize="13"
                         Text="{Binding Data.StatusMessage}"
-                        TextColor="{StaticResource PrimaryTextColor}" />
+                        TextColor="{DynamicResource PrimaryTextColor}" />
                 </Border>
 
                 <VerticalStackLayout
@@ -221,8 +221,8 @@
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="18">
                         <Border
                             Padding="22"
-                            BackgroundColor="{StaticResource SurfaceColor}"
-                            Stroke="{StaticResource DividerColor}">
+                            BackgroundColor="{DynamicResource SurfaceColor}"
+                            Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
@@ -261,8 +261,8 @@
                         <Border
                             Grid.Column="1"
                             Padding="18"
-                            BackgroundColor="{StaticResource SurfaceColor}"
-                            Stroke="{StaticResource DividerColor}">
+                            BackgroundColor="{DynamicResource SurfaceColor}"
+                            Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
@@ -294,7 +294,7 @@
                     </Grid>
 
                     <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="14">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Current balance" />
@@ -304,22 +304,22 @@
                         <Border
                             Grid.Column="1"
                             Padding="16"
-                            BackgroundColor="{StaticResource SurfaceColor}"
-                            Stroke="{StaticResource DividerColor}">
+                            BackgroundColor="{DynamicResource SurfaceColor}"
+                            Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Upcoming obligations" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardUpcomingObligationsText}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Lowest forecast" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.DashboardLowestForecastText}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="3" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="3" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Forecast period" />
@@ -328,7 +328,7 @@
                         </Border>
                     </Grid>
 
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
@@ -374,7 +374,7 @@
                             Style="{StaticResource QuietButton}"
                             Text="{Binding Data.AccountsEditModeText}" />
                     </Grid>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
                             <Label FontAttributes="Bold" Text="New account" />
@@ -383,6 +383,11 @@
                                 ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                                 ItemsSource="{Binding Data.AccountTypes}"
                                 SelectedItem="{Binding Data.SelectedAccountType}" />
+                            <Entry
+                                IsVisible="{Binding Data.IsNewAccountPlanningValueVisible}"
+                                Keyboard="Numeric"
+                                Placeholder="{Binding Data.NewAccountPlanningValueLabel}"
+                                Text="{Binding Data.NewAccountPlanningValueText}" />
                             <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
                                 <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
                                 <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
@@ -422,7 +427,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                                         <VerticalStackLayout IsVisible="{Binding IsReadOnlyVisible}" Spacing="2">
@@ -443,6 +448,11 @@
                                                     ItemsSource="{Binding BindingContext.Data.SupportedCurrencies, Source={x:Reference Page}}"
                                                     SelectedItem="{Binding BindingContext.Data.SelectedAccountCurrency, Source={x:Reference Page}}" />
                                             </Grid>
+                                            <Entry
+                                                IsVisible="{Binding BindingContext.Data.IsSelectedAccountPlanningValueVisible, Source={x:Reference Page}}"
+                                                Keyboard="Numeric"
+                                                Placeholder="{Binding BindingContext.Data.SelectedAccountPlanningValueLabel, Source={x:Reference Page}}"
+                                                Text="{Binding BindingContext.Data.SelectedAccountPlanningValueText, Source={x:Reference Page}}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding BindingContext.Data.SelectedAccountBalanceText, Source={x:Reference Page}, StringFormat='Balance from transactions: {0}'}" />
                                             <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
                                                 <Entry Placeholder="Account number, optional" Text="{Binding BindingContext.Data.SelectedAccountNumber, Source={x:Reference Page}}" />
@@ -508,21 +518,23 @@
                             Text="{Binding Data.TransactionsEditModeText}" />
                     </Grid>
                     <HorizontalStackLayout Spacing="8">
-                        <Label
-                            FontAttributes="Bold"
-                            FontSize="24"
-                            Text="+"
-                            VerticalOptions="Center" />
+                        <Button
+                            Command="{Binding ToggleTransactionAddOptionsCommand}"
+                            Style="{StaticResource QuietButton}"
+                            Text="+" />
                         <Button
                             Command="{Binding OpenExpenseTransactionWorkflowCommand}"
+                            IsVisible="{Binding IsTransactionAddOptionsExpanded}"
                             Style="{StaticResource QuietButton}"
                             Text="Expense" />
                         <Button
                             Command="{Binding OpenIncomeTransactionWorkflowCommand}"
+                            IsVisible="{Binding IsTransactionAddOptionsExpanded}"
                             Style="{StaticResource QuietButton}"
                             Text="Income" />
                         <Button
                             Command="{Binding OpenTransferTransactionWorkflowCommand}"
+                            IsVisible="{Binding IsTransactionAddOptionsExpanded}"
                             Style="{StaticResource QuietButton}"
                             Text="Transfer" />
                         <Button
@@ -536,9 +548,9 @@
                     </HorizontalStackLayout>
                     <Border
                         Padding="16"
-                        BackgroundColor="{StaticResource SurfaceColor}"
+                        BackgroundColor="{DynamicResource SurfaceColor}"
                         IsVisible="{Binding Data.IsTransactionsEditing}"
-                        Stroke="{StaticResource DividerColor}">
+                        Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
                             <Label FontAttributes="Bold" Text="Bulk edit selected transactions" />
@@ -582,14 +594,20 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
-                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                                    <Grid ColumnDefinitions="Auto,Auto,*,160,Auto" ColumnSpacing="10">
                                         <CheckBox
                                             IsChecked="{Binding IsSelected}"
                                             IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
                                             VerticalOptions="Start" />
-                                        <VerticalStackLayout Spacing="2">
+                                        <Button
+                                            Grid.Column="1"
+                                            Command="{Binding ToggleDetailsCommand}"
+                                            IsVisible="{Binding HasDetails}"
+                                            Style="{StaticResource QuietButton}"
+                                            Text="{Binding DetailsToggleText}" />
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
                                             <Label FontAttributes="Bold" Text="{Binding Name}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding AccountName}" />
                                             <Label Style="{StaticResource MutedLabel}" Text="{Binding CategoryText}" />
@@ -598,7 +616,19 @@
                                                 IsVisible="{Binding HasScheduledMark}"
                                                 Style="{StaticResource MutedLabel}"
                                                 Text="{Binding ScheduledMark}" />
-                                            <Label Style="{StaticResource MutedLabel}" Text="{Binding NotesText}" />
+                                            <Border
+                                                Padding="10"
+                                                BackgroundColor="{DynamicResource SurfaceMutedColor}"
+                                                IsVisible="{Binding IsDetailsExpanded}"
+                                                StrokeThickness="0">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="8" />
+                                                </Border.StrokeShape>
+                                                <Label
+                                                    LineBreakMode="WordWrap"
+                                                    Style="{StaticResource MutedLabel}"
+                                                    Text="{Binding NotesText}" />
+                                            </Border>
                                             <VerticalStackLayout
                                                 IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
                                                 Spacing="8">
@@ -630,13 +660,13 @@
                                                 </Grid>
                                             </VerticalStackLayout>
                                         </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="2">
+                                        <VerticalStackLayout Grid.Column="3" HorizontalOptions="End" Spacing="2" WidthRequest="150">
                                             <Label FontAttributes="Bold" HorizontalTextAlignment="End" Text="{Binding AmountText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding DateText}" />
                                             <Label Style="{StaticResource MutedLabel}" HorizontalTextAlignment="End" Text="{Binding AccountValueAfterText}" />
                                         </VerticalStackLayout>
                                         <Button
-                                            Grid.Column="3"
+                                            Grid.Column="4"
                                             Command="{Binding BindingContext.Data.DeleteTransactionCommand, Source={x:Reference Page}}"
                                             CommandParameter="{Binding Source}"
                                             IsVisible="{Binding BindingContext.Data.IsTransactionsEditing, Source={x:Reference Page}}"
@@ -651,7 +681,7 @@
 
                 <VerticalStackLayout IsVisible="{Binding IsStatementsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Statements" />
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="1.1*,1.3*" ColumnSpacing="18">
                             <VerticalStackLayout Spacing="10">
@@ -674,7 +704,7 @@
                                         SelectedItem="{Binding Data.StatementConnectAccount}"
                                         Title="Existing account" />
                                     <Button Command="{Binding Data.ConnectStatementAccountCommand}" Style="{StaticResource QuietButton}" Text="Link to account" />
-                                    <BoxView HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}" />
                                     <Entry Placeholder="New account name" Text="{Binding Data.StatementNewAccountName}" />
                                     <Picker ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.StatementNewAccountCurrency}" Title="Currency" />
                                     <Button Command="{Binding Data.CreateStatementAccountFromStatementCommand}" Style="{StaticResource QuietButton}" Text="Create new account" />
@@ -704,7 +734,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,6" Padding="10" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,6" Padding="10" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                     <Grid ColumnDefinitions="92,2*,110,170,Auto,Auto" ColumnSpacing="10">
                                         <Label Style="{StaticResource MutedLabel}" Text="{Binding DateText}" VerticalTextAlignment="Center" />
@@ -751,7 +781,7 @@
                             Style="{StaticResource QuietButton}"
                             Text="{Binding Data.ScheduledEditModeText}" />
                     </Grid>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="1.2*,*,*" ColumnSpacing="10">
@@ -800,9 +830,9 @@
                     </Border>
                     <Border
                         Padding="16"
-                        BackgroundColor="{StaticResource SurfaceColor}"
+                        BackgroundColor="{DynamicResource SurfaceColor}"
                         IsVisible="{Binding Data.IsScheduledEditing}"
-                        Stroke="{StaticResource DividerColor}">
+                        Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="10">
                             <Label FontAttributes="Bold" Text="Edit scheduled item" />
@@ -858,7 +888,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                                         <VerticalStackLayout Spacing="2">
@@ -888,21 +918,21 @@
                 <VerticalStackLayout IsVisible="{Binding IsForecastSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Forecast" />
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Available to spend" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.AvailableToSpendText}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Lowest balance" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.LowestForecastText}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Period" />
@@ -916,7 +946,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                                <Border Margin="0,0,0,8" Padding="14" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                                     <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <VerticalStackLayout>
@@ -937,7 +967,7 @@
                 <VerticalStackLayout IsVisible="{Binding IsReconciliationSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Reconciliation" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Check-in expected items" />
@@ -952,7 +982,7 @@
                                     </CollectionView.EmptyView>
                                     <CollectionView.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,0,0,8" Padding="12" BackgroundColor="{StaticResource SurfaceMutedColor}" StrokeThickness="0">
+                                            <Border Margin="0,0,0,8" Padding="12" BackgroundColor="{DynamicResource SurfaceMutedColor}" StrokeThickness="0">
                                                 <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                                     <VerticalStackLayout Spacing="2">
@@ -974,7 +1004,7 @@
                             </VerticalStackLayout>
                         </Border>
 
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Reality comparison" />
@@ -1026,21 +1056,21 @@
                 <VerticalStackLayout IsVisible="{Binding IsAnalyticsSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Analytics" />
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Accounts" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.Accounts.Count}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Transactions" />
                                 <Label FontAttributes="Bold" FontSize="24" Text="{Binding Data.Transactions.Count}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="2" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="2" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout>
                                 <Label Style="{StaticResource MutedLabel}" Text="Scheduled" />
@@ -1053,7 +1083,7 @@
 
                 <VerticalStackLayout IsVisible="{Binding IsPreferencesSelected}" Spacing="14">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Preferences" />
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1067,7 +1097,7 @@
                                 SelectedItem="{Binding ThemeMode}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1081,7 +1111,7 @@
                                 SelectedItem="{Binding AccentColor}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1095,7 +1125,7 @@
                                 SelectedItem="{Binding NavigationStyle}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1105,7 +1135,7 @@
                             <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.DefaultCurrency}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1119,7 +1149,7 @@
                                 SelectedItem="{Binding Data.SelectedForecastPeriod}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1133,7 +1163,7 @@
                                 SelectedItem="{Binding Data.SelectedReminderFrequency}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1147,7 +1177,7 @@
                                 SelectedItem="{Binding Data.SelectedDateDisplayFormat}" />
                         </Grid>
                     </Border>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
@@ -1163,7 +1193,7 @@
                 <VerticalStackLayout IsVisible="{Binding IsDataSelected}" Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabel}" Text="Backup and local data" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-                        <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Export backup" />
@@ -1177,7 +1207,7 @@
                             </VerticalStackLayout>
                         </Border>
 
-                        <Border Grid.Column="1" Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                        <Border Grid.Column="1" Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                             <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" Text="Import or restore" />
@@ -1194,7 +1224,7 @@
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
-                    <Border Padding="16" BackgroundColor="{StaticResource SurfaceColor}" Stroke="{StaticResource DividerColor}">
+                    <Border Padding="16" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource DividerColor}">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
                         <VerticalStackLayout Spacing="8">
                             <Label FontAttributes="Bold" Text="Import/export status" />
@@ -1223,10 +1253,10 @@
             IsVisible="{Binding WorkflowOverlay.IsOpen}">
             <Border
                 Padding="24"
-                BackgroundColor="{StaticResource SurfaceColor}"
+                BackgroundColor="{DynamicResource SurfaceColor}"
                 HorizontalOptions="Center"
                 MaximumWidthRequest="620"
-                Stroke="{StaticResource DividerColor}"
+                Stroke="{DynamicResource DividerColor}"
                 VerticalOptions="Center"
                 WidthRequest="560">
                 <Border.StrokeShape>
@@ -1262,7 +1292,7 @@
                     </Grid>
                     <Border
                         Padding="12"
-                        BackgroundColor="{StaticResource SurfaceMutedColor}"
+                        BackgroundColor="{DynamicResource SurfaceMutedColor}"
                         StrokeThickness="0">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
@@ -1288,6 +1318,11 @@
                                     ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                                     ItemsSource="{Binding Data.AccountTypes}"
                                     SelectedItem="{Binding Data.SelectedAccountType}" />
+                                <Entry
+                                    IsVisible="{Binding Data.IsNewAccountPlanningValueVisible}"
+                                    Keyboard="Numeric"
+                                    Placeholder="{Binding Data.NewAccountPlanningValueLabel}"
+                                    Text="{Binding Data.NewAccountPlanningValueText}" />
                                 <Grid ColumnDefinitions="*,140" ColumnSpacing="8">
                                     <Entry Keyboard="Numeric" Placeholder="Balance" Text="{Binding Data.NewAccountBalanceText}" />
                                     <Picker Grid.Column="1" ItemsSource="{Binding Data.SupportedCurrencies}" SelectedItem="{Binding Data.NewAccountCurrency}" />
@@ -1309,50 +1344,52 @@
                                 <Button Command="{Binding Data.AddAccountCommand}" Style="{StaticResource PrimaryButton}" Text="Save account" />
                             </VerticalStackLayout>
                             <VerticalStackLayout IsVisible="{Binding Data.IsExpenseIncomeTransactionWorkflow}" Spacing="8">
-                                <Entry Placeholder="Transaction name" Text="{Binding Data.NewTransactionName}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding Data.IsNewTransactionScheduledOccurrenceEnabled}" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Scheduled transaction occurrence" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
                                 <Grid ColumnDefinitions="*,160" ColumnSpacing="8">
                                     <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" Title="Account" />
                                     <DatePicker Grid.Column="1" Date="{Binding Data.NewTransactionDate}" Format="{Binding Data.DatePickerFormat}" />
                                 </Grid>
-                                <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                    <Picker
-                                        ItemDisplayBinding="{Binding Name}"
-                                        ItemsSource="{Binding Data.TransactionCategoryChoices}"
-                                        SelectedItem="{Binding Data.SelectedTransactionCategory}"
-                                        Title="Category" />
-                                    <Entry Grid.Column="1" Placeholder="New category, optional" Text="{Binding Data.NewTransactionCategoryName}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="*,160" ColumnSpacing="8">
+                                <Grid ColumnDefinitions="*" ColumnSpacing="8">
                                     <Picker
                                         ItemDisplayBinding="{Binding Name}"
                                         ItemsSource="{Binding Data.ScheduledTransactionSummaries}"
                                         SelectedItem="{Binding Data.NewTransactionScheduledOccurrence}"
+                                        IsVisible="{Binding Data.IsNewTransactionScheduledVisible}"
                                         Title="Existing scheduled item" />
-                                    <DatePicker Grid.Column="1" Date="{Binding Data.NewTransactionScheduledOccurrenceDate}" Format="{Binding Data.DatePickerFormat}" />
                                 </Grid>
-                                <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
+                                <VerticalStackLayout IsVisible="{Binding Data.IsNewTransactionAdHocVisible}" Spacing="8">
+                                    <Entry Placeholder="Transaction name" Text="{Binding Data.NewTransactionName}" />
+                                    <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
+                                    <Entry Placeholder="Description, optional" Text="{Binding Data.NewTransactionNotes}" />
+                                </VerticalStackLayout>
                                 <Button Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save transaction" />
                             </VerticalStackLayout>
                             <VerticalStackLayout IsVisible="{Binding Data.IsTransferTransactionWorkflow}" Spacing="8">
-                                <Entry Placeholder="Transfer name" Text="{Binding Data.NewTransactionName}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding Data.IsNewTransactionScheduledOccurrenceEnabled}" />
+                                    <Label Style="{StaticResource MutedLabel}" Text="Scheduled transaction occurrence" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                     <Picker ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransactionAccount}" Title="Outgoing account" />
                                     <Picker Grid.Column="1" ItemDisplayBinding="{Binding Name}" ItemsSource="{Binding Data.Accounts}" SelectedItem="{Binding Data.NewTransferDestinationAccount}" Title="Incoming account or goal" />
                                 </Grid>
-                                <Grid ColumnDefinitions="*,160" ColumnSpacing="8">
-                                    <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
-                                    <DatePicker Grid.Column="1" Date="{Binding Data.NewTransactionDate}" Format="{Binding Data.DatePickerFormat}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="*,160" ColumnSpacing="8">
+                                <DatePicker Date="{Binding Data.NewTransactionDate}" Format="{Binding Data.DatePickerFormat}" />
+                                <Grid ColumnDefinitions="*" ColumnSpacing="8">
                                     <Picker
                                         ItemDisplayBinding="{Binding Name}"
                                         ItemsSource="{Binding Data.ScheduledTransactionSummaries}"
                                         SelectedItem="{Binding Data.NewTransactionScheduledOccurrence}"
+                                        IsVisible="{Binding Data.IsNewTransactionScheduledVisible}"
                                         Title="Existing scheduled item" />
-                                    <DatePicker Grid.Column="1" Date="{Binding Data.NewTransactionScheduledOccurrenceDate}" Format="{Binding Data.DatePickerFormat}" />
                                 </Grid>
-                                <Entry Placeholder="Notes" Text="{Binding Data.NewTransactionNotes}" />
+                                <VerticalStackLayout IsVisible="{Binding Data.IsNewTransactionAdHocVisible}" Spacing="8">
+                                    <Entry Placeholder="Transfer name" Text="{Binding Data.NewTransactionName}" />
+                                    <Entry Keyboard="Numeric" Placeholder="Amount" Text="{Binding Data.NewTransactionAmountText}" />
+                                    <Entry Placeholder="Description, optional" Text="{Binding Data.NewTransactionNotes}" />
+                                </VerticalStackLayout>
                                 <Button Command="{Binding Data.AddTransactionCommand}" Style="{StaticResource PrimaryButton}" Text="Save transfer" />
                             </VerticalStackLayout>
                             <VerticalStackLayout IsVisible="{Binding Data.IsScheduledTransactionWorkflow}" Spacing="8">

@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Repositories;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -24,6 +25,7 @@ public sealed class ShellViewModel : ViewModelBase
     private bool isDashboardForecastExpanded;
     private bool isDashboardAnalyticsExpanded;
     private bool isDashboardReconciliationExpanded;
+    private bool isTransactionAddOptionsExpanded;
     private bool isTransactionStatementImportExpanded;
     private bool isTransactionScheduledExpanded;
     private bool startupSetupShown;
@@ -49,6 +51,7 @@ public sealed class ShellViewModel : ViewModelBase
         ToggleDashboardForecastCommand = new RelayCommand(() => IsDashboardForecastExpanded = !IsDashboardForecastExpanded);
         ToggleDashboardAnalyticsCommand = new RelayCommand(() => IsDashboardAnalyticsExpanded = !IsDashboardAnalyticsExpanded);
         ToggleDashboardReconciliationCommand = new RelayCommand(() => IsDashboardReconciliationExpanded = !IsDashboardReconciliationExpanded);
+        ToggleTransactionAddOptionsCommand = new RelayCommand(() => IsTransactionAddOptionsExpanded = !IsTransactionAddOptionsExpanded);
         ToggleTransactionStatementImportCommand = new RelayCommand(() => IsTransactionStatementImportExpanded = !IsTransactionStatementImportExpanded);
         ToggleTransactionScheduledCommand = new RelayCommand(() => IsTransactionScheduledExpanded = !IsTransactionScheduledExpanded);
         OpenExpenseTransactionWorkflowCommand = new RelayCommand(() => OpenTransactionWorkflow(TransactionWorkflowKind.Expense));
@@ -103,6 +106,8 @@ public sealed class ShellViewModel : ViewModelBase
     public ICommand ToggleDashboardAnalyticsCommand { get; }
 
     public ICommand ToggleDashboardReconciliationCommand { get; }
+
+    public ICommand ToggleTransactionAddOptionsCommand { get; }
 
     public ICommand ToggleTransactionStatementImportCommand { get; }
 
@@ -181,13 +186,25 @@ public sealed class ShellViewModel : ViewModelBase
     public AppThemeMode ThemeMode
     {
         get => themeMode;
-        set => SetProperty(ref themeMode, value);
+        set
+        {
+            if (SetProperty(ref themeMode, value))
+            {
+                ApplyAppearancePreferences();
+            }
+        }
     }
 
     public AccentColor AccentColor
     {
         get => accentColor;
-        set => SetProperty(ref accentColor, value);
+        set
+        {
+            if (SetProperty(ref accentColor, value))
+            {
+                ApplyAppearancePreferences();
+            }
+        }
     }
 
     public bool ShowPowerUserFeatures
@@ -253,6 +270,12 @@ public sealed class ShellViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsReconciliationSelected));
             }
         }
+    }
+
+    public bool IsTransactionAddOptionsExpanded
+    {
+        get => isTransactionAddOptionsExpanded;
+        set => SetProperty(ref isTransactionAddOptionsExpanded, value);
     }
 
     public bool IsTransactionStatementImportExpanded
@@ -347,6 +370,7 @@ public sealed class ShellViewModel : ViewModelBase
         accentColor = settings.AccentColor;
         showPowerUserFeatures = settings.ShowPowerUserFeatures;
         NavigationStyle = settings.NavigationStyle;
+        ApplyAppearancePreferences();
         OnPropertyChanged(nameof(ThemeMode));
         OnPropertyChanged(nameof(AccentColor));
         OnPropertyChanged(nameof(ShowPowerUserFeatures));
@@ -359,6 +383,45 @@ public sealed class ShellViewModel : ViewModelBase
             AccentColor,
             NavigationStyle,
             ShowPowerUserFeatures);
+        ApplyAppearancePreferences();
+    }
+
+    private void ApplyAppearancePreferences()
+    {
+        var application = Application.Current;
+        if (application is null)
+        {
+            return;
+        }
+
+        application.UserAppTheme = ThemeMode switch
+        {
+            AppThemeMode.Dark => AppTheme.Dark,
+            AppThemeMode.Light => AppTheme.Light,
+            _ => AppTheme.Unspecified
+        };
+
+        var (accent, soft) = AccentColor switch
+        {
+            AccentColor.Teal => ("#16847A", "#D9EFEC"),
+            AccentColor.Blue => ("#2D6CDF", "#DCE8FB"),
+            AccentColor.Violet => ("#7256D9", "#E7E2FA"),
+            AccentColor.Rose => ("#B55B67", "#F3DEE2"),
+            AccentColor.Amber => ("#B87920", "#F4E6CD"),
+            _ => ("#2E8B57", "#DDEEE4")
+        };
+        var isDark = ThemeMode == AppThemeMode.Dark;
+        application.Resources["AccentColor"] = Color.FromArgb(accent);
+        application.Resources["AccentSoftColor"] = Color.FromArgb(soft);
+        application.Resources["PageBackgroundColor"] = Color.FromArgb(isDark ? "#101511" : "#F4F6F3");
+        application.Resources["ShellBackgroundColor"] = Color.FromArgb(isDark ? "#0B100D" : "#17201B");
+        application.Resources["ShellPanelColor"] = Color.FromArgb(isDark ? "#162019" : "#203128");
+        application.Resources["SurfaceColor"] = Color.FromArgb(isDark ? "#18211B" : "#FFFFFF");
+        application.Resources["SurfaceMutedColor"] = Color.FromArgb(isDark ? "#223027" : "#EEF3EF");
+        application.Resources["PrimaryTextColor"] = Color.FromArgb(isDark ? "#F4F7F1" : "#14201A");
+        application.Resources["SecondaryTextColor"] = Color.FromArgb(isDark ? "#BBC7BE" : "#5A675E");
+        application.Resources["MutedTextColor"] = Color.FromArgb(isDark ? "#93A198" : "#7A847D");
+        application.Resources["DividerColor"] = Color.FromArgb(isDark ? "#314038" : "#DDE5DD");
     }
 
     public void OpenWorkflowOverlay(string title, string message)

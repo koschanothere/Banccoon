@@ -35,7 +35,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 PlannedPaymentAmount,
                 IncludeInDashboardTotals,
                 AccountNumber,
-                CardLastFourDigits
+                CardLastFourDigits,
+                PlanningValue
             FROM Accounts
             ORDER BY Name;
             """;
@@ -72,7 +73,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 PlannedPaymentAmount,
                 IncludeInDashboardTotals,
                 AccountNumber,
-                CardLastFourDigits
+                CardLastFourDigits,
+                PlanningValue
             FROM Accounts
             WHERE Id = @Id;
             """;
@@ -104,7 +106,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 PlannedPaymentAmount,
                 IncludeInDashboardTotals,
                 AccountNumber,
-                CardLastFourDigits
+                CardLastFourDigits,
+                PlanningValue
             )
             VALUES (
                 @Id,
@@ -121,7 +124,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 @PlannedPaymentAmount,
                 @IncludeInDashboardTotals,
                 @AccountNumber,
-                @CardLastFourDigits
+                @CardLastFourDigits,
+                @PlanningValue
             )
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
@@ -137,7 +141,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 PlannedPaymentAmount = excluded.PlannedPaymentAmount,
                 IncludeInDashboardTotals = excluded.IncludeInDashboardTotals,
                 AccountNumber = excluded.AccountNumber,
-                CardLastFourDigits = excluded.CardLastFourDigits;
+                CardLastFourDigits = excluded.CardLastFourDigits,
+                PlanningValue = excluded.PlanningValue;
             """;
 
         AddParameter(command, "@Id", account.Id.ToString());
@@ -155,6 +160,7 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         AddParameter(command, "@IncludeInDashboardTotals", account.IncludeInDashboardTotals ? 1 : 0);
         AddParameter(command, "@AccountNumber", SqliteData.ToDbValue(account.AccountNumber));
         AddParameter(command, "@CardLastFourDigits", SqliteData.ToDbValue(account.CardLastFourDigits));
+        AddParameter(command, "@PlanningValue", SqliteData.ToDbValue(account.PlanningValue));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -211,6 +217,7 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
             creditCardDetails,
             SqliteData.ReadBoolean(reader, "IncludeInDashboardTotals"),
             SqliteData.ReadNullableString(reader, "AccountNumber"),
-            SqliteData.ReadNullableString(reader, "CardLastFourDigits"));
+            SqliteData.ReadNullableString(reader, "CardLastFourDigits"),
+            SqliteData.ReadNullableDecimal(reader, "PlanningValue"));
     }
 }
