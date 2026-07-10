@@ -7,7 +7,8 @@ public sealed record ForecastRequest(
     DateOnly EndDate,
     IReadOnlyCollection<Account> Accounts,
     IReadOnlyCollection<ScheduledTransaction> ScheduledTransactions,
-    IReadOnlyCollection<SavingsGoal>? SavingsGoals = null)
+    IReadOnlyCollection<SavingsGoal>? SavingsGoals = null,
+    IReadOnlyCollection<Transaction>? Transactions = null)
 {
     public static ForecastRequest ForPeriod(
         DateOnly startDate,

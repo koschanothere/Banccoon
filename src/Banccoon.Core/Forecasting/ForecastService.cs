@@ -33,8 +33,19 @@ public sealed class ForecastService : IForecastService
         }
 
         var currentBalance = accountBalanceService.GetCurrentBalance(request.Accounts);
+        var paidScheduledOccurrences = request.Transactions?
+            .Where(transaction =>
+                transaction.PaidScheduledTransactionId.HasValue
+                && transaction.PaidScheduledOccurrenceDate.HasValue)
+            .Select(transaction => new PaidScheduledOccurrence(
+                transaction.PaidScheduledTransactionId!.Value,
+                transaction.PaidScheduledOccurrenceDate!.Value))
+            .ToHashSet() ?? new HashSet<PaidScheduledOccurrence>();
         var scheduledEvents = scheduledTransactionProjectionService
             .Project(request.ScheduledTransactions, request.StartDate, request.EndDate)
+            .Where(forecastEvent => !paidScheduledOccurrences.Contains(new PaidScheduledOccurrence(
+                forecastEvent.SourceId,
+                forecastEvent.Date)))
             .ToArray();
         var creditCardEvents = ProjectCreditCardEvents(request);
         var forecastEvents = scheduledEvents
@@ -106,4 +117,6 @@ public sealed class ForecastService : IForecastService
                 ForecastEventKind.CreditCardPayment))
             .ToArray();
     }
+
+    private readonly record struct PaidScheduledOccurrence(Guid ScheduledTransactionId, DateOnly OccurrenceDate);
 }

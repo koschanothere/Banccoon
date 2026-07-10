@@ -9,4 +9,6 @@ public sealed record Transaction(
     string? Notes,
     TransactionType Type,
     Guid? DestinationAccountId = null,
-    Guid? DestinationGoalId = null);
+    Guid? DestinationGoalId = null,
+    Guid? PaidScheduledTransactionId = null,
+    DateOnly? PaidScheduledOccurrenceDate = null);
