@@ -21,7 +21,9 @@ The roadmap now shifts from “build the primitives” to “make the app guide 
 
 The app should no longer assume users manually build everything first. On first startup (empty db), Banccoon should guide the user into setup through a focused in-app overlay. The first useful setup paths should be bank-statement import, manual setup, and backup restore from exports.
 
-Large workflows should become app-guided modal panels rather than permanent top-level tabs. These overlays must feel calm, clear, and hard to misuse.
+Large workflows should become app-guided experiences rather than permanent top-level tabs: quick edits are modal overlays, but multi-step flows (statement import, reconciliation) are dedicated full pages, not modals. See `docs/ui-structure-decisions.md` for the full structural spec — it is the source of truth for information architecture and interaction patterns; this file governs implementation phasing only.
+
+The dashboard's headline number is a **"Free to spend" figure** built on the existing `AvailableToSpendService`, extended with a user-set safety-buffer reserve and selectable window modes (rolling days / calendar-aligned / dynamic-until-next-major-payment) — see "Money Model: Free to Spend" in `docs/ui-structure-decisions.md` for the full spec. Not yet assigned to a specific phase below; fold into dashboard-rework phasing when that work is scheduled.
 
 ## Phase 0: Navigation Simplification
 
@@ -36,6 +38,8 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Make the dashboard graph default to the past 7 days of account-balance history plus the saved default forecast period.
 - Draw a clear current-time marker between historical account changes and future projected balances.
 - Derive historical dashboard graph points from persisted transactions and dashboard-included accounts, including account totals after each relevant day or transaction.
+- Expose `Account.IncludeInDashboardTotals` (already exists in Core) as a toggle in account editing — e.g. for a savings account that shouldn't count toward the dashboard total.
+- Add a primary-account concept (new: `AppSettings.PrimaryAccountId` or `Account.IsPrimary`), settable from account editing. Used as the default pre-selected account in Expense/Income/Transfer overlays.
 
 ## Phase 0.1: Navigation Simplification
 
@@ -46,16 +50,19 @@ Large workflows should become app-guided modal panels rather than permanent top-
 - Persist appearance/navigation preferences properly instead of keeping them as shell-only runtime state.
 - Goals should be treated as an account in the DB.
 - Keep Data functionality inside Settings.
-- Keep tab navigation focused on everyday destinations: Dashboard, Transactions, Accounts, and Settings. Scheduled and Statements tabs should go into transaction options. Forecast and Analytics go into dashboard as collapsable fields.
-- Remove Statements and Reconciliation as permanent top-level tabs once their guided overlays exist.
+- Keep tab navigation focused on everyday destinations: Dashboard, Transactions, Accounts, and Settings. Scheduled-*template* management (create/edit recurring rules) moves into Settings, not into Transactions. Statement import and reconciliation become full-page flows launched from Transactions, not tabs. Forecast and Analytics go into dashboard as collapsable fields, in order Upcoming → Forecast → Analytics → Goals (customizable in Settings).
+- Remove Statements and Reconciliation as permanent top-level tabs once their guided full-page flows exist.
 - Keep workflow launch buttons where users naturally need them rather than forcing users to hunt for special tabs.
 
-## Phase 1: Shared Workflow Overlay Architecture
+## Phase 1: Shared Workflow Overlay And Full-Page Flow Architecture
 
-- Add a reusable in-app modal/workflow host inside the existing MAUI shell, not a separate OS window.
-- Support dimmed background, focused content, close/cancel rules, busy/error states, and simple step transitions.
-- Keep overlays reusable for startup setup, statement import review, reconciliation, account editing, category creation, backup restore, and destructive confirmations.
-- Keep workflow state in ViewModels instead of embedding one-off logic in `MainPage.xaml`.
+**The entire `Banccoon.App` project (Views and ViewModels) is being rebuilt from scratch, not refactored.** `MainPage.xaml` (1,510 lines, every screen in one file) and `FinanceDataViewModel.cs` (5,311 lines, every screen's logic in one class) are discarded outright once their replacements exist — nothing from the old UI layer carries forward. `Banccoon.Core` and `Banccoon.Infrastructure` are unaffected; the financial/domain logic there stays as-is. Every file in the new App layer stays small and single-purpose (one view, one view model, one component per file) — see the standing "keep files small" rule; do not let any new file grow into a second god-object.
+
+- Add a reusable in-app modal/workflow host inside the existing MAUI shell, not a separate OS window, for quick-edit overlays (account editing, category creation, create/edit transaction, create/edit scheduled template, create/edit savings goal, backup restore validation, destructive confirmations).
+- Add a separate reusable full-page flow host/pattern for multi-step workflows that need real screen space: statement import and reconciliation. Same busy/error/step-transition support as the overlay host, but navigated to rather than dimmed-background-modal.
+- Support dimmed background, focused content, close/cancel rules, busy/error states, and simple step transitions in the overlay host; confirm-before-discard on cancel only when there's unsaved progress.
+- Startup setup remains a blocking full-screen overlay (not the same as the statement-import/reconciliation full pages) — see Phase 2.
+- One view model per feature/screen from the start (e.g. `DashboardViewModel`, `TransactionsViewModel`, `AccountsViewModel`, `SettingsViewModel`, plus overlay-specific ones) — never a shared catch-all view model.
 
 ## Phase 2: Blank-State Startup And Guided Setup
 
@@ -70,30 +77,37 @@ Large workflows should become app-guided modal panels rather than permanent top-
 
 - Rebuild Transactions as a history-first screen after the shared overlay host exists.
 - Remove permanent create/edit transaction panels once their overlay replacements are available.
-- Add a plus action with Expense, Income, Transfer, Scheduled, and Statement import options.
+- Add a plus action with **Expense, Income, and Transfer only**. Statement import gets its own separate header button next to the plus action, not a menu item inside it.
 - Expense and Income overlays should collect transaction name, account, date, amount, category, and optional assignment to an existing scheduled occurrence.
 - Transfer overlay should collect transaction name, amount, date, outgoing account, incoming account or goal, and optional assignment to an existing scheduled occurrence.
-- Scheduled should open a schedule manager overlay for viewing and creating scheduled expense, income, and transfer templates.
+- Scheduled *template* creation/editing (recurring rules) is **not** reachable from the plus action; it moves to Settings (see Phase 0.1).
 - Scheduled assignment from Expense, Income, or Transfer creates only an occurrence link to an existing scheduled transaction; it must not create a new scheduled template.
-- Statement import should route into the dedicated statement-import workflow.
+- Statement import should route into the dedicated statement-import full-page workflow.
 - Add a first-class `Transaction.Name` field and persist it through SQLite, import/export, statement-created transactions, and tests.
 - Persist `PaidScheduledTransactionId` and `PaidScheduledOccurrenceDate`; the model and forecast service already expect them, but SQLite persistence must read and write them.
-- Transaction history rows should show name, category or transfer destination, scheduled mark, amount, and account value immediately after the transaction.
+- Transaction history rows show name, category (or transfer destination), and amount, with **account balance-after in gray directly under the amount** and a **small scheduled-mark icon** on the row — all visible without expanding or opening edit.
 - In edit mode, keep name locked, make category a dropdown, make scheduled assignment editable, show a trash action, and allow amount and account-value-after edits.
 - Editing account value after a transaction should recalculate that transaction's amount.
-- Add multi-select actions for mass category assignment, mass scheduled-occurrence assignment, and mass deletion.
+- Add multi-select actions via an explicit "Select" mode toggle button (not hover-checkboxes or long-press): mass category assignment, mass scheduled-occurrence assignment, and mass deletion.
+- Add a collapsed filter bar (account, category, date range, type) above the list that expands on demand.
+- Add a persistent "resolve upcoming" widget pinned at the top of the screen: one row per due/overdue scheduled item with Mark Paid / Skip / Delay actions. Mark Paid pre-fills a transaction from the template; nothing here is auto-dismissed — it persists until the user resolves it.
+- Add a category-management icon in the header (next to the filter control) opening a manage-categories overlay (rename, merge, delete, recolor, reorder). Category *creation* stays inline wherever a category is picked (transaction entry, statement import row, scheduled assignment) — this is deliberately not part of Settings.
+- Add a manual reconciliation "check-in" action in the header, grouped with the filter and category-management controls.
 
 ## Phase 3: Bank Statement Import Workflow Redesign
 
-- Replace the Statements tab workflow with a guided overlay launched from blank setup, dashboard actions, or an import command.
+- Replace the Statements tab workflow with a guided **full page**, not a modal overlay, launched from blank setup or the Transactions header import button. **Not** offered as a dashboard action/entry point.
 - Step 1: pick/read statement and show detected balance, account number, card ending, parser, period, and row count.
 - Step 2: confirm account match or create/link an account.
 - When creating an account from a statement, default the starting balance from the parsed closing/current balance when available, falling back only if needed.
 - Step 3: review pending transaction rows in a compact list that gets shorter as rows are approved or skipped.
 - Default uncategorized rows to `Other`, but make category selection/creation fast.
 - Add multi-select so multiple rows can be categorized, skipped, or attached to the same scheduled transaction together.
+- Add a bulk "approve all matching category X" action that surfaces the matched rows for review before committing them, rather than silently mass-approving.
 - Keep duplicate warnings visible before approval.
 - Preserve local category learning when rows are approved.
+- Parser resolution order: try the configured default parser → fall back to auto-detection across `IStatementParserRegistry.AvailableParsers` (already built) → on total failure, show a clear "format not recognized" message with a path to flag it for a new parser.
+- **High-priority backlog: bank parser coverage.** Sberbank exists. Tinkoff and Alphabank are next, confirmed must-have — each needs a real statement sample from an actual account holder before the parser can be built/verified.
 
 ## Phase 4: Scheduled Transaction Matching From Imports
 
@@ -106,38 +120,39 @@ Large workflows should become app-guided modal panels rather than permanent top-
 
 ## Phase 5: Guided Reconciliation
 
-- Move reconciliation out of the main navigation and into an app-triggered overlay.
-- Trigger reconciliation from dashboard/check-in actions, after statement import, and when the app needs a real balance check.
-- Reuse the same “shrinking list” interaction pattern for expected scheduled items: confirm, delay, skip, or attach actual imported/manual transactions.
+- Move reconciliation out of the main navigation and into a guided **full page**, not a modal overlay.
+- Trigger reconciliation automatically right after statement import, plus a manual "check-in" action in the Transactions header, available anytime.
+- Reuse the same "shrinking list" interaction pattern used by the Transactions "resolve upcoming" widget for expected scheduled items: confirm, delay, skip, or attach actual imported/manual transactions — one consistent interaction language across the app.
 - Keep actual-balance comparison, grouped spending, and balance adjustment as focused steps in the workflow.
 - Keep explicit adjustment transactions for auditability.
 
 ## Phase 6: UX Hardening And Expected Overlay Windows
 
-Use focused overlays for:
+Use focused **modal overlays** for:
 
-- first-run setup;
-- statement account confirmation;
-- statement category/scheduled matching;
-- reconciliation/check-in;
+- first-run setup (blocking full-screen overlay, not skippable);
 - create/edit account;
 - create/edit transaction;
-- create/edit scheduled transaction;
+- create/edit scheduled transaction template;
 - create/edit savings goal;
 - create category while categorizing;
+- manage categories (rename/merge/delete/recolor/reorder);
 - backup restore validation;
-- delete-all-local-data confirmation;
+- delete-all-local-data confirmation (extra deliberate confirmation step, irreversible);
 - possible duplicate transaction review;
-- credit-card payoff details.
+- credit-card details (utilization, min payment, payoff estimate).
+
+Statement account confirmation, statement category/scheduled matching, and reconciliation/check-in are **not** separate overlay windows — they are steps within the Phase 3 and Phase 5 full-page flows.
 
 ## Phase 7: Later Product Hardening
 
-- Add a zero-persistence dashboard graph calendar/date selector for arbitrary start and end dates.
+Note: the dashboard custom date range and the Analytics scope below are core decisions (see `docs/ui-structure-decisions.md`), not optional nice-to-haves — they're listed here only because their *implementation* can happen after the core navigation/overlay work lands, not because the spec is vague or deferred. The Transactions filter bar is core to Phase 2.5, not a Phase 7 item — it's listed there now, not here.
+
+- Add a zero-persistence dashboard graph calendar/date selector for arbitrary start and end dates, on top of the default 7-days-back-plus-forecast-period range.
 - Reset temporary dashboard graph date selection when the user leaves the dashboard or data reloads.
 - Keep the graph default as past 7 days plus the saved default forecast period.
 - Desktop reminders and notification lifecycle.
-- Better list sorting/filtering.
-- Richer analytics and category views.
+- Analytics: multi-period category trend (line/bar over last N months), auto-surfaced top movers, drill-down from a category into its filtered transactions, and income-vs-expense breakdown — independent date range on Analytics, defaulting to current month.
 - Error presentation and diagnostics.
 - Database migration diagnostics, including clear failure messages for schema upgrades.
 - Database backup before risky operations.
