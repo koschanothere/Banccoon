@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     x:DataType="viewModels:SettingsViewModel"
-    Title="Settings">
+    Title="Settings"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
     <ScrollView>
         <VerticalStackLayout Padding="32" Spacing="16">
             <Label Text="Settings" Style="{StaticResource ScreenTitleLabel}" />

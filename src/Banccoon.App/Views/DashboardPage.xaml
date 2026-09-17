@@ -6,7 +6,8 @@
     xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     x:DataType="viewModels:DashboardViewModel"
-    Title="Dashboard">
+    Title="Dashboard"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
     <ScrollView>
         <VerticalStackLayout Padding="32" Spacing="16">

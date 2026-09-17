@@ -32,6 +32,11 @@ public sealed class ForecastChartView : GraphicsView
         BackgroundColor = Colors.Transparent;
         StartInteraction += OnInteraction;
         DragInteraction += OnInteraction;
+
+        var pointerRecognizer = new PointerGestureRecognizer();
+        pointerRecognizer.PointerMoved += OnPointerMoved;
+        pointerRecognizer.PointerExited += OnPointerExited;
+        GestureRecognizers.Add(pointerRecognizer);
     }
 
     public IEnumerable<ForecastChartPointViewModel> Points
@@ -94,6 +99,20 @@ public sealed class ForecastChartView : GraphicsView
         }
 
         SelectNearestPoint(e.Touches[0]);
+    }
+
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        var position = e.GetPosition(this);
+        if (position is { } point)
+        {
+            SelectNearestPoint(new PointF((float)point.X, (float)point.Y));
+        }
+    }
+
+    private void OnPointerExited(object? sender, PointerEventArgs e)
+    {
+        SelectedPoint = null;
     }
 
     private void SelectNearestPoint(PointF touchPoint)

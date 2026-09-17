@@ -9,9 +9,9 @@
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
 
             <!-- Light tokens -->
-            <Color x:Key="LightPageBackground">#F4F5F7</Color>
-            <Color x:Key="LightCardBackground">#FFFFFF</Color>
-            <Color x:Key="LightCardSoft">#F4F5F7</Color>
+            <Color x:Key="LightPageBackground">#F1F0ED</Color>
+            <Color x:Key="LightCardBackground">#FAF9F7</Color>
+            <Color x:Key="LightCardSoft">#F1F0ED</Color>
             <Color x:Key="LightTextPrimary">#181A1D</Color>
             <Color x:Key="LightTextSecondary">#666D76</Color>
             <Color x:Key="LightTextTertiary">#9AA0A8</Color>
@@ -26,17 +26,21 @@
             <!-- Dark tokens -->
             <Color x:Key="DarkPageBackground">#131417</Color>
             <Color x:Key="DarkCardBackground">#1D2024</Color>
-            <Color x:Key="DarkCardSoft">#25282D</Color>
+            <Color x:Key="DarkCardSoft">#2A2E34</Color>
             <Color x:Key="DarkTextPrimary">#F2F3F5</Color>
-            <Color x:Key="DarkTextSecondary">#9BA1AA</Color>
-            <Color x:Key="DarkTextTertiary">#6E747D</Color>
-            <Color x:Key="DarkDivider">#2C2F34</Color>
+            <Color x:Key="DarkTextSecondary">#AEB4BD</Color>
+            <Color x:Key="DarkTextTertiary">#868C96</Color>
+            <Color x:Key="DarkDivider">#363B42</Color>
             <Color x:Key="DarkAccent">#10B981</Color>
             <Color x:Key="DarkAccentSoft">#2910B981</Color>
             <Color x:Key="DarkStatusGreen">#34D399</Color>
             <Color x:Key="DarkStatusOrange">#F59E0B</Color>
             <Color x:Key="DarkStatusOrangeSoft">#29F59E0B</Color>
             <Color x:Key="DarkStatusRed">#F87171</Color>
+
+            <!-- Sidebar tokens -->
+            <Color x:Key="LightSidebarBackground">#FAF9F7</Color>
+            <Color x:Key="DarkSidebarBackground">#1A1C20</Color>
 
             <Style TargetType="ContentPage">
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}" />

@@ -185,7 +185,7 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(ForecastPeriod.ThirtyDays, settings.DefaultForecastPeriod);
         Assert.Equal(ReminderFrequency.Weekly, settings.ReminderFrequency);
         Assert.Equal(DateDisplayFormat.DayMonthYear, settings.DateDisplayFormat);
-        Assert.Equal(AppThemeMode.Light, settings.ThemeMode);
+        Assert.Equal(AppThemeMode.System, settings.ThemeMode);
         Assert.Equal(AccentColor.Emerald, settings.AccentColor);
         Assert.Equal(NavigationStyle.Rail, settings.NavigationStyle);
         Assert.False(settings.ShowPowerUserFeatures);

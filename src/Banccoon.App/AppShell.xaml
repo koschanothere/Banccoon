@@ -4,23 +4,33 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:Banccoon.App.Views"
-    Shell.FlyoutBehavior="Disabled">
-    <TabBar>
-        <ShellContent
-            ContentTemplate="{DataTemplate views:DashboardPage}"
-            Route="dashboard"
-            Title="Dashboard" />
-        <ShellContent
-            ContentTemplate="{DataTemplate views:TransactionsPage}"
-            Route="transactions"
-            Title="Transactions" />
-        <ShellContent
-            ContentTemplate="{DataTemplate views:AccountsPage}"
-            Route="accounts"
-            Title="Accounts" />
-        <ShellContent
-            ContentTemplate="{DataTemplate views:SettingsPage}"
-            Route="settings"
-            Title="Settings" />
-    </TabBar>
+    Shell.FlyoutBehavior="Locked"
+    Shell.NavBarIsVisible="False"
+    FlyoutWidth="230"
+    FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource LightSidebarBackground}, Dark={StaticResource DarkSidebarBackground}}">
+
+    <Shell.FlyoutHeaderTemplate>
+        <DataTemplate>
+            <HorizontalStackLayout Padding="20,26,20,14" Spacing="10">
+                <Border WidthRequest="30" HeightRequest="30" StrokeShape="RoundRectangle 9" Stroke="Transparent"
+                        Background="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}">
+                    <Label Text="B" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="Banccoon" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </DataTemplate>
+    </Shell.FlyoutHeaderTemplate>
+
+    <FlyoutItem Title="Dashboard" Route="dashboard">
+        <ShellContent ContentTemplate="{DataTemplate views:DashboardPage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Transactions" Route="transactions">
+        <ShellContent ContentTemplate="{DataTemplate views:TransactionsPage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Accounts" Route="accounts">
+        <ShellContent ContentTemplate="{DataTemplate views:AccountsPage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Settings" Route="settings">
+        <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </FlyoutItem>
 </Shell>

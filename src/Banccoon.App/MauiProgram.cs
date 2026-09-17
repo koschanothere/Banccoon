@@ -15,6 +15,7 @@ using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Infrastructure.Repositories;
 using Banccoon.Infrastructure.Statements;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.LifecycleEvents;
 
 namespace Banccoon.App;
 
@@ -26,6 +27,16 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>();
+
+#if WINDOWS
+        builder.ConfigureLifecycleEvents(events =>
+        {
+            events.AddWindows(windows => windows.OnWindowCreated(window =>
+            {
+                window.SystemBackdrop = null;
+            }));
+        });
+#endif
 
         builder.Services.AddSingleton<IDateProvider, SystemDateProvider>();
         builder.Services.AddSingleton<IRecurrenceValidationService, RecurrenceValidationService>();

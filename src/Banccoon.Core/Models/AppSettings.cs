@@ -8,7 +8,7 @@ public sealed record AppSettings(
     ForecastPeriod DefaultForecastPeriod,
     ReminderFrequency ReminderFrequency,
     DateDisplayFormat DateDisplayFormat = DateDisplayFormat.DayMonthYear,
-    AppThemeMode ThemeMode = AppThemeMode.Light,
+    AppThemeMode ThemeMode = AppThemeMode.System,
     AccentColor AccentColor = AccentColor.Emerald,
     NavigationStyle NavigationStyle = NavigationStyle.Rail,
     bool ShowPowerUserFeatures = false,

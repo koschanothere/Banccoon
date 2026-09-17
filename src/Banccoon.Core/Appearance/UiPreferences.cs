@@ -7,7 +7,7 @@ public sealed record UiPreferences(
     bool ShowPowerUserFeatures)
 {
     public static UiPreferences Default { get; } = new(
-        AppThemeMode.Light,
+        AppThemeMode.System,
         AccentColor.Emerald,
         NavigationStyle.Rail,
         ShowPowerUserFeatures: false);

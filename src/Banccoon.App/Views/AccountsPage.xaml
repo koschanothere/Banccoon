@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     x:DataType="viewModels:AccountsViewModel"
-    Title="Accounts">
+    Title="Accounts"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
     <VerticalStackLayout Padding="32" Spacing="16">
         <Label Text="Accounts" Style="{StaticResource ScreenTitleLabel}" />
         <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
