@@ -92,8 +92,8 @@
 
         <Border
             Padding="14"
-            BackgroundColor="{StaticResource SurfaceMutedColor}"
-            Stroke="{StaticResource DividerColor}"
+            BackgroundColor="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}"
+            Stroke="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}"
             controls:PowerUser.IsPowerUserElement="True"
             controls:PowerUser.ShowPowerUserElements="{Binding ShowPowerUserFeatures}">
             <Border.StrokeShape>
@@ -106,7 +106,7 @@
                             FontAttributes="Bold"
                             Text="Technical recurrence syntax" />
                         <Label
-                            Style="{StaticResource MutedLabel}"
+                            Style="{StaticResource TertiaryLabel}"
                             Text="Optional power-user mode. Friendly controls remain the default." />
                     </VerticalStackLayout>
                     <CheckBox
@@ -130,7 +130,7 @@
                             Text="Apply syntax" />
                     </HorizontalStackLayout>
                     <Label
-                        Style="{StaticResource MutedLabel}"
+                        Style="{StaticResource TertiaryLabel}"
                         Text="{Binding TechnicalSyntaxMessage}" />
                     <Label
                         FontAttributes="Bold"
@@ -150,7 +150,7 @@
                                         FontFamily="Consolas"
                                         FontSize="12"
                                         Text="{Binding Syntax}"
-                                        TextColor="{StaticResource SecondaryTextColor}" />
+                                        TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                                 </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
