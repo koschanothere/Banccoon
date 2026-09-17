@@ -230,11 +230,16 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
         await categoryRepository.SaveAsync(newCategory);
 
-        var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-        CategoryOptions.Add(option);
-        Category = option;
-        IsAddingCategory = false;
-        NewCategoryName = string.Empty;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
+        {
+            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
+            CategoryOptions.Add(option);
+            Category = option;
+            IsAddingCategory = false;
+            NewCategoryName = string.Empty;
+        });
     }
 
     private async Task SaveAsync()
@@ -279,7 +284,9 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
         await scheduledTransactionRepository.SaveAsync(scheduledTransaction);
 
-        IsOpen = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => IsOpen = false);
         await onSaved();
     }
 
@@ -292,7 +299,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
         await scheduledTransactionRepository.DeleteAsync(id);
 
-        IsOpen = false;
+        await RunOnMainThreadAsync(() => IsOpen = false);
         await onSaved();
     }
 }

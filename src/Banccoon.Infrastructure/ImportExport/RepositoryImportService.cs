@@ -14,6 +14,7 @@ public sealed class RepositoryImportService : IImportService
     private readonly IExportValidator exportValidator;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly ILocalDataResetService localDataResetService;
 
     public RepositoryImportService(
         IAccountRepository accountRepository,
@@ -24,7 +25,8 @@ public sealed class RepositoryImportService : IImportService
         ISettingsRepository settingsRepository,
         IExportValidator exportValidator,
         IStatementImportRepository statementImportRepository,
-        ICategoryLearningRuleRepository categoryLearningRuleRepository)
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        ILocalDataResetService localDataResetService)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -35,6 +37,7 @@ public sealed class RepositoryImportService : IImportService
         this.exportValidator = exportValidator;
         this.statementImportRepository = statementImportRepository;
         this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.localDataResetService = localDataResetService;
     }
 
     public Task<ImportValidationResult> ValidateAsync(
@@ -57,7 +60,7 @@ public sealed class RepositoryImportService : IImportService
 
         if (mode == ImportMode.Replace)
         {
-            await DeleteAllDataAsync(cancellationToken);
+            await localDataResetService.ResetAllAsync(cancellationToken);
         }
 
         await SaveDataAsync(exportEnvelope.Data, cancellationToken);
@@ -70,17 +73,6 @@ public sealed class RepositoryImportService : IImportService
             exportEnvelope.Data.ScheduledTransactions.Count,
             exportEnvelope.Data.Categories.Count,
             exportEnvelope.Data.SavingsGoals.Count);
-    }
-
-    private async Task DeleteAllDataAsync(CancellationToken cancellationToken)
-    {
-        await statementImportRepository.DeleteAllAsync(cancellationToken);
-        await categoryLearningRuleRepository.DeleteAllAsync(cancellationToken);
-        await transactionRepository.DeleteAllAsync(cancellationToken);
-        await scheduledTransactionRepository.DeleteAllAsync(cancellationToken);
-        await savingsGoalRepository.DeleteAllAsync(cancellationToken);
-        await categoryRepository.DeleteAllAsync(cancellationToken);
-        await accountRepository.DeleteAllAsync(cancellationToken);
     }
 
     private async Task SaveDataAsync(ExportData data, CancellationToken cancellationToken)

@@ -15,12 +15,16 @@ public sealed class AccountRowViewModel : ViewModelBase
     public AccountRowViewModel(
         Account account,
         bool isPrimary,
+        bool canMoveUp,
+        bool canMoveDown,
         ICommand toggleFavoriteCommand,
         Action<Account> onEdit,
         Func<Guid, Task> onArchive,
         Func<Guid, Task> onUnarchive,
         Func<Guid, Task> onSetPrimary,
-        Action<Account> onOpenCardDetails)
+        Action<Account> onOpenCardDetails,
+        Func<Guid, Task> onMoveUp,
+        Func<Guid, Task> onMoveDown)
     {
         Id = account.Id;
         Type = account.Type;
@@ -30,6 +34,8 @@ public sealed class AccountRowViewModel : ViewModelBase
         IsArchived = account.IsArchived;
         isFavorite = account.IsFavorite;
         IsPrimary = isPrimary;
+        CanMoveUp = canMoveUp;
+        CanMoveDown = canMoveDown;
         ToggleFavoriteCommand = toggleFavoriteCommand;
 
         var hasAccountNumber = !string.IsNullOrWhiteSpace(account.AccountNumber);
@@ -58,6 +64,8 @@ public sealed class AccountRowViewModel : ViewModelBase
         UnarchiveCommand = new RelayCommand(() => _ = onUnarchive(Id));
         SetPrimaryCommand = new RelayCommand(() => _ = onSetPrimary(Id));
         OpenCardDetailsCommand = new RelayCommand(() => onOpenCardDetails(account));
+        MoveUpCommand = new RelayCommand(() => _ = onMoveUp(Id));
+        MoveDownCommand = new RelayCommand(() => _ = onMoveDown(Id));
     }
 
     public Guid Id { get; }
@@ -73,6 +81,10 @@ public sealed class AccountRowViewModel : ViewModelBase
     public bool IsArchived { get; }
 
     public bool IsPrimary { get; }
+
+    public bool CanMoveUp { get; }
+
+    public bool CanMoveDown { get; }
 
     public bool IsGoal { get; }
 
@@ -122,4 +134,8 @@ public sealed class AccountRowViewModel : ViewModelBase
     public ICommand SetPrimaryCommand { get; }
 
     public ICommand OpenCardDetailsCommand { get; }
+
+    public ICommand MoveUpCommand { get; }
+
+    public ICommand MoveDownCommand { get; }
 }

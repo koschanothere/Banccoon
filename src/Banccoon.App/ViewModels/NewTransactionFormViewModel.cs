@@ -194,11 +194,16 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
         await categoryRepository.SaveAsync(newCategory);
 
-        var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-        CategoryOptions.Add(option);
-        Category = option;
-        IsAddingCategory = false;
-        NewCategoryName = string.Empty;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
+        {
+            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
+            CategoryOptions.Add(option);
+            Category = option;
+            IsAddingCategory = false;
+            NewCategoryName = string.Empty;
+        });
     }
 
     private async Task SaveAsync()
@@ -248,7 +253,9 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             await accountRepository.SaveAsync(updatedAccount);
         }
 
-        IsOpen = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => IsOpen = false);
         await onSaved();
     }
 }

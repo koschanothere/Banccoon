@@ -13,4 +13,5 @@ public sealed record Account(
     string? AccountNumber = null,
     string? CardLastFourDigits = null,
     decimal? PlanningValue = null,
-    bool IsFavorite = false);
+    bool IsFavorite = false,
+    int SortOrder = 0);

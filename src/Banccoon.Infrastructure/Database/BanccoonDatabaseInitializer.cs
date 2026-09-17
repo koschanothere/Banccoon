@@ -70,7 +70,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 AccountNumber TEXT NULL,
                 CardLastFourDigits TEXT NULL,
                 PlanningValue TEXT NULL,
-                IsFavorite INTEGER NOT NULL DEFAULT 0
+                IsFavorite INTEGER NOT NULL DEFAULT 0,
+                SortOrder INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS Categories (
@@ -281,6 +282,12 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "Accounts",
             "IsFavorite",
+            "INTEGER NOT NULL DEFAULT 0",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Accounts",
+            "SortOrder",
             "INTEGER NOT NULL DEFAULT 0",
             cancellationToken);
         await AddMissingColumnAsync(

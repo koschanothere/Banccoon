@@ -129,7 +129,9 @@ public sealed class DashboardViewModel : ViewModelBase
         }
         finally
         {
-            IsLoading = false;
+            // Touches UI-bound state after an await that may have resumed off the UI thread (see
+            // ViewModelBase.RunOnMainThreadAsync).
+            await RunOnMainThreadAsync(() => IsLoading = false);
         }
     }
 
@@ -145,13 +147,17 @@ public sealed class DashboardViewModel : ViewModelBase
         var forecast = forecastService.CreateForecast(request);
         var breakdown = availableToSpendService.Calculate(forecast, savingsGoals, settings.SafetyBuffer);
 
-        FreeToSpendText = MoneyFormat.Format(breakdown.AvailableToSpend, settings.DefaultCurrency);
-        LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, settings.DefaultCurrency);
-        ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, settings.DefaultCurrency);
-        SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, settings.DefaultCurrency);
-        FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, settings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, settings.DateDisplayFormat)}";
-
-        return Task.CompletedTask;
+        // Called from InitializeAsync after several awaits that may have resumed off the UI
+        // thread (see ViewModelBase.RunOnMainThreadAsync) - this is the dashboard's hero card, the
+        // first thing shown on every launch, so it's a high-traffic instance of that same bug.
+        return RunOnMainThreadAsync(() =>
+        {
+            FreeToSpendText = MoneyFormat.Format(breakdown.AvailableToSpend, settings.DefaultCurrency);
+            LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, settings.DefaultCurrency);
+            ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, settings.DefaultCurrency);
+            SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, settings.DefaultCurrency);
+            FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, settings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, settings.DateDisplayFormat)}";
+        });
     }
 
     private async Task LoadChartAsync(

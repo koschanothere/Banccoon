@@ -75,7 +75,10 @@ public sealed class CategoryManagementViewModel : ViewModelBase
     public async Task OpenAsync()
     {
         await RefreshAsync();
-        IsOpen = true;
+
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => IsOpen = true);
     }
 
     private async Task ToggleAsync()

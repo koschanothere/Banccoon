@@ -144,6 +144,9 @@ public sealed class StatementImportViewModel : ViewModelBase
             .Distinct()
             .ToArray();
 
+        // Every mutation below runs through RunOnMainThreadAsync since each await in this method
+        // (the file picker, PreviewAsync) may resume off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
         FileResult? result;
         try
         {
@@ -160,7 +163,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         }
         catch (Exception)
         {
-            PreviewStatusText = "Could not open the file picker.";
+            await RunOnMainThreadAsync(() => PreviewStatusText = "Could not open the file picker.");
             return;
         }
 
@@ -169,31 +172,41 @@ public sealed class StatementImportViewModel : ViewModelBase
             return;
         }
 
-        filePath = result.FullPath;
-        FileName = result.FileName;
-        statement = null;
-        OnPropertyChanged(nameof(HasStatement));
-        OnPropertyChanged(nameof(CanContinueFromPick));
+        var pickedFilePath = result.FullPath;
+        await RunOnMainThreadAsync(() =>
+        {
+            filePath = pickedFilePath;
+            FileName = result.FileName;
+            statement = null;
+            OnPropertyChanged(nameof(HasStatement));
+            OnPropertyChanged(nameof(CanContinueFromPick));
+            IsBusy = true;
+        });
 
-        IsBusy = true;
         try
         {
-            var preview = await statementImportService.PreviewAsync(filePath);
-            statement = preview.Statement;
-            PreviewStatusText = preview.Message;
+            var preview = await statementImportService.PreviewAsync(pickedFilePath);
+            await RunOnMainThreadAsync(() =>
+            {
+                statement = preview.Statement;
+                PreviewStatusText = preview.Message;
+            });
         }
         finally
         {
-            IsBusy = false;
+            await RunOnMainThreadAsync(() => IsBusy = false);
         }
 
-        OnPropertyChanged(nameof(HasStatement));
-        OnPropertyChanged(nameof(ParserNameText));
-        OnPropertyChanged(nameof(PeriodText));
-        OnPropertyChanged(nameof(RowCountText));
-        OnPropertyChanged(nameof(DetectedBalanceText));
-        OnPropertyChanged(nameof(DetectedAccountText));
-        OnPropertyChanged(nameof(CanContinueFromPick));
+        await RunOnMainThreadAsync(() =>
+        {
+            OnPropertyChanged(nameof(HasStatement));
+            OnPropertyChanged(nameof(ParserNameText));
+            OnPropertyChanged(nameof(PeriodText));
+            OnPropertyChanged(nameof(RowCountText));
+            OnPropertyChanged(nameof(DetectedBalanceText));
+            OnPropertyChanged(nameof(DetectedAccountText));
+            OnPropertyChanged(nameof(CanContinueFromPick));
+        });
     }
 
     private async Task ContinueFromPickAsync()
@@ -204,7 +217,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         }
 
         await Account.LoadAsync(statement, FileName);
-        CurrentStep = StatementImportStep.ConfirmAccount;
+        await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.ConfirmAccount);
     }
 
     private async Task ContinueFromAccountAsync()
@@ -220,22 +233,22 @@ public sealed class StatementImportViewModel : ViewModelBase
             return;
         }
 
-        IsBusy = true;
+        await RunOnMainThreadAsync(() => IsBusy = true);
         try
         {
             var result = await statementImportService.CreatePendingImportAsync(accountId.Value, filePath, statement);
             if (!result.ParserAvailable || result.Batch is null)
             {
-                Account.SetStatus(result.Message);
+                await RunOnMainThreadAsync(() => Account.SetStatus(result.Message));
                 return;
             }
 
             await Review.LoadAsync(result.Batch.Id, currency);
-            CurrentStep = StatementImportStep.Review;
+            await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
         }
         finally
         {
-            IsBusy = false;
+            await RunOnMainThreadAsync(() => IsBusy = false);
         }
     }
 }

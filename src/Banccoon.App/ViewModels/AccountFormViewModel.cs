@@ -233,7 +233,9 @@ public sealed class AccountFormViewModel : ViewModelBase
 
         await accountRepository.SaveAsync(account);
 
-        IsOpen = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => IsOpen = false);
         await onSaved();
     }
 

@@ -92,9 +92,31 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:AccountRowViewModel">
                             <VerticalStackLayout Padding="0,10" Spacing="6">
-                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Center">
+                                        <Button
+                                            Text="&#9650;"
+                                            Command="{Binding MoveUpCommand}"
+                                            IsEnabled="{Binding CanMoveUp}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                                            FontSize="9"
+                                            Padding="0"
+                                            WidthRequest="22"
+                                            HeightRequest="16" />
+                                        <Button
+                                            Text="&#9660;"
+                                            Command="{Binding MoveDownCommand}"
+                                            IsEnabled="{Binding CanMoveDown}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                                            FontSize="9"
+                                            Padding="0"
+                                            WidthRequest="22"
+                                            HeightRequest="16" />
+                                    </VerticalStackLayout>
                                     <Button
-                                        Grid.Column="0"
+                                        Grid.Column="1"
                                         Text="{Binding IsFavorite, Converter={StaticResource FavoriteStarConverter}}"
                                         Command="{Binding ToggleFavoriteCommand}"
                                         CommandParameter="{Binding Id}"
@@ -104,7 +126,7 @@
                                         Padding="0"
                                         WidthRequest="34"
                                         HeightRequest="34" />
-                                    <VerticalStackLayout Grid.Column="1" Spacing="1" Margin="8,0,0,0">
+                                    <VerticalStackLayout Grid.Column="2" Spacing="1" Margin="8,0,0,0">
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="{Binding Name}" />
                                             <Label Text="Primary" IsVisible="{Binding IsPrimary}" Style="{StaticResource TertiaryLabel}"
@@ -112,26 +134,28 @@
                                         </HorizontalStackLayout>
                                         <Label Text="{Binding TypeText}" Style="{StaticResource TertiaryLabel}" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="2" Text="{Binding BalanceText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding BalanceText}" FontAttributes="Bold" VerticalOptions="Center" />
                                 </Grid>
 
-                                <HorizontalStackLayout Spacing="8" IsVisible="{Binding HasIdentifier}" Margin="42,0,0,0">
+                                <HorizontalStackLayout Spacing="8" IsVisible="{Binding HasIdentifier}" Margin="64,0,0,0">
                                     <Label Text="{Binding IdentifierText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
                                     <Button Text="{Binding RevealToggleText}" Command="{Binding ToggleRevealCommand}" Style="{StaticResource QuietButton}" FontSize="11" Padding="8,4" />
                                 </HorizontalStackLayout>
 
-                                <VerticalStackLayout Spacing="4" IsVisible="{Binding HasGoalTarget}" Margin="42,0,0,0">
+                                <VerticalStackLayout Spacing="4" IsVisible="{Binding HasGoalTarget}" Margin="64,0,0,0">
                                     <ProgressBar Progress="{Binding GoalProgress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                                     <Label Text="{Binding GoalTargetText}" Style="{StaticResource TertiaryLabel}" />
                                 </VerticalStackLayout>
 
-                                <HorizontalStackLayout Spacing="6" Margin="42,0,0,0">
+                                <HorizontalStackLayout Spacing="6" Margin="64,0,0,0">
                                     <Button Text="Edit" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" />
                                     <Button Text="Card details" Command="{Binding OpenCardDetailsCommand}" IsVisible="{Binding IsCreditCard}" Style="{StaticResource QuietButton}" />
                                     <Button Text="Set primary" Command="{Binding SetPrimaryCommand}" IsVisible="{Binding IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
                                     <Button Text="Archive" Command="{Binding ArchiveCommand}" IsVisible="{Binding IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
                                     <Button Text="Unarchive" Command="{Binding UnarchiveCommand}" IsVisible="{Binding IsArchived}" Style="{StaticResource QuietButton}" />
                                 </HorizontalStackLayout>
+
+                                <BoxView HeightRequest="1" Margin="0,4,0,0" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
                             </VerticalStackLayout>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

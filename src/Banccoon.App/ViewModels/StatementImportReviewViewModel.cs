@@ -99,7 +99,11 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     {
         batchId = batch;
         currency = currencyCode;
-        StatusText = string.Empty;
+
+        // This method is itself called after another ViewModel's await chain (see
+        // ViewModelBase.RunOnMainThreadAsync), so even this "before my own first await" mutation
+        // isn't guaranteed to be on the UI thread.
+        await RunOnMainThreadAsync(() => StatusText = string.Empty);
 
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
 
@@ -181,7 +185,9 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id);
         }
 
-        SelectMode = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => SelectMode = false);
         await RefreshRowsAsync();
     }
 
@@ -193,7 +199,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             await statementImportService.SkipRowAsync(row.Id);
         }
 
-        SelectMode = false;
+        await RunOnMainThreadAsync(() => SelectMode = false);
         await RefreshRowsAsync();
     }
 
@@ -207,24 +213,28 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
         await categoryRepository.SaveAsync(newCategory);
 
-        var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-        CategoryOptions.Add(option);
-        BulkCategory = option;
-        IsAddingCategory = false;
-        NewCategoryName = string.Empty;
+        await RunOnMainThreadAsync(() =>
+        {
+            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
+            CategoryOptions.Add(option);
+            BulkCategory = option;
+            IsAddingCategory = false;
+            NewCategoryName = string.Empty;
+        });
     }
 
     private async Task CancelImportAsync()
     {
         var result = await statementImportService.CancelImportAsync(batchId);
-        StatusText = result.Message;
-        if (result.Cancelled)
+
+        await RunOnMainThreadAsync(() =>
         {
-            await RunOnMainThreadAsync(() =>
+            StatusText = result.Message;
+            if (result.Cancelled)
             {
                 Rows.Clear();
                 OnPropertyChanged(nameof(IsComplete));
-            });
-        }
+            }
+        });
     }
 }

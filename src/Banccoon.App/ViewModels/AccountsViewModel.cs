@@ -76,10 +76,11 @@ public sealed class AccountsViewModel : ViewModelBase
             currency = settings.DefaultCurrency;
             primaryAccountId = settings.PrimaryAccountId;
 
+            // Already ordered by SortOrder then Name (see SqliteAccountRepository) - re-sorting
+            // here by name would silently undo manual reordering.
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
             var visible = accounts
                 .Where(account => account.IsArchived == ShowArchived)
-                .OrderBy(account => account.Name)
                 .ToList();
 
             // Mutates a collection bound to live UI - must run on the UI thread, which the awaits
@@ -87,23 +88,30 @@ public sealed class AccountsViewModel : ViewModelBase
             await RunOnMainThreadAsync(() =>
             {
                 Accounts.Clear();
-                foreach (var account in visible)
+                for (var index = 0; index < visible.Count; index++)
                 {
+                    var account = visible[index];
                     Accounts.Add(new AccountRowViewModel(
                         account,
                         account.Id == primaryAccountId,
+                        canMoveUp: index > 0,
+                        canMoveDown: index < visible.Count - 1,
                         ToggleFavoriteCommand,
                         onEdit: Form.OpenForEdit,
                         onArchive: ArchiveAsync,
                         onUnarchive: UnarchiveAsync,
                         onSetPrimary: SetPrimaryAsync,
-                        onOpenCardDetails: CardDetails.Open));
+                        onOpenCardDetails: CardDetails.Open,
+                        onMoveUp: id => MoveAsync(id, -1),
+                        onMoveDown: id => MoveAsync(id, 1)));
                 }
             });
         }
         finally
         {
-            IsLoading = false;
+            // Touches UI-bound state after an await that may have resumed off the UI thread (see
+            // ViewModelBase.RunOnMainThreadAsync).
+            await RunOnMainThreadAsync(() => IsLoading = false);
         }
     }
 
@@ -123,7 +131,11 @@ public sealed class AccountsViewModel : ViewModelBase
 
         var updated = account with { IsFavorite = !account.IsFavorite };
         await accountRepository.SaveAsync(updated);
-        row.IsFavorite = updated.IsFavorite;
+
+        // A scalar property setter, but still touches UI-bound state after an await that may have
+        // resumed off the UI thread - same rule as collection mutations (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => row.IsFavorite = updated.IsFavorite);
     }
 
     private async Task ArchiveAsync(Guid accountId)
@@ -154,6 +166,35 @@ public sealed class AccountsViewModel : ViewModelBase
     {
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { PrimaryAccountId = accountId });
+        await InitializeAsync();
+    }
+
+    private async Task MoveAsync(Guid accountId, int direction)
+    {
+        var order = Accounts.Select(row => row.Id).ToList();
+        var index = order.IndexOf(accountId);
+        var targetIndex = index + direction;
+        if (index < 0 || targetIndex < 0 || targetIndex >= order.Count)
+        {
+            return;
+        }
+
+        (order[index], order[targetIndex]) = (order[targetIndex], order[index]);
+
+        // Renumbers every currently-visible account to its new position rather than swapping two
+        // raw SortOrder values, since every account shares the same default (0) until the first
+        // reorder - a plain swap would leave the rest of the list in an undefined relative order.
+        for (var position = 0; position < order.Count; position++)
+        {
+            var account = await accountRepository.GetByIdAsync(order[position]);
+            if (account is null || account.SortOrder == position)
+            {
+                continue;
+            }
+
+            await accountRepository.SaveAsync(account with { SortOrder = position });
+        }
+
         await InitializeAsync();
     }
 }

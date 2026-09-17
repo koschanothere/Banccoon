@@ -37,9 +37,10 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 AccountNumber,
                 CardLastFourDigits,
                 PlanningValue,
-                IsFavorite
+                IsFavorite,
+                SortOrder
             FROM Accounts
-            ORDER BY Name;
+            ORDER BY SortOrder, Name;
             """;
 
         var accounts = new List<Account>();
@@ -76,7 +77,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 AccountNumber,
                 CardLastFourDigits,
                 PlanningValue,
-                IsFavorite
+                IsFavorite,
+                SortOrder
             FROM Accounts
             WHERE Id = @Id;
             """;
@@ -110,7 +112,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 AccountNumber,
                 CardLastFourDigits,
                 PlanningValue,
-                IsFavorite
+                IsFavorite,
+                SortOrder
             )
             VALUES (
                 @Id,
@@ -129,7 +132,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 @AccountNumber,
                 @CardLastFourDigits,
                 @PlanningValue,
-                @IsFavorite
+                @IsFavorite,
+                @SortOrder
             )
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
@@ -147,7 +151,8 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 AccountNumber = excluded.AccountNumber,
                 CardLastFourDigits = excluded.CardLastFourDigits,
                 PlanningValue = excluded.PlanningValue,
-                IsFavorite = excluded.IsFavorite;
+                IsFavorite = excluded.IsFavorite,
+                SortOrder = excluded.SortOrder;
             """;
 
         AddParameter(command, "@Id", account.Id.ToString());
@@ -167,6 +172,7 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         AddParameter(command, "@CardLastFourDigits", SqliteData.ToDbValue(account.CardLastFourDigits));
         AddParameter(command, "@PlanningValue", SqliteData.ToDbValue(account.PlanningValue));
         AddParameter(command, "@IsFavorite", account.IsFavorite ? 1 : 0);
+        AddParameter(command, "@SortOrder", account.SortOrder);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -225,6 +231,7 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
             SqliteData.ReadNullableString(reader, "AccountNumber"),
             SqliteData.ReadNullableString(reader, "CardLastFourDigits"),
             SqliteData.ReadNullableDecimal(reader, "PlanningValue"),
-            SqliteData.ReadBoolean(reader, "IsFavorite"));
+            SqliteData.ReadBoolean(reader, "IsFavorite"),
+            SqliteData.ReadInt32(reader, "SortOrder"));
     }
 }

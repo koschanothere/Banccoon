@@ -81,6 +81,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledOccurrenceOverrideRepository, SqliteScheduledOccurrenceOverrideRepository>();
         builder.Services.AddSingleton<IExportValidator, ExportValidator>();
         builder.Services.AddSingleton<IExportService, RepositoryExportService>();
+        builder.Services.AddSingleton<ILocalDataResetService, LocalDataResetService>();
         builder.Services.AddSingleton<IImportService, RepositoryImportService>();
         builder.Services.AddSingleton<IBackupService, JsonBackupService>();
 

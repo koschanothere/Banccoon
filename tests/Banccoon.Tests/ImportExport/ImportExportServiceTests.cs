@@ -142,6 +142,14 @@ public sealed class ImportExportServiceTests
             store.Settings,
             store.StatementImports,
             store.CategoryLearningRules);
+        var localDataResetService = new LocalDataResetService(
+            store.Accounts,
+            store.Categories,
+            store.Transactions,
+            store.ScheduledTransactions,
+            store.SavingsGoals,
+            store.StatementImports,
+            store.CategoryLearningRules);
         var importService = new RepositoryImportService(
             store.Accounts,
             store.Categories,
@@ -151,7 +159,8 @@ public sealed class ImportExportServiceTests
             store.Settings,
             validator,
             store.StatementImports,
-            store.CategoryLearningRules);
+            store.CategoryLearningRules,
+            localDataResetService);
         var backupService = new JsonBackupService(exportService, importService);
 
         return new Services(exportService, importService, backupService);

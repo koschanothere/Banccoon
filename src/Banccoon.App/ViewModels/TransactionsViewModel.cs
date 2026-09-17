@@ -226,7 +226,9 @@ public sealed class TransactionsViewModel : ViewModelBase
         }
         finally
         {
-            IsLoading = false;
+            // Touches UI-bound state after an await that may have resumed off the UI thread (see
+            // ViewModelBase.RunOnMainThreadAsync).
+            await RunOnMainThreadAsync(() => IsLoading = false);
         }
     }
 
@@ -433,7 +435,9 @@ public sealed class TransactionsViewModel : ViewModelBase
             await transactionRepository.DeleteAsync(id);
         }
 
-        SelectMode = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => SelectMode = false);
         await InitializeAsync();
     }
 
@@ -450,7 +454,9 @@ public sealed class TransactionsViewModel : ViewModelBase
             await transactionRepository.SaveAsync(transaction with { CategoryId = BulkCategory.Id });
         }
 
-        SelectMode = false;
+        // Touches UI-bound state after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() => SelectMode = false);
         await InitializeAsync();
     }
 }

@@ -139,25 +139,35 @@ public sealed class SettingsViewModel : ViewModelBase
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var settings = await settingsRepository.GetAsync(cancellationToken);
-        ThemeMode = settings.ThemeMode;
-        ApplyTheme(settings.ThemeMode);
 
-        WindowMode = settings.FreeToSpendWindowMode;
-        WindowDaysText = settings.FreeToSpendWindowDays.ToString(CultureInfo.InvariantCulture);
-        SafetyBufferText = settings.SafetyBuffer.ToString(CultureInfo.InvariantCulture);
-        MajorPaymentThresholdText = settings.MajorPaymentThreshold.ToString(CultureInfo.InvariantCulture);
-        FreeToSpendStatusText = string.Empty;
+        // Touches UI-bound state (and, via ApplyTheme, a native platform property) after an await
+        // that may have resumed off the UI thread (see ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
+        {
+            ThemeMode = settings.ThemeMode;
+            ApplyTheme(settings.ThemeMode);
 
-        ResolveUpcomingNearTermDaysText = settings.ResolveUpcomingNearTermDays.ToString(CultureInfo.InvariantCulture);
-        ResolveUpcomingStatusText = string.Empty;
+            WindowMode = settings.FreeToSpendWindowMode;
+            WindowDaysText = settings.FreeToSpendWindowDays.ToString(CultureInfo.InvariantCulture);
+            SafetyBufferText = settings.SafetyBuffer.ToString(CultureInfo.InvariantCulture);
+            MajorPaymentThresholdText = settings.MajorPaymentThreshold.ToString(CultureInfo.InvariantCulture);
+            FreeToSpendStatusText = string.Empty;
+
+            ResolveUpcomingNearTermDaysText = settings.ResolveUpcomingNearTermDays.ToString(CultureInfo.InvariantCulture);
+            ResolveUpcomingStatusText = string.Empty;
+        });
     }
 
     private async Task SetThemeModeAsync(AppThemeMode mode)
     {
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { ThemeMode = mode });
-        ThemeMode = mode;
-        ApplyTheme(mode);
+
+        await RunOnMainThreadAsync(() =>
+        {
+            ThemeMode = mode;
+            ApplyTheme(mode);
+        });
     }
 
     private async Task SaveFreeToSpendAsync()
@@ -189,7 +199,7 @@ public sealed class SettingsViewModel : ViewModelBase
             MajorPaymentThreshold = majorPaymentThreshold
         });
 
-        FreeToSpendStatusText = "Saved.";
+        await RunOnMainThreadAsync(() => FreeToSpendStatusText = "Saved.");
     }
 
     private async Task SaveResolveUpcomingAsync()
@@ -203,7 +213,7 @@ public sealed class SettingsViewModel : ViewModelBase
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { ResolveUpcomingNearTermDays = nearTermDays });
 
-        ResolveUpcomingStatusText = "Saved.";
+        await RunOnMainThreadAsync(() => ResolveUpcomingStatusText = "Saved.");
     }
 
     private static void ApplyTheme(AppThemeMode mode)
