@@ -4,6 +4,7 @@ using Banccoon.Core.Abstractions;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
+using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
 
@@ -45,7 +46,10 @@ public sealed class TransactionsViewModel : ViewModelBase
         IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
         ITransactionBalanceHistoryService transactionBalanceHistoryService,
-        ICategoryManagementService categoryManagementService)
+        ICategoryManagementService categoryManagementService,
+        IRecurrenceDescriptionService recurrenceDescriptionService,
+        IRecurrenceSyntaxService recurrenceSyntaxService,
+        IRecurrenceValidationService recurrenceValidationService)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -73,6 +77,15 @@ public sealed class TransactionsViewModel : ViewModelBase
             categoryRepository,
             categoryManagementService,
             InitializeAsync);
+        ScheduleForm = new ScheduleFormViewModel(
+            dateProvider,
+            accountRepository,
+            categoryRepository,
+            scheduledTransactionRepository,
+            recurrenceDescriptionService,
+            recurrenceSyntaxService,
+            recurrenceValidationService,
+            () => ResolveUpcoming.RefreshAsync(currency));
 
         Rows = [];
         AccountOptions = [];
@@ -83,6 +96,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
         ToggleAddMenuCommand = new RelayCommand(ToggleAddMenuPanel);
         ToggleCategoryManagementCommand = new RelayCommand(() => _ = ToggleCategoryManagementPanelAsync());
+        OpenScheduleFormCommand = new RelayCommand(() => _ = OpenScheduleFormAsync());
         OpenExpenseFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Expense));
         OpenIncomeFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Income));
         OpenTransferFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Transfer));
@@ -156,6 +170,8 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public CategoryManagementViewModel CategoryManagement { get; }
 
+    public ScheduleFormViewModel ScheduleForm { get; }
+
     public ObservableCollection<TransactionRowViewModel> Rows { get; }
 
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
@@ -171,6 +187,8 @@ public sealed class TransactionsViewModel : ViewModelBase
     public ICommand ToggleAddMenuCommand { get; }
 
     public ICommand ToggleCategoryManagementCommand { get; }
+
+    public ICommand OpenScheduleFormCommand { get; }
 
     public ICommand OpenExpenseFormCommand { get; }
 
@@ -378,12 +396,19 @@ public sealed class TransactionsViewModel : ViewModelBase
         _ = AddForm.OpenAsync(type);
     }
 
+    private async Task OpenScheduleFormAsync()
+    {
+        CloseAllPanels();
+        await ScheduleForm.OpenAsync();
+    }
+
     private void CloseAllPanels()
     {
         FilterOpen = false;
         AddMenuOpen = false;
         AddForm.Close();
         CategoryManagement.Close();
+        ScheduleForm.Close();
     }
 
     private async Task DeleteSelectedAsync()
