@@ -118,7 +118,11 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
                 onDelay: () => DelayAsync(scheduledEvent)))
             .ToList();
 
-        RebuildVisibleRows();
+        // RebuildVisibleRows mutates Rows/RuleRows (bound to live CollectionViews) - must run on
+        // the UI thread. Awaited-only here because RefreshAsync's own awaits above may have
+        // resumed off the UI thread (see ViewModelBase.RunOnMainThreadAsync); the IsExpanded
+        // setter below calls RebuildVisibleRows directly since it's already UI-thread-only.
+        await RunOnMainThreadAsync(RebuildVisibleRows);
     }
 
     private void RebuildVisibleRows()

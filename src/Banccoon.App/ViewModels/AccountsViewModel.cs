@@ -32,11 +32,17 @@ public sealed class AccountsViewModel : ViewModelBase
         try
         {
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
-            Accounts.Clear();
-            foreach (var account in accounts.Where(account => !account.IsArchived))
+
+            // Mutates a collection bound to live UI - must run on the UI thread, which the await
+            // above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
+            await RunOnMainThreadAsync(() =>
             {
-                Accounts.Add(new AccountRowViewModel(account, ToggleFavoriteCommand));
-            }
+                Accounts.Clear();
+                foreach (var account in accounts.Where(account => !account.IsArchived))
+                {
+                    Accounts.Add(new AccountRowViewModel(account, ToggleFavoriteCommand));
+                }
+            });
         }
         finally
         {

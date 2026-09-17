@@ -94,21 +94,26 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         var categories = await categoryRepository.GetAllAsync();
         var ordered = categories.OrderBy(category => category.Name).ToList();
 
-        Rows.Clear();
-        foreach (var category in ordered)
+        // Mutates collections bound to live UI - must run on the UI thread, which the await above
+        // may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
         {
-            Rows.Add(new CategoryManagementRowViewModel(category, RenameAsync, DeleteAsync));
-        }
+            Rows.Clear();
+            foreach (var category in ordered)
+            {
+                Rows.Add(new CategoryManagementRowViewModel(category, RenameAsync, DeleteAsync));
+            }
 
-        MergeOptions.Clear();
-        foreach (var category in ordered)
-        {
-            MergeOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
-        }
+            MergeOptions.Clear();
+            foreach (var category in ordered)
+            {
+                MergeOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+            }
 
-        MergeSource = MergeOptions.FirstOrDefault();
-        MergeTarget = MergeOptions.Skip(1).FirstOrDefault();
-        StatusText = string.Empty;
+            MergeSource = MergeOptions.FirstOrDefault();
+            MergeTarget = MergeOptions.Skip(1).FirstOrDefault();
+            StatusText = string.Empty;
+        });
     }
 
     private async Task RenameAsync(Guid id, string newName)

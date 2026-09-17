@@ -214,8 +214,13 @@ public sealed class TransactionsViewModel : ViewModelBase
             categories = await categoryRepository.GetAllAsync();
             allTransactions = await transactionRepository.GetAllAsync();
 
-            RebuildOptionLists();
-            ApplyFilters();
+            // Both mutate collections bound to live UI (Pickers/CollectionView) - must run on the
+            // UI thread, which the awaits above may have hopped off of (see ViewModelBase.RunOnMainThreadAsync).
+            await RunOnMainThreadAsync(() =>
+            {
+                RebuildOptionLists();
+                ApplyFilters();
+            });
             await ResolveUpcoming.RefreshAsync(currency, settings.ResolveUpcomingNearTermDays);
         }
         finally

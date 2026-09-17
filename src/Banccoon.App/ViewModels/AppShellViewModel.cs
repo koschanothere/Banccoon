@@ -24,11 +24,19 @@ public sealed class AppShellViewModel : ViewModelBase
         try
         {
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
-            FavoriteAccounts.Clear();
-            foreach (var account in accounts.Where(account => account.IsFavorite && !account.IsArchived))
+            var favorites = accounts
+                .Where(account => account.IsFavorite && !account.IsArchived)
+                .Select(account => new SidebarAccountViewModel(account))
+                .ToList();
+
+            await RunOnMainThreadAsync(() =>
             {
-                FavoriteAccounts.Add(new SidebarAccountViewModel(account));
-            }
+                FavoriteAccounts.Clear();
+                foreach (var favorite in favorites)
+                {
+                    FavoriteAccounts.Add(favorite);
+                }
+            });
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {

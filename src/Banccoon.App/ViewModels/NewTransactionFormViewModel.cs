@@ -148,29 +148,34 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         var accounts = await accountRepository.GetAllAsync(cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
 
-        AccountOptions.Clear();
-        foreach (var accountItem in accounts.Where(accountItem => !accountItem.IsArchived).OrderBy(accountItem => accountItem.Name))
+        // Everything below touches UI-bound state, and the awaits above may have resumed off the
+        // UI thread (see ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
         {
-            AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
-        }
+            AccountOptions.Clear();
+            foreach (var accountItem in accounts.Where(accountItem => !accountItem.IsArchived).OrderBy(accountItem => accountItem.Name))
+            {
+                AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
+            }
 
-        CategoryOptions.Clear();
-        foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
-        {
-            CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
-        }
+            CategoryOptions.Clear();
+            foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
+            {
+                CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
+            }
 
-        Name = string.Empty;
-        Account = AccountOptions.FirstOrDefault();
-        DestinationAccount = AccountOptions.Skip(1).FirstOrDefault() ?? Account;
-        Date = DateTime.Today;
-        AmountText = string.Empty;
-        Category = CategoryOptions.FirstOrDefault();
-        IsAddingCategory = false;
-        NewCategoryName = string.Empty;
-        StatusText = string.Empty;
-        OnPropertyChanged(nameof(IsTransferForm));
-        IsOpen = true;
+            Name = string.Empty;
+            Account = AccountOptions.FirstOrDefault();
+            DestinationAccount = AccountOptions.Skip(1).FirstOrDefault() ?? Account;
+            Date = DateTime.Today;
+            AmountText = string.Empty;
+            Category = CategoryOptions.FirstOrDefault();
+            IsAddingCategory = false;
+            NewCategoryName = string.Empty;
+            StatusText = string.Empty;
+            OnPropertyChanged(nameof(IsTransferForm));
+            IsOpen = true;
+        });
     }
 
     private async Task CreateCategoryAsync()

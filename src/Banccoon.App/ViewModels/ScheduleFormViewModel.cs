@@ -170,40 +170,45 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         var accounts = await accountRepository.GetAllAsync(cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
 
-        AccountOptions.Clear();
-        foreach (var accountItem in accounts.Where(accountItem => !accountItem.IsArchived).OrderBy(accountItem => accountItem.Name))
+        // Everything below touches UI-bound state, and the awaits above may have resumed off the
+        // UI thread (see ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
         {
-            AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
-        }
+            AccountOptions.Clear();
+            foreach (var accountItem in accounts.Where(accountItem => !accountItem.IsArchived).OrderBy(accountItem => accountItem.Name))
+            {
+                AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
+            }
 
-        CategoryOptions.Clear();
-        foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
-        {
-            CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
-        }
+            CategoryOptions.Clear();
+            foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
+            {
+                CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
+            }
 
-        editingScheduledTransactionId = existing?.Id;
-        Name = existing?.Name ?? string.Empty;
-        Type = existing?.Type ?? TransactionType.Expense;
-        Account = existing is null
-            ? AccountOptions.FirstOrDefault()
-            : AccountOptions.FirstOrDefault(option => option.Id == existing.AccountId) ?? AccountOptions.FirstOrDefault();
-        AmountText = existing is null ? string.Empty : existing.Amount.ToString(CultureInfo.InvariantCulture);
-        Category = existing?.CategoryId is { } categoryId
-            ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
-            : CategoryOptions.FirstOrDefault();
-        IsAddingCategory = false;
-        NewCategoryName = string.Empty;
-        StatusText = string.Empty;
-        Recurrence = CreateRecurrenceEditor();
-        if (existing is not null)
-        {
-            Recurrence.ApplyRule(existing.RecurrenceRule);
-        }
+            editingScheduledTransactionId = existing?.Id;
+            Name = existing?.Name ?? string.Empty;
+            Type = existing?.Type ?? TransactionType.Expense;
+            Account = existing is null
+                ? AccountOptions.FirstOrDefault()
+                : AccountOptions.FirstOrDefault(option => option.Id == existing.AccountId) ?? AccountOptions.FirstOrDefault();
+            AmountText = existing is null ? string.Empty : existing.Amount.ToString(CultureInfo.InvariantCulture);
+            Category = existing?.CategoryId is { } categoryId
+                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
+                : CategoryOptions.FirstOrDefault();
+            IsAddingCategory = false;
+            NewCategoryName = string.Empty;
+            StatusText = string.Empty;
+            Recurrence = CreateRecurrenceEditor();
+            if (existing is not null)
+            {
+                Recurrence.ApplyRule(existing.RecurrenceRule);
+            }
 
-        OnPropertyChanged(nameof(IsEditing));
-        OnPropertyChanged(nameof(FormTitle));
-        IsOpen = true;
+            OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(FormTitle));
+            IsOpen = true;
+        });
     }
 
     private RecurrenceEditorViewModel CreateRecurrenceEditor()

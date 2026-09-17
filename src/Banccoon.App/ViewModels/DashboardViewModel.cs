@@ -177,31 +177,36 @@ public sealed class DashboardViewModel : ViewModelBase
 
         var eventsByDate = graphForecast.Events.ToLookup(forecastEvent => forecastEvent.Date);
 
-        ChartPoints.Clear();
-        foreach (var point in historicalPoints.Where(point => point.Date < today))
+        // Mutates a collection bound to live UI (the balance chart) - must run on the UI thread,
+        // which the awaits above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
         {
-            ChartPoints.Add(new ForecastChartPointViewModel(
-                point.Date,
-                point.Balance,
-                Array.Empty<string>(),
-                settings.DefaultCurrency,
-                settings.DateDisplayFormat,
-                isHistorical: true));
-        }
+            ChartPoints.Clear();
+            foreach (var point in historicalPoints.Where(point => point.Date < today))
+            {
+                ChartPoints.Add(new ForecastChartPointViewModel(
+                    point.Date,
+                    point.Balance,
+                    Array.Empty<string>(),
+                    settings.DefaultCurrency,
+                    settings.DateDisplayFormat,
+                    isHistorical: true));
+            }
 
-        foreach (var point in graphForecast.ProjectedBalances)
-        {
-            var eventSummaries = eventsByDate[point.Date]
-                .Select(forecastEvent => $"{forecastEvent.Name}: {MoneyFormat.Format(forecastEvent.SignedAmount, settings.DefaultCurrency)}")
-                .ToArray();
+            foreach (var point in graphForecast.ProjectedBalances)
+            {
+                var eventSummaries = eventsByDate[point.Date]
+                    .Select(forecastEvent => $"{forecastEvent.Name}: {MoneyFormat.Format(forecastEvent.SignedAmount, settings.DefaultCurrency)}")
+                    .ToArray();
 
-            ChartPoints.Add(new ForecastChartPointViewModel(
-                point.Date,
-                point.Balance,
-                eventSummaries,
-                settings.DefaultCurrency,
-                settings.DateDisplayFormat,
-                isCurrentDate: point.Date == today));
-        }
+                ChartPoints.Add(new ForecastChartPointViewModel(
+                    point.Date,
+                    point.Balance,
+                    eventSummaries,
+                    settings.DefaultCurrency,
+                    settings.DateDisplayFormat,
+                    isCurrentDate: point.Date == today));
+            }
+        });
     }
 }
