@@ -14,7 +14,8 @@ public sealed class AvailableToSpendService : IAvailableToSpendService
 
     public AvailableToSpendBreakdown Calculate(
         ForecastResult forecast,
-        IEnumerable<SavingsGoal> savingsGoals)
+        IEnumerable<SavingsGoal> savingsGoals,
+        decimal safetyBuffer = 0m)
     {
         ArgumentNullException.ThrowIfNull(forecast);
         ArgumentNullException.ThrowIfNull(savingsGoals);
@@ -26,6 +27,7 @@ public sealed class AvailableToSpendService : IAvailableToSpendService
         return new AvailableToSpendBreakdown(
             forecast.LowestForecastedBalance,
             reservedForGoals,
-            Math.Max(0m, forecast.LowestForecastedBalance - reservedForGoals));
+            safetyBuffer,
+            Math.Max(0m, forecast.LowestForecastedBalance - reservedForGoals - safetyBuffer));
     }
 }

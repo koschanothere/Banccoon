@@ -87,6 +87,11 @@ internal static class SqliteData
         return reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
     }
 
+    public static int ReadInt32(DbDataReader reader, string name)
+    {
+        return reader.GetInt32(reader.GetOrdinal(name));
+    }
+
     public static bool ReadBoolean(DbDataReader reader, string name)
     {
         return reader.GetInt32(reader.GetOrdinal(name)) != 0;

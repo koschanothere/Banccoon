@@ -36,7 +36,11 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 ThemeMode,
                 AccentColor,
                 NavigationStyle,
-                ShowPowerUserFeatures
+                ShowPowerUserFeatures,
+                FreeToSpendWindowMode,
+                FreeToSpendWindowDays,
+                SafetyBuffer,
+                MajorPaymentThreshold
             FROM Settings
             WHERE Id = 1;
             """;
@@ -55,7 +59,11 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             Enum.Parse<AppThemeMode>(SqliteData.ReadString(reader, "ThemeMode")),
             Enum.Parse<AccentColor>(SqliteData.ReadString(reader, "AccentColor")),
             Enum.Parse<NavigationStyle>(SqliteData.ReadString(reader, "NavigationStyle")),
-            SqliteData.ReadBoolean(reader, "ShowPowerUserFeatures"));
+            SqliteData.ReadBoolean(reader, "ShowPowerUserFeatures"),
+            Enum.Parse<FreeToSpendWindowMode>(SqliteData.ReadString(reader, "FreeToSpendWindowMode")),
+            SqliteData.ReadInt32(reader, "FreeToSpendWindowDays"),
+            SqliteData.ReadDecimal(reader, "SafetyBuffer"),
+            SqliteData.ReadDecimal(reader, "MajorPaymentThreshold"));
     }
 
     public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
@@ -74,7 +82,11 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 ThemeMode,
                 AccentColor,
                 NavigationStyle,
-                ShowPowerUserFeatures)
+                ShowPowerUserFeatures,
+                FreeToSpendWindowMode,
+                FreeToSpendWindowDays,
+                SafetyBuffer,
+                MajorPaymentThreshold)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -84,7 +96,11 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @ThemeMode,
                 @AccentColor,
                 @NavigationStyle,
-                @ShowPowerUserFeatures)
+                @ShowPowerUserFeatures,
+                @FreeToSpendWindowMode,
+                @FreeToSpendWindowDays,
+                @SafetyBuffer,
+                @MajorPaymentThreshold)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -93,7 +109,11 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 ThemeMode = excluded.ThemeMode,
                 AccentColor = excluded.AccentColor,
                 NavigationStyle = excluded.NavigationStyle,
-                ShowPowerUserFeatures = excluded.ShowPowerUserFeatures;
+                ShowPowerUserFeatures = excluded.ShowPowerUserFeatures,
+                FreeToSpendWindowMode = excluded.FreeToSpendWindowMode,
+                FreeToSpendWindowDays = excluded.FreeToSpendWindowDays,
+                SafetyBuffer = excluded.SafetyBuffer,
+                MajorPaymentThreshold = excluded.MajorPaymentThreshold;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -103,6 +123,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@AccentColor", settings.AccentColor.ToString());
         AddParameter(command, "@NavigationStyle", settings.NavigationStyle.ToString());
         AddParameter(command, "@ShowPowerUserFeatures", settings.ShowPowerUserFeatures ? 1 : 0);
+        AddParameter(command, "@FreeToSpendWindowMode", settings.FreeToSpendWindowMode.ToString());
+        AddParameter(command, "@FreeToSpendWindowDays", settings.FreeToSpendWindowDays);
+        AddParameter(command, "@SafetyBuffer", SqliteData.DecimalToText(settings.SafetyBuffer));
+        AddParameter(command, "@MajorPaymentThreshold", SqliteData.DecimalToText(settings.MajorPaymentThreshold));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

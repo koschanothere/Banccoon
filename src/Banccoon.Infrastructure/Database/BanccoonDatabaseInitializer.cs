@@ -156,7 +156,11 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 ThemeMode TEXT NOT NULL DEFAULT 'Light',
                 AccentColor TEXT NOT NULL DEFAULT 'Emerald',
                 NavigationStyle TEXT NOT NULL DEFAULT 'Rail',
-                ShowPowerUserFeatures INTEGER NOT NULL DEFAULT 0
+                ShowPowerUserFeatures INTEGER NOT NULL DEFAULT 0,
+                FreeToSpendWindowMode TEXT NOT NULL DEFAULT 'RollingDays',
+                FreeToSpendWindowDays INTEGER NOT NULL DEFAULT 7,
+                SafetyBuffer TEXT NOT NULL DEFAULT '0',
+                MajorPaymentThreshold TEXT NOT NULL DEFAULT '0'
             );
             """;
 
@@ -256,6 +260,30 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "Settings",
             "ShowPowerUserFeatures",
             "INTEGER NOT NULL DEFAULT 0",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "FreeToSpendWindowMode",
+            "TEXT NOT NULL DEFAULT 'RollingDays'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "FreeToSpendWindowDays",
+            "INTEGER NOT NULL DEFAULT 7",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "SafetyBuffer",
+            "TEXT NOT NULL DEFAULT '0'",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "MajorPaymentThreshold",
+            "TEXT NOT NULL DEFAULT '0'",
             cancellationToken);
     }
 

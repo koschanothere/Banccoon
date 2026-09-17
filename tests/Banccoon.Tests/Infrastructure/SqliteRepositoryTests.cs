@@ -213,6 +213,31 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task SettingsRepository_SaveAndGet_RoundTripsFreeToSpendSettings()
+    {
+        await using var store = new SqliteTestStore();
+        var settings = new AppSettings(
+            "EUR",
+            ForecastPeriod.ThirtyDays,
+            ReminderFrequency.Weekly)
+        {
+            FreeToSpendWindowMode = FreeToSpendWindowMode.UntilNextMajorPayment,
+            FreeToSpendWindowDays = 14,
+            SafetyBuffer = 4880m,
+            MajorPaymentThreshold = 10000m
+        };
+
+        await store.Settings.SaveAsync(settings);
+
+        var loaded = await store.Settings.GetAsync();
+
+        Assert.Equal(FreeToSpendWindowMode.UntilNextMajorPayment, loaded.FreeToSpendWindowMode);
+        Assert.Equal(14, loaded.FreeToSpendWindowDays);
+        Assert.Equal(4880m, loaded.SafetyBuffer);
+        Assert.Equal(10000m, loaded.MajorPaymentThreshold);
+    }
+
+    [Fact]
     public async Task StatementImportRepository_SaveAndGet_RoundTripsBatchAndRows()
     {
         await using var store = new SqliteTestStore();

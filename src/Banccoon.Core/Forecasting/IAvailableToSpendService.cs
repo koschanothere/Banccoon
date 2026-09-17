@@ -6,5 +6,6 @@ public interface IAvailableToSpendService
 {
     AvailableToSpendBreakdown Calculate(
         ForecastResult forecast,
-        IEnumerable<SavingsGoal> savingsGoals);
+        IEnumerable<SavingsGoal> savingsGoals,
+        decimal safetyBuffer = 0m);
 }

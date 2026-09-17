@@ -13,7 +13,7 @@
 
             <VerticalStackLayout Spacing="2">
                 <Label Text="Dashboard" Style="{StaticResource ScreenTitleLabel}" />
-                <Label Text="{Binding WindowSummaryText}" Style="{StaticResource SecondaryLabel}" />
+                <Label Text="{Binding FreeToSpendWindowText}" Style="{StaticResource SecondaryLabel}" />
             </VerticalStackLayout>
 
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
@@ -41,6 +41,10 @@
                             <Label Grid.Column="1" Text="{Binding ReservedForGoalsText}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Safety buffer" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="1" Text="{Binding SafetyBufferText}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Free to spend" FontAttributes="Bold" />
                             <Label Grid.Column="1" Text="{Binding FreeToSpendText}" FontAttributes="Bold" />
                         </Grid>
@@ -51,6 +55,7 @@
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Balance history &amp; forecast" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
                     <controls:ForecastChartView Points="{Binding ChartPoints}" HeightRequest="220" />
                 </VerticalStackLayout>
             </Border>
