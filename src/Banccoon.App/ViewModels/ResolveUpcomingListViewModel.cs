@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
@@ -20,6 +21,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private readonly IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService;
     private readonly ITransactionApplicationService transactionApplicationService;
     private readonly Func<Task> onChanged;
+
+    private List<ResolveUpcomingRowViewModel> allRows = [];
+    private bool isExpanded;
 
     public ResolveUpcomingListViewModel(
         IDateProvider dateProvider,
@@ -43,9 +47,24 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         this.onChanged = onChanged;
 
         Rows = [];
+        ToggleExpandedCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
     }
 
     public ObservableCollection<ResolveUpcomingRowViewModel> Rows { get; }
+
+    public bool IsExpanded
+    {
+        get => isExpanded;
+        private set
+        {
+            if (SetProperty(ref isExpanded, value))
+            {
+                RebuildVisibleRows();
+            }
+        }
+    }
+
+    public ICommand ToggleExpandedCommand { get; }
 
     public async Task RefreshAsync(string currency, CancellationToken cancellationToken = default)
     {
@@ -63,19 +82,37 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
             .Select(transaction => (transaction.PaidScheduledTransactionId!.Value, transaction.PaidScheduledOccurrenceDate!.Value))
             .ToHashSet();
 
-        Rows.Clear();
-        foreach (var scheduledEvent in resolvedEvents
-                     .Where(scheduledEvent => !paidOccurrences.Contains((scheduledEvent.SourceId, scheduledEvent.Date)))
-                     .OrderBy(scheduledEvent => scheduledEvent.Date))
-        {
-            var capturedEvent = scheduledEvent;
-            Rows.Add(new ResolveUpcomingRowViewModel(
-                capturedEvent,
+        allRows = resolvedEvents
+            .Where(scheduledEvent => !paidOccurrences.Contains((scheduledEvent.SourceId, scheduledEvent.Date)))
+            .OrderBy(scheduledEvent => scheduledEvent.Date)
+            .Select(scheduledEvent => new ResolveUpcomingRowViewModel(
+                scheduledEvent,
                 today,
                 currency,
-                onMarkPaid: () => MarkPaidAsync(capturedEvent),
-                onSkip: () => SkipAsync(capturedEvent),
-                onDelay: () => DelayAsync(capturedEvent)));
+                onMarkPaid: () => MarkPaidAsync(scheduledEvent),
+                onSkip: () => SkipAsync(scheduledEvent),
+                onDelay: () => DelayAsync(scheduledEvent)))
+            .ToList();
+
+        RebuildVisibleRows();
+    }
+
+    private void RebuildVisibleRows()
+    {
+        // Collapsed: one line per distinct scheduled transaction (its earliest/most urgent
+        // occurrence), so a schedule with several overdue occurrences doesn't flood the glance
+        // view - expanding reveals every individual occurrence.
+        IEnumerable<ResolveUpcomingRowViewModel> visible = IsExpanded
+            ? allRows
+            : allRows
+                .GroupBy(row => row.ScheduledTransactionId)
+                .Select(group => group.OrderBy(row => row.OccurrenceDate).First())
+                .OrderBy(row => row.OccurrenceDate);
+
+        Rows.Clear();
+        foreach (var row in visible)
+        {
+            Rows.Add(row);
         }
     }
 

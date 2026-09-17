@@ -44,7 +44,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         AccountOptions = [];
         CategoryOptions = [];
 
-        CloseCommand = new RelayCommand(() => IsOpen = false);
+        CloseCommand = new RelayCommand(Close);
         ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
         CreateCategoryCommand = new RelayCommand(() => _ = CreateCategoryAsync());
         SaveCommand = new RelayCommand(() => _ = SaveAsync());
@@ -129,6 +129,11 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
     public ICommand CreateCategoryCommand { get; }
 
     public ICommand SaveCommand { get; }
+
+    public void Close()
+    {
+        IsOpen = false;
+    }
 
     public async Task OpenAsync(TransactionType openType, CancellationToken cancellationToken = default)
     {

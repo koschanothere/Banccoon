@@ -15,7 +15,7 @@
                 <Label Grid.Column="0" Text="Transactions" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
                     <Button Text="Filter" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Categories" Command="{Binding CategoryManagement.ToggleCommand}" Style="{StaticResource QuietButton}" />
+                    <Button Text="Categories" Command="{Binding ToggleCategoryManagementCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="Check-in" IsEnabled="False" Style="{StaticResource QuietButton}" />
                     <Button Text="Select" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="Import" IsEnabled="False" Style="{StaticResource QuietButton}" />
@@ -64,7 +64,10 @@
 
             <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CategoryManagement.IsOpen}">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="Manage categories" Style="{StaticResource SectionTitleLabel}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Manage categories" Style="{StaticResource SectionTitleLabel}" />
+                        <Button Grid.Column="1" Text="Close" Command="{Binding CategoryManagement.CloseCommand}" Style="{StaticResource QuietButton}" />
+                    </Grid>
                     <CollectionView ItemsSource="{Binding CategoryManagement.Rows}">
                         <CollectionView.EmptyView>
                             <Label Text="No categories yet." Style="{StaticResource TertiaryLabel}" />
@@ -99,7 +102,10 @@
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Resolve upcoming" Style="{StaticResource SectionTitleLabel}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Resolve upcoming" Style="{StaticResource SectionTitleLabel}" />
+                        <Button Grid.Column="1" Text="{Binding ResolveUpcoming.IsExpanded, Converter={StaticResource ExpandedLabelConverter}}" Command="{Binding ResolveUpcoming.ToggleExpandedCommand}" Style="{StaticResource QuietButton}" />
+                    </Grid>
                     <CollectionView ItemsSource="{Binding ResolveUpcoming.Rows}">
                         <CollectionView.EmptyView>
                             <Label Text="Nothing due right now." Style="{StaticResource TertiaryLabel}" />
@@ -138,10 +144,15 @@
                         <DataTemplate x:DataType="viewModels:TransactionRowViewModel">
                             <Grid ColumnDefinitions="Auto,Auto,*,Auto" Padding="0,10" ColumnSpacing="10">
                                 <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" />
-                                <Label Grid.Column="1" Text="&#8635;" IsVisible="{Binding IsScheduled}" VerticalOptions="Center"
-                                       TextColor="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+                                <Border Grid.Column="1" WidthRequest="28" HeightRequest="28" StrokeShape="RoundRectangle 14" Stroke="Transparent" Background="{Binding BadgeColor}">
+                                    <Label Text="{Binding BadgeLetter}" TextColor="White" FontAttributes="Bold" FontSize="12" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
                                 <VerticalStackLayout Grid.Column="2" Spacing="1">
-                                    <Label Text="{Binding Name}" />
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="{Binding Name}" />
+                                        <Label Text="&#8635;" IsVisible="{Binding IsScheduled}" FontSize="12" VerticalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+                                    </HorizontalStackLayout>
                                     <Label Text="{Binding CategoryOrDestinationText}" Style="{StaticResource TertiaryLabel}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="3" HorizontalOptions="End">

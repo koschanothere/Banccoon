@@ -29,6 +29,7 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         MergeOptions = [];
 
         ToggleCommand = new RelayCommand(() => _ = ToggleAsync());
+        CloseCommand = new RelayCommand(Close);
         MergeCommand = new RelayCommand(() => _ = MergeAsync());
     }
 
@@ -62,18 +63,30 @@ public sealed class CategoryManagementViewModel : ViewModelBase
 
     public ICommand ToggleCommand { get; }
 
+    public ICommand CloseCommand { get; }
+
     public ICommand MergeCommand { get; }
+
+    public void Close()
+    {
+        IsOpen = false;
+    }
+
+    public async Task OpenAsync()
+    {
+        await RefreshAsync();
+        IsOpen = true;
+    }
 
     private async Task ToggleAsync()
     {
         if (IsOpen)
         {
-            IsOpen = false;
+            Close();
             return;
         }
 
-        await RefreshAsync();
-        IsOpen = true;
+        await OpenAsync();
     }
 
     private async Task RefreshAsync()

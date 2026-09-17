@@ -16,6 +16,13 @@ Concrete look decisions: typography, shape, density, and color. For the underlyi
 
 - **Desktop-first, moderately denser than the mobile reference it was inspired by**, while staying airy rather than cramped. Take advantage of desktop screen space (e.g. more transaction rows visible without scrolling) without collapsing the breathing room that makes the reference feel calm.
 
+## Iconography (buttons) — deferred, tracked as a global pass
+
+- **Current state (temporary, explicitly acceptable for now):** every button in the app — header actions (Filter, Categories, Check-in, Select, Import, Add), form actions (Save, Close, Mark Paid, Skip, Delay, Rename, Delete, Merge) — uses a plain text label. This was a deliberate "get it working first" choice, not a design decision.
+- **Eventual requirement:** icon-based buttons are one of the actual design principles (the reference app used icon glyphs for header-level actions, not text), so text-label buttons need to be replaced app-wide once the underlying screens/flows are further along.
+- **Do not do this incrementally per-screen.** Explicitly called out by the user as a *global* fix to do in one pass near the end of the build, once more of the app exists — not something to chase screen-by-screen as new buttons get added, since that would mean re-touching the same buttons twice.
+- When it happens: needs an actual icon set decision first (a bundled icon font/SVG set, since MAUI has no built-in icon glyphs) — not yet chosen.
+
 ## Dark Mode
 
 - Designed **alongside** light mode from the start, not retrofitted later. `AppThemeMode` already models `System/Light/Dark` in `Banccoon.Core.Appearance` — both palettes below need defining together.

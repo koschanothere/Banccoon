@@ -1,5 +1,6 @@
 using Banccoon.App.Formatting;
 using Banccoon.Core.Models;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -31,6 +32,13 @@ public sealed class TransactionRowViewModel : ViewModelBase
         AmountText = MoneyFormat.Format(signedAmount, currency);
         IsPositive = signedAmount > 0;
         BalanceAfterText = MoneyFormat.Format(balanceAfter, currency);
+
+        BadgeColor = CategoryId is { } categoryId
+            ? CategoryColorPalette.GetColorForCategory(categoryId)
+            : CategoryColorPalette.GetTransferColor();
+        BadgeLetter = categoryOrDestinationText.Length > 0
+            ? categoryOrDestinationText[..1].ToUpperInvariant()
+            : "?";
     }
 
     public Guid Id { get; }
@@ -54,6 +62,10 @@ public sealed class TransactionRowViewModel : ViewModelBase
     public bool IsPositive { get; }
 
     public string BalanceAfterText { get; }
+
+    public Color BadgeColor { get; }
+
+    public string BadgeLetter { get; }
 
     public bool IsSelected
     {

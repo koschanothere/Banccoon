@@ -79,9 +79,10 @@ public sealed class TransactionsViewModel : ViewModelBase
         CategoryOptions = [];
         BulkCategoryOptions = [];
 
-        ToggleFilterCommand = new RelayCommand(() => FilterOpen = !FilterOpen);
+        ToggleFilterCommand = new RelayCommand(ToggleFilterPanel);
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
-        ToggleAddMenuCommand = new RelayCommand(() => AddMenuOpen = !AddMenuOpen);
+        ToggleAddMenuCommand = new RelayCommand(ToggleAddMenuPanel);
+        ToggleCategoryManagementCommand = new RelayCommand(() => _ = ToggleCategoryManagementPanelAsync());
         OpenExpenseFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Expense));
         OpenIncomeFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Income));
         OpenTransferFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Transfer));
@@ -169,6 +170,8 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public ICommand ToggleAddMenuCommand { get; }
 
+    public ICommand ToggleCategoryManagementCommand { get; }
+
     public ICommand OpenExpenseFormCommand { get; }
 
     public ICommand OpenIncomeFormCommand { get; }
@@ -203,6 +206,10 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private void RebuildOptionLists()
     {
+        var previousAccountFilterId = AccountFilter?.Id;
+        var previousCategoryFilterId = CategoryFilter?.Id;
+        var previousBulkCategoryId = BulkCategory?.Id;
+
         AccountOptions.Clear();
         AccountOptions.Add(new NamedOptionViewModel(AllOptionId, "All accounts"));
         foreach (var account in accounts.Where(account => !account.IsArchived).OrderBy(account => account.Name))
@@ -219,7 +226,24 @@ public sealed class TransactionsViewModel : ViewModelBase
             BulkCategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
         }
 
-        BulkCategory = BulkCategoryOptions.FirstOrDefault();
+        // Re-resolve filter/bulk selections against the freshly rebuilt option lists by Id,
+        // since RebuildOptionLists runs on every InitializeAsync (including every OnAppearing) -
+        // without this, the Picker's SelectedItem no longer matches any object in the new
+        // ItemsSource by reference, so it silently resets and the filter appears to "stop working".
+        accountFilter = previousAccountFilterId is { } accountId
+            ? AccountOptions.FirstOrDefault(option => option.Id == accountId)
+            : null;
+        OnPropertyChanged(nameof(AccountFilter));
+
+        categoryFilter = previousCategoryFilterId is { } categoryId
+            ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
+            : null;
+        OnPropertyChanged(nameof(CategoryFilter));
+
+        bulkCategory = previousBulkCategoryId is { } bulkCategoryId
+            ? BulkCategoryOptions.FirstOrDefault(option => option.Id == bulkCategoryId)
+            : BulkCategoryOptions.FirstOrDefault();
+        OnPropertyChanged(nameof(BulkCategory));
     }
 
     private void ApplyFilters()
@@ -312,10 +336,54 @@ public sealed class TransactionsViewModel : ViewModelBase
         SelectionSummaryText = count == 1 ? "1 selected" : $"{count} selected";
     }
 
+    private void ToggleFilterPanel()
+    {
+        if (FilterOpen)
+        {
+            FilterOpen = false;
+            return;
+        }
+
+        CloseAllPanels();
+        FilterOpen = true;
+    }
+
+    private void ToggleAddMenuPanel()
+    {
+        if (AddMenuOpen)
+        {
+            AddMenuOpen = false;
+            return;
+        }
+
+        CloseAllPanels();
+        AddMenuOpen = true;
+    }
+
+    private async Task ToggleCategoryManagementPanelAsync()
+    {
+        if (CategoryManagement.IsOpen)
+        {
+            CategoryManagement.Close();
+            return;
+        }
+
+        CloseAllPanels();
+        await CategoryManagement.OpenAsync();
+    }
+
     private void OpenAddForm(TransactionType type)
     {
-        AddMenuOpen = false;
+        CloseAllPanels();
         _ = AddForm.OpenAsync(type);
+    }
+
+    private void CloseAllPanels()
+    {
+        FilterOpen = false;
+        AddMenuOpen = false;
+        AddForm.Close();
+        CategoryManagement.Close();
     }
 
     private async Task DeleteSelectedAsync()
