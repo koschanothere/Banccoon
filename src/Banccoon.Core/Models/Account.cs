@@ -12,4 +12,5 @@ public sealed record Account(
     bool IncludeInDashboardTotals = true,
     string? AccountNumber = null,
     string? CardLastFourDigits = null,
-    decimal? PlanningValue = null);
+    decimal? PlanningValue = null,
+    bool IsFavorite = false);

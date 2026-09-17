@@ -7,6 +7,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
+            <converters:FavoriteStarConverter x:Key="FavoriteStarConverter" />
 
             <!-- Light tokens -->
             <Color x:Key="LightPageBackground">#F1F0ED</Color>

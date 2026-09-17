@@ -18,12 +18,23 @@
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:AccountRowViewModel">
-                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <VerticalStackLayout Grid.Column="0" Spacing="1">
+                        <Grid ColumnDefinitions="Auto,*,Auto" Padding="0,10">
+                            <Button
+                                Grid.Column="0"
+                                Text="{Binding IsFavorite, Converter={StaticResource FavoriteStarConverter}}"
+                                Command="{Binding ToggleFavoriteCommand}"
+                                CommandParameter="{Binding Id}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}"
+                                FontSize="17"
+                                Padding="0"
+                                WidthRequest="34"
+                                HeightRequest="34" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" Margin="8,0,0,0">
                                 <Label Text="{Binding Name}" />
                                 <Label Text="{Binding TypeText}" Style="{StaticResource TertiaryLabel}" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="1" Text="{Binding BalanceText}" FontAttributes="Bold" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="{Binding BalanceText}" FontAttributes="Bold" VerticalOptions="Center" />
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

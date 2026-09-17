@@ -80,8 +80,11 @@ public static class MauiProgram
         builder.Services.AddTransient<TransactionsViewModel>();
         builder.Services.AddTransient<AccountsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<AppShellViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
+
+        builder.Services.AddTransient<AppShell>();
 
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<TransactionsPage>();

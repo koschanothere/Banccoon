@@ -40,6 +40,24 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task AccountRepository_SaveAndGetAll_RoundTripsIsFavorite()
+    {
+        await using var store = new SqliteTestStore();
+        var favorite = CreateAccount("Favorite checking") with { IsFavorite = true };
+        var other = CreateAccount("Other checking");
+
+        await store.Accounts.SaveAsync(favorite);
+        await store.Accounts.SaveAsync(other);
+
+        var all = await store.Accounts.GetAllAsync();
+        var loadedFavorite = all.Single(account => account.Id == favorite.Id);
+        var loadedOther = all.Single(account => account.Id == other.Id);
+
+        Assert.True(loadedFavorite.IsFavorite);
+        Assert.False(loadedOther.IsFavorite);
+    }
+
+    [Fact]
     public async Task CategoryRepository_SaveUpdateAndDelete_PersistsChanges()
     {
         await using var store = new SqliteTestStore();
