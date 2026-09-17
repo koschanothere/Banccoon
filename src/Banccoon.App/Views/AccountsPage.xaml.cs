@@ -2,11 +2,11 @@ using Banccoon.App.ViewModels;
 
 namespace Banccoon.App.Views;
 
-public partial class MainPage : ContentPage
+public partial class AccountsPage : ContentPage
 {
-    private readonly ShellViewModel viewModel;
+    private readonly AccountsViewModel viewModel;
 
-    public MainPage(ShellViewModel viewModel)
+    public AccountsPage(AccountsViewModel viewModel)
     {
         InitializeComponent();
         this.viewModel = viewModel;
@@ -16,6 +16,6 @@ public partial class MainPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await viewModel.LoadAsync();
+        await viewModel.InitializeAsync();
     }
 }

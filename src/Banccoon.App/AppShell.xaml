@@ -5,8 +5,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:Banccoon.App.Views"
     Shell.FlyoutBehavior="Disabled">
-    <ShellContent
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="dashboard"
-        Title="Dashboard" />
+    <TabBar>
+        <ShellContent
+            ContentTemplate="{DataTemplate views:DashboardPage}"
+            Route="dashboard"
+            Title="Dashboard" />
+        <ShellContent
+            ContentTemplate="{DataTemplate views:TransactionsPage}"
+            Route="transactions"
+            Title="Transactions" />
+        <ShellContent
+            ContentTemplate="{DataTemplate views:AccountsPage}"
+            Route="accounts"
+            Title="Accounts" />
+        <ShellContent
+            ContentTemplate="{DataTemplate views:SettingsPage}"
+            Route="settings"
+            Title="Settings" />
+    </TabBar>
 </Shell>

@@ -8,82 +8,110 @@
         <ResourceDictionary>
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
 
-            <Color x:Key="PageBackgroundColor">#F4F6F3</Color>
-            <Color x:Key="ShellBackgroundColor">#17201B</Color>
-            <Color x:Key="ShellPanelColor">#203128</Color>
-            <Color x:Key="SurfaceColor">#FFFFFF</Color>
-            <Color x:Key="SurfaceMutedColor">#EEF3EF</Color>
-            <Color x:Key="PrimaryTextColor">#14201A</Color>
-            <Color x:Key="SecondaryTextColor">#5A675E</Color>
-            <Color x:Key="MutedTextColor">#7A847D</Color>
-            <Color x:Key="ShellTextColor">#F5F8F2</Color>
-            <Color x:Key="AccentColor">#2E8B57</Color>
-            <Color x:Key="AccentSoftColor">#DDEEE4</Color>
-            <Color x:Key="WarningColor">#C9862C</Color>
-            <Color x:Key="RoseColor">#B55B67</Color>
-            <Color x:Key="DividerColor">#DDE5DD</Color>
+            <!-- Light tokens -->
+            <Color x:Key="LightPageBackground">#F4F5F7</Color>
+            <Color x:Key="LightCardBackground">#FFFFFF</Color>
+            <Color x:Key="LightCardSoft">#F4F5F7</Color>
+            <Color x:Key="LightTextPrimary">#181A1D</Color>
+            <Color x:Key="LightTextSecondary">#666D76</Color>
+            <Color x:Key="LightTextTertiary">#9AA0A8</Color>
+            <Color x:Key="LightDivider">#E7E9EC</Color>
+            <Color x:Key="LightAccent">#059669</Color>
+            <Color x:Key="LightAccentSoft">#1A059669</Color>
+            <Color x:Key="LightStatusGreen">#16A34A</Color>
+            <Color x:Key="LightStatusOrange">#D97706</Color>
+            <Color x:Key="LightStatusOrangeSoft">#1FD97706</Color>
+            <Color x:Key="LightStatusRed">#DC2626</Color>
 
-            <Style TargetType="Label">
-                <Setter Property="FontFamily" Value="Segoe UI" />
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
+            <!-- Dark tokens -->
+            <Color x:Key="DarkPageBackground">#131417</Color>
+            <Color x:Key="DarkCardBackground">#1D2024</Color>
+            <Color x:Key="DarkCardSoft">#25282D</Color>
+            <Color x:Key="DarkTextPrimary">#F2F3F5</Color>
+            <Color x:Key="DarkTextSecondary">#9BA1AA</Color>
+            <Color x:Key="DarkTextTertiary">#6E747D</Color>
+            <Color x:Key="DarkDivider">#2C2F34</Color>
+            <Color x:Key="DarkAccent">#10B981</Color>
+            <Color x:Key="DarkAccentSoft">#2910B981</Color>
+            <Color x:Key="DarkStatusGreen">#34D399</Color>
+            <Color x:Key="DarkStatusOrange">#F59E0B</Color>
+            <Color x:Key="DarkStatusOrangeSoft">#29F59E0B</Color>
+            <Color x:Key="DarkStatusRed">#F87171</Color>
+
+            <Style TargetType="ContentPage">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}" />
             </Style>
 
-            <Style x:Key="SectionTitleLabel" TargetType="Label">
+            <Style TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+            </Style>
+
+            <Style x:Key="ScreenTitleLabel" TargetType="Label">
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="FontSize" Value="26" />
             </Style>
 
-            <Style x:Key="MutedLabel" TargetType="Label">
+            <Style x:Key="SectionTitleLabel" TargetType="Label">
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="FontSize" Value="15" />
+            </Style>
+
+            <Style x:Key="SecondaryLabel" TargetType="Label">
                 <Setter Property="FontSize" Value="13" />
-                <Setter Property="TextColor" Value="{DynamicResource SecondaryTextColor}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+            </Style>
+
+            <Style x:Key="TertiaryLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+            </Style>
+
+            <Style x:Key="HeroAmountLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="42" />
+                <Setter Property="FontAttributes" Value="Bold" />
+            </Style>
+
+            <Style x:Key="CardBorder" TargetType="Border">
+                <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackground}}" />
+                <Setter Property="Stroke" Value="Transparent" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+                <Setter Property="Padding" Value="24,20" />
             </Style>
 
             <Style TargetType="Entry">
-                <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceMutedColor}" />
-                <Setter Property="FontFamily" Value="Segoe UI" />
-                <Setter Property="PlaceholderColor" Value="{DynamicResource MutedTextColor}" />
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
             </Style>
 
             <Style TargetType="Picker">
-                <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceMutedColor}" />
-                <Setter Property="FontFamily" Value="Segoe UI" />
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="TitleColor" Value="{DynamicResource MutedTextColor}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                <Setter Property="TitleColor" Value="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
             </Style>
 
             <Style TargetType="DatePicker">
-                <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceMutedColor}" />
-                <Setter Property="FontFamily" Value="Segoe UI" />
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-            </Style>
-
-            <Style x:Key="ShellButton" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="Transparent" />
-                <Setter Property="BorderWidth" Value="0" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="FontSize" Value="14" />
-                <Setter Property="HorizontalOptions" Value="Start" />
-                <Setter Property="Padding" Value="12,10" />
-                <Setter Property="TextColor" Value="{DynamicResource ShellTextColor}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
             </Style>
 
             <Style x:Key="QuietButton" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceMutedColor}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
                 <Setter Property="BorderWidth" Value="0" />
-                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="CornerRadius" Value="9" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Padding" Value="12,8" />
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
             </Style>
 
             <Style x:Key="PrimaryButton" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
-                <Setter Property="BorderWidth" Value="0" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="FontSize" Value="13" />
-                <Setter Property="Padding" Value="12,8" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                 <Setter Property="TextColor" Value="#FFFFFF" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="CornerRadius" Value="9" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="Padding" Value="14,9" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>
