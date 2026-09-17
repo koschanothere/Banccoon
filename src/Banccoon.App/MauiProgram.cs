@@ -51,6 +51,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IHistoricalBalanceService, HistoricalBalanceService>();
         builder.Services.AddSingleton<ICreditCardForecastService, CreditCardForecastService>();
         builder.Services.AddSingleton<ITransactionBalanceService, TransactionBalanceService>();
+        builder.Services.AddSingleton<ITransactionApplicationService, TransactionApplicationService>();
+        builder.Services.AddSingleton<ITransactionBalanceHistoryService, TransactionBalanceHistoryService>();
         builder.Services.AddSingleton<ICategorySuggestionService, CategorySuggestionService>();
         builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
