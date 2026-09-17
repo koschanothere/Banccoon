@@ -6,26 +6,62 @@
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     x:DataType="viewModels:SettingsViewModel"
     Title="Settings">
-    <VerticalStackLayout Padding="32" Spacing="16">
-        <Label Text="Settings" Style="{StaticResource ScreenTitleLabel}" />
+    <ScrollView>
+        <VerticalStackLayout Padding="32" Spacing="16">
+            <Label Text="Settings" Style="{StaticResource ScreenTitleLabel}" />
 
-        <Border Style="{StaticResource CardBorder}">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Appearance" Style="{StaticResource SectionTitleLabel}" />
-                <Label Text="Theme" Style="{StaticResource SecondaryLabel}" />
-                <HorizontalStackLayout Spacing="6">
-                    <Button Text="Light" Command="{Binding SetLightCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Dark" Command="{Binding SetDarkCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="System" Command="{Binding SetSystemCommand}" Style="{StaticResource QuietButton}" />
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-        </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Appearance" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="Theme" Style="{StaticResource SecondaryLabel}" />
+                    <HorizontalStackLayout Spacing="6">
+                        <Button Text="Light" Command="{Binding SetLightCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Dark" Command="{Binding SetDarkCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="System" Command="{Binding SetSystemCommand}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
-        <Border Style="{StaticResource CardBorder}">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
-                <Label Text="Backup, restore, and delete-all-local-data coming soon." Style="{StaticResource TertiaryLabel}" />
-            </VerticalStackLayout>
-        </Border>
-    </VerticalStackLayout>
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Free to spend" Style="{StaticResource SectionTitleLabel}" />
+
+                    <Label Text="Window" Style="{StaticResource SecondaryLabel}" />
+                    <HorizontalStackLayout Spacing="6">
+                        <Button Text="Rolling days" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="This week" Command="{Binding SetWindowCalendarWeekCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="This month" Command="{Binding SetWindowCalendarMonthCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Until next major payment" Command="{Binding SetWindowUntilMajorPaymentCommand}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding IsRollingDaysFieldVisible}">
+                        <Label Text="Rolling window, in days" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Text="{Binding WindowDaysText}" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding IsMajorPaymentThresholdFieldVisible}">
+                        <Label Text="Major payment threshold" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Text="{Binding MajorPaymentThresholdText}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Safety buffer (always kept out of Free to spend)" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Text="{Binding SafetyBufferText}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Label Text="{Binding FreeToSpendStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="Backup, restore, and delete-all-local-data coming soon." Style="{StaticResource TertiaryLabel}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

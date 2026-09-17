@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Windows.Input;
 using Banccoon.Core.Appearance;
+using Banccoon.Core.Forecasting;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
@@ -8,6 +10,11 @@ public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly ISettingsRepository settingsRepository;
     private AppThemeMode themeMode = AppThemeMode.Light;
+    private FreeToSpendWindowMode windowMode = FreeToSpendWindowMode.RollingDays;
+    private string windowDaysText = "7";
+    private string safetyBufferText = "0";
+    private string majorPaymentThresholdText = "0";
+    private string freeToSpendStatusText = string.Empty;
 
     public SettingsViewModel(ISettingsRepository settingsRepository)
     {
@@ -15,6 +22,12 @@ public sealed class SettingsViewModel : ViewModelBase
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
         SetDarkCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Dark));
         SetSystemCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.System));
+
+        SetWindowRollingCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.RollingDays);
+        SetWindowCalendarWeekCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.CalendarWeek);
+        SetWindowCalendarMonthCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.CalendarMonth);
+        SetWindowUntilMajorPaymentCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.UntilNextMajorPayment);
+        SaveFreeToSpendCommand = new RelayCommand(() => _ = SaveFreeToSpendAsync());
     }
 
     public AppThemeMode ThemeMode
@@ -43,11 +56,80 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public ICommand SetSystemCommand { get; }
 
+    public FreeToSpendWindowMode WindowMode
+    {
+        get => windowMode;
+        private set
+        {
+            if (SetProperty(ref windowMode, value))
+            {
+                OnPropertyChanged(nameof(IsWindowRollingSelected));
+                OnPropertyChanged(nameof(IsWindowCalendarWeekSelected));
+                OnPropertyChanged(nameof(IsWindowCalendarMonthSelected));
+                OnPropertyChanged(nameof(IsWindowUntilMajorPaymentSelected));
+                OnPropertyChanged(nameof(IsRollingDaysFieldVisible));
+                OnPropertyChanged(nameof(IsMajorPaymentThresholdFieldVisible));
+            }
+        }
+    }
+
+    public bool IsWindowRollingSelected => WindowMode == FreeToSpendWindowMode.RollingDays;
+
+    public bool IsWindowCalendarWeekSelected => WindowMode == FreeToSpendWindowMode.CalendarWeek;
+
+    public bool IsWindowCalendarMonthSelected => WindowMode == FreeToSpendWindowMode.CalendarMonth;
+
+    public bool IsWindowUntilMajorPaymentSelected => WindowMode == FreeToSpendWindowMode.UntilNextMajorPayment;
+
+    public bool IsRollingDaysFieldVisible => IsWindowRollingSelected;
+
+    public bool IsMajorPaymentThresholdFieldVisible => IsWindowUntilMajorPaymentSelected;
+
+    public string WindowDaysText
+    {
+        get => windowDaysText;
+        set => SetProperty(ref windowDaysText, value);
+    }
+
+    public string SafetyBufferText
+    {
+        get => safetyBufferText;
+        set => SetProperty(ref safetyBufferText, value);
+    }
+
+    public string MajorPaymentThresholdText
+    {
+        get => majorPaymentThresholdText;
+        set => SetProperty(ref majorPaymentThresholdText, value);
+    }
+
+    public string FreeToSpendStatusText
+    {
+        get => freeToSpendStatusText;
+        private set => SetProperty(ref freeToSpendStatusText, value);
+    }
+
+    public ICommand SetWindowRollingCommand { get; }
+
+    public ICommand SetWindowCalendarWeekCommand { get; }
+
+    public ICommand SetWindowCalendarMonthCommand { get; }
+
+    public ICommand SetWindowUntilMajorPaymentCommand { get; }
+
+    public ICommand SaveFreeToSpendCommand { get; }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var settings = await settingsRepository.GetAsync(cancellationToken);
         ThemeMode = settings.ThemeMode;
         ApplyTheme(settings.ThemeMode);
+
+        WindowMode = settings.FreeToSpendWindowMode;
+        WindowDaysText = settings.FreeToSpendWindowDays.ToString(CultureInfo.InvariantCulture);
+        SafetyBufferText = settings.SafetyBuffer.ToString(CultureInfo.InvariantCulture);
+        MajorPaymentThresholdText = settings.MajorPaymentThreshold.ToString(CultureInfo.InvariantCulture);
+        FreeToSpendStatusText = string.Empty;
     }
 
     private async Task SetThemeModeAsync(AppThemeMode mode)
@@ -56,6 +138,38 @@ public sealed class SettingsViewModel : ViewModelBase
         await settingsRepository.SaveAsync(settings with { ThemeMode = mode });
         ThemeMode = mode;
         ApplyTheme(mode);
+    }
+
+    private async Task SaveFreeToSpendAsync()
+    {
+        if (!int.TryParse(WindowDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var windowDays) || windowDays < 1)
+        {
+            FreeToSpendStatusText = "Rolling days must be a whole number of at least 1.";
+            return;
+        }
+
+        if (!decimal.TryParse(SafetyBufferText, NumberStyles.Number, CultureInfo.InvariantCulture, out var safetyBuffer) || safetyBuffer < 0m)
+        {
+            FreeToSpendStatusText = "Safety buffer must be a number of 0 or more.";
+            return;
+        }
+
+        if (!decimal.TryParse(MajorPaymentThresholdText, NumberStyles.Number, CultureInfo.InvariantCulture, out var majorPaymentThreshold) || majorPaymentThreshold < 0m)
+        {
+            FreeToSpendStatusText = "Major payment threshold must be a number of 0 or more.";
+            return;
+        }
+
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with
+        {
+            FreeToSpendWindowMode = WindowMode,
+            FreeToSpendWindowDays = windowDays,
+            SafetyBuffer = safetyBuffer,
+            MajorPaymentThreshold = majorPaymentThreshold
+        });
+
+        FreeToSpendStatusText = "Saved.";
     }
 
     private static void ApplyTheme(AppThemeMode mode)
