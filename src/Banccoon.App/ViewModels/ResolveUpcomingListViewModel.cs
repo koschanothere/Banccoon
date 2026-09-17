@@ -11,6 +11,9 @@ namespace Banccoon.App.ViewModels;
 public sealed class ResolveUpcomingListViewModel : ViewModelBase
 {
     private const int DefaultDelayDays = 7;
+    private const int LookbackDays = 30;
+    private const int NearTermForwardDays = 3;
+    private const int ExpandedForwardDays = 90;
 
     private readonly IDateProvider dateProvider;
     private readonly IAccountRepository accountRepository;
@@ -23,6 +26,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private readonly Func<Task> onChanged;
 
     private List<ResolveUpcomingRowViewModel> allRows = [];
+    private DateOnly nearTermCutoff;
     private bool isExpanded;
 
     public ResolveUpcomingListViewModel(
@@ -69,9 +73,14 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     public async Task RefreshAsync(string currency, CancellationToken cancellationToken = default)
     {
         var today = dateProvider.Today;
+        nearTermCutoff = today.AddDays(NearTermForwardDays);
         var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
         var activeSchedules = scheduledTransactions.Where(schedule => schedule.Active).ToList();
-        var projectedEvents = scheduledTransactionProjectionService.Project(activeSchedules, today.AddDays(-30), today.AddDays(3));
+        // Project the full expanded window up front - collapsed view then filters down to
+        // near-term (below), rather than only ever having near-term events to work with, which
+        // left "expand" with nothing new to reveal beyond what was already showing.
+        var projectedEvents = scheduledTransactionProjectionService.Project(
+            activeSchedules, today.AddDays(-LookbackDays), today.AddDays(ExpandedForwardDays));
 
         var overrides = await scheduledOccurrenceOverrideRepository.GetAllAsync(cancellationToken);
         var resolvedEvents = scheduledOccurrenceResolutionService.ApplyOverrides(projectedEvents, overrides);
@@ -99,12 +108,13 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 
     private void RebuildVisibleRows()
     {
-        // Collapsed: one line per distinct scheduled transaction (its earliest/most urgent
-        // occurrence), so a schedule with several overdue occurrences doesn't flood the glance
-        // view - expanding reveals every individual occurrence.
+        // Collapsed: near-term only (overdue, or due within NearTermForwardDays), one line per
+        // distinct scheduled transaction (its most urgent occurrence). Expanded: every individual
+        // occurrence across the full lookback/expanded-forward window, not just near-term ones.
         IEnumerable<ResolveUpcomingRowViewModel> visible = IsExpanded
             ? allRows
             : allRows
+                .Where(row => row.OccurrenceDate <= nearTermCutoff)
                 .GroupBy(row => row.ScheduledTransactionId)
                 .Select(group => group.OrderBy(row => row.OccurrenceDate).First())
                 .OrderBy(row => row.OccurrenceDate);

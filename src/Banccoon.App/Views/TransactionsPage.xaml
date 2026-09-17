@@ -104,7 +104,31 @@
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="Resolve upcoming" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="{Binding ResolveUpcoming.IsExpanded, Converter={StaticResource ExpandedLabelConverter}}" Command="{Binding ResolveUpcoming.ToggleExpandedCommand}" Style="{StaticResource QuietButton}" />
+                        <Grid
+                            Grid.Column="1"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            Rotation="{Binding ResolveUpcoming.IsExpanded, Converter={StaticResource ExpandedRotationConverter}}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ResolveUpcoming.ToggleExpandedCommand}" />
+                            </Grid.GestureRecognizers>
+                            <BoxView
+                                WidthRequest="9"
+                                HeightRequest="2"
+                                CornerRadius="1"
+                                Rotation="45"
+                                TranslationX="-3"
+                                TranslationY="-2"
+                                Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                            <BoxView
+                                WidthRequest="9"
+                                HeightRequest="2"
+                                CornerRadius="1"
+                                Rotation="-45"
+                                TranslationX="3"
+                                TranslationY="-2"
+                                Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                        </Grid>
                     </Grid>
                     <CollectionView ItemsSource="{Binding ResolveUpcoming.Rows}">
                         <CollectionView.EmptyView>

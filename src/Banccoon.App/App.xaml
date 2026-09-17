@@ -9,7 +9,7 @@
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
             <converters:FavoriteStarConverter x:Key="FavoriteStarConverter" />
             <converters:PositiveAmountColorConverter x:Key="PositiveAmountColorConverter" />
-            <converters:ExpandedLabelConverter x:Key="ExpandedLabelConverter" />
+            <converters:ExpandedRotationConverter x:Key="ExpandedRotationConverter" />
 
             <!-- Light tokens -->
             <Color x:Key="LightPageBackground">#F1F0ED</Color>
