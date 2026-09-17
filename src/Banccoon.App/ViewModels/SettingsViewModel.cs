@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
@@ -18,9 +19,14 @@ public sealed class SettingsViewModel : ViewModelBase
     private string resolveUpcomingNearTermDaysText = "3";
     private string resolveUpcomingStatusText = string.Empty;
 
-    public SettingsViewModel(ISettingsRepository settingsRepository)
+    public SettingsViewModel(
+        ISettingsRepository settingsRepository,
+        IBackupService backupService,
+        ILocalDataResetService localDataResetService)
     {
         this.settingsRepository = settingsRepository;
+        Data = new DataManagementViewModel(backupService, localDataResetService);
+
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
         SetDarkCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Dark));
         SetSystemCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.System));
@@ -32,6 +38,8 @@ public sealed class SettingsViewModel : ViewModelBase
         SaveFreeToSpendCommand = new RelayCommand(() => _ = SaveFreeToSpendAsync());
         SaveResolveUpcomingCommand = new RelayCommand(() => _ = SaveResolveUpcomingAsync());
     }
+
+    public DataManagementViewModel Data { get; }
 
     public AppThemeMode ThemeMode
     {

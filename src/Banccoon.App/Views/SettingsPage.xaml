@@ -74,9 +74,65 @@
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="4">
+                <VerticalStackLayout Spacing="12">
                     <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
-                    <Label Text="Backup, restore, and delete-all-local-data coming soon." Style="{StaticResource TertiaryLabel}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Backup" Style="{StaticResource SecondaryLabel}" />
+                        <Button Text="Export backup" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                        <Label Text="{Binding Data.ExportStatusText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Restore from backup" Style="{StaticResource SecondaryLabel}" />
+                        <Button
+                            Text="Choose backup file"
+                            Command="{Binding Data.PickRestoreFileCommand}"
+                            IsVisible="{Binding Data.HasPendingRestore, Converter={StaticResource InverseBoolConverter}}"
+                            Style="{StaticResource QuietButton}"
+                            HorizontalOptions="Start" />
+
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding Data.HasPendingRestore}">
+                            <Label Text="{Binding Data.PendingRestoreFileName}" />
+                            <Label Text="{Binding Data.PendingRestoreSummaryText}" Style="{StaticResource TertiaryLabel}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Merge" Command="{Binding Data.ConfirmMergeCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="Replace everything" Command="{Binding Data.ConfirmReplaceCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource DestructiveButton}" />
+                                <Button Text="Cancel" Command="{Binding Data.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+                        <Label Text="{Binding Data.RestoreStatusText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Delete all local data" Style="{StaticResource SecondaryLabel}" />
+                        <Button
+                            Text="Delete all local data"
+                            Command="{Binding Data.RequestDeleteAllCommand}"
+                            IsVisible="{Binding Data.IsConfirmingDeleteAll, Converter={StaticResource InverseBoolConverter}}"
+                            Style="{StaticResource DestructiveButton}"
+                            HorizontalOptions="Start" />
+
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding Data.IsConfirmingDeleteAll}">
+                            <Label
+                                Text="This permanently deletes every account, transaction, category, scheduled rule, and goal. This cannot be undone."
+                                Style="{StaticResource TertiaryLabel}"
+                                TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Yes, delete everything" Command="{Binding Data.ConfirmDeleteAllCommand}" Style="{StaticResource DestructiveButton}" />
+                                <Button Text="Cancel" Command="{Binding Data.CancelDeleteAllCommand}" Style="{StaticResource QuietButton}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+                        <Label Text="{Binding Data.DeleteAllStatusText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+
+                    <ActivityIndicator IsRunning="{Binding Data.IsBusy}" IsVisible="{Binding Data.IsBusy}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
