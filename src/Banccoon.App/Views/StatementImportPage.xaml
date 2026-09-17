@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Banccoon.App.Views.StatementImportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    x:DataType="viewModels:StatementImportViewModel"
+    Title="Import Statement"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="32" Spacing="16">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0" Text="Import statement" Style="{StaticResource ScreenTitleLabel}" />
+                <Button Grid.Column="1" Text="Close" Clicked="OnCloseClicked" Style="{StaticResource QuietButton}" />
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+
+            <!-- Step 1: pick file -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsPickFileStep}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="1. Choose a statement file" Style="{StaticResource SectionTitleLabel}" />
+                    <Button Text="Choose file" Command="{Binding PickFileCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    <Label Text="{Binding FileName}" IsVisible="{Binding HasStatement}" />
+                    <Label Text="{Binding PreviewStatusText}" Style="{StaticResource SecondaryLabel}" />
+
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding HasStatement}">
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+                            <Label Grid.Row="0" Grid.Column="0" Text="Parser" Style="{StaticResource TertiaryLabel}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding ParserNameText}" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="Period" Style="{StaticResource TertiaryLabel}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PeriodText}" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="Rows found" Style="{StaticResource TertiaryLabel}" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding RowCountText}" />
+                            <Label Grid.Row="3" Grid.Column="0" Text="Detected balance" Style="{StaticResource TertiaryLabel}" />
+                            <Label Grid.Row="3" Grid.Column="1" Text="{Binding DetectedBalanceText}" />
+                            <Label Grid.Row="4" Grid.Column="0" Text="Detected account" Style="{StaticResource TertiaryLabel}" />
+                            <Label Grid.Row="4" Grid.Column="1" Text="{Binding DetectedAccountText}" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <Button
+                        Text="Continue"
+                        Command="{Binding ContinueFromPickCommand}"
+                        IsEnabled="{Binding CanContinueFromPick}"
+                        Style="{StaticResource PrimaryButton}"
+                        HorizontalOptions="Start" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Step 2: confirm/create account -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsConfirmAccountStep}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="2. Confirm the account" Style="{StaticResource SectionTitleLabel}" />
+
+                    <HorizontalStackLayout Spacing="6">
+                        <Button Text="Existing account" Command="{Binding Account.UseExistingAccountCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="New account" Command="{Binding Account.UseNewAccountCommand}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+
+                    <Picker
+                        Title="Account"
+                        ItemsSource="{Binding Account.AccountOptions}"
+                        SelectedItem="{Binding Account.SelectedAccount}"
+                        IsVisible="{Binding Account.IsCreatingNewAccount, Converter={StaticResource InverseBoolConverter}}" />
+
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding Account.IsCreatingNewAccount}">
+                        <Entry Placeholder="Account name" Text="{Binding Account.NewAccountName}" />
+                        <Picker Title="Type" ItemsSource="{Binding Account.AccountTypes}" SelectedItem="{Binding Account.NewAccountType}" />
+                        <Entry Placeholder="Starting balance" Text="{Binding Account.NewAccountStartingBalanceText}" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding Account.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Back" Command="{Binding BackToPickCommand}" Style="{StaticResource QuietButton}" />
+                        <Button
+                            Text="Continue"
+                            Command="{Binding ContinueFromAccountCommand}"
+                            IsEnabled="{Binding Account.CanContinue}"
+                            Style="{StaticResource PrimaryButton}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Step 3: review rows -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsReviewStep}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <Label Grid.Column="0" Text="3. Review transactions" Style="{StaticResource SectionTitleLabel}" />
+                        <Button Grid.Column="1" Text="Select" Command="{Binding Review.ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="2" Text="Cancel import" Command="{Binding Review.CancelImportCommand}" Style="{StaticResource DestructiveButton}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding Review.SelectMode}">
+                        <Label Grid.Column="0" Text="{Binding Review.SelectionSummaryText}" VerticalOptions="Center" />
+                        <Picker Grid.Column="1" Title="Category" ItemsSource="{Binding Review.CategoryOptions}" SelectedItem="{Binding Review.BulkCategory}" WidthRequest="160" />
+                        <Button Grid.Column="2" Text="Approve selected" Command="{Binding Review.ApproveSelectedCommand}" Style="{StaticResource PrimaryButton}" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding Review.SelectMode}">
+                        <Button Text="+ New category" Command="{Binding Review.ToggleAddCategoryCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Skip selected" Command="{Binding Review.SkipSelectedCommand}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding Review.IsAddingCategory}">
+                        <Entry Grid.Column="0" Placeholder="New category name" Text="{Binding Review.NewCategoryName}" />
+                        <Button Grid.Column="1" Text="Create" Command="{Binding Review.CreateCategoryCommand}" Style="{StaticResource QuietButton}" />
+                    </Grid>
+
+                    <Label Text="{Binding Review.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+
+                    <CollectionView ItemsSource="{Binding Review.Rows}">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="All rows reviewed." Style="{StaticResource SecondaryLabel}" />
+                                <Button Text="Done" Clicked="OnCloseClicked" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:StatementImportRowViewModel">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" />
+                                    <Label Grid.Column="1" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                    <VerticalStackLayout Grid.Column="2" Spacing="1">
+                                        <Label Text="{Binding Description}" />
+                                        <Label Text="Possible duplicate" IsVisible="{Binding IsDuplicate}" Style="{StaticResource TertiaryLabel}"
+                                               TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="3" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Picker Grid.Column="4" Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
+                                    <Button Grid.Column="5" Text="Skip" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                    <Button Grid.Column="6" Text="Approve" Command="{Binding ApproveCommand}" Style="{StaticResource PrimaryButton}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

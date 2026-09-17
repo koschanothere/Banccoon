@@ -2,11 +2,11 @@ using Banccoon.App.ViewModels;
 
 namespace Banccoon.App.Views;
 
-public partial class TransactionsPage : ContentPage
+public partial class StatementImportPage : ContentPage
 {
-    private readonly TransactionsViewModel viewModel;
+    private readonly StatementImportViewModel viewModel;
 
-    public TransactionsPage(TransactionsViewModel viewModel)
+    public StatementImportPage(StatementImportViewModel viewModel)
     {
         InitializeComponent();
         this.viewModel = viewModel;
@@ -19,8 +19,8 @@ public partial class TransactionsPage : ContentPage
         await viewModel.InitializeAsync();
     }
 
-    private async void OnImportClicked(object? sender, EventArgs e)
+    private async void OnCloseClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("statementImport");
+        await Shell.Current.GoToAsync("..");
     }
 }

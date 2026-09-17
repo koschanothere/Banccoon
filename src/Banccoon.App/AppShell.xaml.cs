@@ -1,4 +1,5 @@
 using Banccoon.App.ViewModels;
+using Banccoon.App.Views;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Banccoon.App;
@@ -14,6 +15,8 @@ public partial class AppShell : Shell
         BindingContext = viewModel;
         Navigated += OnNavigated;
         _ = viewModel.RefreshFavoritesAsync();
+
+        Routing.RegisterRoute("statementImport", typeof(StatementImportPage));
     }
 
     private void OnNavigated(object? sender, ShellNavigatedEventArgs e)

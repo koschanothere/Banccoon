@@ -10,6 +10,7 @@
             <converters:FavoriteStarConverter x:Key="FavoriteStarConverter" />
             <converters:PositiveAmountColorConverter x:Key="PositiveAmountColorConverter" />
             <converters:ExpandedRotationConverter x:Key="ExpandedRotationConverter" />
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
 
             <!-- Light tokens -->
             <Color x:Key="LightPageBackground">#F1F0ED</Color>

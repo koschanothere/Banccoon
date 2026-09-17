@@ -20,7 +20,7 @@
                     <Button Text="Categories" Command="{Binding ToggleCategoryManagementCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="Check-in" IsEnabled="False" Style="{StaticResource QuietButton}" />
                     <Button Text="Select" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Import" IsEnabled="False" Style="{StaticResource QuietButton}" />
+                    <Button Text="Import" Clicked="OnImportClicked" Style="{StaticResource QuietButton}" />
                     <Button Text="+ Add" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>

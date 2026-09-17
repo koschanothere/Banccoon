@@ -91,11 +91,13 @@ public static class MauiProgram
         builder.Services.AddTransient<AppShellViewModel>();
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
+        builder.Services.AddTransient<StatementImportViewModel>();
 
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<TransactionsPage>();
         builder.Services.AddTransient<AccountsPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<StatementImportPage>();
 
 #if WINDOWS
         ConfigureWindowsInputBorders();
