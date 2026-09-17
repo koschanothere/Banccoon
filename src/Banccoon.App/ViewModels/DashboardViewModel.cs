@@ -11,6 +11,7 @@ namespace Banccoon.App.ViewModels;
 public sealed class DashboardViewModel : ViewModelBase
 {
     private const int HistoricalDays = 7;
+    private const int UpcomingObligationCount = 5;
 
     private readonly IDateProvider dateProvider;
     private readonly IAccountRepository accountRepository;
@@ -31,6 +32,9 @@ public sealed class DashboardViewModel : ViewModelBase
     private string safetyBufferText = string.Empty;
     private string freeToSpendWindowText = string.Empty;
     private string graphWindowSummaryText = string.Empty;
+    private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
+    private string forecastEndBalanceText = string.Empty;
+    private string forecastStatusText = string.Empty;
 
     public DashboardViewModel(
         IDateProvider dateProvider,
@@ -56,7 +60,10 @@ public sealed class DashboardViewModel : ViewModelBase
         this.historicalBalanceService = historicalBalanceService;
 
         ChartPoints = [];
+        UpcomingObligations = [];
+        Goals = [];
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
+        SaveForecastPeriodCommand = new RelayCommand(() => _ = SaveForecastPeriodAsync());
     }
 
     public bool IsLoading
@@ -109,7 +116,33 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ObservableCollection<ForecastChartPointViewModel> ChartPoints { get; }
 
+    public IReadOnlyList<ForecastPeriod> ForecastPeriods { get; } = Enum.GetValues<ForecastPeriod>();
+
+    public ForecastPeriod SelectedForecastPeriod
+    {
+        get => selectedForecastPeriod;
+        set => SetProperty(ref selectedForecastPeriod, value);
+    }
+
+    public string ForecastEndBalanceText
+    {
+        get => forecastEndBalanceText;
+        private set => SetProperty(ref forecastEndBalanceText, value);
+    }
+
+    public string ForecastStatusText
+    {
+        get => forecastStatusText;
+        private set => SetProperty(ref forecastStatusText, value);
+    }
+
+    public ObservableCollection<UpcomingObligationRowViewModel> UpcomingObligations { get; }
+
+    public ObservableCollection<SavingsGoalRowViewModel> Goals { get; }
+
     public ICommand ToggleCalcCommand { get; }
+
+    public ICommand SaveForecastPeriodCommand { get; }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -123,6 +156,12 @@ public sealed class DashboardViewModel : ViewModelBase
             var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
             var savingsGoals = await savingsGoalRepository.GetAllAsync(cancellationToken);
             var today = dateProvider.Today;
+
+            await RunOnMainThreadAsync(() =>
+            {
+                SelectedForecastPeriod = settings.DefaultForecastPeriod;
+                ForecastStatusText = string.Empty;
+            });
 
             await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, savingsGoals);
             await LoadChartAsync(today, settings, dashboardAccounts, dashboardAccountIds, scheduledTransactions, cancellationToken);
@@ -157,7 +196,22 @@ public sealed class DashboardViewModel : ViewModelBase
             ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, settings.DefaultCurrency);
             SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, settings.DefaultCurrency);
             FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, settings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, settings.DateDisplayFormat)}";
+
+            Goals.Clear();
+            foreach (var goal in savingsGoals)
+            {
+                Goals.Add(new SavingsGoalRowViewModel(goal, settings.DefaultCurrency, settings.DateDisplayFormat));
+            }
         });
+    }
+
+    private async Task SaveForecastPeriodAsync()
+    {
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
+
+        await RunOnMainThreadAsync(() => ForecastStatusText = "Saved.");
+        await InitializeAsync();
     }
 
     private async Task LoadChartAsync(
@@ -170,7 +224,15 @@ public sealed class DashboardViewModel : ViewModelBase
     {
         var graphRequest = ForecastRequest.ForPeriod(today, settings.DefaultForecastPeriod, dashboardAccounts, scheduledTransactions);
         var graphForecast = forecastService.CreateForecast(graphRequest);
-        GraphWindowSummaryText = $"{DateDisplay.Format(today.AddDays(-HistoricalDays), settings.DateDisplayFormat)} – {DateDisplay.Format(graphForecast.EndDate, settings.DateDisplayFormat)}";
+
+        // This method is itself called after InitializeAsync's own awaits, which may have already
+        // resumed off the UI thread (see ViewModelBase.RunOnMainThreadAsync) - so even this
+        // "before my own first await" mutation isn't safe by default.
+        await RunOnMainThreadAsync(() =>
+        {
+            GraphWindowSummaryText = $"{DateDisplay.Format(today.AddDays(-HistoricalDays), settings.DateDisplayFormat)} – {DateDisplay.Format(graphForecast.EndDate, settings.DateDisplayFormat)}";
+            ForecastEndBalanceText = MoneyFormat.Format(graphForecast.ForecastedBalance, settings.DefaultCurrency);
+        });
 
         var allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
         var currentTotalBalance = dashboardAccounts.Sum(account => account.CurrentBalance);
@@ -212,6 +274,12 @@ public sealed class DashboardViewModel : ViewModelBase
                     settings.DefaultCurrency,
                     settings.DateDisplayFormat,
                     isCurrentDate: point.Date == today));
+            }
+
+            UpcomingObligations.Clear();
+            foreach (var obligation in graphForecast.UpcomingObligations.OrderBy(obligation => obligation.Date).Take(UpcomingObligationCount))
+            {
+                UpcomingObligations.Add(new UpcomingObligationRowViewModel(obligation, today, settings.DefaultCurrency));
             }
         });
     }

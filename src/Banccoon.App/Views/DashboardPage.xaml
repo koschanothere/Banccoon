@@ -62,16 +62,38 @@
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="4">
+                <VerticalStackLayout Spacing="8">
                     <Label Text="Upcoming" Style="{StaticResource SectionTitleLabel}" />
-                    <Label Text="Coming soon" Style="{StaticResource TertiaryLabel}" />
+                    <Label Text="Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions." Style="{StaticResource TertiaryLabel}" />
+                    <CollectionView ItemsSource="{Binding UpcomingObligations}">
+                        <CollectionView.EmptyView>
+                            <Label Text="Nothing coming up." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:UpcomingObligationRowViewModel">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="0,4">
+                                    <Label Grid.Column="0" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="4">
+                <VerticalStackLayout Spacing="8">
                     <Label Text="Forecast" Style="{StaticResource SectionTitleLabel}" />
-                    <Label Text="Coming soon" Style="{StaticResource TertiaryLabel}" />
+                    <Picker Title="Period" ItemsSource="{Binding ForecastPeriods}" SelectedItem="{Binding SelectedForecastPeriod}" WidthRequest="160" HorizontalOptions="Start" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Projected balance at end of period" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding ForecastEndBalanceText}" FontAttributes="Bold" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Label Text="{Binding ForecastStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
 
@@ -83,9 +105,28 @@
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="4">
+                <VerticalStackLayout Spacing="8">
                     <Label Text="Goals" Style="{StaticResource SectionTitleLabel}" />
-                    <Label Text="Coming soon" Style="{StaticResource TertiaryLabel}" />
+                    <CollectionView ItemsSource="{Binding Goals}">
+                        <CollectionView.EmptyView>
+                            <Label Text="No savings goals yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:SavingsGoalRowViewModel">
+                                <VerticalStackLayout Spacing="4" Padding="0,6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding Name}" />
+                                        <Label Grid.Column="1" Text="{Binding TargetDateText}" IsVisible="{Binding HasTargetDate}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                    </Grid>
+                                    <ProgressBar Progress="{Binding Progress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding CurrentText}" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Grid.Column="1" Text="{Binding TargetText}" Style="{StaticResource TertiaryLabel}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
 
