@@ -75,8 +75,6 @@ public static class MauiProgram
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
 
-        builder.Services.AddTransient<AppShell>();
-
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<TransactionsPage>();
         builder.Services.AddTransient<AccountsPage>();

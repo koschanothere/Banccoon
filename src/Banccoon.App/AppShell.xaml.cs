@@ -1,4 +1,5 @@
 using Banccoon.App.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Banccoon.App;
 
@@ -6,10 +7,10 @@ public partial class AppShell : Shell
 {
     private readonly AppShellViewModel viewModel;
 
-    public AppShell(AppShellViewModel viewModel)
+    public AppShell()
     {
         InitializeComponent();
-        this.viewModel = viewModel;
+        viewModel = IPlatformApplication.Current!.Services.GetRequiredService<AppShellViewModel>();
         BindingContext = viewModel;
         Navigated += OnNavigated;
         _ = viewModel.RefreshFavoritesAsync();

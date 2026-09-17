@@ -5,10 +5,10 @@ namespace Banccoon.App;
 
 public partial class App : Application
 {
-    public App(AppShell appShell, ISettingsRepository settingsRepository)
+    public App(ISettingsRepository settingsRepository)
     {
         InitializeComponent();
-        MainPage = appShell;
+        MainPage = new AppShell();
         _ = ApplyStartupThemeAsync(settingsRepository);
     }
 
