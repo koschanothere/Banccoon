@@ -25,6 +25,7 @@ public sealed class SqliteTestStore : IAsyncDisposable
         Settings = new SqliteSettingsRepository(ConnectionFactory, Initializer);
         StatementImports = new SqliteStatementImportRepository(ConnectionFactory, Initializer);
         CategoryLearningRules = new SqliteCategoryLearningRuleRepository(ConnectionFactory, Initializer);
+        ScheduledOccurrenceOverrides = new SqliteScheduledOccurrenceOverrideRepository(ConnectionFactory, Initializer);
     }
 
     public SqliteConnectionFactory ConnectionFactory { get; }
@@ -46,6 +47,8 @@ public sealed class SqliteTestStore : IAsyncDisposable
     public SqliteStatementImportRepository StatementImports { get; }
 
     public SqliteCategoryLearningRuleRepository CategoryLearningRules { get; }
+
+    public SqliteScheduledOccurrenceOverrideRepository ScheduledOccurrenceOverrides { get; }
 
     public ValueTask DisposeAsync()
     {

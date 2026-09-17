@@ -1,6 +1,7 @@
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Categories;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
@@ -42,6 +43,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ITransactionBalanceService, TransactionBalanceService>();
         builder.Services.AddSingleton<ITransactionApplicationService, TransactionApplicationService>();
         builder.Services.AddSingleton<ITransactionBalanceHistoryService, TransactionBalanceHistoryService>();
+        builder.Services.AddSingleton<IScheduledOccurrenceResolutionService, ScheduledOccurrenceResolutionService>();
+        builder.Services.AddSingleton<ICategoryManagementService, CategoryManagementService>();
         builder.Services.AddSingleton<ICategorySuggestionService, CategorySuggestionService>();
         builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
@@ -62,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
         builder.Services.AddSingleton<IStatementImportRepository, SqliteStatementImportRepository>();
         builder.Services.AddSingleton<ICategoryLearningRuleRepository, SqliteCategoryLearningRuleRepository>();
+        builder.Services.AddSingleton<IScheduledOccurrenceOverrideRepository, SqliteScheduledOccurrenceOverrideRepository>();
         builder.Services.AddSingleton<IExportValidator, ExportValidator>();
         builder.Services.AddSingleton<IExportService, RepositoryExportService>();
         builder.Services.AddSingleton<IImportService, RepositoryImportService>();

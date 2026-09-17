@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -29,6 +30,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private bool addMenuOpen;
     private NamedOptionViewModel? accountFilter;
     private NamedOptionViewModel? categoryFilter;
+    private NamedOptionViewModel? bulkCategory;
     private string selectionSummaryText = string.Empty;
 
     public TransactionsViewModel(
@@ -37,10 +39,13 @@ public sealed class TransactionsViewModel : ViewModelBase
         ICategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
         IScheduledTransactionRepository scheduledTransactionRepository,
+        IScheduledOccurrenceOverrideRepository scheduledOccurrenceOverrideRepository,
         ISettingsRepository settingsRepository,
         IScheduledTransactionProjectionService scheduledTransactionProjectionService,
+        IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
-        ITransactionBalanceHistoryService transactionBalanceHistoryService)
+        ITransactionBalanceHistoryService transactionBalanceHistoryService,
+        ICategoryManagementService categoryManagementService)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -59,13 +64,20 @@ public sealed class TransactionsViewModel : ViewModelBase
             accountRepository,
             transactionRepository,
             scheduledTransactionRepository,
+            scheduledOccurrenceOverrideRepository,
             scheduledTransactionProjectionService,
+            scheduledOccurrenceResolutionService,
             transactionApplicationService,
+            InitializeAsync);
+        CategoryManagement = new CategoryManagementViewModel(
+            categoryRepository,
+            categoryManagementService,
             InitializeAsync);
 
         Rows = [];
         AccountOptions = [];
         CategoryOptions = [];
+        BulkCategoryOptions = [];
 
         ToggleFilterCommand = new RelayCommand(() => FilterOpen = !FilterOpen);
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
@@ -74,6 +86,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         OpenIncomeFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Income));
         OpenTransferFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Transfer));
         DeleteSelectedCommand = new RelayCommand(() => _ = DeleteSelectedAsync());
+        AssignCategoryToSelectedCommand = new RelayCommand(() => _ = AssignCategoryToSelectedAsync());
     }
 
     public bool IsLoading
@@ -130,15 +143,25 @@ public sealed class TransactionsViewModel : ViewModelBase
         private set => SetProperty(ref selectionSummaryText, value);
     }
 
+    public NamedOptionViewModel? BulkCategory
+    {
+        get => bulkCategory;
+        set => SetProperty(ref bulkCategory, value);
+    }
+
     public NewTransactionFormViewModel AddForm { get; }
 
     public ResolveUpcomingListViewModel ResolveUpcoming { get; }
+
+    public CategoryManagementViewModel CategoryManagement { get; }
 
     public ObservableCollection<TransactionRowViewModel> Rows { get; }
 
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
     public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+
+    public ObservableCollection<NamedOptionViewModel> BulkCategoryOptions { get; }
 
     public ICommand ToggleFilterCommand { get; }
 
@@ -153,6 +176,8 @@ public sealed class TransactionsViewModel : ViewModelBase
     public ICommand OpenTransferFormCommand { get; }
 
     public ICommand DeleteSelectedCommand { get; }
+
+    public ICommand AssignCategoryToSelectedCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -187,10 +212,14 @@ public sealed class TransactionsViewModel : ViewModelBase
 
         CategoryOptions.Clear();
         CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, "All categories"));
+        BulkCategoryOptions.Clear();
         foreach (var category in categories.OrderBy(category => category.Name))
         {
             CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+            BulkCategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
         }
+
+        BulkCategory = BulkCategoryOptions.FirstOrDefault();
     }
 
     private void ApplyFilters()
@@ -295,6 +324,23 @@ public sealed class TransactionsViewModel : ViewModelBase
         foreach (var id in selectedIds)
         {
             await transactionRepository.DeleteAsync(id);
+        }
+
+        SelectMode = false;
+        await InitializeAsync();
+    }
+
+    private async Task AssignCategoryToSelectedAsync()
+    {
+        if (BulkCategory is null)
+        {
+            return;
+        }
+
+        var selectedIds = Rows.Where(row => row.IsSelected).Select(row => row.Id).ToHashSet();
+        foreach (var transaction in allTransactions.Where(transaction => selectedIds.Contains(transaction.Id)))
+        {
+            await transactionRepository.SaveAsync(transaction with { CategoryId = BulkCategory.Id });
         }
 
         SelectMode = false;

@@ -371,6 +371,39 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(rule, loaded);
     }
 
+    [Fact]
+    public async Task ScheduledOccurrenceOverrideRepository_SaveAndGetAll_RoundTripsSkipAndDelay()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        await store.Accounts.SaveAsync(account);
+        var scheduledTransaction = new ScheduledTransaction(
+            Guid.NewGuid(),
+            "Rent",
+            1000m,
+            account.Id,
+            null,
+            TransactionType.Expense,
+            new RecurrenceRule(RecurrenceFrequency.Monthly, 1, new DateOnly(2026, 6, 10)),
+            new DateOnly(2026, 6, 10),
+            Active: true);
+        await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
+
+        var skip = new ScheduledOccurrenceOverride(
+            Guid.NewGuid(), scheduledTransaction.Id, new DateOnly(2026, 6, 10), ScheduledOccurrenceOverrideKind.Skipped);
+        var delay = new ScheduledOccurrenceOverride(
+            Guid.NewGuid(), scheduledTransaction.Id, new DateOnly(2026, 7, 10), ScheduledOccurrenceOverrideKind.Delayed, new DateOnly(2026, 7, 17));
+
+        await store.ScheduledOccurrenceOverrides.SaveAsync(skip);
+        await store.ScheduledOccurrenceOverrides.SaveAsync(delay);
+
+        var all = await store.ScheduledOccurrenceOverrides.GetAllAsync();
+
+        Assert.Equal(2, all.Count);
+        Assert.Contains(all, item => item == skip);
+        Assert.Contains(all, item => item == delay);
+    }
+
     private static Account CreateAccount(string name)
     {
         return new Account(

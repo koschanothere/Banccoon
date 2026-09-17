@@ -138,6 +138,15 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
             );
 
+            CREATE TABLE IF NOT EXISTS ScheduledOccurrenceOverrides (
+                Id TEXT PRIMARY KEY,
+                ScheduledTransactionId TEXT NOT NULL,
+                OriginalOccurrenceDate TEXT NOT NULL,
+                Kind TEXT NOT NULL,
+                DelayedToDate TEXT NULL,
+                FOREIGN KEY (ScheduledTransactionId) REFERENCES ScheduledTransactions(Id) ON DELETE CASCADE
+            );
+
             CREATE TABLE IF NOT EXISTS SavingsGoals (
                 Id TEXT PRIMARY KEY,
                 Name TEXT NOT NULL,

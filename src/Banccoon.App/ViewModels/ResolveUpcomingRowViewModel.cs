@@ -1,13 +1,18 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Forecasting;
-using Banccoon.Core.Models;
 
 namespace Banccoon.App.ViewModels;
 
 public sealed class ResolveUpcomingRowViewModel
 {
-    public ResolveUpcomingRowViewModel(ForecastEvent scheduledEvent, DateOnly today, string currency, ICommand markPaidCommand)
+    public ResolveUpcomingRowViewModel(
+        ForecastEvent scheduledEvent,
+        DateOnly today,
+        string currency,
+        Func<Task> onMarkPaid,
+        Func<Task> onSkip,
+        Func<Task> onDelay)
     {
         ScheduledTransactionId = scheduledEvent.SourceId;
         OccurrenceDate = scheduledEvent.Date;
@@ -19,7 +24,10 @@ public sealed class ResolveUpcomingRowViewModel
             : scheduledEvent.Date == today
                 ? "due today"
                 : $"due {scheduledEvent.Date:dd/MM/yyyy}";
-        MarkPaidCommand = markPaidCommand;
+
+        MarkPaidCommand = new RelayCommand(() => _ = onMarkPaid());
+        SkipCommand = new RelayCommand(() => _ = onSkip());
+        DelayCommand = new RelayCommand(() => _ = onDelay());
     }
 
     public Guid ScheduledTransactionId { get; }
@@ -35,4 +43,8 @@ public sealed class ResolveUpcomingRowViewModel
     public bool IsOverdue { get; }
 
     public ICommand MarkPaidCommand { get; }
+
+    public ICommand SkipCommand { get; }
+
+    public ICommand DelayCommand { get; }
 }
