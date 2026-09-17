@@ -22,9 +22,11 @@
             <Color x:Key="LightAccent">#059669</Color>
             <Color x:Key="LightAccentSoft">#1A059669</Color>
             <Color x:Key="LightStatusGreen">#16A34A</Color>
+            <Color x:Key="LightStatusGreenSoft">#1F16A34A</Color>
             <Color x:Key="LightStatusOrange">#D97706</Color>
             <Color x:Key="LightStatusOrangeSoft">#1FD97706</Color>
             <Color x:Key="LightStatusRed">#DC2626</Color>
+            <Color x:Key="LightStatusRedSoft">#1FDC2626</Color>
 
             <!-- Dark tokens -->
             <Color x:Key="DarkPageBackground">#131417</Color>
@@ -37,9 +39,11 @@
             <Color x:Key="DarkAccent">#10B981</Color>
             <Color x:Key="DarkAccentSoft">#2910B981</Color>
             <Color x:Key="DarkStatusGreen">#34D399</Color>
+            <Color x:Key="DarkStatusGreenSoft">#2934D399</Color>
             <Color x:Key="DarkStatusOrange">#F59E0B</Color>
             <Color x:Key="DarkStatusOrangeSoft">#29F59E0B</Color>
             <Color x:Key="DarkStatusRed">#F87171</Color>
+            <Color x:Key="DarkStatusRedSoft">#29F87171</Color>
 
             <!-- Sidebar tokens -->
             <Color x:Key="LightSidebarBackground">#FAF9F7</Color>
@@ -89,6 +93,13 @@
             <Style TargetType="Entry">
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+            </Style>
+
+            <Style TargetType="Editor">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
             </Style>
 
             <Style TargetType="Picker">
@@ -105,7 +116,8 @@
             <Style x:Key="QuietButton" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}" />
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
-                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                <Setter Property="BorderWidth" Value="1" />
                 <Setter Property="CornerRadius" Value="9" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Padding" Value="12,8" />
@@ -119,6 +131,28 @@
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="Padding" Value="14,9" />
+            </Style>
+
+            <!-- Semantic action colors: same meaning everywhere, so the color becomes a habit
+                 rather than something the user has to read - red always destroys, red-leaning
+                 always means expense/money-out, green always means income/money-in. Mirrors the
+                 fixed status-color rule already used for amounts and "resolve upcoming". -->
+            <Style x:Key="DestructiveButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightStatusRedSoft}, Dark={StaticResource DarkStatusRedSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightStatusRedSoft}, Dark={StaticResource DarkStatusRedSoft}}" />
+            </Style>
+
+            <Style x:Key="ExpenseButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightStatusRedSoft}, Dark={StaticResource DarkStatusRedSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightStatusRedSoft}, Dark={StaticResource DarkStatusRedSoft}}" />
+            </Style>
+
+            <Style x:Key="IncomeButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreenSoft}, Dark={StaticResource DarkStatusGreenSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreen}, Dark={StaticResource DarkStatusGreen}}" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreenSoft}, Dark={StaticResource DarkStatusGreenSoft}}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

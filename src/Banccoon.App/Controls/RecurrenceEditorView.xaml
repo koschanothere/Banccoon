@@ -15,10 +15,12 @@
                 Grid.Row="0"
                 Grid.Column="1"
                 Keyboard="Numeric"
+                Placeholder="1"
                 Text="{Binding Interval}" />
             <Picker
                 Grid.Row="0"
                 Grid.Column="2"
+                Title="Frequency"
                 ItemsSource="{Binding Frequencies}"
                 SelectedItem="{Binding Frequency}" />
 
@@ -32,6 +34,7 @@
                 Grid.Row="1"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
+                Title="Day of week"
                 IsVisible="{Binding IsWeekly}"
                 ItemsSource="{Binding DaysOfWeek}"
                 SelectedItem="{Binding DayOfWeek}" />
@@ -46,6 +49,7 @@
                 Grid.Row="2"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
+                Title="Monthly mode"
                 IsVisible="{Binding IsMonthly}"
                 ItemsSource="{Binding MonthlyModes}"
                 SelectedItem="{Binding MonthlyMode}" />
@@ -122,6 +126,7 @@
                         AutoSize="TextChanges"
                         FontFamily="Consolas"
                         HeightRequest="74"
+                        Placeholder="FREQ=WEEKLY;INTERVAL=2;BYDAY=MO;START=2026-06-07"
                         Text="{Binding TechnicalSyntax}" />
                     <HorizontalStackLayout Spacing="8">
                         <Button

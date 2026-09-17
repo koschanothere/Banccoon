@@ -15,7 +15,8 @@ public sealed record AppSettings(
     FreeToSpendWindowMode FreeToSpendWindowMode = FreeToSpendWindowMode.RollingDays,
     int FreeToSpendWindowDays = 7,
     decimal SafetyBuffer = 0m,
-    decimal MajorPaymentThreshold = 0m)
+    decimal MajorPaymentThreshold = 0m,
+    int ResolveUpcomingNearTermDays = 3)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

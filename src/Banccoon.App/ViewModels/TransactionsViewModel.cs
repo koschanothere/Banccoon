@@ -63,6 +63,15 @@ public sealed class TransactionsViewModel : ViewModelBase
             transactionRepository,
             transactionApplicationService,
             InitializeAsync);
+        ScheduleForm = new ScheduleFormViewModel(
+            dateProvider,
+            accountRepository,
+            categoryRepository,
+            scheduledTransactionRepository,
+            recurrenceDescriptionService,
+            recurrenceSyntaxService,
+            recurrenceValidationService,
+            InitializeAsync);
         ResolveUpcoming = new ResolveUpcomingListViewModel(
             dateProvider,
             accountRepository,
@@ -72,20 +81,13 @@ public sealed class TransactionsViewModel : ViewModelBase
             scheduledTransactionProjectionService,
             scheduledOccurrenceResolutionService,
             transactionApplicationService,
-            InitializeAsync);
+            recurrenceDescriptionService,
+            InitializeAsync,
+            onEditRequested: schedule => OpenScheduleFormForEditAsync(schedule));
         CategoryManagement = new CategoryManagementViewModel(
             categoryRepository,
             categoryManagementService,
             InitializeAsync);
-        ScheduleForm = new ScheduleFormViewModel(
-            dateProvider,
-            accountRepository,
-            categoryRepository,
-            scheduledTransactionRepository,
-            recurrenceDescriptionService,
-            recurrenceSyntaxService,
-            recurrenceValidationService,
-            () => ResolveUpcoming.RefreshAsync(currency));
 
         Rows = [];
         AccountOptions = [];
@@ -214,7 +216,7 @@ public sealed class TransactionsViewModel : ViewModelBase
 
             RebuildOptionLists();
             ApplyFilters();
-            await ResolveUpcoming.RefreshAsync(currency);
+            await ResolveUpcoming.RefreshAsync(currency, settings.ResolveUpcomingNearTermDays);
         }
         finally
         {
@@ -250,12 +252,12 @@ public sealed class TransactionsViewModel : ViewModelBase
         // ItemsSource by reference, so it silently resets and the filter appears to "stop working".
         accountFilter = previousAccountFilterId is { } accountId
             ? AccountOptions.FirstOrDefault(option => option.Id == accountId)
-            : null;
+            : AccountOptions.FirstOrDefault();
         OnPropertyChanged(nameof(AccountFilter));
 
         categoryFilter = previousCategoryFilterId is { } categoryId
             ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
-            : null;
+            : CategoryOptions.FirstOrDefault();
         OnPropertyChanged(nameof(CategoryFilter));
 
         bulkCategory = previousBulkCategoryId is { } bulkCategoryId
@@ -400,6 +402,12 @@ public sealed class TransactionsViewModel : ViewModelBase
     {
         CloseAllPanels();
         await ScheduleForm.OpenAsync();
+    }
+
+    private async Task OpenScheduleFormForEditAsync(ScheduledTransaction schedule)
+    {
+        CloseAllPanels();
+        await ScheduleForm.OpenForEditAsync(schedule);
     }
 
     private void CloseAllPanels()

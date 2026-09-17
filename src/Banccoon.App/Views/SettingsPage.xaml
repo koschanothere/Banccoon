@@ -37,22 +37,38 @@
 
                     <VerticalStackLayout Spacing="4" IsVisible="{Binding IsRollingDaysFieldVisible}">
                         <Label Text="Rolling window, in days" Style="{StaticResource SecondaryLabel}" />
-                        <Entry Text="{Binding WindowDaysText}" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                        <Entry Text="{Binding WindowDaysText}" Placeholder="Days" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Spacing="4" IsVisible="{Binding IsMajorPaymentThresholdFieldVisible}">
                         <Label Text="Major payment threshold" Style="{StaticResource SecondaryLabel}" />
-                        <Entry Text="{Binding MajorPaymentThresholdText}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                        <Entry Text="{Binding MajorPaymentThresholdText}" Placeholder="Amount" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Safety buffer (always kept out of Free to spend)" Style="{StaticResource SecondaryLabel}" />
-                        <Entry Text="{Binding SafetyBufferText}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                        <Entry Text="{Binding SafetyBufferText}" Placeholder="Amount" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
                     </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="10">
                         <Button Text="Save" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
                         <Label Text="{Binding FreeToSpendStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Transactions" Style="{StaticResource SectionTitleLabel}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Resolve upcoming: days ahead to show while collapsed" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Text="{Binding ResolveUpcomingNearTermDaysText}" Placeholder="Days" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save" Command="{Binding SaveResolveUpcomingCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Label Text="{Binding ResolveUpcomingStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>

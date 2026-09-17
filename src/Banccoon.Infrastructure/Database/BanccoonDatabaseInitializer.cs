@@ -5,19 +5,53 @@ namespace Banccoon.Infrastructure.Database;
 public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
 {
     private readonly ISqliteConnectionFactory connectionFactory;
+    private readonly SemaphoreSlim initializationLock = new(1, 1);
+    private bool isInitialized;
 
     public BanccoonDatabaseInitializer(ISqliteConnectionFactory connectionFactory)
     {
         this.connectionFactory = connectionFactory;
     }
 
+    // Every repository call goes through this before touching the database, so without caching,
+    // rapid navigation (which fans out into many repository calls at once, e.g. the sidebar's
+    // favorites refresh plus a page's own InitializeAsync) was reopening a connection and re-running
+    // the entire schema/migration battery on every single call - needless connection churn that
+    // made transient SQLite lock contention far more likely. The underlying SQL is already
+    // idempotent (CREATE TABLE IF NOT EXISTS / AddMissingColumnAsync), so running it once per
+    // process instead of once per call changes nothing except how much redundant work happens.
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        if (isInitialized)
+        {
+            return;
+        }
+
+        await initializationLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (isInitialized)
+            {
+                return;
+            }
+
+            await InitializeCoreAsync(cancellationToken);
+            isInitialized = true;
+        }
+        finally
+        {
+            initializationLock.Release();
+        }
+    }
+
+    private async Task InitializeCoreAsync(CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
 
         command.CommandText = """
             PRAGMA foreign_keys = ON;
+            PRAGMA journal_mode = WAL;
 
             CREATE TABLE IF NOT EXISTS Accounts (
                 Id TEXT PRIMARY KEY,
@@ -170,7 +204,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FreeToSpendWindowMode TEXT NOT NULL DEFAULT 'RollingDays',
                 FreeToSpendWindowDays INTEGER NOT NULL DEFAULT 7,
                 SafetyBuffer TEXT NOT NULL DEFAULT '0',
-                MajorPaymentThreshold TEXT NOT NULL DEFAULT '0'
+                MajorPaymentThreshold TEXT NOT NULL DEFAULT '0',
+                ResolveUpcomingNearTermDays INTEGER NOT NULL DEFAULT 3
             );
             """;
 
@@ -300,6 +335,13 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "Settings",
             "MajorPaymentThreshold",
             "TEXT NOT NULL DEFAULT '0'",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "ResolveUpcomingNearTermDays",
+            "INTEGER NOT NULL DEFAULT 3",
             cancellationToken);
     }
 

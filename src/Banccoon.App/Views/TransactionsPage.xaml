@@ -9,6 +9,7 @@
     Title="Transactions"
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
+    <Grid>
     <ScrollView>
         <VerticalStackLayout Padding="32" Spacing="16">
 
@@ -25,14 +26,6 @@
             </Grid>
 
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
-
-            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding AddMenuOpen}">
-                <HorizontalStackLayout Spacing="8">
-                    <Button Text="Expense" Command="{Binding OpenExpenseFormCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Income" Command="{Binding OpenIncomeFormCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Transfer" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource QuietButton}" />
-                </HorizontalStackLayout>
-            </Border>
 
             <Border Style="{StaticResource CardBorder}" IsVisible="{Binding AddForm.IsOpen}">
                 <VerticalStackLayout Spacing="10">
@@ -76,9 +69,9 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:CategoryManagementRowViewModel">
                                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,6">
-                                    <Entry Grid.Column="0" Text="{Binding Name}" />
+                                    <Entry Grid.Column="0" Placeholder="Category name" Text="{Binding Name}" />
                                     <Button Grid.Column="1" Text="Rename" Command="{Binding RenameCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="2" Text="Delete" Command="{Binding DeleteCommand}" Style="{StaticResource QuietButton}" />
+                                    <Button Grid.Column="2" Text="Delete" Command="{Binding DeleteCommand}" Style="{StaticResource DestructiveButton}" />
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -95,11 +88,6 @@
                     <Label Text="{Binding CategoryManagement.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                 </VerticalStackLayout>
             </Border>
-
-            <HorizontalStackLayout Spacing="8" IsVisible="{Binding FilterOpen}">
-                <Picker Title="Account" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding AccountFilter}" WidthRequest="180" />
-                <Picker Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding CategoryFilter}" WidthRequest="180" />
-            </HorizontalStackLayout>
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
@@ -138,16 +126,21 @@
                         </Grid>
                     </Grid>
 
-                    <Border Style="{StaticResource CardBorder}" IsVisible="{Binding ScheduleForm.IsOpen}">
+                    <Border
+                        Style="{StaticResource CardBorder}"
+                        IsVisible="{Binding ScheduleForm.IsOpen}"
+                        Margin="0,6,0,12"
+                        Background="{AppThemeBinding Light={StaticResource LightCardSoft}, Dark={StaticResource DarkCardSoft}}">
                         <VerticalStackLayout Spacing="10">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="New scheduled rule" Style="{StaticResource SectionTitleLabel}" />
-                                <Button Grid.Column="1" Text="Close" Command="{Binding ScheduleForm.CloseCommand}" Style="{StaticResource QuietButton}" />
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <Label Grid.Column="0" Text="{Binding ScheduleForm.FormTitle}" Style="{StaticResource SectionTitleLabel}" />
+                                <Button Grid.Column="1" Text="Delete" Command="{Binding ScheduleForm.DeleteCommand}" IsVisible="{Binding ScheduleForm.IsEditing}" Style="{StaticResource DestructiveButton}" />
+                                <Button Grid.Column="2" Text="Close" Command="{Binding ScheduleForm.CloseCommand}" Style="{StaticResource QuietButton}" />
                             </Grid>
 
                             <HorizontalStackLayout Spacing="8">
-                                <Button Text="Expense" Command="{Binding ScheduleForm.SetExpenseCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="Income" Command="{Binding ScheduleForm.SetIncomeCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="Expense" Command="{Binding ScheduleForm.SetExpenseCommand}" Style="{StaticResource ExpenseButton}" />
+                                <Button Text="Income" Command="{Binding ScheduleForm.SetIncomeCommand}" Style="{StaticResource IncomeButton}" />
                             </HorizontalStackLayout>
 
                             <Entry Placeholder="Name" Text="{Binding ScheduleForm.Name}" />
@@ -173,7 +166,7 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <CollectionView ItemsSource="{Binding ResolveUpcoming.Rows}">
+                    <CollectionView ItemsSource="{Binding ResolveUpcoming.Rows}" IsVisible="{Binding ResolveUpcoming.IsCollapsed}">
                         <CollectionView.EmptyView>
                             <Label Text="Nothing due right now." Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
@@ -192,14 +185,39 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
+
+                    <CollectionView ItemsSource="{Binding ResolveUpcoming.RuleRows}" IsVisible="{Binding ResolveUpcoming.IsExpanded}">
+                        <CollectionView.EmptyView>
+                            <Label Text="No scheduled rules yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:ScheduledRuleRowViewModel">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                        <Label Text="{Binding Name}" />
+                                        <Label Text="{Binding RecurrenceDescriptionText}" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Text="{Binding NextDueText}" Style="{StaticResource TertiaryLabel}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Button Grid.Column="2" Text="Mark paid" Command="{Binding MarkPaidCommand}" IsVisible="{Binding HasUpcomingOccurrence}" Style="{StaticResource QuietButton}" />
+                                    <Button Grid.Column="3" Text="Edit" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
+
+            <HorizontalStackLayout Spacing="8" IsVisible="{Binding FilterOpen}">
+                <Picker Title="Account" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding AccountFilter}" WidthRequest="180" />
+                <Picker Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding CategoryFilter}" WidthRequest="180" />
+            </HorizontalStackLayout>
 
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding SelectMode}">
                 <Label Grid.Column="0" Text="{Binding SelectionSummaryText}" VerticalOptions="Center" />
                 <Picker Grid.Column="1" Title="Set category" ItemsSource="{Binding BulkCategoryOptions}" SelectedItem="{Binding BulkCategory}" WidthRequest="160" />
                 <Button Grid.Column="2" Text="Apply category" Command="{Binding AssignCategoryToSelectedCommand}" Style="{StaticResource QuietButton}" />
-                <Button Grid.Column="3" Text="Delete selected" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource QuietButton}" />
+                <Button Grid.Column="3" Text="Delete selected" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DestructiveButton}" />
             </Grid>
 
             <Border Style="{StaticResource CardBorder}">
@@ -238,4 +256,23 @@
 
         </VerticalStackLayout>
     </ScrollView>
+
+    <Border
+        Style="{StaticResource CardBorder}"
+        IsVisible="{Binding AddMenuOpen}"
+        HorizontalOptions="End"
+        VerticalOptions="Start"
+        Margin="0,78,32,0"
+        WidthRequest="160"
+        Padding="8">
+        <Border.Shadow>
+            <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.18" />
+        </Border.Shadow>
+        <VerticalStackLayout Spacing="6">
+            <Button Text="Expense" Command="{Binding OpenExpenseFormCommand}" Style="{StaticResource ExpenseButton}" HorizontalOptions="Fill" />
+            <Button Text="Income" Command="{Binding OpenIncomeFormCommand}" Style="{StaticResource IncomeButton}" HorizontalOptions="Fill" />
+            <Button Text="Transfer" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Fill" />
+        </VerticalStackLayout>
+    </Border>
+    </Grid>
 </ContentPage>

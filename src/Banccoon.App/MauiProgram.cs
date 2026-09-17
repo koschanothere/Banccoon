@@ -84,6 +84,40 @@ public static class MauiProgram
         builder.Services.AddTransient<AccountsPage>();
         builder.Services.AddTransient<SettingsPage>();
 
+#if WINDOWS
+        ConfigureWindowsInputBorders();
+#endif
+
         return builder.Build();
     }
+
+#if WINDOWS
+    // Entry/Picker/DatePicker have no cross-platform border property in MAUI, so the subtle
+    // outline that makes them read as distinct fields (rather than blending into the card
+    // background) is applied directly to the native WinUI control here. One neutral gray works
+    // for both themes, avoiding the extra plumbing a theme-reactive native color would need.
+    private static void ConfigureWindowsInputBorders()
+    {
+        var borderColor = Windows.UI.Color.FromArgb(255, 148, 156, 166);
+        var borderThickness = new Microsoft.UI.Xaml.Thickness(1);
+
+        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BanccoonBorder", (handler, _) =>
+        {
+            handler.PlatformView.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(borderColor);
+            handler.PlatformView.BorderThickness = borderThickness;
+        });
+
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("BanccoonBorder", (handler, _) =>
+        {
+            handler.PlatformView.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(borderColor);
+            handler.PlatformView.BorderThickness = borderThickness;
+        });
+
+        Microsoft.Maui.Handlers.DatePickerHandler.Mapper.AppendToMapping("BanccoonBorder", (handler, _) =>
+        {
+            handler.PlatformView.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(borderColor);
+            handler.PlatformView.BorderThickness = borderThickness;
+        });
+    }
+#endif
 }

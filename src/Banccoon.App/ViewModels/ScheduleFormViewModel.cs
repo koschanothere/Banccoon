@@ -20,6 +20,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
     private readonly Func<Task> onSaved;
 
     private bool isOpen;
+    private Guid? editingScheduledTransactionId;
     private TransactionType type = TransactionType.Expense;
     private string name = string.Empty;
     private NamedOptionViewModel? account;
@@ -59,6 +60,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
         CreateCategoryCommand = new RelayCommand(() => _ = CreateCategoryAsync());
         SaveCommand = new RelayCommand(() => _ = SaveAsync());
+        DeleteCommand = new RelayCommand(() => _ = DeleteAsync());
     }
 
     public bool IsOpen
@@ -66,6 +68,10 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         get => isOpen;
         private set => SetProperty(ref isOpen, value);
     }
+
+    public bool IsEditing => editingScheduledTransactionId.HasValue;
+
+    public string FormTitle => IsEditing ? "Edit scheduled rule" : "New scheduled rule";
 
     public TransactionType Type
     {
@@ -148,12 +154,18 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
     public ICommand SaveCommand { get; }
 
+    public ICommand DeleteCommand { get; }
+
     public void Close()
     {
         IsOpen = false;
     }
 
-    public async Task OpenAsync(CancellationToken cancellationToken = default)
+    public Task OpenAsync(CancellationToken cancellationToken = default) => OpenInternalAsync(existing: null, cancellationToken);
+
+    public Task OpenForEditAsync(ScheduledTransaction existing, CancellationToken cancellationToken = default) => OpenInternalAsync(existing, cancellationToken);
+
+    private async Task OpenInternalAsync(ScheduledTransaction? existing, CancellationToken cancellationToken)
     {
         var accounts = await accountRepository.GetAllAsync(cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
@@ -170,15 +182,27 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
         }
 
-        Name = string.Empty;
-        Type = TransactionType.Expense;
-        Account = AccountOptions.FirstOrDefault();
-        AmountText = string.Empty;
-        Category = CategoryOptions.FirstOrDefault();
+        editingScheduledTransactionId = existing?.Id;
+        Name = existing?.Name ?? string.Empty;
+        Type = existing?.Type ?? TransactionType.Expense;
+        Account = existing is null
+            ? AccountOptions.FirstOrDefault()
+            : AccountOptions.FirstOrDefault(option => option.Id == existing.AccountId) ?? AccountOptions.FirstOrDefault();
+        AmountText = existing is null ? string.Empty : existing.Amount.ToString(CultureInfo.InvariantCulture);
+        Category = existing?.CategoryId is { } categoryId
+            ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
+            : CategoryOptions.FirstOrDefault();
         IsAddingCategory = false;
         NewCategoryName = string.Empty;
         StatusText = string.Empty;
         Recurrence = CreateRecurrenceEditor();
+        if (existing is not null)
+        {
+            Recurrence.ApplyRule(existing.RecurrenceRule);
+        }
+
+        OnPropertyChanged(nameof(IsEditing));
+        OnPropertyChanged(nameof(FormTitle));
         IsOpen = true;
     }
 
@@ -238,7 +262,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
         var rule = Recurrence.BuildRule();
         var scheduledTransaction = new ScheduledTransaction(
-            Guid.NewGuid(),
+            editingScheduledTransactionId ?? Guid.NewGuid(),
             Name.Trim(),
             amount,
             Account.Id,
@@ -249,6 +273,19 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             Active: true);
 
         await scheduledTransactionRepository.SaveAsync(scheduledTransaction);
+
+        IsOpen = false;
+        await onSaved();
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (editingScheduledTransactionId is not { } id)
+        {
+            return;
+        }
+
+        await scheduledTransactionRepository.DeleteAsync(id);
 
         IsOpen = false;
         await onSaved();

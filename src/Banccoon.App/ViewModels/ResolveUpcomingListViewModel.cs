@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
+using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
 
@@ -12,7 +13,6 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 {
     private const int DefaultDelayDays = 7;
     private const int LookbackDays = 30;
-    private const int NearTermForwardDays = 3;
     private const int ExpandedForwardDays = 90;
 
     private readonly IDateProvider dateProvider;
@@ -23,9 +23,13 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private readonly IScheduledTransactionProjectionService scheduledTransactionProjectionService;
     private readonly IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService;
     private readonly ITransactionApplicationService transactionApplicationService;
+    private readonly IRecurrenceDescriptionService recurrenceDescriptionService;
     private readonly Func<Task> onChanged;
+    private readonly Func<ScheduledTransaction, Task> onEditRequested;
 
     private List<ResolveUpcomingRowViewModel> allRows = [];
+    private List<ScheduledTransaction> activeSchedules = [];
+    private string currency = string.Empty;
     private DateOnly nearTermCutoff;
     private bool isExpanded;
 
@@ -38,7 +42,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         IScheduledTransactionProjectionService scheduledTransactionProjectionService,
         IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
-        Func<Task> onChanged)
+        IRecurrenceDescriptionService recurrenceDescriptionService,
+        Func<Task> onChanged,
+        Func<ScheduledTransaction, Task> onEditRequested)
     {
         this.dateProvider = dateProvider;
         this.accountRepository = accountRepository;
@@ -48,13 +54,18 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         this.scheduledTransactionProjectionService = scheduledTransactionProjectionService;
         this.scheduledOccurrenceResolutionService = scheduledOccurrenceResolutionService;
         this.transactionApplicationService = transactionApplicationService;
+        this.recurrenceDescriptionService = recurrenceDescriptionService;
         this.onChanged = onChanged;
+        this.onEditRequested = onEditRequested;
 
         Rows = [];
+        RuleRows = [];
         ToggleExpandedCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
     }
 
     public ObservableCollection<ResolveUpcomingRowViewModel> Rows { get; }
+
+    public ObservableCollection<ScheduledRuleRowViewModel> RuleRows { get; }
 
     public bool IsExpanded
     {
@@ -63,19 +74,23 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         {
             if (SetProperty(ref isExpanded, value))
             {
+                OnPropertyChanged(nameof(IsCollapsed));
                 RebuildVisibleRows();
             }
         }
     }
 
+    public bool IsCollapsed => !IsExpanded;
+
     public ICommand ToggleExpandedCommand { get; }
 
-    public async Task RefreshAsync(string currency, CancellationToken cancellationToken = default)
+    public async Task RefreshAsync(string currency, int nearTermDays, CancellationToken cancellationToken = default)
     {
+        this.currency = currency;
         var today = dateProvider.Today;
-        nearTermCutoff = today.AddDays(NearTermForwardDays);
+        nearTermCutoff = today.AddDays(nearTermDays);
         var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
-        var activeSchedules = scheduledTransactions.Where(schedule => schedule.Active).ToList();
+        activeSchedules = scheduledTransactions.Where(schedule => schedule.Active).ToList();
         // Project the full expanded window up front - collapsed view then filters down to
         // near-term (below), rather than only ever having near-term events to work with, which
         // left "expand" with nothing new to reveal beyond what was already showing.
@@ -108,21 +123,36 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 
     private void RebuildVisibleRows()
     {
-        // Collapsed: near-term only (overdue, or due within NearTermForwardDays), one line per
-        // distinct scheduled transaction (its most urgent occurrence). Expanded: every individual
-        // occurrence across the full lookback/expanded-forward window, not just near-term ones.
-        IEnumerable<ResolveUpcomingRowViewModel> visible = IsExpanded
-            ? allRows
-            : allRows
-                .Where(row => row.OccurrenceDate <= nearTermCutoff)
-                .GroupBy(row => row.ScheduledTransactionId)
-                .Select(group => group.OrderBy(row => row.OccurrenceDate).First())
-                .OrderBy(row => row.OccurrenceDate);
+        // Collapsed: near-term only (overdue, or due within the configured near-term window), one
+        // line per distinct scheduled transaction (its most urgent occurrence).
+        var nearTerm = allRows
+            .Where(row => row.OccurrenceDate <= nearTermCutoff)
+            .GroupBy(row => row.ScheduledTransactionId)
+            .Select(group => group.OrderBy(row => row.OccurrenceDate).First())
+            .OrderBy(row => row.OccurrenceDate);
 
         Rows.Clear();
-        foreach (var row in visible)
+        foreach (var row in nearTerm)
         {
             Rows.Add(row);
+        }
+
+        // Expanded: one line per rule that exists (not per occurrence), each carrying its own
+        // soonest not-yet-paid occurrence (if any) for the mark-paid action, plus edit access.
+        var soonestByScheduleId = allRows
+            .GroupBy(row => row.ScheduledTransactionId)
+            .ToDictionary(group => group.Key, group => group.OrderBy(row => row.OccurrenceDate).First());
+
+        RuleRows.Clear();
+        foreach (var schedule in activeSchedules.OrderBy(schedule => schedule.Name))
+        {
+            soonestByScheduleId.TryGetValue(schedule.Id, out var soonestOccurrence);
+            RuleRows.Add(new ScheduledRuleRowViewModel(
+                schedule,
+                recurrenceDescriptionService.Describe(schedule.RecurrenceRule),
+                currency,
+                soonestOccurrence,
+                onEdit: () => onEditRequested(schedule)));
         }
     }
 

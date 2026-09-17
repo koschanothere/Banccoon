@@ -15,6 +15,8 @@ public sealed class SettingsViewModel : ViewModelBase
     private string safetyBufferText = "0";
     private string majorPaymentThresholdText = "0";
     private string freeToSpendStatusText = string.Empty;
+    private string resolveUpcomingNearTermDaysText = "3";
+    private string resolveUpcomingStatusText = string.Empty;
 
     public SettingsViewModel(ISettingsRepository settingsRepository)
     {
@@ -28,6 +30,7 @@ public sealed class SettingsViewModel : ViewModelBase
         SetWindowCalendarMonthCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.CalendarMonth);
         SetWindowUntilMajorPaymentCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.UntilNextMajorPayment);
         SaveFreeToSpendCommand = new RelayCommand(() => _ = SaveFreeToSpendAsync());
+        SaveResolveUpcomingCommand = new RelayCommand(() => _ = SaveResolveUpcomingAsync());
     }
 
     public AppThemeMode ThemeMode
@@ -119,6 +122,20 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public ICommand SaveFreeToSpendCommand { get; }
 
+    public string ResolveUpcomingNearTermDaysText
+    {
+        get => resolveUpcomingNearTermDaysText;
+        set => SetProperty(ref resolveUpcomingNearTermDaysText, value);
+    }
+
+    public string ResolveUpcomingStatusText
+    {
+        get => resolveUpcomingStatusText;
+        private set => SetProperty(ref resolveUpcomingStatusText, value);
+    }
+
+    public ICommand SaveResolveUpcomingCommand { get; }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var settings = await settingsRepository.GetAsync(cancellationToken);
@@ -130,6 +147,9 @@ public sealed class SettingsViewModel : ViewModelBase
         SafetyBufferText = settings.SafetyBuffer.ToString(CultureInfo.InvariantCulture);
         MajorPaymentThresholdText = settings.MajorPaymentThreshold.ToString(CultureInfo.InvariantCulture);
         FreeToSpendStatusText = string.Empty;
+
+        ResolveUpcomingNearTermDaysText = settings.ResolveUpcomingNearTermDays.ToString(CultureInfo.InvariantCulture);
+        ResolveUpcomingStatusText = string.Empty;
     }
 
     private async Task SetThemeModeAsync(AppThemeMode mode)
@@ -170,6 +190,20 @@ public sealed class SettingsViewModel : ViewModelBase
         });
 
         FreeToSpendStatusText = "Saved.";
+    }
+
+    private async Task SaveResolveUpcomingAsync()
+    {
+        if (!int.TryParse(ResolveUpcomingNearTermDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var nearTermDays) || nearTermDays < 0)
+        {
+            ResolveUpcomingStatusText = "Must be a whole number of 0 or more.";
+            return;
+        }
+
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with { ResolveUpcomingNearTermDays = nearTermDays });
+
+        ResolveUpcomingStatusText = "Saved.";
     }
 
     private static void ApplyTheme(AppThemeMode mode)

@@ -35,6 +35,8 @@ Concrete look decisions: typography, shape, density, and color. For the underlyi
 - Overdue / negative: red
 - Warning / due-soon: orange
 - These always mean the same thing everywhere (transaction rows, the "resolve upcoming" widget, reconciliation, the Free-to-spend breakdown) and are **not** affected by the user's chosen accent color — preserves "color as signal" regardless of personalization.
+- **Extends to action buttons, not just status text/amounts** — the same fixed colors are used on buttons so the color itself becomes a habit and the user doesn't have to read the label every time: any destructive action (delete a category, a scheduled rule, a transaction) is red; any "this is an expense" action is red-leaning (money going out, same family as negative amounts); any "this is income" action is green (money coming in, same family as positive amounts). Implemented as `DestructiveButton`/`ExpenseButton`/`IncomeButton` styles in `App.xaml`, all a soft/tinted version of the status color (not the saturated status color itself) so they read as calm chips rather than alarms — `QuietButton` with color swapped in, not a new visual weight class. Apply these to every future delete/expense/income button as it's built (Accounts archive/delete, Categories delete, etc.) rather than leaving them as plain `QuietButton`.
+- Transfer actions are deliberately left neutral (`QuietButton`) for now — no third color was requested, and a transfer isn't "money leaving the system" the way an expense is. Revisit only if asked.
 
 ### Accent color — architecture ready, one scheme implemented for now
 

@@ -216,7 +216,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         OnPropertyChanged(nameof(TechnicalSyntaxMessage));
     }
 
-    private void ApplyRule(RecurrenceRule rule)
+    public void ApplyRule(RecurrenceRule rule)
     {
         frequency = rule.Frequency;
         interval = rule.Interval;

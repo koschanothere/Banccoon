@@ -25,7 +25,8 @@ public sealed class SqliteConnectionFactory : ISqliteConnectionFactory
             Mode = SqliteOpenMode.ReadWriteCreate,
             Cache = SqliteCacheMode.Shared,
             ForeignKeys = true,
-            Pooling = false
+            Pooling = false,
+            DefaultTimeout = 5
         }.ToString();
 
         var connection = new SqliteConnection(connectionString);

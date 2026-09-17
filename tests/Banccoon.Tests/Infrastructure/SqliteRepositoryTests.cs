@@ -242,7 +242,8 @@ public sealed class SqliteRepositoryTests
             FreeToSpendWindowMode = FreeToSpendWindowMode.UntilNextMajorPayment,
             FreeToSpendWindowDays = 14,
             SafetyBuffer = 4880m,
-            MajorPaymentThreshold = 10000m
+            MajorPaymentThreshold = 10000m,
+            ResolveUpcomingNearTermDays = 10
         };
 
         await store.Settings.SaveAsync(settings);
@@ -253,6 +254,7 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(14, loaded.FreeToSpendWindowDays);
         Assert.Equal(4880m, loaded.SafetyBuffer);
         Assert.Equal(10000m, loaded.MajorPaymentThreshold);
+        Assert.Equal(10, loaded.ResolveUpcomingNearTermDays);
     }
 
     [Fact]

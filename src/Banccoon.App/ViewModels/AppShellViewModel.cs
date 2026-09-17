@@ -17,11 +17,21 @@ public sealed class AppShellViewModel : ViewModelBase
 
     public async Task RefreshFavoritesAsync(CancellationToken cancellationToken = default)
     {
-        var accounts = await accountRepository.GetAllAsync(cancellationToken);
-        FavoriteAccounts.Clear();
-        foreach (var account in accounts.Where(account => account.IsFavorite && !account.IsArchived))
+        // Fired on every navigation and never awaited by its caller (AppShell), so a transient
+        // failure here (e.g. momentary SQLite lock contention from another in-flight call) must
+        // not surface as an unobserved exception - this is a best-effort sidebar refresh, not a
+        // correctness-critical read.
+        try
         {
-            FavoriteAccounts.Add(new SidebarAccountViewModel(account));
+            var accounts = await accountRepository.GetAllAsync(cancellationToken);
+            FavoriteAccounts.Clear();
+            foreach (var account in accounts.Where(account => account.IsFavorite && !account.IsArchived))
+            {
+                FavoriteAccounts.Add(new SidebarAccountViewModel(account));
+            }
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
         }
     }
 }
