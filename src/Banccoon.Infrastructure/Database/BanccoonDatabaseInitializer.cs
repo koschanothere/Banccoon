@@ -205,7 +205,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FreeToSpendWindowDays INTEGER NOT NULL DEFAULT 7,
                 SafetyBuffer TEXT NOT NULL DEFAULT '0',
                 MajorPaymentThreshold TEXT NOT NULL DEFAULT '0',
-                ResolveUpcomingNearTermDays INTEGER NOT NULL DEFAULT 3
+                ResolveUpcomingNearTermDays INTEGER NOT NULL DEFAULT 3,
+                PrimaryAccountId TEXT NULL
             );
             """;
 
@@ -342,6 +343,13 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "Settings",
             "ResolveUpcomingNearTermDays",
             "INTEGER NOT NULL DEFAULT 3",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "PrimaryAccountId",
+            "TEXT NULL",
             cancellationToken);
     }
 

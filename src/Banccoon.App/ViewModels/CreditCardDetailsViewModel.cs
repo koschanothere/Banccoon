@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Models;
@@ -7,6 +10,7 @@ namespace Banccoon.App.ViewModels;
 public sealed class CreditCardDetailsViewModel : ViewModelBase
 {
     private readonly ICreditCardForecastService creditCardForecastService;
+    private bool isOpen;
     private Account? account;
     private decimal chosenPaymentAmount;
     private decimal manualMonthlyFinanceCharge;
@@ -19,20 +23,41 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
     {
         this.creditCardForecastService = creditCardForecastService;
         firstPaymentDate = dateProvider.Today;
+
+        CloseCommand = new RelayCommand(Close);
+    }
+
+    public bool IsOpen
+    {
+        get => isOpen;
+        private set => SetProperty(ref isOpen, value);
     }
 
     public Account? Account
     {
         get => account;
-        set
+        private set
         {
             if (SetProperty(ref account, value))
             {
+                OnPropertyChanged(nameof(AccountName));
+                OnPropertyChanged(nameof(CurrentDebtText));
+                OnPropertyChanged(nameof(MinimumPaymentDisplayText));
                 ChosenPaymentAmount = GetDefaultPaymentAmount(value);
                 RecalculatePayoff();
             }
         }
     }
+
+    public string AccountName => Account?.Name ?? string.Empty;
+
+    public string CurrentDebtText => Account?.CreditCardDetails?.CurrentDebt is { } debt
+        ? MoneyFormat.Format(debt, Account.Currency)
+        : "Not set";
+
+    public string MinimumPaymentDisplayText => Account?.CreditCardDetails?.MinimumPayment is { } minimum
+        ? MoneyFormat.Format(minimum, Account.Currency)
+        : "Not set";
 
     public decimal ChosenPaymentAmount
     {
@@ -41,7 +66,20 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref chosenPaymentAmount, Math.Max(0m, value)))
             {
+                OnPropertyChanged(nameof(ChosenPaymentAmountText));
                 RecalculatePayoff();
+            }
+        }
+    }
+
+    public string ChosenPaymentAmountText
+    {
+        get => chosenPaymentAmount.ToString(CultureInfo.InvariantCulture);
+        set
+        {
+            if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+            {
+                ChosenPaymentAmount = parsed;
             }
         }
     }
@@ -53,7 +91,20 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref manualMonthlyFinanceCharge, Math.Max(0m, value)))
             {
+                OnPropertyChanged(nameof(ManualMonthlyFinanceChargeText));
                 RecalculatePayoff();
+            }
+        }
+    }
+
+    public string ManualMonthlyFinanceChargeText
+    {
+        get => manualMonthlyFinanceCharge.ToString(CultureInfo.InvariantCulture);
+        set
+        {
+            if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+            {
+                ManualMonthlyFinanceCharge = parsed;
             }
         }
     }
@@ -65,9 +116,16 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref firstPaymentDate, value))
             {
+                OnPropertyChanged(nameof(FirstPaymentDateTime));
                 RecalculatePayoff();
             }
         }
+    }
+
+    public DateTime FirstPaymentDateTime
+    {
+        get => firstPaymentDate.ToDateTime(TimeOnly.MinValue);
+        set => FirstPaymentDate = DateOnly.FromDateTime(value);
     }
 
     public CreditCardPayoffPlan? PayoffPlan
@@ -101,6 +159,16 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
                 : $"Paid off in {PayoffPlan.MonthCount} months.";
         }
     }
+
+    public ICommand CloseCommand { get; }
+
+    public void Open(Account selectedAccount)
+    {
+        Account = selectedAccount;
+        IsOpen = true;
+    }
+
+    public void Close() => IsOpen = false;
 
     private void RecalculatePayoff()
     {

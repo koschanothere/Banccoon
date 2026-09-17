@@ -16,7 +16,8 @@ public sealed record AppSettings(
     int FreeToSpendWindowDays = 7,
     decimal SafetyBuffer = 0m,
     decimal MajorPaymentThreshold = 0m,
-    int ResolveUpcomingNearTermDays = 3)
+    int ResolveUpcomingNearTermDays = 3,
+    Guid? PrimaryAccountId = null)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

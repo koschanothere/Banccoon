@@ -41,7 +41,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 FreeToSpendWindowDays,
                 SafetyBuffer,
                 MajorPaymentThreshold,
-                ResolveUpcomingNearTermDays
+                ResolveUpcomingNearTermDays,
+                PrimaryAccountId
             FROM Settings
             WHERE Id = 1;
             """;
@@ -65,7 +66,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             SqliteData.ReadInt32(reader, "FreeToSpendWindowDays"),
             SqliteData.ReadDecimal(reader, "SafetyBuffer"),
             SqliteData.ReadDecimal(reader, "MajorPaymentThreshold"),
-            SqliteData.ReadInt32(reader, "ResolveUpcomingNearTermDays"));
+            SqliteData.ReadInt32(reader, "ResolveUpcomingNearTermDays"),
+            SqliteData.ReadNullableGuid(reader, "PrimaryAccountId"));
     }
 
     public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
@@ -89,7 +91,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 FreeToSpendWindowDays,
                 SafetyBuffer,
                 MajorPaymentThreshold,
-                ResolveUpcomingNearTermDays)
+                ResolveUpcomingNearTermDays,
+                PrimaryAccountId)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -104,7 +107,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @FreeToSpendWindowDays,
                 @SafetyBuffer,
                 @MajorPaymentThreshold,
-                @ResolveUpcomingNearTermDays)
+                @ResolveUpcomingNearTermDays,
+                @PrimaryAccountId)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -118,7 +122,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 FreeToSpendWindowDays = excluded.FreeToSpendWindowDays,
                 SafetyBuffer = excluded.SafetyBuffer,
                 MajorPaymentThreshold = excluded.MajorPaymentThreshold,
-                ResolveUpcomingNearTermDays = excluded.ResolveUpcomingNearTermDays;
+                ResolveUpcomingNearTermDays = excluded.ResolveUpcomingNearTermDays,
+                PrimaryAccountId = excluded.PrimaryAccountId;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -133,6 +138,7 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@SafetyBuffer", SqliteData.DecimalToText(settings.SafetyBuffer));
         AddParameter(command, "@MajorPaymentThreshold", SqliteData.DecimalToText(settings.MajorPaymentThreshold));
         AddParameter(command, "@ResolveUpcomingNearTermDays", settings.ResolveUpcomingNearTermDays);
+        AddParameter(command, "@PrimaryAccountId", SqliteData.ToDbValue(settings.PrimaryAccountId));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

@@ -13,6 +13,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
     private readonly ICategoryRepository categoryRepository;
     private readonly ITransactionRepository transactionRepository;
     private readonly ITransactionApplicationService transactionApplicationService;
+    private readonly ISettingsRepository settingsRepository;
     private readonly Func<Task> onSaved;
 
     private TransactionType type;
@@ -33,12 +34,14 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         ICategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
         ITransactionApplicationService transactionApplicationService,
+        ISettingsRepository settingsRepository,
         Func<Task> onSaved)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.transactionApplicationService = transactionApplicationService;
+        this.settingsRepository = settingsRepository;
         this.onSaved = onSaved;
 
         AccountOptions = [];
@@ -147,6 +150,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
 
         var accounts = await accountRepository.GetAllAsync(cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        var settings = await settingsRepository.GetAsync(cancellationToken);
 
         // Everything below touches UI-bound state, and the awaits above may have resumed off the
         // UI thread (see ViewModelBase.RunOnMainThreadAsync).
@@ -165,7 +169,9 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             }
 
             Name = string.Empty;
-            Account = AccountOptions.FirstOrDefault();
+            Account = (settings.PrimaryAccountId is { } primaryAccountId
+                ? AccountOptions.FirstOrDefault(option => option.Id == primaryAccountId)
+                : null) ?? AccountOptions.FirstOrDefault();
             DestinationAccount = AccountOptions.Skip(1).FirstOrDefault() ?? Account;
             Date = DateTime.Today;
             AmountText = string.Empty;

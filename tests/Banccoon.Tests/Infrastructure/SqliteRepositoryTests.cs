@@ -234,6 +234,7 @@ public sealed class SqliteRepositoryTests
     public async Task SettingsRepository_SaveAndGet_RoundTripsFreeToSpendSettings()
     {
         await using var store = new SqliteTestStore();
+        var primaryAccountId = Guid.NewGuid();
         var settings = new AppSettings(
             "EUR",
             ForecastPeriod.ThirtyDays,
@@ -243,7 +244,8 @@ public sealed class SqliteRepositoryTests
             FreeToSpendWindowDays = 14,
             SafetyBuffer = 4880m,
             MajorPaymentThreshold = 10000m,
-            ResolveUpcomingNearTermDays = 10
+            ResolveUpcomingNearTermDays = 10,
+            PrimaryAccountId = primaryAccountId
         };
 
         await store.Settings.SaveAsync(settings);
@@ -255,6 +257,7 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(4880m, loaded.SafetyBuffer);
         Assert.Equal(10000m, loaded.MajorPaymentThreshold);
         Assert.Equal(10, loaded.ResolveUpcomingNearTermDays);
+        Assert.Equal(primaryAccountId, loaded.PrimaryAccountId);
     }
 
     [Fact]

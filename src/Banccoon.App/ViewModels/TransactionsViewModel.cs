@@ -62,7 +62,8 @@ public sealed class TransactionsViewModel : ViewModelBase
             categoryRepository,
             transactionRepository,
             transactionApplicationService,
-            InitializeAsync);
+            settingsRepository,
+            () => InitializeAsync());
         ScheduleForm = new ScheduleFormViewModel(
             dateProvider,
             accountRepository,
