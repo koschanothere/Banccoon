@@ -1,3 +1,4 @@
+using Banccoon.App.Diagnostics;
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
@@ -23,6 +24,18 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        // Diagnostics for the intermittent "sidebar goes blank, tabs stop navigating" report -
+        // it isn't a crash (the process keeps running), so it needs whatever exception caused it
+        // caught and logged rather than silently swallowed, to have something to look at next time.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            DiagnosticLog.Write($"AppDomain unhandled exception (terminating={e.IsTerminating}): {e.ExceptionObject}");
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            DiagnosticLog.Write($"Unobserved task exception: {e.Exception}");
+            e.SetObserved();
+        };
+
         var builder = MauiApp.CreateBuilder();
 
         builder
