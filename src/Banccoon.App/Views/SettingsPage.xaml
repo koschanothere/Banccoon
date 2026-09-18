@@ -20,6 +20,16 @@
                         <Button Text="Dark" Command="{Binding SetDarkCommand}" Style="{StaticResource QuietButton}" />
                         <Button Text="System" Command="{Binding SetSystemCommand}" Style="{StaticResource QuietButton}" />
                     </HorizontalStackLayout>
+
+                    <Label Text="Category colors" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="Set per-category in Transactions -&gt; Categories. Exact shades still TBD." Style="{StaticResource TertiaryLabel}" />
+                    <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding CategoryColorPreview}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="Color">
+                                <Border WidthRequest="22" HeightRequest="22" StrokeShape="RoundRectangle 11" Stroke="Transparent" Background="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
 

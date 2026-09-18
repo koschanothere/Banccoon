@@ -277,6 +277,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private void ApplyFilters()
     {
         var accountsById = accounts.ToDictionary(account => account.Id);
+        var categoriesById = categories.ToDictionary(category => category.Id);
         var balancesByAccount = accounts.ToDictionary(
             account => account.Id,
             account => transactionBalanceHistoryService.GetBalancesAfterEachTransaction(
@@ -305,7 +306,10 @@ public sealed class TransactionsViewModel : ViewModelBase
                 ? balance
                 : accountsById.TryGetValue(transaction.AccountId, out var account) ? account.CurrentBalance : 0m;
 
-            var row = new TransactionRowViewModel(transaction, descriptionText, balanceAfter, currency)
+            var category = transaction.CategoryId is { } categoryId && categoriesById.TryGetValue(categoryId, out var foundCategory)
+                ? foundCategory
+                : null;
+            var row = new TransactionRowViewModel(transaction, descriptionText, balanceAfter, currency, category)
             {
                 IsSelectModeActive = SelectMode
             };

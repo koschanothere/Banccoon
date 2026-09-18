@@ -68,11 +68,33 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:CategoryManagementRowViewModel">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,6">
-                                    <Entry Grid.Column="0" Placeholder="Category name" Text="{Binding Name}" />
-                                    <Button Grid.Column="1" Text="Rename" Command="{Binding RenameCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="2" Text="Delete" Command="{Binding DeleteCommand}" Style="{StaticResource DestructiveButton}" />
-                                </Grid>
+                                <VerticalStackLayout Spacing="6" Padding="0,6">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <Entry Grid.Column="0" Placeholder="Category name" Text="{Binding Name}" />
+                                        <Button Grid.Column="1" Text="Rename" Command="{Binding RenameCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="2" Text="Delete" Command="{Binding DeleteCommand}" Style="{StaticResource DestructiveButton}" />
+                                    </Grid>
+                                    <CollectionView ItemsSource="{Binding ColorSwatches}" HeightRequest="24">
+                                        <CollectionView.ItemsLayout>
+                                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="6" />
+                                        </CollectionView.ItemsLayout>
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
+                                                <Border
+                                                    WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeShape="RoundRectangle 11"
+                                                    StrokeThickness="{Binding SelectionStrokeThickness}"
+                                                    Stroke="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}"
+                                                    Background="{Binding Color}">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                                    </Border.GestureRecognizers>
+                                                </Border>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

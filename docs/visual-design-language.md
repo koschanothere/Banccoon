@@ -46,7 +46,7 @@ Concrete look decisions: typography, shape, density, and color. For the underlyi
 ### Category colors — separate dedicated palette, not reused from accent
 
 - Categories get their **own fixed color palette**, distinct from both the accent system and the semantic status colors. Each category consistently uses the same color everywhere it appears (transaction row badge, Analytics breakdown/trend, category management).
-- Starting proposal (open to adjustment once seen in the mockup): a rotating set of ~8–10 hues distinct enough to tell apart at a glance (including a couple of neutral/muted tones like tan/brown and gray, not just saturated primaries), assigned to categories in creation order, with manual override available per category in the manage-categories overlay.
+- **Implemented**: a 7-color palette (`Banccoon.Core.Appearance.CategoryColor`; hex values in `Banccoon.App.Formatting.CategoryColorPalette`, still provisional — "actual colours can be decided later" per direct instruction). Manual override lives in the manage-categories overlay (tap a swatch to set it), matching the original proposal. Categories without an explicit choice still get a color deterministically derived from their Id, so nothing looks uncolored while waiting to be assigned one.
 
 ### Category icons
 

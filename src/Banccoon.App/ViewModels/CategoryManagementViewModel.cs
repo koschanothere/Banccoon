@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 
@@ -104,7 +105,7 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             Rows.Clear();
             foreach (var category in ordered)
             {
-                Rows.Add(new CategoryManagementRowViewModel(category, RenameAsync, DeleteAsync));
+                Rows.Add(new CategoryManagementRowViewModel(category, RenameAsync, DeleteAsync, SetColorAsync));
             }
 
             MergeOptions.Clear();
@@ -133,6 +134,18 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         }
 
         await categoryRepository.SaveAsync(category with { Name = newName.Trim() });
+        await onChanged();
+    }
+
+    private async Task SetColorAsync(Guid id, CategoryColor color)
+    {
+        var category = await categoryRepository.GetByIdAsync(id);
+        if (category is null)
+        {
+            return;
+        }
+
+        await categoryRepository.SaveAsync(category with { Color = color });
         await onChanged();
     }
 

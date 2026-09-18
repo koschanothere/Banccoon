@@ -13,7 +13,8 @@ public sealed class TransactionRowViewModel : ViewModelBase
         Transaction transaction,
         string categoryOrDestinationText,
         decimal balanceAfter,
-        string currency)
+        string currency,
+        Category? category)
     {
         Id = transaction.Id;
         AccountId = transaction.AccountId;
@@ -34,7 +35,7 @@ public sealed class TransactionRowViewModel : ViewModelBase
         BalanceAfterText = MoneyFormat.Format(balanceAfter, currency);
 
         BadgeColor = CategoryId is { } categoryId
-            ? CategoryColorPalette.GetColorForCategory(categoryId)
+            ? CategoryColorPalette.GetColorForCategory(categoryId, category?.Color)
             : CategoryColorPalette.GetTransferColor();
         BadgeLetter = categoryOrDestinationText.Length > 0
             ? categoryOrDestinationText[..1].ToUpperInvariant()

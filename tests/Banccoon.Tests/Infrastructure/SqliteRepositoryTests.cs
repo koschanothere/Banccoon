@@ -64,7 +64,7 @@ public sealed class SqliteRepositoryTests
         var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
 
         await store.Categories.SaveAsync(category);
-        var updated = category with { Name = "Groceries" };
+        var updated = category with { Name = "Groceries", Color = CategoryColor.Violet };
         await store.Categories.SaveAsync(updated);
         var saved = await store.Categories.GetByIdAsync(category.Id);
         await store.Categories.DeleteAsync(category.Id);
@@ -72,6 +72,7 @@ public sealed class SqliteRepositoryTests
         var loaded = await store.Categories.GetByIdAsync(category.Id);
 
         Assert.Equal(updated, saved);
+        Assert.Equal(CategoryColor.Violet, saved?.Color);
         Assert.Null(loaded);
     }
 

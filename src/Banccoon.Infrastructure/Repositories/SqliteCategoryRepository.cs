@@ -1,3 +1,4 @@
+using Banccoon.Core.Appearance;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Infrastructure.Database;
@@ -19,7 +20,7 @@ public sealed class SqliteCategoryRepository : SqliteRepositoryBase, ICategoryRe
 
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT Id, Name, Type FROM Categories ORDER BY Name;";
+        command.CommandText = "SELECT Id, Name, Type, Color FROM Categories ORDER BY Name;";
 
         var categories = new List<Category>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -37,7 +38,7 @@ public sealed class SqliteCategoryRepository : SqliteRepositoryBase, ICategoryRe
 
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT Id, Name, Type FROM Categories WHERE Id = @Id;";
+        command.CommandText = "SELECT Id, Name, Type, Color FROM Categories WHERE Id = @Id;";
         AddParameter(command, "@Id", id.ToString());
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -51,15 +52,17 @@ public sealed class SqliteCategoryRepository : SqliteRepositoryBase, ICategoryRe
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO Categories (Id, Name, Type)
-            VALUES (@Id, @Name, @Type)
+            INSERT INTO Categories (Id, Name, Type, Color)
+            VALUES (@Id, @Name, @Type, @Color)
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
-                Type = excluded.Type;
+                Type = excluded.Type,
+                Color = excluded.Color;
             """;
         AddParameter(command, "@Id", category.Id.ToString());
         AddParameter(command, "@Name", category.Name);
         AddParameter(command, "@Type", SqliteData.ToDbValue(category.Type?.ToString()));
+        AddParameter(command, "@Color", SqliteData.ToDbValue(category.Color?.ToString()));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -94,6 +97,9 @@ public sealed class SqliteCategoryRepository : SqliteRepositoryBase, ICategoryRe
             SqliteData.ReadString(reader, "Name"),
             SqliteData.ReadNullableString(reader, "Type") is { } type
                 ? Enum.Parse<TransactionType>(type)
+                : null,
+            SqliteData.ReadNullableString(reader, "Color") is { } color
+                ? Enum.Parse<CategoryColor>(color)
                 : null);
     }
 }

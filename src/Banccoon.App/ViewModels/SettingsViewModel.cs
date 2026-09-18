@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -40,6 +42,12 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public DataManagementViewModel Data { get; }
+
+    // Read-only preview of the fixed category-color palette (docs/visual-design-language.md).
+    // Not all 7 colors need to be interactive here - this is just visibility into the scheme;
+    // the actual hex values still live in code (CategoryColorPalette), not in Settings/the DB.
+    public IReadOnlyList<Color> CategoryColorPreview { get; } =
+        CategoryColorPalette.AllColors.Select(CategoryColorPalette.GetColor).ToArray();
 
     public AppThemeMode ThemeMode
     {
