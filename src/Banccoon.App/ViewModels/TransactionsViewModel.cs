@@ -34,6 +34,16 @@ public sealed class TransactionsViewModel : ViewModelBase
     private string currency = "EUR";
     private Guid? pendingCategoryFilterId;
 
+    // Clearing/repopulating AccountOptions or CategoryOptions makes their bound Pickers reset
+    // their own SelectedItem (the native control's reaction to its ItemsSource changing), which
+    // round-trips back through the two-way binding into AccountFilter/CategoryFilter's setters
+    // below - reentrantly, from inside RebuildOptionLists, before it's restored the "real"
+    // selection. That reentrant ApplyFilters() call raced against an in-flight CollectionView
+    // scroll/arrange pass and threw a native "modification in progress" COMException (caught via
+    // diagnostics.log, not reported by a user). This flag makes RebuildOptionLists the only thing
+    // that runs while it's active - it always calls ApplyFilters() itself once done anyway.
+    private bool isRebuildingOptions;
+
     private bool isLoading;
     private bool filterOpen;
     private bool selectMode;
@@ -146,7 +156,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         get => accountFilter;
         set
         {
-            if (SetProperty(ref accountFilter, value))
+            if (SetProperty(ref accountFilter, value) && !isRebuildingOptions)
             {
                 ApplyFilters();
             }
@@ -158,7 +168,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         get => categoryFilter;
         set
         {
-            if (SetProperty(ref categoryFilter, value))
+            if (SetProperty(ref categoryFilter, value) && !isRebuildingOptions)
             {
                 ApplyFilters();
             }
@@ -262,44 +272,52 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private void RebuildOptionLists()
     {
-        var previousAccountFilterId = AccountFilter?.Id;
-        var previousCategoryFilterId = CategoryFilter?.Id;
-        var previousBulkCategoryId = BulkCategory?.Id;
-
-        AccountOptions.Clear();
-        AccountOptions.Add(new NamedOptionViewModel(AllOptionId, "All accounts"));
-        foreach (var account in accounts.Where(account => !account.IsArchived).OrderBy(account => account.Name))
+        isRebuildingOptions = true;
+        try
         {
-            AccountOptions.Add(new NamedOptionViewModel(account.Id, account.Name));
-        }
+            var previousAccountFilterId = AccountFilter?.Id;
+            var previousCategoryFilterId = CategoryFilter?.Id;
+            var previousBulkCategoryId = BulkCategory?.Id;
 
-        CategoryOptions.Clear();
-        CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, "All categories"));
-        BulkCategoryOptions.Clear();
-        foreach (var category in categories.OrderBy(category => category.Name))
+            AccountOptions.Clear();
+            AccountOptions.Add(new NamedOptionViewModel(AllOptionId, "All accounts"));
+            foreach (var account in accounts.Where(account => !account.IsArchived).OrderBy(account => account.Name))
+            {
+                AccountOptions.Add(new NamedOptionViewModel(account.Id, account.Name));
+            }
+
+            CategoryOptions.Clear();
+            CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, "All categories"));
+            BulkCategoryOptions.Clear();
+            foreach (var category in categories.OrderBy(category => category.Name))
+            {
+                CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+                BulkCategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+            }
+
+            // Re-resolve filter/bulk selections against the freshly rebuilt option lists by Id,
+            // since RebuildOptionLists runs on every InitializeAsync (including every OnAppearing) -
+            // without this, the Picker's SelectedItem no longer matches any object in the new
+            // ItemsSource by reference, so it silently resets and the filter appears to "stop working".
+            accountFilter = previousAccountFilterId is { } accountId
+                ? AccountOptions.FirstOrDefault(option => option.Id == accountId)
+                : AccountOptions.FirstOrDefault();
+            OnPropertyChanged(nameof(AccountFilter));
+
+            categoryFilter = previousCategoryFilterId is { } categoryId
+                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
+                : CategoryOptions.FirstOrDefault();
+            OnPropertyChanged(nameof(CategoryFilter));
+
+            bulkCategory = previousBulkCategoryId is { } bulkCategoryId
+                ? BulkCategoryOptions.FirstOrDefault(option => option.Id == bulkCategoryId)
+                : BulkCategoryOptions.FirstOrDefault();
+            OnPropertyChanged(nameof(BulkCategory));
+        }
+        finally
         {
-            CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
-            BulkCategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+            isRebuildingOptions = false;
         }
-
-        // Re-resolve filter/bulk selections against the freshly rebuilt option lists by Id,
-        // since RebuildOptionLists runs on every InitializeAsync (including every OnAppearing) -
-        // without this, the Picker's SelectedItem no longer matches any object in the new
-        // ItemsSource by reference, so it silently resets and the filter appears to "stop working".
-        accountFilter = previousAccountFilterId is { } accountId
-            ? AccountOptions.FirstOrDefault(option => option.Id == accountId)
-            : AccountOptions.FirstOrDefault();
-        OnPropertyChanged(nameof(AccountFilter));
-
-        categoryFilter = previousCategoryFilterId is { } categoryId
-            ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
-            : CategoryOptions.FirstOrDefault();
-        OnPropertyChanged(nameof(CategoryFilter));
-
-        bulkCategory = previousBulkCategoryId is { } bulkCategoryId
-            ? BulkCategoryOptions.FirstOrDefault(option => option.Id == bulkCategoryId)
-            : BulkCategoryOptions.FirstOrDefault();
-        OnPropertyChanged(nameof(BulkCategory));
     }
 
     private void ApplyPendingCategoryFilter()
@@ -352,8 +370,22 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private void LoadMore()
     {
+        // Appends only the newly-revealed rows rather than clearing and rebuilding the whole list
+        // (see RebuildVisibleRows) - this runs from CollectionView's own
+        // RemainingItemsThresholdReached, i.e. while it's actively mid-scroll, and a full Clear()
+        // there previously raced the native control's own in-flight layout pass and threw a
+        // "collection modification already in progress" COMException (caught via diagnostics.log).
+        // Appending is a much smaller, additive change the control handles safely during a scroll.
+        var previousVisibleCount = visibleCount;
         visibleCount += PageSize;
-        RebuildVisibleRows();
+
+        foreach (var transaction in filteredTransactions.Skip(previousVisibleCount).Take(visibleCount - previousVisibleCount))
+        {
+            Rows.Add(BuildRow(transaction));
+        }
+
+        OnPropertyChanged(nameof(HasMoreRows));
+        OnPropertyChanged(nameof(RowCountText));
     }
 
     private void RebuildVisibleRows()
@@ -361,31 +393,36 @@ public sealed class TransactionsViewModel : ViewModelBase
         Rows.Clear();
         foreach (var transaction in filteredTransactions.Take(visibleCount))
         {
-            var descriptionText = GetCategoryOrDestinationText(transaction, accountsById);
-            var balanceAfter = balancesByAccount.TryGetValue(transaction.AccountId, out var balances) && balances.TryGetValue(transaction.Id, out var balance)
-                ? balance
-                : accountsById.TryGetValue(transaction.AccountId, out var account) ? account.CurrentBalance : 0m;
-
-            var category = transaction.CategoryId is { } categoryId && categoriesById.TryGetValue(categoryId, out var foundCategory)
-                ? foundCategory
-                : null;
-            var row = new TransactionRowViewModel(transaction, descriptionText, balanceAfter, currency, category)
-            {
-                IsSelectModeActive = SelectMode
-            };
-            row.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(TransactionRowViewModel.IsSelected))
-                {
-                    UpdateSelectionSummary();
-                }
-            };
-            Rows.Add(row);
+            Rows.Add(BuildRow(transaction));
         }
 
         OnPropertyChanged(nameof(HasMoreRows));
         OnPropertyChanged(nameof(RowCountText));
         UpdateSelectionSummary();
+    }
+
+    private TransactionRowViewModel BuildRow(Transaction transaction)
+    {
+        var descriptionText = GetCategoryOrDestinationText(transaction, accountsById);
+        var balanceAfter = balancesByAccount.TryGetValue(transaction.AccountId, out var balances) && balances.TryGetValue(transaction.Id, out var balance)
+            ? balance
+            : accountsById.TryGetValue(transaction.AccountId, out var account) ? account.CurrentBalance : 0m;
+
+        var category = transaction.CategoryId is { } categoryId && categoriesById.TryGetValue(categoryId, out var foundCategory)
+            ? foundCategory
+            : null;
+        var row = new TransactionRowViewModel(transaction, descriptionText, balanceAfter, currency, category)
+        {
+            IsSelectModeActive = SelectMode
+        };
+        row.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TransactionRowViewModel.IsSelected))
+            {
+                UpdateSelectionSummary();
+            }
+        };
+        return row;
     }
 
     private string GetCategoryOrDestinationText(Transaction transaction, IReadOnlyDictionary<Guid, Account> accountsById)
