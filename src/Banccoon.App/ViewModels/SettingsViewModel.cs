@@ -27,6 +27,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
     private string dashboardStatusText = string.Empty;
     private SettingsCategory selectedCategory = SettingsCategory.General;
+    private DashboardPrimaryMetric primaryMetric = DashboardPrimaryMetric.FreeToSpend;
 
     public SettingsViewModel(
         ISettingsRepository settingsRepository,
@@ -57,6 +58,8 @@ public sealed class SettingsViewModel : ViewModelBase
         SaveFreeToSpendCommand = new RelayCommand(() => _ = SaveFreeToSpendAsync());
         SaveResolveUpcomingCommand = new RelayCommand(() => _ = SaveResolveUpcomingAsync());
         SaveForecastPeriodCommand = new RelayCommand(() => _ = SaveForecastPeriodAsync());
+        SetFreeToSpendPrimaryCommand = new RelayCommand(() => _ = SetPrimaryMetricAsync(DashboardPrimaryMetric.FreeToSpend));
+        SetCurrentBalancePrimaryCommand = new RelayCommand(() => _ = SetPrimaryMetricAsync(DashboardPrimaryMetric.CurrentBalance));
     }
 
     public DataManagementViewModel Data { get; }
@@ -111,6 +114,27 @@ public sealed class SettingsViewModel : ViewModelBase
         get => dashboardStatusText;
         private set => SetProperty(ref dashboardStatusText, value);
     }
+
+    public DashboardPrimaryMetric PrimaryMetric
+    {
+        get => primaryMetric;
+        private set
+        {
+            if (SetProperty(ref primaryMetric, value))
+            {
+                OnPropertyChanged(nameof(IsFreeToSpendPrimarySelected));
+                OnPropertyChanged(nameof(IsCurrentBalancePrimarySelected));
+            }
+        }
+    }
+
+    public bool IsFreeToSpendPrimarySelected => PrimaryMetric == DashboardPrimaryMetric.FreeToSpend;
+
+    public bool IsCurrentBalancePrimarySelected => PrimaryMetric == DashboardPrimaryMetric.CurrentBalance;
+
+    public ICommand SetFreeToSpendPrimaryCommand { get; }
+
+    public ICommand SetCurrentBalancePrimaryCommand { get; }
 
     public ICommand SaveForecastPeriodCommand { get; }
 
@@ -244,6 +268,7 @@ public sealed class SettingsViewModel : ViewModelBase
             ResolveUpcomingStatusText = string.Empty;
 
             SelectedForecastPeriod = settings.DefaultForecastPeriod;
+            PrimaryMetric = settings.DashboardPrimaryMetric;
             DashboardStatusText = string.Empty;
             dashboardSectionOrder = DashboardSectionOrdering.Parse(settings.DashboardSectionOrder);
             RebuildDashboardSectionRows();
@@ -310,6 +335,14 @@ public sealed class SettingsViewModel : ViewModelBase
         await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
 
         await RunOnMainThreadAsync(() => DashboardStatusText = "Saved.");
+    }
+
+    private async Task SetPrimaryMetricAsync(DashboardPrimaryMetric metric)
+    {
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with { DashboardPrimaryMetric = metric });
+
+        await RunOnMainThreadAsync(() => PrimaryMetric = metric);
     }
 
     private async Task SetThemeModeAsync(AppThemeMode mode)

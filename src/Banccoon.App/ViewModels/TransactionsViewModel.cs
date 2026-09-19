@@ -33,6 +33,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private int visibleCount = PageSize;
     private string currency = "EUR";
     private Guid? pendingCategoryFilterId;
+    private Guid? pendingAccountFilterId;
 
     // Clearing/repopulating AccountOptions or CategoryOptions makes their bound Pickers reset
     // their own SelectedItem (the native control's reaction to its ItemsSource changing), which
@@ -239,6 +240,13 @@ public sealed class TransactionsViewModel : ViewModelBase
         pendingCategoryFilterId = categoryId;
     }
 
+    // Set when navigated here from an account's detail card on Accounts ("View transactions").
+    // Same timing rationale as SetPendingCategoryFilter above.
+    public void SetPendingAccountFilter(Guid accountId)
+    {
+        pendingAccountFilterId = accountId;
+    }
+
     public async Task InitializeAsync()
     {
         IsLoading = true;
@@ -258,6 +266,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             {
                 RebuildOptionLists();
                 ApplyPendingCategoryFilter();
+                ApplyPendingAccountFilter();
                 ApplyFilters();
             });
             await ResolveUpcoming.RefreshAsync(currency, settings.ResolveUpcomingNearTermDays);
@@ -335,6 +344,23 @@ public sealed class TransactionsViewModel : ViewModelBase
         }
 
         pendingCategoryFilterId = null;
+    }
+
+    private void ApplyPendingAccountFilter()
+    {
+        if (pendingAccountFilterId is not { } accountId)
+        {
+            return;
+        }
+
+        var match = AccountOptions.FirstOrDefault(option => option.Id == accountId);
+        if (match is not null)
+        {
+            AccountFilter = match;
+            FilterOpen = true;
+        }
+
+        pendingAccountFilterId = null;
     }
 
     private void ApplyFilters()

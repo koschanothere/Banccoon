@@ -84,6 +84,66 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Account detail -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsDetailOpen}">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border
+                            Grid.Column="0"
+                            WidthRequest="44"
+                            HeightRequest="44"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="Transparent"
+                            Background="{AppThemeBinding Light={StaticResource LightAccentSoft}, Dark={StaticResource DarkAccentSoft}}">
+                            <Label
+                                Text="{Binding DetailAccount.IsFavorite, Converter={StaticResource FavoriteStarConverter}}"
+                                FontSize="20"
+                                HorizontalTextAlignment="Center"
+                                VerticalTextAlignment="Center"
+                                TextColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" Margin="12,0,0,0" VerticalOptions="Center">
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="{Binding DetailAccount.Name}" Style="{StaticResource SectionTitleLabel}" />
+                                <Label Text="Primary" IsVisible="{Binding DetailAccount.IsPrimary}" Style="{StaticResource TertiaryLabel}"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding DetailAccount.TypeText}" Style="{StaticResource TertiaryLabel}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="2" Text="Close" Command="{Binding CloseDetailCommand}" Style="{StaticResource QuietButton}" />
+                    </Grid>
+
+                    <Label Text="{Binding DetailAccount.BalanceText}" Style="{StaticResource HeroAmountLabel}" />
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding DetailAccount.HasIdentifier}">
+                        <Label Text="{Binding DetailAccount.IdentifierText}" VerticalOptions="Center" />
+                        <Button Text="{Binding DetailAccount.RevealToggleText}" Command="{Binding DetailAccount.ToggleRevealCommand}" Style="{StaticResource QuietButton}" FontSize="11" Padding="8,4" />
+                    </HorizontalStackLayout>
+
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding DetailAccount.HasGoalTarget}">
+                        <Label Text="Goal progress" Style="{StaticResource TertiaryLabel}" />
+                        <ProgressBar Progress="{Binding DetailAccount.GoalProgress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                        <Label Text="{Binding DetailAccount.GoalTargetText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+
+                    <Label Text="Archived" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource TertiaryLabel}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Edit" Command="{Binding DetailEditCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Button Text="View transactions" Command="{Binding DetailViewTransactionsCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Card details" Command="{Binding DetailOpenCardDetailsCommand}" IsVisible="{Binding DetailAccount.IsCreditCard}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Set primary" Command="{Binding DetailSetPrimaryCommand}" IsVisible="{Binding DetailAccount.IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                        <Button Text="Archive" Command="{Binding DetailArchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
+                        <Button Text="Unarchive" Command="{Binding DetailUnarchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <Border Style="{StaticResource CardBorder}">
                 <CollectionView ItemsSource="{Binding Accounts}">
                     <CollectionView.EmptyView>
@@ -91,8 +151,11 @@
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:AccountRowViewModel">
-                            <VerticalStackLayout Padding="0,10" Spacing="6">
+                            <VerticalStackLayout Padding="0,10" Spacing="0">
                                 <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenDetailCommand}" />
+                                    </Grid.GestureRecognizers>
                                     <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Center">
                                         <Button
                                             Text="&#9650;"
@@ -125,8 +188,9 @@
                                         FontSize="17"
                                         Padding="0"
                                         WidthRequest="34"
-                                        HeightRequest="34" />
-                                    <VerticalStackLayout Grid.Column="2" Spacing="1" Margin="8,0,0,0">
+                                        HeightRequest="34"
+                                        TranslationY="2" />
+                                    <VerticalStackLayout Grid.Column="2" Spacing="1" Margin="8,0,0,0" VerticalOptions="Center">
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="{Binding Name}" />
                                             <Label Text="Primary" IsVisible="{Binding IsPrimary}" Style="{StaticResource TertiaryLabel}"
@@ -137,25 +201,7 @@
                                     <Label Grid.Column="3" Text="{Binding BalanceText}" FontAttributes="Bold" VerticalOptions="Center" />
                                 </Grid>
 
-                                <HorizontalStackLayout Spacing="8" IsVisible="{Binding HasIdentifier}" Margin="64,0,0,0">
-                                    <Label Text="{Binding IdentifierText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
-                                    <Button Text="{Binding RevealToggleText}" Command="{Binding ToggleRevealCommand}" Style="{StaticResource QuietButton}" FontSize="11" Padding="8,4" />
-                                </HorizontalStackLayout>
-
-                                <VerticalStackLayout Spacing="4" IsVisible="{Binding HasGoalTarget}" Margin="64,0,0,0">
-                                    <ProgressBar Progress="{Binding GoalProgress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
-                                    <Label Text="{Binding GoalTargetText}" Style="{StaticResource TertiaryLabel}" />
-                                </VerticalStackLayout>
-
-                                <HorizontalStackLayout Spacing="6" Margin="64,0,0,0">
-                                    <Button Text="Edit" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Text="Card details" Command="{Binding OpenCardDetailsCommand}" IsVisible="{Binding IsCreditCard}" Style="{StaticResource QuietButton}" />
-                                    <Button Text="Set primary" Command="{Binding SetPrimaryCommand}" IsVisible="{Binding IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
-                                    <Button Text="Archive" Command="{Binding ArchiveCommand}" IsVisible="{Binding IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
-                                    <Button Text="Unarchive" Command="{Binding UnarchiveCommand}" IsVisible="{Binding IsArchived}" Style="{StaticResource QuietButton}" />
-                                </HorizontalStackLayout>
-
-                                <BoxView HeightRequest="1" Margin="0,4,0,0" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                                <BoxView HeightRequest="1" Margin="0,10,0,0" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
                             </VerticalStackLayout>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

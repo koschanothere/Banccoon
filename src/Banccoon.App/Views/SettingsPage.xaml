@@ -163,6 +163,15 @@
                                 <Button Text="Save" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding DashboardStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
+
+                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                            <Label Text="Primary hero number" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="Which number shows big on the dashboard - the other still shows smaller alongside it." Style="{StaticResource TertiaryLabel}" />
+                            <HorizontalStackLayout Spacing="6">
+                                <Button Text="Free to spend" Command="{Binding SetFreeToSpendPrimaryCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="Current balance" Command="{Binding SetCurrentBalancePrimaryCommand}" Style="{StaticResource QuietButton}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 

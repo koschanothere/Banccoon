@@ -14,12 +14,17 @@ public partial class TransactionsPage : ContentPage, IQueryAttributable
     }
 
     // Shell calls this before OnAppearing, when navigated here from the Dashboard's Analytics
-    // "drill down into this category" action (see DashboardPage.OnCategoryDrillDownRequestedAsync).
+    // "drill down into this category" action, or from an account's detail card on Accounts.
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("categoryId", out var value) && Guid.TryParse(value?.ToString(), out var categoryId))
+        if (query.TryGetValue("categoryId", out var categoryValue) && Guid.TryParse(categoryValue?.ToString(), out var categoryId))
         {
             viewModel.SetPendingCategoryFilter(categoryId);
+        }
+
+        if (query.TryGetValue("accountId", out var accountValue) && Guid.TryParse(accountValue?.ToString(), out var accountId))
+        {
+            viewModel.SetPendingAccountFilter(accountId);
         }
     }
 

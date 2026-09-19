@@ -41,6 +41,8 @@ public sealed class DashboardViewModel : ViewModelBase
     private bool isLoading;
     private bool isCalcOpen;
     private string freeToSpendText = string.Empty;
+    private string currentBalanceText = string.Empty;
+    private DashboardPrimaryMetric primaryMetric = DashboardPrimaryMetric.FreeToSpend;
     private string lowestForecastedBalanceText = string.Empty;
     private string reservedForGoalsText = string.Empty;
     private string safetyBufferText = string.Empty;
@@ -117,6 +119,16 @@ public sealed class DashboardViewModel : ViewModelBase
         get => freeToSpendText;
         private set => SetProperty(ref freeToSpendText, value);
     }
+
+    public string CurrentBalanceText
+    {
+        get => currentBalanceText;
+        private set => SetProperty(ref currentBalanceText, value);
+    }
+
+    public bool IsFreeToSpendPrimary => primaryMetric == DashboardPrimaryMetric.FreeToSpend;
+
+    public bool IsCurrentBalancePrimary => primaryMetric == DashboardPrimaryMetric.CurrentBalance;
 
     public string LowestForecastedBalanceText
     {
@@ -264,9 +276,15 @@ public sealed class DashboardViewModel : ViewModelBase
         // Called from InitializeAsync after several awaits that may have resumed off the UI
         // thread (see ViewModelBase.RunOnMainThreadAsync) - this is the dashboard's hero card, the
         // first thing shown on every launch, so it's a high-traffic instance of that same bug.
+        var currentBalance = accountsForTotals.Sum(account => account.CurrentBalance);
+
         return RunOnMainThreadAsync(() =>
         {
             FreeToSpendText = MoneyFormat.Format(breakdown.AvailableToSpend, appSettings.DefaultCurrency);
+            CurrentBalanceText = MoneyFormat.Format(currentBalance, appSettings.DefaultCurrency);
+            primaryMetric = appSettings.DashboardPrimaryMetric;
+            OnPropertyChanged(nameof(IsFreeToSpendPrimary));
+            OnPropertyChanged(nameof(IsCurrentBalancePrimary));
             LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, appSettings.DefaultCurrency);
             ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, appSettings.DefaultCurrency);
             SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, appSettings.DefaultCurrency);

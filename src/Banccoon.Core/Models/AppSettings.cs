@@ -28,7 +28,8 @@ public sealed record AppSettings(
     bool AutoBackupEnabled = false,
     int AutoBackupFrequencyDays = 30,
     int AutoBackupRetentionCount = 5,
-    DateTimeOffset? LastAutoBackupAt = null)
+    DateTimeOffset? LastAutoBackupAt = null,
+    DashboardPrimaryMetric DashboardPrimaryMetric = DashboardPrimaryMetric.FreeToSpend)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

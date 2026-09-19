@@ -16,6 +16,8 @@ public sealed class AccountsViewModel : ViewModelBase
     private Guid? primaryAccountId;
     private bool isLoading;
     private bool showArchived;
+    private AccountRowViewModel? detailAccount;
+    private bool isDetailOpen;
 
     public AccountsViewModel(
         IAccountRepository accountRepository,
@@ -33,11 +35,84 @@ public sealed class AccountsViewModel : ViewModelBase
         ToggleFavoriteCommand = new RelayCommand<Guid>(id => _ = ToggleFavoriteAsync(id));
         ToggleShowArchivedCommand = new RelayCommand(() => ShowArchived = !ShowArchived);
         OpenAddAccountCommand = new RelayCommand(() => Form.OpenForCreate(currency));
+
+        CloseDetailCommand = new RelayCommand(CloseDetail);
+        DetailEditCommand = new RelayCommand(() =>
+        {
+            var row = DetailAccount;
+            CloseDetail();
+            row?.EditCommand.Execute(null);
+        });
+        DetailArchiveCommand = new RelayCommand(() =>
+        {
+            var row = DetailAccount;
+            CloseDetail();
+            row?.ArchiveCommand.Execute(null);
+        });
+        DetailUnarchiveCommand = new RelayCommand(() =>
+        {
+            var row = DetailAccount;
+            CloseDetail();
+            row?.UnarchiveCommand.Execute(null);
+        });
+        DetailSetPrimaryCommand = new RelayCommand(() =>
+        {
+            var row = DetailAccount;
+            CloseDetail();
+            row?.SetPrimaryCommand.Execute(null);
+        });
+        DetailOpenCardDetailsCommand = new RelayCommand(() =>
+        {
+            var row = DetailAccount;
+            CloseDetail();
+            row?.OpenCardDetailsCommand.Execute(null);
+        });
+        DetailViewTransactionsCommand = new RelayCommand(() =>
+        {
+            var accountId = DetailAccount?.Id;
+            CloseDetail();
+            if (accountId is { } id)
+            {
+                _ = RaiseViewTransactionsRequestedAsync(id);
+            }
+        });
     }
 
     public AccountFormViewModel Form { get; }
 
     public CreditCardDetailsViewModel CardDetails { get; }
+
+    // The Accounts row's own detail-card action buttons need Shell navigation for "view
+    // transactions," which ViewModels in this app don't perform directly (see
+    // StatementImportPage.xaml.cs's OnCloseClicked for the established convention) - surfaced as
+    // an event for AccountsPage's code-behind to act on instead.
+    public event Func<Guid, Task>? ViewTransactionsRequested;
+
+    public AccountRowViewModel? DetailAccount
+    {
+        get => detailAccount;
+        private set => SetProperty(ref detailAccount, value);
+    }
+
+    public bool IsDetailOpen
+    {
+        get => isDetailOpen;
+        private set => SetProperty(ref isDetailOpen, value);
+    }
+
+    public ICommand CloseDetailCommand { get; }
+
+    public ICommand DetailEditCommand { get; }
+
+    public ICommand DetailArchiveCommand { get; }
+
+    public ICommand DetailUnarchiveCommand { get; }
+
+    public ICommand DetailSetPrimaryCommand { get; }
+
+    public ICommand DetailOpenCardDetailsCommand { get; }
+
+    public ICommand DetailViewTransactionsCommand { get; }
 
     public bool IsLoading
     {
@@ -105,7 +180,8 @@ public sealed class AccountsViewModel : ViewModelBase
                         onSetPrimary: SetPrimaryAsync,
                         onOpenCardDetails: CardDetails.Open,
                         onMoveUp: id => MoveAsync(id, -1),
-                        onMoveDown: id => MoveAsync(id, 1)));
+                        onMoveDown: id => MoveAsync(id, 1),
+                        onOpenDetail: OpenDetail));
                 }
             });
         }
@@ -198,5 +274,21 @@ public sealed class AccountsViewModel : ViewModelBase
         }
 
         await InitializeAsync();
+    }
+
+    private void OpenDetail(AccountRowViewModel row)
+    {
+        DetailAccount = row;
+        IsDetailOpen = true;
+    }
+
+    private void CloseDetail()
+    {
+        IsDetailOpen = false;
+    }
+
+    private Task RaiseViewTransactionsRequestedAsync(Guid accountId)
+    {
+        return ViewTransactionsRequested?.Invoke(accountId) ?? Task.CompletedTask;
     }
 }

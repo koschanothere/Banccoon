@@ -24,7 +24,8 @@ public sealed class AccountRowViewModel : ViewModelBase
         Func<Guid, Task> onSetPrimary,
         Action<Account> onOpenCardDetails,
         Func<Guid, Task> onMoveUp,
-        Func<Guid, Task> onMoveDown)
+        Func<Guid, Task> onMoveDown,
+        Action<AccountRowViewModel> onOpenDetail)
     {
         Id = account.Id;
         Type = account.Type;
@@ -66,6 +67,7 @@ public sealed class AccountRowViewModel : ViewModelBase
         OpenCardDetailsCommand = new RelayCommand(() => onOpenCardDetails(account));
         MoveUpCommand = new RelayCommand(() => _ = onMoveUp(Id));
         MoveDownCommand = new RelayCommand(() => _ = onMoveDown(Id));
+        OpenDetailCommand = new RelayCommand(() => onOpenDetail(this));
     }
 
     public Guid Id { get; }
@@ -138,4 +140,6 @@ public sealed class AccountRowViewModel : ViewModelBase
     public ICommand MoveUpCommand { get; }
 
     public ICommand MoveDownCommand { get; }
+
+    public ICommand OpenDetailCommand { get; }
 }
