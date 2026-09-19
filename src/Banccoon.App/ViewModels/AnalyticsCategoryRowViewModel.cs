@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Analytics;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -9,10 +10,12 @@ public sealed class AnalyticsCategoryRowViewModel
     private const double MaxBarHeight = 32;
     private const double MinBarHeight = 2;
 
-    public AnalyticsCategoryRowViewModel(AnalyticsCategoryTrend trend, string currency, Func<Guid?, Task> onSelected)
+    public AnalyticsCategoryRowViewModel(AnalyticsCategoryTrend trend, Color color, string currency, Func<Guid?, Task> onSelected)
     {
         CategoryId = trend.CategoryId;
         CategoryName = trend.CategoryName;
+        Amount = trend.CurrentPeriodTotal;
+        Color = color;
         CurrentTotalText = MoneyFormat.Format(trend.CurrentPeriodTotal, currency);
         ChangeText = BuildChangeText(trend, currency);
         IsIncrease = trend.ChangeAmount > 0m;
@@ -32,6 +35,10 @@ public sealed class AnalyticsCategoryRowViewModel
     public Guid? CategoryId { get; }
 
     public string CategoryName { get; }
+
+    public decimal Amount { get; }
+
+    public Color Color { get; }
 
     public string CurrentTotalText { get; }
 

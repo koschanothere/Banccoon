@@ -17,7 +17,8 @@ public sealed record AppSettings(
     decimal SafetyBuffer = 0m,
     decimal MajorPaymentThreshold = 0m,
     int ResolveUpcomingNearTermDays = 3,
-    Guid? PrimaryAccountId = null)
+    Guid? PrimaryAccountId = null,
+    string DashboardSectionOrder = "Upcoming,Analytics,Goals")
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

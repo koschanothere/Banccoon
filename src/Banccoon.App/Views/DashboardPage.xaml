@@ -54,14 +54,30 @@
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Balance history &amp; forecast" Style="{StaticResource SecondaryLabel}" />
-                    <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
-                    <controls:ForecastChartView Points="{Binding ChartPoints}" HeightRequest="220" />
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                            <Label Text="Balance history &amp; forecast" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
+                        </VerticalStackLayout>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="6">
+                            <DatePicker Date="{Binding RangeStartDate}" Format="dd MMM" WidthRequest="110" />
+                            <Label Text="&#8594;" VerticalOptions="Center" Style="{StaticResource TertiaryLabel}" />
+                            <DatePicker Date="{Binding RangeEndDate}" Format="dd MMM" WidthRequest="110" />
+                            <Button Text="Apply" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="Reset" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Label
+                        Text="{Binding GraphStatusText}"
+                        Style="{StaticResource TertiaryLabel}"
+                        TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                    <controls:ForecastChartView Points="{Binding ChartPoints}" HeightRequest="240" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource CardBorder}">
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+            <Border Grid.Row="{Binding UpcomingSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Upcoming" Style="{StaticResource SectionTitleLabel}" />
                     <Label Text="Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions." Style="{StaticResource TertiaryLabel}" />
@@ -82,22 +98,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Forecast" Style="{StaticResource SectionTitleLabel}" />
-                    <Picker Title="Period" ItemsSource="{Binding ForecastPeriods}" SelectedItem="{Binding SelectedForecastPeriod}" WidthRequest="160" HorizontalOptions="Start" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Grid.Column="0" Text="Projected balance at end of period" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding ForecastEndBalanceText}" FontAttributes="Bold" />
-                    </Grid>
-                    <HorizontalStackLayout Spacing="10">
-                        <Button Text="Save" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
-                        <Label Text="{Binding ForecastStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}">
+            <Border Grid.Row="{Binding AnalyticsSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <Button Grid.Column="0" Text="&#8592;" Command="{Binding Analytics.PreviousMonthCommand}" Style="{StaticResource QuietButton}" WidthRequest="36" />
@@ -108,15 +109,37 @@
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
                             <Label Text="Income" Style="{StaticResource TertiaryLabel}" />
-                            <Label Text="{Binding Analytics.IncomeText}" FontAttributes="Bold" />
+                            <Label
+                                Text="{Binding Analytics.IncomeText}"
+                                Style="{StaticResource SummaryAmountLabel}"
+                                TextColor="{AppThemeBinding Light={StaticResource LightStatusGreen}, Dark={StaticResource DarkStatusGreen}}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Expense" Style="{StaticResource TertiaryLabel}" />
-                            <Label Text="{Binding Analytics.ExpenseText}" FontAttributes="Bold" />
+                            <Label
+                                Text="{Binding Analytics.ExpenseText}"
+                                Style="{StaticResource SummaryAmountLabel}"
+                                TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="2" Spacing="2">
                             <Label Text="Net" Style="{StaticResource TertiaryLabel}" />
-                            <Label Text="{Binding Analytics.NetText}" FontAttributes="Bold" />
+                            <Label Text="{Binding Analytics.NetText}" Style="{StaticResource SummaryAmountLabel}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Spending breakdown" Style="{StaticResource SecondaryLabel}" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                        <controls:DonutChartView
+                            Grid.Column="0"
+                            WidthRequest="140"
+                            HeightRequest="140"
+                            Segments="{Binding Analytics.DonutSegments}"
+                            HighlightedSegment="{Binding Analytics.HighlightedSegment, Mode=TwoWay}" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                            <Label Text="{Binding Analytics.DonutCaptionText}" Style="{StaticResource SecondaryLabel}" LineBreakMode="WordWrap" />
+                            <Label Text="Hover a slice for details." Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
                     </Grid>
 
@@ -190,7 +213,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource CardBorder}">
+            <Border Grid.Row="{Binding GoalsSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Goals" Style="{StaticResource SectionTitleLabel}" />
                     <CollectionView ItemsSource="{Binding Goals}">
@@ -215,6 +238,7 @@
                     </CollectionView>
                 </VerticalStackLayout>
             </Border>
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

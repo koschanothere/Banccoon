@@ -1,9 +1,11 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
+using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Microsoft.Maui.Graphics;
 
@@ -20,6 +22,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private string freeToSpendStatusText = string.Empty;
     private string resolveUpcomingNearTermDaysText = "3";
     private string resolveUpcomingStatusText = string.Empty;
+    private IReadOnlyList<DashboardSection> dashboardSectionOrder = DashboardSectionOrdering.Default;
+    private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
+    private string dashboardStatusText = string.Empty;
 
     public SettingsViewModel(
         ISettingsRepository settingsRepository,
@@ -28,6 +33,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         this.settingsRepository = settingsRepository;
         Data = new DataManagementViewModel(backupService, localDataResetService);
+        DashboardSectionRows = [];
 
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
         SetDarkCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Dark));
@@ -39,9 +45,28 @@ public sealed class SettingsViewModel : ViewModelBase
         SetWindowUntilMajorPaymentCommand = new RelayCommand(() => WindowMode = FreeToSpendWindowMode.UntilNextMajorPayment);
         SaveFreeToSpendCommand = new RelayCommand(() => _ = SaveFreeToSpendAsync());
         SaveResolveUpcomingCommand = new RelayCommand(() => _ = SaveResolveUpcomingAsync());
+        SaveForecastPeriodCommand = new RelayCommand(() => _ = SaveForecastPeriodAsync());
     }
 
     public DataManagementViewModel Data { get; }
+
+    public ObservableCollection<DashboardSectionRowViewModel> DashboardSectionRows { get; }
+
+    public IReadOnlyList<ForecastPeriod> ForecastPeriods { get; } = Enum.GetValues<ForecastPeriod>();
+
+    public ForecastPeriod SelectedForecastPeriod
+    {
+        get => selectedForecastPeriod;
+        set => SetProperty(ref selectedForecastPeriod, value);
+    }
+
+    public string DashboardStatusText
+    {
+        get => dashboardStatusText;
+        private set => SetProperty(ref dashboardStatusText, value);
+    }
+
+    public ICommand SaveForecastPeriodCommand { get; }
 
     // Read-only preview of the fixed category-color palette (docs/visual-design-language.md).
     // Not all 7 colors need to be interactive here - this is just visibility into the scheme;
@@ -171,7 +196,52 @@ public sealed class SettingsViewModel : ViewModelBase
 
             ResolveUpcomingNearTermDaysText = settings.ResolveUpcomingNearTermDays.ToString(CultureInfo.InvariantCulture);
             ResolveUpcomingStatusText = string.Empty;
+
+            SelectedForecastPeriod = settings.DefaultForecastPeriod;
+            DashboardStatusText = string.Empty;
+            dashboardSectionOrder = DashboardSectionOrdering.Parse(settings.DashboardSectionOrder);
+            RebuildDashboardSectionRows();
         });
+    }
+
+    private void RebuildDashboardSectionRows()
+    {
+        DashboardSectionRows.Clear();
+        for (var index = 0; index < dashboardSectionOrder.Count; index++)
+        {
+            DashboardSectionRows.Add(new DashboardSectionRowViewModel(
+                dashboardSectionOrder[index],
+                canMoveUp: index > 0,
+                canMoveDown: index < dashboardSectionOrder.Count - 1,
+                onMoveUp: section => _ = MoveDashboardSectionAsync(section, -1),
+                onMoveDown: section => _ = MoveDashboardSectionAsync(section, 1)));
+        }
+    }
+
+    private async Task MoveDashboardSectionAsync(DashboardSection section, int direction)
+    {
+        var order = dashboardSectionOrder.ToList();
+        var index = order.IndexOf(section);
+        var targetIndex = index + direction;
+        if (index < 0 || targetIndex < 0 || targetIndex >= order.Count)
+        {
+            return;
+        }
+
+        (order[index], order[targetIndex]) = (order[targetIndex], order[index]);
+        dashboardSectionOrder = order;
+        RebuildDashboardSectionRows();
+
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with { DashboardSectionOrder = DashboardSectionOrdering.Format(order) });
+    }
+
+    private async Task SaveForecastPeriodAsync()
+    {
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
+
+        await RunOnMainThreadAsync(() => DashboardStatusText = "Saved.");
     }
 
     private async Task SetThemeModeAsync(AppThemeMode mode)

@@ -216,7 +216,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 SafetyBuffer TEXT NOT NULL DEFAULT '0',
                 MajorPaymentThreshold TEXT NOT NULL DEFAULT '0',
                 ResolveUpcomingNearTermDays INTEGER NOT NULL DEFAULT 3,
-                PrimaryAccountId TEXT NULL
+                PrimaryAccountId TEXT NULL,
+                DashboardSectionOrder TEXT NOT NULL DEFAULT 'Upcoming,Analytics,Goals'
             );
             """;
 
@@ -412,6 +413,13 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "StatementImportBatches",
             "ClosingBalance",
             "TEXT NULL",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "Settings",
+            "DashboardSectionOrder",
+            "TEXT NOT NULL DEFAULT 'Upcoming,Analytics,Goals'",
             cancellationToken);
     }
 

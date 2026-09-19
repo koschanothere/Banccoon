@@ -3,7 +3,9 @@ using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Analytics;
+using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -25,6 +27,9 @@ public sealed class AnalyticsViewModel : ViewModelBase
     private string expenseText = string.Empty;
     private string netText = string.Empty;
     private bool canGoToNextMonth;
+    private decimal donutTotal;
+    private AnalyticsCategoryRowViewModel? highlightedSegment;
+    private string donutCaptionText = "Hover a slice to see its share.";
 
     public AnalyticsViewModel(
         IDateProvider dateProvider,
@@ -41,6 +46,7 @@ public sealed class AnalyticsViewModel : ViewModelBase
 
         CategoryRows = [];
         TopMovers = [];
+        DonutSegments = [];
 
         PreviousMonthCommand = new RelayCommand(() => _ = ChangeMonthAsync(-1));
         NextMonthCommand = new RelayCommand(() => _ = ChangeMonthAsync(1));
@@ -80,6 +86,27 @@ public sealed class AnalyticsViewModel : ViewModelBase
 
     public ObservableCollection<AnalyticsCategoryRowViewModel> TopMovers { get; }
 
+    public ObservableCollection<AnalyticsCategoryRowViewModel> DonutSegments { get; }
+
+    // Two-way: the donut chart control sets this on hover, and clears it (null) on pointer-exit.
+    public AnalyticsCategoryRowViewModel? HighlightedSegment
+    {
+        get => highlightedSegment;
+        set
+        {
+            if (SetProperty(ref highlightedSegment, value))
+            {
+                UpdateDonutCaption();
+            }
+        }
+    }
+
+    public string DonutCaptionText
+    {
+        get => donutCaptionText;
+        private set => SetProperty(ref donutCaptionText, value);
+    }
+
     public ICommand PreviousMonthCommand { get; }
 
     public ICommand NextMonthCommand { get; }
@@ -102,6 +129,7 @@ public sealed class AnalyticsViewModel : ViewModelBase
     {
         var transactions = await transactionRepository.GetAllAsync(cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        var categoriesById = categories.ToDictionary(category => category.Id);
         var report = analyticsService.BuildReport(periodAnchor, TrendPeriodCount, transactions, categories);
 
         // Mutates collections bound to live UI after awaits that may have resumed off the UI
@@ -116,18 +144,53 @@ public sealed class AnalyticsViewModel : ViewModelBase
             CategoryRows.Clear();
             foreach (var trend in report.CategoryTrends)
             {
-                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, currency, onCategorySelected));
+                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, ResolveColor(trend.CategoryId, categoriesById), currency, onCategorySelected));
             }
 
             TopMovers.Clear();
             foreach (var trend in report.TopMovers)
             {
-                TopMovers.Add(new AnalyticsCategoryRowViewModel(trend, currency, onCategorySelected));
+                TopMovers.Add(new AnalyticsCategoryRowViewModel(trend, ResolveColor(trend.CategoryId, categoriesById), currency, onCategorySelected));
             }
+
+            DonutSegments.Clear();
+            foreach (var row in CategoryRows.Where(row => row.Amount > 0m))
+            {
+                DonutSegments.Add(row);
+            }
+
+            donutTotal = DonutSegments.Sum(row => row.Amount);
+            HighlightedSegment = null;
+            UpdateDonutCaption();
 
             var anchorMonth = new DateOnly(periodAnchor.Year, periodAnchor.Month, 1);
             var todayMonth = new DateOnly(today.Year, today.Month, 1);
             CanGoToNextMonth = anchorMonth < todayMonth;
         });
+    }
+
+    private void UpdateDonutCaption()
+    {
+        if (HighlightedSegment is null)
+        {
+            DonutCaptionText = donutTotal > 0m
+                ? $"Total spend: {MoneyFormat.Format(donutTotal, currency)}"
+                : "No expenses recorded yet.";
+            return;
+        }
+
+        var share = donutTotal > 0m ? HighlightedSegment.Amount / donutTotal : 0m;
+        DonutCaptionText = $"{HighlightedSegment.CategoryName}: {HighlightedSegment.CurrentTotalText} ({share:P0})";
+    }
+
+    private static Color ResolveColor(Guid? categoryId, IReadOnlyDictionary<Guid, Category> categoriesById)
+    {
+        if (categoryId is { } id)
+        {
+            var explicitColor = categoriesById.TryGetValue(id, out var category) ? category.Color : null;
+            return CategoryColorPalette.GetColorForCategory(id, explicitColor);
+        }
+
+        return CategoryColorPalette.GetTransferColor();
     }
 }

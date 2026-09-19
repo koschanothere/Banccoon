@@ -11,7 +11,7 @@ namespace Banccoon.App.ViewModels;
 
 public sealed class DashboardViewModel : ViewModelBase
 {
-    private const int HistoricalDays = 7;
+    private const int DefaultHistoricalDays = 7;
     private const int UpcomingObligationCount = 5;
 
     private readonly IDateProvider dateProvider;
@@ -25,6 +25,17 @@ public sealed class DashboardViewModel : ViewModelBase
     private readonly IFreeToSpendWindowService freeToSpendWindowService;
     private readonly IHistoricalBalanceService historicalBalanceService;
 
+    // Cached from the most recent InitializeAsync so the graph can be redrawn for a custom range
+    // without re-fetching everything from the repositories again.
+    private DateOnly today;
+    private AppSettings settings = null!;
+    private IReadOnlyList<Account> dashboardAccounts = [];
+    private HashSet<Guid> dashboardAccountIds = [];
+    private IReadOnlyList<ScheduledTransaction> scheduledTransactions = [];
+    private IReadOnlyList<Transaction> allTransactions = [];
+    private DateOnly defaultRangeStart;
+    private DateOnly defaultRangeEnd;
+
     private bool isLoading;
     private bool isCalcOpen;
     private string freeToSpendText = string.Empty;
@@ -33,9 +44,12 @@ public sealed class DashboardViewModel : ViewModelBase
     private string safetyBufferText = string.Empty;
     private string freeToSpendWindowText = string.Empty;
     private string graphWindowSummaryText = string.Empty;
-    private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
-    private string forecastEndBalanceText = string.Empty;
-    private string forecastStatusText = string.Empty;
+    private DateTime rangeStartDate;
+    private DateTime rangeEndDate;
+    private string graphStatusText = string.Empty;
+    private int upcomingSectionRow;
+    private int analyticsSectionRow;
+    private int goalsSectionRow;
 
     public DashboardViewModel(
         IDateProvider dateProvider,
@@ -72,7 +86,8 @@ public sealed class DashboardViewModel : ViewModelBase
             analyticsService,
             categoryId => RaiseCategoryDrillDownRequested(categoryId));
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
-        SaveForecastPeriodCommand = new RelayCommand(() => _ = SaveForecastPeriodAsync());
+        ApplyRangeCommand = new RelayCommand(() => RedrawChart());
+        ResetRangeCommand = new RelayCommand(() => ResetRange());
     }
 
     // The Analytics section's "drill down into this category" action needs Shell navigation,
@@ -129,27 +144,27 @@ public sealed class DashboardViewModel : ViewModelBase
         private set => SetProperty(ref graphWindowSummaryText, value);
     }
 
+    // Zero-persistence: a custom range is view-only state, reset every time the dashboard loads
+    // rather than saved anywhere (see docs/development-phases.md's Phase 7 note on this).
+    public DateTime RangeStartDate
+    {
+        get => rangeStartDate;
+        set => SetProperty(ref rangeStartDate, value);
+    }
+
+    public DateTime RangeEndDate
+    {
+        get => rangeEndDate;
+        set => SetProperty(ref rangeEndDate, value);
+    }
+
+    public string GraphStatusText
+    {
+        get => graphStatusText;
+        private set => SetProperty(ref graphStatusText, value);
+    }
+
     public ObservableCollection<ForecastChartPointViewModel> ChartPoints { get; }
-
-    public IReadOnlyList<ForecastPeriod> ForecastPeriods { get; } = Enum.GetValues<ForecastPeriod>();
-
-    public ForecastPeriod SelectedForecastPeriod
-    {
-        get => selectedForecastPeriod;
-        set => SetProperty(ref selectedForecastPeriod, value);
-    }
-
-    public string ForecastEndBalanceText
-    {
-        get => forecastEndBalanceText;
-        private set => SetProperty(ref forecastEndBalanceText, value);
-    }
-
-    public string ForecastStatusText
-    {
-        get => forecastStatusText;
-        private set => SetProperty(ref forecastStatusText, value);
-    }
 
     public ObservableCollection<UpcomingObligationRowViewModel> UpcomingObligations { get; }
 
@@ -157,31 +172,62 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public AnalyticsViewModel Analytics { get; }
 
+    public int UpcomingSectionRow
+    {
+        get => upcomingSectionRow;
+        private set => SetProperty(ref upcomingSectionRow, value);
+    }
+
+    public int AnalyticsSectionRow
+    {
+        get => analyticsSectionRow;
+        private set => SetProperty(ref analyticsSectionRow, value);
+    }
+
+    public int GoalsSectionRow
+    {
+        get => goalsSectionRow;
+        private set => SetProperty(ref goalsSectionRow, value);
+    }
+
     public ICommand ToggleCalcCommand { get; }
 
-    public ICommand SaveForecastPeriodCommand { get; }
+    public ICommand ApplyRangeCommand { get; }
+
+    public ICommand ResetRangeCommand { get; }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
         try
         {
-            var settings = await settingsRepository.GetAsync(cancellationToken);
+            settings = await settingsRepository.GetAsync(cancellationToken);
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
-            var dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals).ToList();
-            var dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
-            var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
+            dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals).ToList();
+            dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
+            scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
+            allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
             var savingsGoals = await savingsGoalRepository.GetAllAsync(cancellationToken);
-            var today = dateProvider.Today;
+            today = dateProvider.Today;
+            defaultRangeStart = today.AddDays(-DefaultHistoricalDays);
+            defaultRangeEnd = today.AddDays((int)settings.DefaultForecastPeriod - 1);
+
+            var order = DashboardSectionOrdering.Parse(settings.DashboardSectionOrder).ToList();
 
             await RunOnMainThreadAsync(() =>
             {
-                SelectedForecastPeriod = settings.DefaultForecastPeriod;
-                ForecastStatusText = string.Empty;
+                RangeStartDate = defaultRangeStart.ToDateTime(TimeOnly.MinValue);
+                RangeEndDate = defaultRangeEnd.ToDateTime(TimeOnly.MinValue);
+                GraphStatusText = string.Empty;
+
+                UpcomingSectionRow = order.IndexOf(DashboardSection.Upcoming);
+                AnalyticsSectionRow = order.IndexOf(DashboardSection.Analytics);
+                GoalsSectionRow = order.IndexOf(DashboardSection.Goals);
             });
 
             await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, savingsGoals);
-            await LoadChartAsync(today, settings, dashboardAccounts, dashboardAccountIds, scheduledTransactions, cancellationToken);
+            await LoadUpcomingObligationsAsync(today, settings, dashboardAccounts, scheduledTransactions);
+            await RunOnMainThreadAsync(() => RedrawChart());
             await Analytics.InitializeAsync(settings.DefaultCurrency, cancellationToken);
         }
         finally
@@ -198,82 +244,99 @@ public sealed class DashboardViewModel : ViewModelBase
     }
 
     private Task LoadFreeToSpendAsync(
-        DateOnly today,
-        AppSettings settings,
-        IReadOnlyList<Account> dashboardAccounts,
-        IReadOnlyList<ScheduledTransaction> scheduledTransactions,
+        DateOnly asOfToday,
+        AppSettings appSettings,
+        IReadOnlyList<Account> accountsForTotals,
+        IReadOnlyList<ScheduledTransaction> scheduled,
         IReadOnlyList<SavingsGoal> savingsGoals)
     {
-        var window = freeToSpendWindowService.GetWindow(today, settings, scheduledTransactions);
-        var request = new ForecastRequest(window.StartDate, window.EndDate, dashboardAccounts, scheduledTransactions);
+        var window = freeToSpendWindowService.GetWindow(asOfToday, appSettings, scheduled);
+        var request = new ForecastRequest(window.StartDate, window.EndDate, accountsForTotals, scheduled);
         var forecast = forecastService.CreateForecast(request);
-        var breakdown = availableToSpendService.Calculate(forecast, savingsGoals, settings.SafetyBuffer);
+        var breakdown = availableToSpendService.Calculate(forecast, savingsGoals, appSettings.SafetyBuffer);
 
         // Called from InitializeAsync after several awaits that may have resumed off the UI
         // thread (see ViewModelBase.RunOnMainThreadAsync) - this is the dashboard's hero card, the
         // first thing shown on every launch, so it's a high-traffic instance of that same bug.
         return RunOnMainThreadAsync(() =>
         {
-            FreeToSpendText = MoneyFormat.Format(breakdown.AvailableToSpend, settings.DefaultCurrency);
-            LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, settings.DefaultCurrency);
-            ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, settings.DefaultCurrency);
-            SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, settings.DefaultCurrency);
-            FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, settings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, settings.DateDisplayFormat)}";
+            FreeToSpendText = MoneyFormat.Format(breakdown.AvailableToSpend, appSettings.DefaultCurrency);
+            LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, appSettings.DefaultCurrency);
+            ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, appSettings.DefaultCurrency);
+            SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, appSettings.DefaultCurrency);
+            FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, appSettings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, appSettings.DateDisplayFormat)}";
 
             Goals.Clear();
             foreach (var goal in savingsGoals)
             {
-                Goals.Add(new SavingsGoalRowViewModel(goal, settings.DefaultCurrency, settings.DateDisplayFormat));
+                Goals.Add(new SavingsGoalRowViewModel(goal, appSettings.DefaultCurrency, appSettings.DateDisplayFormat));
             }
         });
     }
 
-    private async Task SaveForecastPeriodAsync()
+    // Deliberately independent of the graph's own (possibly custom, exploratory) date range - this
+    // widget exists to surface real upcoming obligations for taking action on, so it always uses
+    // the saved forecast period regardless of whatever window the user is currently looking at on
+    // the graph.
+    private Task LoadUpcomingObligationsAsync(
+        DateOnly asOfToday,
+        AppSettings appSettings,
+        IReadOnlyList<Account> accountsForForecast,
+        IReadOnlyList<ScheduledTransaction> scheduled)
     {
-        var settings = await settingsRepository.GetAsync();
-        await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
+        var request = ForecastRequest.ForPeriod(asOfToday, appSettings.DefaultForecastPeriod, accountsForForecast, scheduled);
+        var forecast = forecastService.CreateForecast(request);
 
-        await RunOnMainThreadAsync(() => ForecastStatusText = "Saved.");
-        await InitializeAsync();
+        return RunOnMainThreadAsync(() =>
+        {
+            UpcomingObligations.Clear();
+            foreach (var obligation in forecast.UpcomingObligations.OrderBy(obligation => obligation.Date).Take(UpcomingObligationCount))
+            {
+                UpcomingObligations.Add(new UpcomingObligationRowViewModel(obligation, asOfToday, appSettings.DefaultCurrency));
+            }
+        });
     }
 
-    private async Task LoadChartAsync(
-        DateOnly today,
-        AppSettings settings,
-        IReadOnlyList<Account> dashboardAccounts,
-        HashSet<Guid> dashboardAccountIds,
-        IReadOnlyList<ScheduledTransaction> scheduledTransactions,
-        CancellationToken cancellationToken)
+    private void ResetRange()
     {
-        var graphRequest = ForecastRequest.ForPeriod(today, settings.DefaultForecastPeriod, dashboardAccounts, scheduledTransactions);
-        var graphForecast = forecastService.CreateForecast(graphRequest);
+        RangeStartDate = defaultRangeStart.ToDateTime(TimeOnly.MinValue);
+        RangeEndDate = defaultRangeEnd.ToDateTime(TimeOnly.MinValue);
+        RedrawChart();
+    }
 
-        // This method is itself called after InitializeAsync's own awaits, which may have already
-        // resumed off the UI thread (see ViewModelBase.RunOnMainThreadAsync) - so even this
-        // "before my own first await" mutation isn't safe by default.
-        await RunOnMainThreadAsync(() =>
+    // Synchronous and UI-thread-only (called from a command or from within an already-marshaled
+    // block) - everything it reads was fetched once by InitializeAsync, so redrawing for a new
+    // custom range never needs to hit the repositories again.
+    private void RedrawChart()
+    {
+        var rangeStart = DateOnly.FromDateTime(RangeStartDate);
+        var rangeEnd = DateOnly.FromDateTime(RangeEndDate);
+        if (rangeEnd < rangeStart)
         {
-            GraphWindowSummaryText = $"{DateDisplay.Format(today.AddDays(-HistoricalDays), settings.DateDisplayFormat)} – {DateDisplay.Format(graphForecast.EndDate, settings.DateDisplayFormat)}";
-            ForecastEndBalanceText = MoneyFormat.Format(graphForecast.ForecastedBalance, settings.DefaultCurrency);
-        });
+            GraphStatusText = "End date must be on or after the start date.";
+            return;
+        }
 
-        var allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
-        var currentTotalBalance = dashboardAccounts.Sum(account => account.CurrentBalance);
-        var historicalPoints = historicalBalanceService.GetHistoricalBalances(
-            today.AddDays(-HistoricalDays),
-            today,
-            currentTotalBalance,
-            dashboardAccountIds,
-            allTransactions);
+        GraphStatusText = string.Empty;
+        GraphWindowSummaryText = $"{DateDisplay.Format(rangeStart, settings.DateDisplayFormat)} – {DateDisplay.Format(rangeEnd, settings.DateDisplayFormat)}";
 
-        var eventsByDate = graphForecast.Events.ToLookup(forecastEvent => forecastEvent.Date);
+        ChartPoints.Clear();
 
-        // Mutates a collection bound to live UI (the balance chart) - must run on the UI thread,
-        // which the awaits above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
-        await RunOnMainThreadAsync(() =>
+        // The historical/forecast split always happens at "today", regardless of how far the
+        // chosen range reaches in either direction - a forecast can only ever project forward
+        // from the account's actual current balance, never from some other day.
+        var historicalEnd = rangeStart > today ? rangeStart : (rangeEnd < today ? rangeEnd : today.AddDays(-1));
+        if (rangeStart <= today)
         {
-            ChartPoints.Clear();
-            foreach (var point in historicalPoints.Where(point => point.Date < today))
+            var currentTotalBalance = dashboardAccounts.Sum(account => account.CurrentBalance);
+            var historicalPoints = historicalBalanceService.GetHistoricalBalances(
+                rangeStart,
+                historicalEnd,
+                currentTotalBalance,
+                dashboardAccountIds,
+                allTransactions);
+
+            foreach (var point in historicalPoints.Where(point => point.Date <= historicalEnd))
             {
                 ChartPoints.Add(new ForecastChartPointViewModel(
                     point.Date,
@@ -283,6 +346,14 @@ public sealed class DashboardViewModel : ViewModelBase
                     settings.DateDisplayFormat,
                     isHistorical: true));
             }
+        }
+
+        if (rangeEnd >= today)
+        {
+            var forecastStart = rangeStart > today ? rangeStart : today;
+            var graphRequest = new ForecastRequest(forecastStart, rangeEnd, dashboardAccounts, scheduledTransactions);
+            var graphForecast = forecastService.CreateForecast(graphRequest);
+            var eventsByDate = graphForecast.Events.ToLookup(forecastEvent => forecastEvent.Date);
 
             foreach (var point in graphForecast.ProjectedBalances)
             {
@@ -298,12 +369,6 @@ public sealed class DashboardViewModel : ViewModelBase
                     settings.DateDisplayFormat,
                     isCurrentDate: point.Date == today));
             }
-
-            UpcomingObligations.Clear();
-            foreach (var obligation in graphForecast.UpcomingObligations.OrderBy(obligation => obligation.Date).Take(UpcomingObligationCount))
-            {
-                UpcomingObligations.Add(new UpcomingObligationRowViewModel(obligation, today, settings.DefaultCurrency));
-            }
-        });
+        }
     }
 }

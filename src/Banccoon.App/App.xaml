@@ -86,6 +86,11 @@
                 <Setter Property="FontAttributes" Value="Bold" />
             </Style>
 
+            <Style x:Key="SummaryAmountLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="24" />
+                <Setter Property="FontAttributes" Value="Bold" />
+            </Style>
+
             <Style x:Key="CardBorder" TargetType="Border">
                 <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackground}}" />
                 <Setter Property="Stroke" Value="Transparent" />

@@ -30,8 +30,11 @@ public sealed class ForecastChartView : GraphicsView
     {
         Drawable = chartDrawable;
         BackgroundColor = Colors.Transparent;
-        StartInteraction += OnInteraction;
-        DragInteraction += OnInteraction;
+
+        var pointerRecognizer = new PointerGestureRecognizer();
+        pointerRecognizer.PointerMoved += OnPointerMoved;
+        pointerRecognizer.PointerExited += OnPointerExited;
+        GestureRecognizers.Add(pointerRecognizer);
     }
 
     public IEnumerable<ForecastChartPointViewModel> Points
@@ -86,17 +89,23 @@ public sealed class ForecastChartView : GraphicsView
         Invalidate();
     }
 
-    private void OnInteraction(object? sender, TouchEventArgs e)
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (e.Touches.Length == 0)
+        var point = e.GetPosition(this);
+        if (point is null)
         {
             return;
         }
 
-        SelectNearestPoint(e.Touches[0]);
+        SelectNearestPoint(new PointF((float)point.Value.X, (float)point.Value.Y));
     }
 
-    private void SelectNearestPoint(PointF touchPoint)
+    private void OnPointerExited(object? sender, PointerEventArgs e)
+    {
+        SelectedPoint = null;
+    }
+
+    private void SelectNearestPoint(PointF pointerPoint)
     {
         var points = chartDrawable.Points;
         if (points.Count == 0)
@@ -107,7 +116,15 @@ public sealed class ForecastChartView : GraphicsView
         var plot = ForecastChartDrawable.GetPlotArea((float)Width, (float)Height);
         var plotLeft = plot.X;
         var plotRight = plot.X + plot.Width;
-        var clampedX = Math.Clamp(touchPoint.X, plotLeft, plotRight);
+        if (pointerPoint.X < plotLeft - 12f || pointerPoint.X > plotRight + 12f)
+        {
+            // Hovering the surrounding margin (axis labels, padding) rather than the plotted line
+            // itself doesn't count as pointing at a day's balance.
+            SelectedPoint = null;
+            return;
+        }
+
+        var clampedX = Math.Clamp(pointerPoint.X, plotLeft, plotRight);
         var ratio = plot.Width <= 0f ? 0f : (clampedX - plotLeft) / plot.Width;
         var index = points.Count == 1
             ? 0
@@ -119,13 +136,18 @@ public sealed class ForecastChartView : GraphicsView
 
 internal sealed class ForecastChartDrawable : IDrawable
 {
-    private static readonly Color AxisColor = Color.FromArgb("#DDE5DD");
-    private static readonly Color GridColor = Color.FromArgb("#EEF3EF");
-    private static readonly Color TextColor = Color.FromArgb("#14201A");
-    private static readonly Color MutedTextColor = Color.FromArgb("#5A675E");
-    private static readonly Color AccentColor = Color.FromArgb("#2E8B57");
-    private static readonly Color AccentSoftColor = Color.FromArgb("#DDEEE4");
-    private static readonly Color RoseColor = Color.FromArgb("#B55B67");
+    // Matches App.xaml's LightAccent/DarkAccent/LightTextPrimary/etc. tokens - a GraphicsView
+    // can't consume AppThemeBinding directly, so it re-checks the live theme every draw instead
+    // (same approach as the Increase/CurrentBar converters).
+    private static Color TextColor => IsDark ? Color.FromArgb("#F2F3F5") : Color.FromArgb("#181A1D");
+    private static Color MutedTextColor => IsDark ? Color.FromArgb("#868C96") : Color.FromArgb("#9AA0A8");
+    private static Color GridColor => IsDark ? Color.FromArgb("#2A2E34") : Color.FromArgb("#EDEDEA");
+    private static Color AxisColor => IsDark ? Color.FromArgb("#363B42") : Color.FromArgb("#E7E9EC");
+    private static Color AccentColor => IsDark ? Color.FromArgb("#10B981") : Color.FromArgb("#059669");
+    private static Color NegativeColor => IsDark ? Color.FromArgb("#F87171") : Color.FromArgb("#DC2626");
+    private static Color CalloutBackground => IsDark ? Color.FromArgb("#1D2024") : Color.FromArgb("#FAF9F7");
+
+    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
 
     public IReadOnlyList<ForecastChartPointViewModel> Points { get; set; } = Array.Empty<ForecastChartPointViewModel>();
 
@@ -161,9 +183,14 @@ internal sealed class ForecastChartDrawable : IDrawable
 
         DrawGrid(canvas, plot, minBalance, maxBalance);
         DrawCurrentDateMarker(canvas, plot);
+        DrawAreaFill(canvas, plot, minBalance, maxBalance);
         DrawProjectionLine(canvas, plot, minBalance, maxBalance);
         DrawEventDots(canvas, plot, minBalance, maxBalance);
-        DrawSelectedPoint(canvas, plot, minBalance, maxBalance, dirtyRect);
+        if (SelectedPoint is not null)
+        {
+            DrawSelectedPoint(canvas, plot, minBalance, maxBalance, dirtyRect);
+        }
+
         DrawDateLabels(canvas, plot, dirtyRect);
     }
 
@@ -214,6 +241,31 @@ internal sealed class ForecastChartDrawable : IDrawable
         canvas.DrawLine(plot.X, plot.Y + plot.Height, plot.X + plot.Width, plot.Y + plot.Height);
     }
 
+    private void DrawAreaFill(ICanvas canvas, RectF plot, decimal minBalance, decimal maxBalance)
+    {
+        var path = new PathF();
+        var baseline = plot.Y + plot.Height;
+        path.MoveTo(GetX(plot, 0), baseline);
+        for (var index = 0; index < Points.Count; index++)
+        {
+            path.LineTo(GetX(plot, index), GetY(plot, Points[index].Balance, minBalance, maxBalance));
+        }
+
+        path.LineTo(GetX(plot, Points.Count - 1), baseline);
+        path.Close();
+
+        canvas.SetFillPaint(
+            new LinearGradientPaint
+            {
+                StartColor = AccentColor.WithAlpha(0.22f),
+                EndColor = AccentColor.WithAlpha(0.0f),
+                StartPoint = new PointF(0, 0),
+                EndPoint = new PointF(0, 1)
+            },
+            plot);
+        canvas.FillPath(path);
+    }
+
     private void DrawProjectionLine(ICanvas canvas, RectF plot, decimal minBalance, decimal maxBalance)
     {
         var path = new PathF();
@@ -233,7 +285,9 @@ internal sealed class ForecastChartDrawable : IDrawable
         }
 
         canvas.StrokeColor = AccentColor;
-        canvas.StrokeSize = 3f;
+        canvas.StrokeSize = 2.5f;
+        canvas.StrokeLineJoin = LineJoin.Round;
+        canvas.StrokeLineCap = LineCap.Round;
         canvas.DrawPath(path);
     }
 
@@ -249,13 +303,13 @@ internal sealed class ForecastChartDrawable : IDrawable
         }
 
         var x = GetX(plot, currentIndex.Value);
-        canvas.StrokeColor = TextColor;
-        canvas.StrokeSize = 1.25f;
-        canvas.StrokeDashPattern = new[] { 4f, 4f };
+        canvas.StrokeColor = MutedTextColor;
+        canvas.StrokeSize = 1f;
+        canvas.StrokeDashPattern = new[] { 3f, 4f };
         canvas.DrawLine(x, plot.Y, x, plot.Y + plot.Height);
         canvas.StrokeDashPattern = Array.Empty<float>();
 
-        canvas.FontColor = TextColor;
+        canvas.FontColor = MutedTextColor;
         canvas.FontSize = 10f;
         canvas.DrawString(
             "Today",
@@ -279,22 +333,19 @@ internal sealed class ForecastChartDrawable : IDrawable
 
             var x = GetX(plot, index);
             var y = GetY(plot, point.Balance, minBalance, maxBalance);
-            canvas.FillColor = point.Balance < 0m ? RoseColor : AccentSoftColor;
-            canvas.FillCircle(x, y, 4.5f);
+            canvas.FillColor = point.Balance < 0m ? NegativeColor : CalloutBackground;
+            canvas.FillCircle(x, y, 4f);
             canvas.StrokeColor = AccentColor;
             canvas.StrokeSize = 1.5f;
-            canvas.DrawCircle(x, y, 4.5f);
+            canvas.DrawCircle(x, y, 4f);
         }
     }
 
+    // Only ever called while SelectedPoint is non-null (see Draw) - there is no default/fallback
+    // selection any more, so nothing is shown until the pointer is actually over the chart.
     private void DrawSelectedPoint(ICanvas canvas, RectF plot, decimal minBalance, decimal maxBalance, RectF dirtyRect)
     {
-        var selected = SelectedPoint ?? Points.OrderBy(point => point.Balance).FirstOrDefault();
-        if (selected is null)
-        {
-            return;
-        }
-
+        var selected = SelectedPoint!;
         var selectedIndex = Points
             .Select((point, index) => new { point, index })
             .FirstOrDefault(pair => pair.point.Date == selected.Date)
@@ -302,36 +353,37 @@ internal sealed class ForecastChartDrawable : IDrawable
         var x = GetX(plot, selectedIndex);
         var y = GetY(plot, selected.Balance, minBalance, maxBalance);
 
-        canvas.StrokeColor = AccentColor;
-        canvas.StrokeSize = 1.5f;
+        canvas.StrokeColor = AxisColor;
+        canvas.StrokeSize = 1f;
         canvas.DrawLine(x, plot.Y, x, plot.Y + plot.Height);
         canvas.FillColor = AccentColor;
-        canvas.FillCircle(x, y, 6f);
-        canvas.StrokeColor = Colors.White;
+        canvas.FillCircle(x, y, 5.5f);
+        canvas.StrokeColor = CalloutBackground;
         canvas.StrokeSize = 2f;
-        canvas.DrawCircle(x, y, 6f);
+        canvas.DrawCircle(x, y, 5.5f);
 
-        var calloutWidth = Math.Min(260f, dirtyRect.Width - 24f);
-        var calloutHeight = 68f;
+        var calloutWidth = Math.Min(240f, dirtyRect.Width - 24f);
+        var calloutHeight = 62f;
         var calloutX = x + calloutWidth + 14f > dirtyRect.Width
             ? dirtyRect.Width - calloutWidth - 10f
             : Math.Max(10f, x + 14f);
         var calloutY = Math.Max(8f, y - calloutHeight - 12f);
 
-        canvas.FillColor = Colors.White;
-        canvas.FillRoundedRectangle(calloutX, calloutY, calloutWidth, calloutHeight, 8f);
+        canvas.FillColor = CalloutBackground;
+        canvas.FillRoundedRectangle(calloutX, calloutY, calloutWidth, calloutHeight, 10f);
         canvas.StrokeColor = AxisColor;
         canvas.StrokeSize = 1f;
-        canvas.DrawRoundedRectangle(calloutX, calloutY, calloutWidth, calloutHeight, 8f);
+        canvas.DrawRoundedRectangle(calloutX, calloutY, calloutWidth, calloutHeight, 10f);
 
-        canvas.FontColor = TextColor;
-        canvas.FontSize = 12f;
-        canvas.DrawString(selected.DateText, calloutX + 10f, calloutY + 8f, calloutWidth - 20f, 16f, HorizontalAlignment.Left, VerticalAlignment.Center);
-        canvas.FontSize = 15f;
-        canvas.DrawString(selected.BalanceText, calloutX + 10f, calloutY + 25f, calloutWidth - 20f, 20f, HorizontalAlignment.Left, VerticalAlignment.Center);
         canvas.FontColor = MutedTextColor;
         canvas.FontSize = 11f;
-        canvas.DrawString(TrimForCallout(selected.EventsText), calloutX + 10f, calloutY + 46f, calloutWidth - 20f, 16f, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.DrawString(selected.DateText, calloutX + 12f, calloutY + 8f, calloutWidth - 24f, 14f, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.FontColor = TextColor;
+        canvas.FontSize = 16f;
+        canvas.DrawString(selected.BalanceText, calloutX + 12f, calloutY + 24f, calloutWidth - 24f, 20f, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.FontColor = MutedTextColor;
+        canvas.FontSize = 11f;
+        canvas.DrawString(TrimForCallout(selected.EventsText), calloutX + 12f, calloutY + 44f, calloutWidth - 24f, 16f, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
     private void DrawDateLabels(ICanvas canvas, RectF plot, RectF dirtyRect)
@@ -385,6 +437,6 @@ internal sealed class ForecastChartDrawable : IDrawable
 
     private static string TrimForCallout(string text)
     {
-        return text.Length <= 58 ? text : $"{text[..55]}...";
+        return text.Length <= 52 ? text : $"{text[..49]}...";
     }
 }
