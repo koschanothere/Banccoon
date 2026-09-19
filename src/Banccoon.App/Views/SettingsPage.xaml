@@ -231,23 +231,44 @@
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="Learned categorization rules" Style="{StaticResource SectionTitleLabel}" />
-                            <Label Text="What the app has auto-learned from your corrections during statement import. Forget one if it learned something wrong." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="What the app has auto-learned from your corrections during statement import. Edit one that learned wrong, or forget it entirely." Style="{StaticResource TertiaryLabel}" />
+                            <SearchBar Placeholder="Search by recipient or category" Text="{Binding LearningRules.SearchText}" />
                             <CollectionView ItemsSource="{Binding LearningRules.Rows}">
                                 <CollectionView.EmptyView>
                                     <Label Text="Nothing learned yet." Style="{StaticResource TertiaryLabel}" />
                                 </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:CategoryLearningRuleRowViewModel">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,8">
-                                            <VerticalStackLayout Grid.Column="0" Spacing="1">
-                                                <Label Text="{Binding MatchText}" />
-                                                <Label Style="{StaticResource TertiaryLabel}" Text="{Binding TypeText}" />
-                                                <Label Style="{StaticResource TertiaryLabel}" Text="{Binding CategoryName}" />
-                                                <Label Style="{StaticResource TertiaryLabel}" Text="{Binding DestinationAccountName}" IsVisible="{Binding HasDestinationAccount}" />
-                                                <Label Style="{StaticResource TertiaryLabel}" Text="{Binding MatchCountText}" />
+                                        <VerticalStackLayout Padding="0,8" Spacing="8">
+                                            <!-- View mode -->
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}">
+                                                <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                                    <Label Text="{Binding MatchText}" />
+                                                    <Label Style="{StaticResource TertiaryLabel}" Text="{Binding TypeText}" />
+                                                    <Label Style="{StaticResource TertiaryLabel}" Text="{Binding CategoryName}" />
+                                                    <Label Style="{StaticResource TertiaryLabel}" Text="{Binding DestinationAccountName}" IsVisible="{Binding HasDestinationAccount}" />
+                                                    <Label Style="{StaticResource TertiaryLabel}" Text="{Binding MatchCountText}" />
+                                                </VerticalStackLayout>
+                                                <Button Grid.Column="1" Text="Edit" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="Forget" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
+                                            </Grid>
+
+                                            <!-- Edit mode -->
+                                            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditing}">
+                                                <Entry Text="{Binding EditMatchText}" Placeholder="Recipient text" />
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                    <Picker Grid.Column="0" Title="Type" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding EditType}" />
+                                                    <Picker Grid.Column="1" Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding EditCategory}" />
+                                                </Grid>
+                                                <Picker Title="Other account" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding EditDestinationAccount}" IsVisible="{Binding IsEditTransferType}" />
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Button Text="Save" Command="{Binding SaveEditCommand}" Style="{StaticResource PrimaryButton}" />
+                                                    <Button Text="Cancel" Command="{Binding CancelEditCommand}" Style="{StaticResource QuietButton}" />
+                                                </HorizontalStackLayout>
                                             </VerticalStackLayout>
-                                            <Button Grid.Column="1" Text="Forget" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
-                                        </Grid>
+
+                                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                                        </VerticalStackLayout>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
