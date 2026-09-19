@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
@@ -235,6 +236,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         {
             var settings = await settingsRepository.GetAsync();
             currency = settings.DefaultCurrency;
+            PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
 
             accounts = await accountRepository.GetAllAsync();
             categories = await categoryRepository.GetAllAsync();

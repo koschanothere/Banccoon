@@ -35,6 +35,79 @@
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
+                    <Label Text="General" Style="{StaticResource SectionTitleLabel}" />
+
+                    <Label Text="Language" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="Only affects newly-parsed statement text going forward - the app's own screens don't translate yet, that's a separate, larger project." Style="{StaticResource TertiaryLabel}" />
+                    <Picker Title="Language" ItemsSource="{Binding General.Languages}" SelectedItem="{Binding General.SelectedLanguage}" WidthRequest="160" HorizontalOptions="Start" />
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Reminders" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="How often to be reminded of upcoming bills. Desktop notification delivery isn't wired up yet - this saves the preference for when it is." Style="{StaticResource TertiaryLabel}" />
+                    <Picker Title="Frequency" ItemsSource="{Binding General.ReminderFrequencies}" SelectedItem="{Binding General.ReminderFrequency}" WidthRequest="160" HorizontalOptions="Start" />
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="New account defaults" Style="{StaticResource SecondaryLabel}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Default currency" Style="{StaticResource TertiaryLabel}" />
+                            <Entry Text="{Binding General.DefaultCurrencyText}" Placeholder="EUR" WidthRequest="100" HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Default account type" Style="{StaticResource TertiaryLabel}" />
+                            <Picker Title="Type" ItemsSource="{Binding General.AccountTypes}" SelectedItem="{Binding General.DefaultAccountType}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                            <Label Text="Privacy mode" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="Hides every amount behind &#8226;&#8226;&#8226;&#8226; app-wide." Style="{StaticResource TertiaryLabel}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding General.PrivacyModeEnabled}" VerticalOptions="Center" />
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save" Command="{Binding General.SaveCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Label Text="{Binding General.StatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Security" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless." Style="{StaticResource TertiaryLabel}" />
+
+                    <Label Text="A PIN is currently set." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding AppLock.IsPinSet}" />
+                    <Label Text="No PIN is set - the app opens directly." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding AppLock.IsPinSet, Converter={StaticResource InverseBoolConverter}}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry Grid.Column="0" Text="{Binding AppLock.NewPinText}" Placeholder="New PIN" IsPassword="True" Keyboard="Numeric" />
+                        <Entry Grid.Column="1" Text="{Binding AppLock.ConfirmPinText}" Placeholder="Confirm PIN" IsPassword="True" Keyboard="Numeric" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Set / change PIN" Command="{Binding AppLock.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Button Text="Remove PIN" Command="{Binding AppLock.RemovePinCommand}" IsVisible="{Binding AppLock.IsPinSet}" Style="{StaticResource DestructiveButton}" />
+                    </HorizontalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Auto-lock after inactivity" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="Approximate - checked whenever you switch tabs, not on every mouse movement." Style="{StaticResource TertiaryLabel}" />
+                    <Entry Text="{Binding AppLock.AutoLockMinutesText}" Placeholder="Minutes" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                    <Button Text="Save" Command="{Binding AppLock.SaveAutoLockCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+
+                    <Label Text="{Binding AppLock.StatusText}" Style="{StaticResource SecondaryLabel}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
                     <Label Text="Free to spend" Style="{StaticResource SectionTitleLabel}" />
 
                     <Label Text="Window" Style="{StaticResource SecondaryLabel}" />
@@ -113,6 +186,32 @@
             </Border>
 
             <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Learned categorization rules" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="What the app has auto-learned from your corrections during statement import. Forget one if it learned something wrong." Style="{StaticResource TertiaryLabel}" />
+                    <CollectionView ItemsSource="{Binding LearningRules.Rows}">
+                        <CollectionView.EmptyView>
+                            <Label Text="Nothing learned yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:CategoryLearningRuleRowViewModel">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,8">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                        <Label Text="{Binding MatchText}" />
+                                        <Label Style="{StaticResource TertiaryLabel}" Text="{Binding TypeText}" />
+                                        <Label Style="{StaticResource TertiaryLabel}" Text="{Binding CategoryName}" />
+                                        <Label Style="{StaticResource TertiaryLabel}" Text="{Binding DestinationAccountName}" IsVisible="{Binding HasDestinationAccount}" />
+                                        <Label Style="{StaticResource TertiaryLabel}" Text="{Binding MatchCountText}" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1" Text="Forget" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
 
@@ -120,6 +219,43 @@
                         <Label Text="Backup" Style="{StaticResource SecondaryLabel}" />
                         <Button Text="Export backup" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
                         <Label Text="{Binding Data.ExportStatusText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Automatic backups" Style="{StaticResource SecondaryLabel}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Enable automatic backups" VerticalOptions="Center" />
+                            <Switch Grid.Column="1" IsToggled="{Binding Data.AutoBackupEnabled}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="Every (days)" Style="{StaticResource TertiaryLabel}" />
+                                <Entry Text="{Binding Data.AutoBackupFrequencyDaysText}" Keyboard="Numeric" WidthRequest="100" HorizontalOptions="Start" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Keep last N backups" Style="{StaticResource TertiaryLabel}" />
+                                <Entry Text="{Binding Data.AutoBackupRetentionCountText}" Keyboard="Numeric" WidthRequest="100" HorizontalOptions="Start" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Label Text="{Binding Data.LastAutoBackupText, StringFormat='Last automatic backup: {0}'}" Style="{StaticResource TertiaryLabel}" />
+                        <HorizontalStackLayout Spacing="10">
+                            <Button Text="Save" Command="{Binding Data.SaveAutoBackupSettingsCommand}" Style="{StaticResource PrimaryButton}" />
+                            <Label Text="{Binding Data.AutoBackupStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Diagnostics" Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{Binding Data.AppVersionText}" Style="{StaticResource TertiaryLabel}" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="Open diagnostics log" Command="{Binding Data.OpenDiagnosticsLogCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="Open data folder" Command="{Binding Data.OpenDataFolderCommand}" Style="{StaticResource QuietButton}" />
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding Data.DiagnosticsStatusText}" Style="{StaticResource TertiaryLabel}" />
                     </VerticalStackLayout>
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />

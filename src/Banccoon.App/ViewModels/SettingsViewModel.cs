@@ -7,6 +7,7 @@ using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Banccoon.Infrastructure.Database;
 using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
@@ -29,10 +30,17 @@ public sealed class SettingsViewModel : ViewModelBase
     public SettingsViewModel(
         ISettingsRepository settingsRepository,
         IBackupService backupService,
-        ILocalDataResetService localDataResetService)
+        ILocalDataResetService localDataResetService,
+        IDatabasePathProvider databasePathProvider,
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        ICategoryRepository categoryRepository,
+        IAccountRepository accountRepository)
     {
         this.settingsRepository = settingsRepository;
-        Data = new DataManagementViewModel(backupService, localDataResetService);
+        Data = new DataManagementViewModel(backupService, localDataResetService, settingsRepository, databasePathProvider);
+        General = new GeneralPreferencesViewModel(settingsRepository);
+        AppLock = new AppLockSettingsViewModel(settingsRepository);
+        LearningRules = new CategoryLearningRulesViewModel(categoryLearningRuleRepository, categoryRepository, accountRepository);
         DashboardSectionRows = [];
 
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
@@ -49,6 +57,12 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public DataManagementViewModel Data { get; }
+
+    public GeneralPreferencesViewModel General { get; }
+
+    public AppLockSettingsViewModel AppLock { get; }
+
+    public CategoryLearningRulesViewModel LearningRules { get; }
 
     public ObservableCollection<DashboardSectionRowViewModel> DashboardSectionRows { get; }
 
@@ -201,7 +215,14 @@ public sealed class SettingsViewModel : ViewModelBase
             DashboardStatusText = string.Empty;
             dashboardSectionOrder = DashboardSectionOrdering.Parse(settings.DashboardSectionOrder);
             RebuildDashboardSectionRows();
+
+            PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
         });
+
+        await General.InitializeAsync(settings);
+        await AppLock.InitializeAsync(settings);
+        await Data.InitializeAsync(settings);
+        await LearningRules.InitializeAsync(cancellationToken);
     }
 
     private void RebuildDashboardSectionRows()

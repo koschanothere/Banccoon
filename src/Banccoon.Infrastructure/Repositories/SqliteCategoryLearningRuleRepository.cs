@@ -113,6 +113,18 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM CategoryLearningRules WHERE Id = @Id;";
+        AddParameter(command, "@Id", id.ToString());
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken);

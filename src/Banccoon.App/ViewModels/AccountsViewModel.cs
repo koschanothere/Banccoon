@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Repositories;
@@ -75,6 +76,7 @@ public sealed class AccountsViewModel : ViewModelBase
             var settings = await settingsRepository.GetAsync(cancellationToken);
             currency = settings.DefaultCurrency;
             primaryAccountId = settings.PrimaryAccountId;
+            PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
 
             // Already ordered by SortOrder then Name (see SqliteAccountRepository) - re-sorting
             // here by name would silently undo manual reordering.

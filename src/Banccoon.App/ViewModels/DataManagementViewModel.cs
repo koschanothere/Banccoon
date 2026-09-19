@@ -1,5 +1,10 @@
+using System.Diagnostics;
+using System.Globalization;
 using System.Windows.Input;
 using Banccoon.Core.ImportExport;
+using Banccoon.Core.Models;
+using Banccoon.Core.Repositories;
+using Banccoon.Infrastructure.Database;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
 
@@ -9,6 +14,8 @@ public sealed class DataManagementViewModel : ViewModelBase
 {
     private readonly IBackupService backupService;
     private readonly ILocalDataResetService localDataResetService;
+    private readonly ISettingsRepository settingsRepository;
+    private readonly IDatabasePathProvider databasePathProvider;
 
     private bool isBusy;
     private string exportStatusText = string.Empty;
@@ -20,13 +27,23 @@ public sealed class DataManagementViewModel : ViewModelBase
     private string pendingRestoreSummaryText = string.Empty;
     private bool isConfirmingDeleteAll;
     private string deleteAllStatusText = string.Empty;
+    private bool autoBackupEnabled;
+    private string autoBackupFrequencyDaysText = "30";
+    private string autoBackupRetentionCountText = "5";
+    private string autoBackupStatusText = string.Empty;
+    private string lastAutoBackupText = "Never";
+    private string diagnosticsStatusText = string.Empty;
 
     public DataManagementViewModel(
         IBackupService backupService,
-        ILocalDataResetService localDataResetService)
+        ILocalDataResetService localDataResetService,
+        ISettingsRepository settingsRepository,
+        IDatabasePathProvider databasePathProvider)
     {
         this.backupService = backupService;
         this.localDataResetService = localDataResetService;
+        this.settingsRepository = settingsRepository;
+        this.databasePathProvider = databasePathProvider;
 
         ExportCommand = new RelayCommand(() => _ = ExportAsync());
         PickRestoreFileCommand = new RelayCommand(() => _ = PickRestoreFileAsync());
@@ -36,6 +53,9 @@ public sealed class DataManagementViewModel : ViewModelBase
         RequestDeleteAllCommand = new RelayCommand(() => IsConfirmingDeleteAll = true);
         CancelDeleteAllCommand = new RelayCommand(() => IsConfirmingDeleteAll = false);
         ConfirmDeleteAllCommand = new RelayCommand(() => _ = DeleteAllAsync());
+        SaveAutoBackupSettingsCommand = new RelayCommand(() => _ = SaveAutoBackupSettingsAsync());
+        OpenDiagnosticsLogCommand = new RelayCommand(OpenDiagnosticsLog);
+        OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
     }
 
     public bool IsBusy
@@ -91,6 +111,50 @@ public sealed class DataManagementViewModel : ViewModelBase
         get => deleteAllStatusText;
         private set => SetProperty(ref deleteAllStatusText, value);
     }
+
+    public bool AutoBackupEnabled
+    {
+        get => autoBackupEnabled;
+        set => SetProperty(ref autoBackupEnabled, value);
+    }
+
+    public string AutoBackupFrequencyDaysText
+    {
+        get => autoBackupFrequencyDaysText;
+        set => SetProperty(ref autoBackupFrequencyDaysText, value);
+    }
+
+    public string AutoBackupRetentionCountText
+    {
+        get => autoBackupRetentionCountText;
+        set => SetProperty(ref autoBackupRetentionCountText, value);
+    }
+
+    public string AutoBackupStatusText
+    {
+        get => autoBackupStatusText;
+        private set => SetProperty(ref autoBackupStatusText, value);
+    }
+
+    public string LastAutoBackupText
+    {
+        get => lastAutoBackupText;
+        private set => SetProperty(ref lastAutoBackupText, value);
+    }
+
+    public string DiagnosticsStatusText
+    {
+        get => diagnosticsStatusText;
+        private set => SetProperty(ref diagnosticsStatusText, value);
+    }
+
+    public string AppVersionText { get; } = $"Banccoon {AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})";
+
+    public ICommand SaveAutoBackupSettingsCommand { get; }
+
+    public ICommand OpenDiagnosticsLogCommand { get; }
+
+    public ICommand OpenDataFolderCommand { get; }
 
     public ICommand ExportCommand { get; }
 
@@ -260,5 +324,70 @@ public sealed class DataManagementViewModel : ViewModelBase
         {
             await RunOnMainThreadAsync(() => IsBusy = false);
         }
+    }
+
+    public Task InitializeAsync(AppSettings settings)
+    {
+        AutoBackupEnabled = settings.AutoBackupEnabled;
+        AutoBackupFrequencyDaysText = settings.AutoBackupFrequencyDays.ToString(CultureInfo.InvariantCulture);
+        AutoBackupRetentionCountText = settings.AutoBackupRetentionCount.ToString(CultureInfo.InvariantCulture);
+        LastAutoBackupText = settings.LastAutoBackupAt is { } lastAutoBackupAt
+            ? lastAutoBackupAt.ToLocalTime().ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture)
+            : "Never";
+        AutoBackupStatusText = string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAutoBackupSettingsAsync()
+    {
+        if (!int.TryParse(AutoBackupFrequencyDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var frequencyDays) || frequencyDays < 1)
+        {
+            AutoBackupStatusText = "Frequency must be a whole number of at least 1 day.";
+            return;
+        }
+
+        if (!int.TryParse(AutoBackupRetentionCountText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var retentionCount) || retentionCount < 1)
+        {
+            AutoBackupStatusText = "Retention count must be a whole number of at least 1.";
+            return;
+        }
+
+        var settings = await settingsRepository.GetAsync();
+        await settingsRepository.SaveAsync(settings with
+        {
+            AutoBackupEnabled = AutoBackupEnabled,
+            AutoBackupFrequencyDays = frequencyDays,
+            AutoBackupRetentionCount = retentionCount
+        });
+
+        await RunOnMainThreadAsync(() => AutoBackupStatusText = "Saved.");
+    }
+
+    private void OpenDiagnosticsLog()
+    {
+        var logPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Banccoon",
+            "diagnostics.log");
+
+        if (!File.Exists(logPath))
+        {
+            DiagnosticsStatusText = "No diagnostics log yet - nothing has been recorded.";
+            return;
+        }
+
+        DiagnosticsStatusText = string.Empty;
+        Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true });
+    }
+
+    private void OpenDataFolder()
+    {
+        var folder = Path.GetDirectoryName(databasePathProvider.DatabasePath);
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true });
     }
 }

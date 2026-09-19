@@ -10,5 +10,7 @@ public interface ICategoryLearningRuleRepository
 
     Task SaveAsync(CategoryLearningRule rule, CancellationToken cancellationToken = default);
 
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

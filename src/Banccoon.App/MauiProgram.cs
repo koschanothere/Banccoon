@@ -1,4 +1,5 @@
 using Banccoon.App.Diagnostics;
+using Banccoon.App.Services;
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
@@ -69,6 +70,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
         builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
+        builder.Services.AddSingleton<IAutoBackupRunner, AutoBackupRunner>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
         builder.Services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         builder.Services.AddSingleton<IBanccoonDatabaseInitializer, BanccoonDatabaseInitializer>();
@@ -95,12 +97,14 @@ public static class MauiProgram
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
         builder.Services.AddTransient<StatementImportViewModel>();
+        builder.Services.AddTransient<AppLockViewModel>();
 
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<TransactionsPage>();
         builder.Services.AddTransient<AccountsPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<StatementImportPage>();
+        builder.Services.AddTransient<AppLockPage>();
 
 #if WINDOWS
         ConfigureWindowsInputBorders();

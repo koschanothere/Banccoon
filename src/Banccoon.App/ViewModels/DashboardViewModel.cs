@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Services;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Analytics;
 using Banccoon.Core.Forecasting;
@@ -24,6 +25,7 @@ public sealed class DashboardViewModel : ViewModelBase
     private readonly IAvailableToSpendService availableToSpendService;
     private readonly IFreeToSpendWindowService freeToSpendWindowService;
     private readonly IHistoricalBalanceService historicalBalanceService;
+    private readonly IAutoBackupRunner autoBackupRunner;
 
     // Cached from the most recent InitializeAsync so the graph can be redrawn for a custom range
     // without re-fetching everything from the repositories again.
@@ -63,7 +65,8 @@ public sealed class DashboardViewModel : ViewModelBase
         IFreeToSpendWindowService freeToSpendWindowService,
         IHistoricalBalanceService historicalBalanceService,
         ICategoryRepository categoryRepository,
-        IAnalyticsService analyticsService)
+        IAnalyticsService analyticsService,
+        IAutoBackupRunner autoBackupRunner)
     {
         this.dateProvider = dateProvider;
         this.accountRepository = accountRepository;
@@ -75,6 +78,7 @@ public sealed class DashboardViewModel : ViewModelBase
         this.availableToSpendService = availableToSpendService;
         this.freeToSpendWindowService = freeToSpendWindowService;
         this.historicalBalanceService = historicalBalanceService;
+        this.autoBackupRunner = autoBackupRunner;
 
         ChartPoints = [];
         UpcomingObligations = [];
@@ -202,6 +206,7 @@ public sealed class DashboardViewModel : ViewModelBase
         try
         {
             settings = await settingsRepository.GetAsync(cancellationToken);
+            PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
             dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals).ToList();
             dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
@@ -229,6 +234,7 @@ public sealed class DashboardViewModel : ViewModelBase
             await LoadUpcomingObligationsAsync(today, settings, dashboardAccounts, scheduledTransactions);
             await RunOnMainThreadAsync(() => RedrawChart());
             await Analytics.InitializeAsync(settings.DefaultCurrency, cancellationToken);
+            await autoBackupRunner.RunIfDueAsync(settings, cancellationToken);
         }
         finally
         {

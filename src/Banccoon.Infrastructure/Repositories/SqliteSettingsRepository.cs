@@ -43,7 +43,17 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 MajorPaymentThreshold,
                 ResolveUpcomingNearTermDays,
                 PrimaryAccountId,
-                DashboardSectionOrder
+                DashboardSectionOrder,
+                DisplayLanguage,
+                DefaultAccountType,
+                PrivacyModeEnabled,
+                AppLockPinHash,
+                AppLockPinSalt,
+                AppLockAutoLockMinutes,
+                AutoBackupEnabled,
+                AutoBackupFrequencyDays,
+                AutoBackupRetentionCount,
+                LastAutoBackupAt
             FROM Settings
             WHERE Id = 1;
             """;
@@ -69,7 +79,23 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             SqliteData.ReadDecimal(reader, "MajorPaymentThreshold"),
             SqliteData.ReadInt32(reader, "ResolveUpcomingNearTermDays"),
             SqliteData.ReadNullableGuid(reader, "PrimaryAccountId"),
-            SqliteData.ReadString(reader, "DashboardSectionOrder"));
+            SqliteData.ReadString(reader, "DashboardSectionOrder"),
+            SqliteData.ReadString(reader, "DisplayLanguage"),
+            Enum.Parse<AccountType>(SqliteData.ReadString(reader, "DefaultAccountType")),
+            SqliteData.ReadBoolean(reader, "PrivacyModeEnabled"),
+            SqliteData.ReadNullableString(reader, "AppLockPinHash"),
+            SqliteData.ReadNullableString(reader, "AppLockPinSalt"),
+            SqliteData.ReadInt32(reader, "AppLockAutoLockMinutes"),
+            SqliteData.ReadBoolean(reader, "AutoBackupEnabled"),
+            SqliteData.ReadInt32(reader, "AutoBackupFrequencyDays"),
+            SqliteData.ReadInt32(reader, "AutoBackupRetentionCount"),
+            ReadNullableDateTimeOffset(reader, "LastAutoBackupAt"));
+    }
+
+    private static DateTimeOffset? ReadNullableDateTimeOffset(System.Data.Common.DbDataReader reader, string name)
+    {
+        var value = SqliteData.ReadNullableString(reader, name);
+        return value is null ? null : DateTimeOffset.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
@@ -95,7 +121,17 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 MajorPaymentThreshold,
                 ResolveUpcomingNearTermDays,
                 PrimaryAccountId,
-                DashboardSectionOrder)
+                DashboardSectionOrder,
+                DisplayLanguage,
+                DefaultAccountType,
+                PrivacyModeEnabled,
+                AppLockPinHash,
+                AppLockPinSalt,
+                AppLockAutoLockMinutes,
+                AutoBackupEnabled,
+                AutoBackupFrequencyDays,
+                AutoBackupRetentionCount,
+                LastAutoBackupAt)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -112,7 +148,17 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @MajorPaymentThreshold,
                 @ResolveUpcomingNearTermDays,
                 @PrimaryAccountId,
-                @DashboardSectionOrder)
+                @DashboardSectionOrder,
+                @DisplayLanguage,
+                @DefaultAccountType,
+                @PrivacyModeEnabled,
+                @AppLockPinHash,
+                @AppLockPinSalt,
+                @AppLockAutoLockMinutes,
+                @AutoBackupEnabled,
+                @AutoBackupFrequencyDays,
+                @AutoBackupRetentionCount,
+                @LastAutoBackupAt)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -128,7 +174,17 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 MajorPaymentThreshold = excluded.MajorPaymentThreshold,
                 ResolveUpcomingNearTermDays = excluded.ResolveUpcomingNearTermDays,
                 PrimaryAccountId = excluded.PrimaryAccountId,
-                DashboardSectionOrder = excluded.DashboardSectionOrder;
+                DashboardSectionOrder = excluded.DashboardSectionOrder,
+                DisplayLanguage = excluded.DisplayLanguage,
+                DefaultAccountType = excluded.DefaultAccountType,
+                PrivacyModeEnabled = excluded.PrivacyModeEnabled,
+                AppLockPinHash = excluded.AppLockPinHash,
+                AppLockPinSalt = excluded.AppLockPinSalt,
+                AppLockAutoLockMinutes = excluded.AppLockAutoLockMinutes,
+                AutoBackupEnabled = excluded.AutoBackupEnabled,
+                AutoBackupFrequencyDays = excluded.AutoBackupFrequencyDays,
+                AutoBackupRetentionCount = excluded.AutoBackupRetentionCount,
+                LastAutoBackupAt = excluded.LastAutoBackupAt;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -145,6 +201,16 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@ResolveUpcomingNearTermDays", settings.ResolveUpcomingNearTermDays);
         AddParameter(command, "@PrimaryAccountId", SqliteData.ToDbValue(settings.PrimaryAccountId));
         AddParameter(command, "@DashboardSectionOrder", settings.DashboardSectionOrder);
+        AddParameter(command, "@DisplayLanguage", settings.DisplayLanguage);
+        AddParameter(command, "@DefaultAccountType", settings.DefaultAccountType.ToString());
+        AddParameter(command, "@PrivacyModeEnabled", settings.PrivacyModeEnabled ? 1 : 0);
+        AddParameter(command, "@AppLockPinHash", SqliteData.ToDbValue(settings.AppLockPinHash));
+        AddParameter(command, "@AppLockPinSalt", SqliteData.ToDbValue(settings.AppLockPinSalt));
+        AddParameter(command, "@AppLockAutoLockMinutes", settings.AppLockAutoLockMinutes);
+        AddParameter(command, "@AutoBackupEnabled", settings.AutoBackupEnabled ? 1 : 0);
+        AddParameter(command, "@AutoBackupFrequencyDays", settings.AutoBackupFrequencyDays);
+        AddParameter(command, "@AutoBackupRetentionCount", settings.AutoBackupRetentionCount);
+        AddParameter(command, "@LastAutoBackupAt", settings.LastAutoBackupAt is { } lastAutoBackupAt ? lastAutoBackupAt.ToString("O") : (object)DBNull.Value);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

@@ -217,7 +217,17 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 MajorPaymentThreshold TEXT NOT NULL DEFAULT '0',
                 ResolveUpcomingNearTermDays INTEGER NOT NULL DEFAULT 3,
                 PrimaryAccountId TEXT NULL,
-                DashboardSectionOrder TEXT NOT NULL DEFAULT 'Upcoming,Analytics,Goals'
+                DashboardSectionOrder TEXT NOT NULL DEFAULT 'Upcoming,Analytics,Goals',
+                DisplayLanguage TEXT NOT NULL DEFAULT 'en',
+                DefaultAccountType TEXT NOT NULL DEFAULT 'DebitCard',
+                PrivacyModeEnabled INTEGER NOT NULL DEFAULT 0,
+                AppLockPinHash TEXT NULL,
+                AppLockPinSalt TEXT NULL,
+                AppLockAutoLockMinutes INTEGER NOT NULL DEFAULT 5,
+                AutoBackupEnabled INTEGER NOT NULL DEFAULT 0,
+                AutoBackupFrequencyDays INTEGER NOT NULL DEFAULT 30,
+                AutoBackupRetentionCount INTEGER NOT NULL DEFAULT 5,
+                LastAutoBackupAt TEXT NULL
             );
             """;
 
@@ -421,6 +431,17 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "DashboardSectionOrder",
             "TEXT NOT NULL DEFAULT 'Upcoming,Analytics,Goals'",
             cancellationToken);
+
+        await AddMissingColumnAsync(connection, "Settings", "DisplayLanguage", "TEXT NOT NULL DEFAULT 'en'", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "DefaultAccountType", "TEXT NOT NULL DEFAULT 'DebitCard'", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "PrivacyModeEnabled", "INTEGER NOT NULL DEFAULT 0", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AppLockPinHash", "TEXT NULL", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AppLockPinSalt", "TEXT NULL", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AppLockAutoLockMinutes", "INTEGER NOT NULL DEFAULT 5", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AutoBackupEnabled", "INTEGER NOT NULL DEFAULT 0", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AutoBackupFrequencyDays", "INTEGER NOT NULL DEFAULT 30", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "AutoBackupRetentionCount", "INTEGER NOT NULL DEFAULT 5", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "LastAutoBackupAt", "TEXT NULL", cancellationToken);
     }
 
     private static async Task AddMissingColumnAsync(
