@@ -45,11 +45,11 @@
                     <DatePicker Date="{Binding AddForm.Date}" />
                     <Entry Placeholder="Amount" Text="{Binding AddForm.AmountText}" Keyboard="Numeric" />
 
-                    <Picker Title="Category" ItemsSource="{Binding AddForm.CategoryOptions}" SelectedItem="{Binding AddForm.Category}" />
-                    <Button Text="+ New category" Command="{Binding AddForm.ToggleAddCategoryCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding AddForm.IsAddingCategory}">
-                        <Entry Grid.Column="0" Placeholder="New category name" Text="{Binding AddForm.NewCategoryName}" />
-                        <Button Grid.Column="1" Text="Create" Command="{Binding AddForm.CreateCategoryCommand}" Style="{StaticResource QuietButton}" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Border Grid.Column="0" StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding AddForm.CategoryBorderColor}" Padding="0">
+                            <Picker Title="Category" ItemsSource="{Binding AddForm.CategoryOptions}" SelectedItem="{Binding AddForm.Category}" />
+                        </Border>
+                        <Entry Grid.Column="1" Placeholder="New category name" Text="{Binding AddForm.NewCategoryName}" IsVisible="{Binding AddForm.IsCreatingNewCategory}" />
                     </Grid>
 
                     <Label Text="{Binding AddForm.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
@@ -173,11 +173,11 @@
                                 <Entry Grid.Column="1" Placeholder="Amount" Text="{Binding ScheduleForm.AmountText}" Keyboard="Numeric" />
                             </Grid>
 
-                            <Picker Title="Category" ItemsSource="{Binding ScheduleForm.CategoryOptions}" SelectedItem="{Binding ScheduleForm.Category}" />
-                            <Button Text="+ New category" Command="{Binding ScheduleForm.ToggleAddCategoryCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding ScheduleForm.IsAddingCategory}">
-                                <Entry Grid.Column="0" Placeholder="New category name" Text="{Binding ScheduleForm.NewCategoryName}" />
-                                <Button Grid.Column="1" Text="Create" Command="{Binding ScheduleForm.CreateCategoryCommand}" Style="{StaticResource QuietButton}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <Border Grid.Column="0" StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding ScheduleForm.CategoryBorderColor}" Padding="0">
+                                    <Picker Title="Category" ItemsSource="{Binding ScheduleForm.CategoryOptions}" SelectedItem="{Binding ScheduleForm.Category}" />
+                                </Border>
+                                <Entry Grid.Column="1" Placeholder="New category name" Text="{Binding ScheduleForm.NewCategoryName}" IsVisible="{Binding ScheduleForm.IsCreatingNewCategory}" />
                             </Grid>
 
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />

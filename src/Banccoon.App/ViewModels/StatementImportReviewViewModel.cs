@@ -17,9 +17,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private Guid accountId;
     private string currency = "EUR";
     private bool selectMode;
-    private NamedOptionViewModel? bulkCategory;
-    private bool isAddingCategory;
-    private string newCategoryName = string.Empty;
+    private CategoryOptionViewModel? bulkCategory;
+    private string newBulkCategoryName = string.Empty;
     private string statusText = string.Empty;
     private string selectionSummaryText = string.Empty;
 
@@ -39,8 +38,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         OtherAccountOptions = [];
 
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
-        ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
-        CreateCategoryCommand = new RelayCommand(() => _ = CreateCategoryAsync());
         ApproveSelectedCommand = new RelayCommand(() => _ = ApproveSelectedAsync());
         SkipSelectedCommand = new RelayCommand(() => _ = SkipSelectedAsync());
         CancelImportCommand = new RelayCommand(() => _ = CancelImportAsync());
@@ -48,7 +45,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     public ObservableCollection<StatementImportRowViewModel> Rows { get; }
 
-    public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
     // Every other tracked account, offered as the "other side" when a row is marked Transfer.
     public ObservableCollection<NamedOptionViewModel> OtherAccountOptions { get; }
@@ -61,22 +58,24 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         private set => SetProperty(ref selectMode, value);
     }
 
-    public NamedOptionViewModel? BulkCategory
+    public CategoryOptionViewModel? BulkCategory
     {
         get => bulkCategory;
-        set => SetProperty(ref bulkCategory, value);
+        set
+        {
+            if (SetProperty(ref bulkCategory, value))
+            {
+                OnPropertyChanged(nameof(IsCreatingNewBulkCategory));
+            }
+        }
     }
 
-    public bool IsAddingCategory
-    {
-        get => isAddingCategory;
-        private set => SetProperty(ref isAddingCategory, value);
-    }
+    public bool IsCreatingNewBulkCategory => BulkCategory?.IsCreateNew == true;
 
-    public string NewCategoryName
+    public string NewBulkCategoryName
     {
-        get => newCategoryName;
-        set => SetProperty(ref newCategoryName, value);
+        get => newBulkCategoryName;
+        set => SetProperty(ref newBulkCategoryName, value);
     }
 
     public string StatusText
@@ -92,10 +91,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     }
 
     public ICommand ToggleSelectModeCommand { get; }
-
-    public ICommand ToggleAddCategoryCommand { get; }
-
-    public ICommand CreateCategoryCommand { get; }
 
     public ICommand ApproveSelectedCommand { get; }
 
@@ -123,11 +118,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
         await RunOnMainThreadAsync(() =>
         {
-            CategoryOptions.Clear();
-            foreach (var category in categories.OrderBy(category => category.Name))
-            {
-                CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
-            }
+            CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
 
             OtherAccountOptions.Clear();
             foreach (var account in otherAccounts)
@@ -166,7 +157,19 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     private async Task ApproveRowAsync(StatementImportRowViewModel row)
     {
-        await statementImportService.ApproveRowAsync(row.Id, row.Category?.Id, row.Type, row.OtherAccount?.Id);
+        if (row.IsCreatingNewCategory && string.IsNullOrWhiteSpace(row.NewCategoryName))
+        {
+            await RunOnMainThreadAsync(() => StatusText = "Name the new category first.");
+            return;
+        }
+
+        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(row.Category, row.NewCategoryName, categoryRepository);
+        if (newOption is not null)
+        {
+            await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));
+        }
+
+        await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
         await RefreshRowsAsync();
     }
 
@@ -199,15 +202,49 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     private async Task ApproveSelectedAsync()
     {
+        if (IsCreatingNewBulkCategory && string.IsNullOrWhiteSpace(NewBulkCategoryName))
+        {
+            await RunOnMainThreadAsync(() => StatusText = "Name the new category first.");
+            return;
+        }
+
         var selected = Rows.Where(row => row.IsSelected).ToList();
+
+        // A bulk category (including "create new") wins over each row's own pick, matching the
+        // original BulkCategory?.Id ?? row.Category?.Id fallback - but a bulk "create new" is
+        // resolved once, up front, so every selected row lands in the same new category rather
+        // than creating one per row.
+        var (bulkCategoryId, newBulkOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(BulkCategory, NewBulkCategoryName, categoryRepository);
+        if (newBulkOption is not null)
+        {
+            await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newBulkOption));
+        }
+
         foreach (var row in selected)
         {
-            await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id, row.Type, row.OtherAccount?.Id);
+            Guid? categoryId = bulkCategoryId;
+            if (categoryId is null)
+            {
+                var (rowCategoryId, newRowOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(row.Category, row.NewCategoryName, categoryRepository);
+                if (newRowOption is not null)
+                {
+                    await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newRowOption));
+                }
+
+                categoryId = rowCategoryId;
+            }
+
+            await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
         }
 
         // Touches UI-bound state after an await that may have resumed off the UI thread (see
         // ViewModelBase.RunOnMainThreadAsync).
-        await RunOnMainThreadAsync(() => SelectMode = false);
+        await RunOnMainThreadAsync(() =>
+        {
+            SelectMode = false;
+            BulkCategory = null;
+            NewBulkCategoryName = string.Empty;
+        });
         await RefreshRowsAsync();
     }
 
@@ -221,26 +258,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
         await RunOnMainThreadAsync(() => SelectMode = false);
         await RefreshRowsAsync();
-    }
-
-    private async Task CreateCategoryAsync()
-    {
-        if (string.IsNullOrWhiteSpace(NewCategoryName))
-        {
-            return;
-        }
-
-        var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
-        await categoryRepository.SaveAsync(newCategory);
-
-        await RunOnMainThreadAsync(() =>
-        {
-            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-            CategoryOptions.Add(option);
-            BulkCategory = option;
-            IsAddingCategory = false;
-            NewCategoryName = string.Empty;
-        });
     }
 
     private async Task CancelImportAsync()

@@ -4,6 +4,7 @@ using Banccoon.App.Formatting;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -13,7 +14,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     private readonly string currency;
     private readonly bool isIncoming;
 
-    private NamedOptionViewModel? category;
+    private CategoryOptionViewModel? category;
+    private string newCategoryName = string.Empty;
     private TransactionType type;
     private NamedOptionViewModel? otherAccount;
     private bool isSelected;
@@ -22,7 +24,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public StatementImportRowViewModel(
         StatementImportRow row,
         string currency,
-        ObservableCollection<NamedOptionViewModel> categoryOptions,
+        ObservableCollection<CategoryOptionViewModel> categoryOptions,
         ObservableCollection<NamedOptionViewModel> otherAccountOptions,
         Func<StatementImportRowViewModel, Task> onApprove,
         Func<StatementImportRowViewModel, Task> onSkip)
@@ -40,8 +42,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
         var selectedCategoryId = row.CategoryId ?? row.SuggestedCategoryId;
         category = selectedCategoryId is { } categoryId
-            ? categoryOptions.FirstOrDefault(option => option.Id == categoryId)
-            : categoryOptions.FirstOrDefault();
+            ? categoryOptions.FirstOrDefault(option => option.Id == categoryId && !option.IsCreateNew)
+            : categoryOptions.FirstOrDefault(option => !option.IsCreateNew);
 
         otherAccount = row.DestinationAccountId is { } otherAccountId
             ? otherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
@@ -70,12 +72,31 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     public bool IsDuplicate { get; }
 
-    public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
-    public NamedOptionViewModel? Category
+    public CategoryOptionViewModel? Category
     {
         get => category;
-        set => SetProperty(ref category, value);
+        set
+        {
+            if (SetProperty(ref category, value))
+            {
+                OnPropertyChanged(nameof(IsCreatingNewCategory));
+                OnPropertyChanged(nameof(CategoryBorderColor));
+            }
+        }
+    }
+
+    public bool IsCreatingNewCategory => Category?.IsCreateNew == true;
+
+    // Falls back to transparent so a row never shows a stray colored border before any category
+    // (or the create-new sentinel) has a color to show.
+    public Color CategoryBorderColor => Category?.Color ?? Colors.Transparent;
+
+    public string NewCategoryName
+    {
+        get => newCategoryName;
+        set => SetProperty(ref newCategoryName, value);
     }
 
     // The other account on a transfer - not always the semantic "destination" (see

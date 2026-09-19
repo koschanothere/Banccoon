@@ -5,6 +5,7 @@ using Banccoon.Core.Abstractions;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -25,8 +26,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
     private string name = string.Empty;
     private NamedOptionViewModel? account;
     private string amountText = string.Empty;
-    private NamedOptionViewModel? category;
-    private bool isAddingCategory;
+    private CategoryOptionViewModel? category;
     private string newCategoryName = string.Empty;
     private string statusText = string.Empty;
     private RecurrenceEditorViewModel recurrence;
@@ -57,8 +57,6 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         SetExpenseCommand = new RelayCommand(() => Type = TransactionType.Expense);
         SetIncomeCommand = new RelayCommand(() => Type = TransactionType.Income);
         CloseCommand = new RelayCommand(Close);
-        ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
-        CreateCategoryCommand = new RelayCommand(() => _ = CreateCategoryAsync());
         SaveCommand = new RelayCommand(() => _ = SaveAsync());
         DeleteCommand = new RelayCommand(() => _ = DeleteAsync());
     }
@@ -108,17 +106,22 @@ public sealed class ScheduleFormViewModel : ViewModelBase
         set => SetProperty(ref amountText, value);
     }
 
-    public NamedOptionViewModel? Category
+    public CategoryOptionViewModel? Category
     {
         get => category;
-        set => SetProperty(ref category, value);
+        set
+        {
+            if (SetProperty(ref category, value))
+            {
+                OnPropertyChanged(nameof(IsCreatingNewCategory));
+                OnPropertyChanged(nameof(CategoryBorderColor));
+            }
+        }
     }
 
-    public bool IsAddingCategory
-    {
-        get => isAddingCategory;
-        private set => SetProperty(ref isAddingCategory, value);
-    }
+    public bool IsCreatingNewCategory => Category?.IsCreateNew == true;
+
+    public Color CategoryBorderColor => Category?.Color ?? Colors.Transparent;
 
     public string NewCategoryName
     {
@@ -140,17 +143,13 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
-    public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
     public ICommand SetExpenseCommand { get; }
 
     public ICommand SetIncomeCommand { get; }
 
     public ICommand CloseCommand { get; }
-
-    public ICommand ToggleAddCategoryCommand { get; }
-
-    public ICommand CreateCategoryCommand { get; }
 
     public ICommand SaveCommand { get; }
 
@@ -180,11 +179,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
                 AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
             }
 
-            CategoryOptions.Clear();
-            foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
-            {
-                CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
-            }
+            CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
 
             editingScheduledTransactionId = existing?.Id;
             Name = existing?.Name ?? string.Empty;
@@ -194,9 +189,8 @@ public sealed class ScheduleFormViewModel : ViewModelBase
                 : AccountOptions.FirstOrDefault(option => option.Id == existing.AccountId) ?? AccountOptions.FirstOrDefault();
             AmountText = existing is null ? string.Empty : existing.Amount.ToString(CultureInfo.InvariantCulture);
             Category = existing?.CategoryId is { } categoryId
-                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
-                : CategoryOptions.FirstOrDefault();
-            IsAddingCategory = false;
+                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId && !option.IsCreateNew)
+                : CategoryOptions.FirstOrDefault(option => !option.IsCreateNew);
             NewCategoryName = string.Empty;
             StatusText = string.Empty;
             Recurrence = CreateRecurrenceEditor();
@@ -218,28 +212,6 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             recurrenceDescriptionService,
             recurrenceSyntaxService,
             recurrenceValidationService);
-    }
-
-    private async Task CreateCategoryAsync()
-    {
-        if (string.IsNullOrWhiteSpace(NewCategoryName))
-        {
-            return;
-        }
-
-        var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
-        await categoryRepository.SaveAsync(newCategory);
-
-        // Touches UI-bound state after an await that may have resumed off the UI thread (see
-        // ViewModelBase.RunOnMainThreadAsync).
-        await RunOnMainThreadAsync(() =>
-        {
-            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-            CategoryOptions.Add(option);
-            Category = option;
-            IsAddingCategory = false;
-            NewCategoryName = string.Empty;
-        });
     }
 
     private async Task SaveAsync()
@@ -270,13 +242,25 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             return;
         }
 
+        if (Category?.IsCreateNew == true && string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            StatusText = "Name the new category first.";
+            return;
+        }
+
+        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+        if (newOption is not null)
+        {
+            await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));
+        }
+
         var rule = Recurrence.BuildRule();
         var scheduledTransaction = new ScheduledTransaction(
             editingScheduledTransactionId ?? Guid.NewGuid(),
             Name.Trim(),
             amount,
             Account.Id,
-            Category?.Id,
+            categoryId,
             Type,
             rule,
             rule.StartDate,

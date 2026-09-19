@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
+using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
@@ -24,8 +25,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
     private NamedOptionViewModel? destinationAccount;
     private DateTime date = DateTime.Today;
     private string amountText = string.Empty;
-    private NamedOptionViewModel? category;
-    private bool isAddingCategory;
+    private CategoryOptionViewModel? category;
     private string newCategoryName = string.Empty;
     private string statusText = string.Empty;
 
@@ -48,8 +48,6 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         CategoryOptions = [];
 
         CloseCommand = new RelayCommand(Close);
-        ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
-        CreateCategoryCommand = new RelayCommand(() => _ = CreateCategoryAsync());
         SaveCommand = new RelayCommand(() => _ = SaveAsync());
     }
 
@@ -97,17 +95,22 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         set => SetProperty(ref amountText, value);
     }
 
-    public NamedOptionViewModel? Category
+    public CategoryOptionViewModel? Category
     {
         get => category;
-        set => SetProperty(ref category, value);
+        set
+        {
+            if (SetProperty(ref category, value))
+            {
+                OnPropertyChanged(nameof(IsCreatingNewCategory));
+                OnPropertyChanged(nameof(CategoryBorderColor));
+            }
+        }
     }
 
-    public bool IsAddingCategory
-    {
-        get => isAddingCategory;
-        private set => SetProperty(ref isAddingCategory, value);
-    }
+    public bool IsCreatingNewCategory => Category?.IsCreateNew == true;
+
+    public Color CategoryBorderColor => Category?.Color ?? Colors.Transparent;
 
     public string NewCategoryName
     {
@@ -123,13 +126,9 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
 
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
-    public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
     public ICommand CloseCommand { get; }
-
-    public ICommand ToggleAddCategoryCommand { get; }
-
-    public ICommand CreateCategoryCommand { get; }
 
     public ICommand SaveCommand { get; }
 
@@ -162,11 +161,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
                 AccountOptions.Add(new NamedOptionViewModel(accountItem.Id, accountItem.Name));
             }
 
-            CategoryOptions.Clear();
-            foreach (var categoryItem in categories.OrderBy(categoryItem => categoryItem.Name))
-            {
-                CategoryOptions.Add(new NamedOptionViewModel(categoryItem.Id, categoryItem.Name));
-            }
+            CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
 
             Name = string.Empty;
             Account = (settings.PrimaryAccountId is { } primaryAccountId
@@ -175,34 +170,11 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             DestinationAccount = AccountOptions.Skip(1).FirstOrDefault() ?? Account;
             Date = DateTime.Today;
             AmountText = string.Empty;
-            Category = CategoryOptions.FirstOrDefault();
-            IsAddingCategory = false;
+            Category = CategoryOptions.FirstOrDefault(option => !option.IsCreateNew);
             NewCategoryName = string.Empty;
             StatusText = string.Empty;
             OnPropertyChanged(nameof(IsTransferForm));
             IsOpen = true;
-        });
-    }
-
-    private async Task CreateCategoryAsync()
-    {
-        if (string.IsNullOrWhiteSpace(NewCategoryName))
-        {
-            return;
-        }
-
-        var newCategory = new Category(Guid.NewGuid(), NewCategoryName.Trim());
-        await categoryRepository.SaveAsync(newCategory);
-
-        // Touches UI-bound state after an await that may have resumed off the UI thread (see
-        // ViewModelBase.RunOnMainThreadAsync).
-        await RunOnMainThreadAsync(() =>
-        {
-            var option = new NamedOptionViewModel(newCategory.Id, newCategory.Name);
-            CategoryOptions.Add(option);
-            Category = option;
-            IsAddingCategory = false;
-            NewCategoryName = string.Empty;
         });
     }
 
@@ -232,12 +204,30 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             return;
         }
 
+        if (!IsTransferForm && Category?.IsCreateNew == true && string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            StatusText = "Name the new category first.";
+            return;
+        }
+
+        Guid? categoryId = null;
+        if (!IsTransferForm)
+        {
+            var (resolvedCategoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+            if (newOption is not null)
+            {
+                await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));
+            }
+
+            categoryId = resolvedCategoryId;
+        }
+
         var transaction = new Transaction(
             Guid.NewGuid(),
             DateOnly.FromDateTime(Date),
             amount,
             Account.Id,
-            IsTransferForm ? null : Category?.Id,
+            categoryId,
             Notes: null,
             type,
             DestinationAccountId: IsTransferForm ? DestinationAccount!.Id : null,
