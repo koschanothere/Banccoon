@@ -11,11 +11,18 @@ public partial class DashboardPage : ContentPage
         InitializeComponent();
         this.viewModel = viewModel;
         BindingContext = viewModel;
+        viewModel.CategoryDrillDownRequested += OnCategoryDrillDownRequestedAsync;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         await viewModel.InitializeAsync();
+    }
+
+    private static Task OnCategoryDrillDownRequestedAsync(Guid? categoryId)
+    {
+        var route = categoryId is { } id ? $"//transactions?categoryId={id}" : "//transactions";
+        return Shell.Current.GoToAsync(route);
     }
 }

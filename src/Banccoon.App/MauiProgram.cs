@@ -2,6 +2,7 @@ using Banccoon.App.Diagnostics;
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Analytics;
 using Banccoon.Core.Categories;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
@@ -67,6 +68,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
         builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
         builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
+        builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
         builder.Services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         builder.Services.AddSingleton<IBanccoonDatabaseInitializer, BanccoonDatabaseInitializer>();

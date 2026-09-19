@@ -31,6 +31,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         new Dictionary<Guid, IReadOnlyDictionary<Guid, decimal>>();
     private int visibleCount = PageSize;
     private string currency = "EUR";
+    private Guid? pendingCategoryFilterId;
 
     private bool isLoading;
     private bool filterOpen;
@@ -219,6 +220,14 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public ICommand LoadMoreCommand { get; }
 
+    // Set when navigated here from the Dashboard's Analytics "drill down into this category"
+    // action (see TransactionsPage.ApplyQueryAttributes) - applied once CategoryOptions is
+    // rebuilt below, since the filter has to match an option already in that list by Id.
+    public void SetPendingCategoryFilter(Guid categoryId)
+    {
+        pendingCategoryFilterId = categoryId;
+    }
+
     public async Task InitializeAsync()
     {
         IsLoading = true;
@@ -236,6 +245,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             await RunOnMainThreadAsync(() =>
             {
                 RebuildOptionLists();
+                ApplyPendingCategoryFilter();
                 ApplyFilters();
             });
             await ResolveUpcoming.RefreshAsync(currency, settings.ResolveUpcomingNearTermDays);
@@ -288,6 +298,23 @@ public sealed class TransactionsViewModel : ViewModelBase
             ? BulkCategoryOptions.FirstOrDefault(option => option.Id == bulkCategoryId)
             : BulkCategoryOptions.FirstOrDefault();
         OnPropertyChanged(nameof(BulkCategory));
+    }
+
+    private void ApplyPendingCategoryFilter()
+    {
+        if (pendingCategoryFilterId is not { } categoryId)
+        {
+            return;
+        }
+
+        var match = CategoryOptions.FirstOrDefault(option => option.Id == categoryId);
+        if (match is not null)
+        {
+            CategoryFilter = match;
+            FilterOpen = true;
+        }
+
+        pendingCategoryFilterId = null;
     }
 
     private void ApplyFilters()

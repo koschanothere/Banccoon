@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Analytics;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -46,7 +47,9 @@ public sealed class DashboardViewModel : ViewModelBase
         IForecastService forecastService,
         IAvailableToSpendService availableToSpendService,
         IFreeToSpendWindowService freeToSpendWindowService,
-        IHistoricalBalanceService historicalBalanceService)
+        IHistoricalBalanceService historicalBalanceService,
+        ICategoryRepository categoryRepository,
+        IAnalyticsService analyticsService)
     {
         this.dateProvider = dateProvider;
         this.accountRepository = accountRepository;
@@ -62,9 +65,21 @@ public sealed class DashboardViewModel : ViewModelBase
         ChartPoints = [];
         UpcomingObligations = [];
         Goals = [];
+        Analytics = new AnalyticsViewModel(
+            dateProvider,
+            transactionRepository,
+            categoryRepository,
+            analyticsService,
+            categoryId => RaiseCategoryDrillDownRequested(categoryId));
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
         SaveForecastPeriodCommand = new RelayCommand(() => _ = SaveForecastPeriodAsync());
     }
+
+    // The Analytics section's "drill down into this category" action needs Shell navigation,
+    // which ViewModels in this app don't perform directly (see StatementImportPage.xaml.cs's
+    // OnCloseClicked for the established convention) - so it's surfaced as an event for
+    // DashboardPage's code-behind to act on instead.
+    public event Func<Guid?, Task>? CategoryDrillDownRequested;
 
     public bool IsLoading
     {
@@ -140,6 +155,8 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ObservableCollection<SavingsGoalRowViewModel> Goals { get; }
 
+    public AnalyticsViewModel Analytics { get; }
+
     public ICommand ToggleCalcCommand { get; }
 
     public ICommand SaveForecastPeriodCommand { get; }
@@ -165,6 +182,7 @@ public sealed class DashboardViewModel : ViewModelBase
 
             await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, savingsGoals);
             await LoadChartAsync(today, settings, dashboardAccounts, dashboardAccountIds, scheduledTransactions, cancellationToken);
+            await Analytics.InitializeAsync(settings.DefaultCurrency, cancellationToken);
         }
         finally
         {
@@ -172,6 +190,11 @@ public sealed class DashboardViewModel : ViewModelBase
             // ViewModelBase.RunOnMainThreadAsync).
             await RunOnMainThreadAsync(() => IsLoading = false);
         }
+    }
+
+    private Task RaiseCategoryDrillDownRequested(Guid? categoryId)
+    {
+        return CategoryDrillDownRequested?.Invoke(categoryId) ?? Task.CompletedTask;
     }
 
     private Task LoadFreeToSpendAsync(
