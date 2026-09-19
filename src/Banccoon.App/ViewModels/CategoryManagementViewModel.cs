@@ -1,20 +1,20 @@
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
 
+// Renders categories as a "sea of boxes" (each box's background is its own color) rather than a
+// list + separate merge-picker: tap opens the color picker inline, double-tap renames, and
+// dragging one box onto another merges the dragged category into the drop target.
 public sealed class CategoryManagementViewModel : ViewModelBase
 {
     private readonly ICategoryRepository categoryRepository;
     private readonly ICategoryManagementService categoryManagementService;
     private readonly Func<Task> onChanged;
 
-    private bool isOpen;
-    private NamedOptionViewModel? mergeSource;
-    private NamedOptionViewModel? mergeTarget;
+    private CategoryBoxViewModel? draggedCategory;
     private string statusText = string.Empty;
 
     public CategoryManagementViewModel(
@@ -26,31 +26,10 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         this.categoryManagementService = categoryManagementService;
         this.onChanged = onChanged;
 
-        Rows = [];
-        MergeOptions = [];
-
-        ToggleCommand = new RelayCommand(() => _ = ToggleAsync());
-        CloseCommand = new RelayCommand(Close);
-        MergeCommand = new RelayCommand(() => _ = MergeAsync());
+        Boxes = [];
     }
 
-    public bool IsOpen
-    {
-        get => isOpen;
-        private set => SetProperty(ref isOpen, value);
-    }
-
-    public NamedOptionViewModel? MergeSource
-    {
-        get => mergeSource;
-        set => SetProperty(ref mergeSource, value);
-    }
-
-    public NamedOptionViewModel? MergeTarget
-    {
-        get => mergeTarget;
-        set => SetProperty(ref mergeTarget, value);
-    }
+    public ObservableCollection<CategoryBoxViewModel> Boxes { get; }
 
     public string StatusText
     {
@@ -58,82 +37,66 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         private set => SetProperty(ref statusText, value);
     }
 
-    public ObservableCollection<CategoryManagementRowViewModel> Rows { get; }
-
-    public ObservableCollection<NamedOptionViewModel> MergeOptions { get; }
-
-    public ICommand ToggleCommand { get; }
-
-    public ICommand CloseCommand { get; }
-
-    public ICommand MergeCommand { get; }
-
-    public void Close()
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        IsOpen = false;
+        await RefreshAsync(cancellationToken);
     }
 
-    public async Task OpenAsync()
+    private async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
-        await RefreshAsync();
-
-        // Touches UI-bound state after an await that may have resumed off the UI thread (see
-        // ViewModelBase.RunOnMainThreadAsync).
-        await RunOnMainThreadAsync(() => IsOpen = true);
-    }
-
-    private async Task ToggleAsync()
-    {
-        if (IsOpen)
-        {
-            Close();
-            return;
-        }
-
-        await OpenAsync();
-    }
-
-    private async Task RefreshAsync()
-    {
-        var categories = await categoryRepository.GetAllAsync();
+        var categories = await categoryRepository.GetAllAsync(cancellationToken);
         var ordered = categories.OrderBy(category => category.Name).ToList();
 
-        // Mutates collections bound to live UI - must run on the UI thread, which the await above
-        // may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
+        // Mutates a collection bound to live UI - must run on the UI thread, which the await
+        // above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() =>
         {
-            Rows.Clear();
+            Boxes.Clear();
             foreach (var category in ordered)
             {
-                Rows.Add(new CategoryManagementRowViewModel(category, RenameAsync, DeleteAsync, SetColorAsync));
+                Boxes.Add(new CategoryBoxViewModel(
+                    category,
+                    StartDrag,
+                    box => _ = HandleDropAsync(box),
+                    (box, newName) => RenameAsync(box.Id, newName),
+                    SetColorAsync,
+                    DeleteAsync));
             }
 
-            MergeOptions.Clear();
-            foreach (var category in ordered)
-            {
-                MergeOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
-            }
-
-            MergeSource = MergeOptions.FirstOrDefault();
-            MergeTarget = MergeOptions.Skip(1).FirstOrDefault();
             StatusText = string.Empty;
         });
     }
 
-    private async Task RenameAsync(Guid id, string newName)
+    private void StartDrag(CategoryBoxViewModel box)
     {
-        if (string.IsNullOrWhiteSpace(newName))
+        draggedCategory = box;
+    }
+
+    private async Task HandleDropAsync(CategoryBoxViewModel target)
+    {
+        var source = draggedCategory;
+        draggedCategory = null;
+
+        if (source is null || source.Id == target.Id)
         {
             return;
         }
 
+        await categoryManagementService.MergeAsync(source.Id, target.Id);
+        await RefreshAsync();
+        await onChanged();
+    }
+
+    private async Task RenameAsync(Guid id, string newName)
+    {
         var category = await categoryRepository.GetByIdAsync(id);
         if (category is null)
         {
             return;
         }
 
-        await categoryRepository.SaveAsync(category with { Name = newName.Trim() });
+        await categoryRepository.SaveAsync(category with { Name = newName });
+        await RefreshAsync();
         await onChanged();
     }
 
@@ -146,31 +109,13 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         }
 
         await categoryRepository.SaveAsync(category with { Color = color });
+        await RefreshAsync();
         await onChanged();
     }
 
     private async Task DeleteAsync(Guid id)
     {
         await categoryRepository.DeleteAsync(id);
-        await RefreshAsync();
-        await onChanged();
-    }
-
-    private async Task MergeAsync()
-    {
-        if (MergeSource is null || MergeTarget is null)
-        {
-            StatusText = "Choose both categories.";
-            return;
-        }
-
-        if (MergeSource.Id == MergeTarget.Id)
-        {
-            StatusText = "Choose two different categories.";
-            return;
-        }
-
-        await categoryManagementService.MergeAsync(MergeSource.Id, MergeTarget.Id);
         await RefreshAsync();
         await onChanged();
     }

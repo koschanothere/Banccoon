@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
-using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
@@ -66,7 +65,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
         ITransactionBalanceHistoryService transactionBalanceHistoryService,
-        ICategoryManagementService categoryManagementService,
         IRecurrenceDescriptionService recurrenceDescriptionService,
         IRecurrenceSyntaxService recurrenceSyntaxService,
         IRecurrenceValidationService recurrenceValidationService)
@@ -105,10 +103,6 @@ public sealed class TransactionsViewModel : ViewModelBase
             recurrenceDescriptionService,
             InitializeAsync,
             onEditRequested: schedule => OpenScheduleFormForEditAsync(schedule));
-        CategoryManagement = new CategoryManagementViewModel(
-            categoryRepository,
-            categoryManagementService,
-            InitializeAsync);
 
         Rows = [];
         AccountOptions = [];
@@ -118,7 +112,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         ToggleFilterCommand = new RelayCommand(ToggleFilterPanel);
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
         ToggleAddMenuCommand = new RelayCommand(ToggleAddMenuPanel);
-        ToggleCategoryManagementCommand = new RelayCommand(() => _ = ToggleCategoryManagementPanelAsync());
         OpenScheduleFormCommand = new RelayCommand(() => _ = OpenScheduleFormAsync());
         OpenExpenseFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Expense));
         OpenIncomeFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Income));
@@ -198,8 +191,6 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public ResolveUpcomingListViewModel ResolveUpcoming { get; }
 
-    public CategoryManagementViewModel CategoryManagement { get; }
-
     public ScheduleFormViewModel ScheduleForm { get; }
 
     public ObservableCollection<TransactionRowViewModel> Rows { get; }
@@ -215,8 +206,6 @@ public sealed class TransactionsViewModel : ViewModelBase
     public ICommand ToggleSelectModeCommand { get; }
 
     public ICommand ToggleAddMenuCommand { get; }
-
-    public ICommand ToggleCategoryManagementCommand { get; }
 
     public ICommand OpenScheduleFormCommand { get; }
 
@@ -517,18 +506,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         AddMenuOpen = true;
     }
 
-    private async Task ToggleCategoryManagementPanelAsync()
-    {
-        if (CategoryManagement.IsOpen)
-        {
-            CategoryManagement.Close();
-            return;
-        }
-
-        CloseAllPanels();
-        await CategoryManagement.OpenAsync();
-    }
-
     private void OpenAddForm(TransactionType type)
     {
         CloseAllPanels();
@@ -552,7 +529,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         FilterOpen = false;
         AddMenuOpen = false;
         AddForm.Close();
-        CategoryManagement.Close();
         ScheduleForm.Close();
     }
 

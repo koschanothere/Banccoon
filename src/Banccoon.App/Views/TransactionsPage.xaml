@@ -18,7 +18,6 @@
                 <Label Grid.Column="0" Text="Transactions" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
                     <Button Text="Filter" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="Categories" Command="{Binding ToggleCategoryManagementCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="Check-in" IsEnabled="False" Style="{StaticResource QuietButton}" />
                     <Button Text="Select" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="Import" Clicked="OnImportClicked" Style="{StaticResource QuietButton}" />
@@ -54,61 +53,6 @@
 
                     <Label Text="{Binding AddForm.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                     <Button Text="Save" Command="{Binding AddForm.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CategoryManagement.IsOpen}">
-                <VerticalStackLayout Spacing="10">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Grid.Column="0" Text="Manage categories" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="Close" Command="{Binding CategoryManagement.CloseCommand}" Style="{StaticResource QuietButton}" />
-                    </Grid>
-                    <CollectionView ItemsSource="{Binding CategoryManagement.Rows}">
-                        <CollectionView.EmptyView>
-                            <Label Text="No categories yet." Style="{StaticResource TertiaryLabel}" />
-                        </CollectionView.EmptyView>
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="viewModels:CategoryManagementRowViewModel">
-                                <VerticalStackLayout Spacing="6" Padding="0,6">
-                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <Entry Grid.Column="0" Placeholder="Category name" Text="{Binding Name}" />
-                                        <Button Grid.Column="1" Text="Rename" Command="{Binding RenameCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="2" Text="Delete" Command="{Binding DeleteCommand}" Style="{StaticResource DestructiveButton}" />
-                                    </Grid>
-                                    <CollectionView ItemsSource="{Binding ColorSwatches}" HeightRequest="24">
-                                        <CollectionView.ItemsLayout>
-                                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="6" />
-                                        </CollectionView.ItemsLayout>
-                                        <CollectionView.ItemTemplate>
-                                            <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
-                                                <Border
-                                                    WidthRequest="22"
-                                                    HeightRequest="22"
-                                                    StrokeShape="RoundRectangle 11"
-                                                    StrokeThickness="{Binding SelectionStrokeThickness}"
-                                                    Stroke="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}"
-                                                    Background="{Binding Color}">
-                                                    <Border.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
-                                                    </Border.GestureRecognizers>
-                                                </Border>
-                                            </DataTemplate>
-                                        </CollectionView.ItemTemplate>
-                                    </CollectionView>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-
-                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
-
-                    <Label Text="Merge one category into another" Style="{StaticResource SecondaryLabel}" />
-                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
-                        <Picker Grid.Column="0" Title="From" ItemsSource="{Binding CategoryManagement.MergeOptions}" SelectedItem="{Binding CategoryManagement.MergeSource}" />
-                        <Picker Grid.Column="1" Title="Into" ItemsSource="{Binding CategoryManagement.MergeOptions}" SelectedItem="{Binding CategoryManagement.MergeTarget}" />
-                        <Button Grid.Column="2" Text="Merge" Command="{Binding CategoryManagement.MergeCommand}" Style="{StaticResource QuietButton}" />
-                    </Grid>
-                    <Label Text="{Binding CategoryManagement.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                 </VerticalStackLayout>
             </Border>
 

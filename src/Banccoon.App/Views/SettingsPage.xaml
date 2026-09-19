@@ -47,7 +47,7 @@
                             </HorizontalStackLayout>
 
                             <Label Text="Category colors" Style="{StaticResource SecondaryLabel}" />
-                            <Label Text="Set per-category in Transactions -&gt; Categories. Exact shades still TBD." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="Set per-category in Settings -&gt; Transactions -&gt; Manage categories. Exact shades still TBD." Style="{StaticResource TertiaryLabel}" />
                             <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding CategoryColorPreview}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="Color">
@@ -212,6 +212,99 @@
 
                 <!-- Transactions -->
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsTransactionsCategorySelected}">
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Manage categories" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="Tap a category to change its color, use the pencil to rename, or press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
+
+                            <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding CategoryManagement.Boxes}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:CategoryBoxViewModel">
+                                        <Border
+                                            StrokeShape="RoundRectangle 10"
+                                            Stroke="Transparent"
+                                            Background="{Binding Color}"
+                                            Padding="12,8"
+                                            Margin="4"
+                                            MinimumWidthRequest="110">
+                                            <!-- Drag/drop lives on the outer Border only; tap-to-open-color-menu lives on the
+                                                 inner Grid below. Stacking Tap + Drag on the identical element is a known
+                                                 MAUI/WinUI conflict where the drag recognizer can swallow the tap entirely -
+                                                 keeping them on separate (parent/child) elements avoids that. -->
+                                            <Border.GestureRecognizers>
+                                                <DragGestureRecognizer CanDrag="True" DragStartingCommand="{Binding StartDragCommand}" />
+                                                <DropGestureRecognizer AllowDrop="True" DropCommand="{Binding DropCommand}" />
+                                            </Border.GestureRecognizers>
+
+                                            <VerticalStackLayout Spacing="8">
+                                                <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding IsRenaming, Converter={StaticResource InverseBoolConverter}}">
+                                                    <Grid.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding ToggleColorMenuCommand}" />
+                                                    </Grid.GestureRecognizers>
+                                                    <Label Grid.Column="0" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                                                    <Button
+                                                        Grid.Column="1"
+                                                        Text="&#9998;"
+                                                        Command="{Binding StartRenameCommand}"
+                                                        BackgroundColor="Transparent"
+                                                        TextColor="White"
+                                                        FontSize="11"
+                                                        Padding="0"
+                                                        WidthRequest="20"
+                                                        HeightRequest="20"
+                                                        VerticalOptions="Center" />
+                                                    <Button
+                                                        Grid.Column="2"
+                                                        Text="&#10005;"
+                                                        Command="{Binding DeleteCommand}"
+                                                        BackgroundColor="Transparent"
+                                                        TextColor="White"
+                                                        FontSize="11"
+                                                        Padding="0"
+                                                        WidthRequest="20"
+                                                        HeightRequest="20"
+                                                        VerticalOptions="Center" />
+                                                </Grid>
+
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding IsRenaming}">
+                                                    <Entry Grid.Column="0" Text="{Binding EditName}" BackgroundColor="White" TextColor="Black" WidthRequest="100" />
+                                                    <Button
+                                                        Grid.Column="1"
+                                                        Text="&#10003;"
+                                                        Command="{Binding CommitRenameCommand}"
+                                                        BackgroundColor="Transparent"
+                                                        TextColor="White"
+                                                        FontSize="14"
+                                                        Padding="0"
+                                                        WidthRequest="24" />
+                                                </Grid>
+
+                                                <FlexLayout Wrap="Wrap" IsVisible="{Binding IsColorMenuOpen}" BindableLayout.ItemsSource="{Binding ColorSwatches}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
+                                                            <Border
+                                                                WidthRequest="20"
+                                                                HeightRequest="20"
+                                                                Margin="2"
+                                                                StrokeShape="RoundRectangle 10"
+                                                                Stroke="White"
+                                                                StrokeThickness="{Binding SelectionStrokeThickness}"
+                                                                Background="{Binding Color}">
+                                                                <Border.GestureRecognizers>
+                                                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                                                </Border.GestureRecognizers>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </FlexLayout>
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="Transactions" Style="{StaticResource SectionTitleLabel}" />

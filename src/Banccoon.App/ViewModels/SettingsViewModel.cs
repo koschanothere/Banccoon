@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.Core.Appearance;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
@@ -36,6 +37,7 @@ public sealed class SettingsViewModel : ViewModelBase
         IDatabasePathProvider databasePathProvider,
         ICategoryLearningRuleRepository categoryLearningRuleRepository,
         ICategoryRepository categoryRepository,
+        ICategoryManagementService categoryManagementService,
         IAccountRepository accountRepository)
     {
         this.settingsRepository = settingsRepository;
@@ -43,6 +45,7 @@ public sealed class SettingsViewModel : ViewModelBase
         General = new GeneralPreferencesViewModel(settingsRepository);
         AppLock = new AppLockSettingsViewModel(settingsRepository);
         LearningRules = new CategoryLearningRulesViewModel(categoryLearningRuleRepository, categoryRepository, accountRepository);
+        CategoryManagement = new CategoryManagementViewModel(categoryRepository, categoryManagementService, () => LearningRules.InitializeAsync());
         DashboardSectionRows = [];
         Categories = [];
         RebuildCategoryRows();
@@ -69,6 +72,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public AppLockSettingsViewModel AppLock { get; }
 
     public CategoryLearningRulesViewModel LearningRules { get; }
+
+    public CategoryManagementViewModel CategoryManagement { get; }
 
     public ObservableCollection<SettingsCategoryRowViewModel> Categories { get; }
 
@@ -280,6 +285,7 @@ public sealed class SettingsViewModel : ViewModelBase
         await AppLock.InitializeAsync(settings);
         await Data.InitializeAsync(settings);
         await LearningRules.InitializeAsync(cancellationToken);
+        await CategoryManagement.InitializeAsync(cancellationToken);
     }
 
     private void RebuildCategoryRows()
