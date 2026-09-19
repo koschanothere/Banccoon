@@ -43,7 +43,6 @@ public partial class AppShell : Shell
         try
         {
             var settings = await settingsRepository.GetAsync();
-            AppLockState.RecordActivity();
             if (settings.AppLockPinHash is not null)
             {
                 await ShowLockScreenAsync();
@@ -60,50 +59,10 @@ public partial class AppShell : Shell
     private void OnNavigated(object? sender, ShellNavigatedEventArgs e)
     {
         _ = viewModel.RefreshFavoritesAsync();
-        _ = CheckAppLockIfIdleAsync();
-    }
-
-    private async Task CheckAppLockIfIdleAsync()
-    {
-        // Shell.Navigated also fires for the very navigation that shows the lock screen itself -
-        // without this guard, that would immediately re-trigger this check and try to push a
-        // second lock screen on top of the first.
-        if (AppLockState.IsLockScreenActive)
-        {
-            return;
-        }
-
-        try
-        {
-            var settings = await settingsRepository.GetAsync();
-            if (settings.AppLockPinHash is null)
-            {
-                AppLockState.RecordActivity();
-                return;
-            }
-
-            var wasIdleTooLong = AppLockState.IsIdleTooLong(settings.AppLockAutoLockMinutes);
-            AppLockState.RecordActivity();
-
-            if (wasIdleTooLong)
-            {
-                await ShowLockScreenAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            DiagnosticLog.Write($"CheckAppLockIfIdleAsync failed, leaving app unlocked: {ex}");
-        }
     }
 
     private async Task ShowLockScreenAsync()
     {
-        if (AppLockState.IsLockScreenActive)
-        {
-            return;
-        }
-
-        AppLockState.IsLockScreenActive = true;
         var lockPage = IPlatformApplication.Current!.Services.GetRequiredService<AppLockPage>();
         await Navigation.PushModalAsync(lockPage, animated: false);
     }

@@ -8,6 +8,7 @@
     Title="Settings"
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
+    <Grid>
     <Grid ColumnDefinitions="220,*" Padding="32" ColumnSpacing="24">
 
         <VerticalStackLayout Grid.Column="0" Spacing="4">
@@ -104,37 +105,6 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <!-- Security & Privacy -->
-                <VerticalStackLayout Spacing="16" IsVisible="{Binding IsSecurityCategorySelected}">
-                    <Border Style="{StaticResource CardBorder}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Text="Security" Style="{StaticResource SectionTitleLabel}" />
-                            <Label Text="A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless." Style="{StaticResource TertiaryLabel}" />
-
-                            <Label Text="A PIN is currently set." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding AppLock.IsPinSet}" />
-                            <Label Text="No PIN is set - the app opens directly." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding AppLock.IsPinSet, Converter={StaticResource InverseBoolConverter}}" />
-
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Entry Grid.Column="0" Text="{Binding AppLock.NewPinText}" Placeholder="New PIN" IsPassword="True" Keyboard="Numeric" />
-                                <Entry Grid.Column="1" Text="{Binding AppLock.ConfirmPinText}" Placeholder="Confirm PIN" IsPassword="True" Keyboard="Numeric" />
-                            </Grid>
-                            <HorizontalStackLayout Spacing="8">
-                                <Button Text="Set / change PIN" Command="{Binding AppLock.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Text="Remove PIN" Command="{Binding AppLock.RemovePinCommand}" IsVisible="{Binding AppLock.IsPinSet}" Style="{StaticResource DestructiveButton}" />
-                            </HorizontalStackLayout>
-
-                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
-
-                            <Label Text="Auto-lock after inactivity" Style="{StaticResource SecondaryLabel}" />
-                            <Label Text="Approximate - checked whenever you switch tabs, not on every mouse movement." Style="{StaticResource TertiaryLabel}" />
-                            <Entry Text="{Binding AppLock.AutoLockMinutesText}" Placeholder="Minutes" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
-                            <Button Text="Save" Command="{Binding AppLock.SaveAutoLockCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
-
-                            <Label Text="{Binding AppLock.StatusText}" Style="{StaticResource SecondaryLabel}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-
                 <!-- Dashboard -->
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsDashboardCategorySelected}">
                     <Border Style="{StaticResource CardBorder}">
@@ -214,8 +184,13 @@
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsTransactionsCategorySelected}">
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
-                            <Label Text="Manage categories" Style="{StaticResource SectionTitleLabel}" />
-                            <Label Text="Tap a category to change its color, use the pencil to rename, or press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label Grid.Column="0" Text="Manage categories" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="Select" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                                <Button Grid.Column="1" Text="Cancel" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
+                                <Button Grid.Column="2" Text="Delete selected" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
+                            </Grid>
+                            <Label Text="Tap a category to change its color - tap it again while the color picker is open to rename it. Press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
 
                             <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding CategoryManagement.Boxes}">
                                 <BindableLayout.ItemTemplate>
@@ -227,43 +202,22 @@
                                             Padding="12,8"
                                             Margin="4"
                                             MinimumWidthRequest="110">
-                                            <!-- Drag/drop lives on the outer Border only; tap-to-open-color-menu lives on the
-                                                 inner Grid below. Stacking Tap + Drag on the identical element is a known
-                                                 MAUI/WinUI conflict where the drag recognizer can swallow the tap entirely -
-                                                 keeping them on separate (parent/child) elements avoids that. -->
+                                            <!-- Drag/drop lives on the outer Border only; tapping lives on the inner Grid
+                                                 below. Stacking Tap + Drag on the identical element is a known MAUI/WinUI
+                                                 conflict where the drag recognizer can swallow the tap entirely - keeping
+                                                 them on separate (parent/child) elements avoids that. -->
                                             <Border.GestureRecognizers>
-                                                <DragGestureRecognizer CanDrag="True" DragStartingCommand="{Binding StartDragCommand}" />
+                                                <DragGestureRecognizer CanDrag="{Binding IsSelectModeActive, Converter={StaticResource InverseBoolConverter}}" DragStartingCommand="{Binding StartDragCommand}" />
                                                 <DropGestureRecognizer AllowDrop="True" DropCommand="{Binding DropCommand}" />
                                             </Border.GestureRecognizers>
 
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding IsRenaming, Converter={StaticResource InverseBoolConverter}}">
+                                            <Grid>
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding IsRenaming, Converter={StaticResource InverseBoolConverter}}">
                                                     <Grid.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding ToggleColorMenuCommand}" />
+                                                        <TapGestureRecognizer Command="{Binding TapCommand}" />
                                                     </Grid.GestureRecognizers>
-                                                    <Label Grid.Column="0" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
-                                                    <Button
-                                                        Grid.Column="1"
-                                                        Text="&#9998;"
-                                                        Command="{Binding StartRenameCommand}"
-                                                        BackgroundColor="Transparent"
-                                                        TextColor="White"
-                                                        FontSize="11"
-                                                        Padding="0"
-                                                        WidthRequest="20"
-                                                        HeightRequest="20"
-                                                        VerticalOptions="Center" />
-                                                    <Button
-                                                        Grid.Column="2"
-                                                        Text="&#10005;"
-                                                        Command="{Binding DeleteCommand}"
-                                                        BackgroundColor="Transparent"
-                                                        TextColor="White"
-                                                        FontSize="11"
-                                                        Padding="0"
-                                                        WidthRequest="20"
-                                                        HeightRequest="20"
-                                                        VerticalOptions="Center" />
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" IsEnabled="False" Scale="0.8" />
+                                                    <Label Grid.Column="1" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
                                                 </Grid>
 
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding IsRenaming}">
@@ -278,30 +232,25 @@
                                                         Padding="0"
                                                         WidthRequest="24" />
                                                 </Grid>
-
-                                                <FlexLayout Wrap="Wrap" IsVisible="{Binding IsColorMenuOpen}" BindableLayout.ItemsSource="{Binding ColorSwatches}">
-                                                    <BindableLayout.ItemTemplate>
-                                                        <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
-                                                            <Border
-                                                                WidthRequest="20"
-                                                                HeightRequest="20"
-                                                                Margin="2"
-                                                                StrokeShape="RoundRectangle 10"
-                                                                Stroke="White"
-                                                                StrokeThickness="{Binding SelectionStrokeThickness}"
-                                                                Background="{Binding Color}">
-                                                                <Border.GestureRecognizers>
-                                                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
-                                                                </Border.GestureRecognizers>
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </BindableLayout.ItemTemplate>
-                                                </FlexLayout>
-                                            </VerticalStackLayout>
+                                            </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </FlexLayout>
+
+                            <Button
+                                Text="+ Add category"
+                                Command="{Binding CategoryManagement.StartAddCategoryCommand}"
+                                IsVisible="{Binding CategoryManagement.IsAddingCategory, Converter={StaticResource InverseBoolConverter}}"
+                                Style="{StaticResource QuietButton}"
+                                HorizontalOptions="Start" />
+
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding CategoryManagement.IsAddingCategory}">
+                                <Entry Grid.Column="0" Text="{Binding CategoryManagement.NewCategoryName}" Placeholder="Category name" />
+                                <Button Grid.Column="1" Text="Add" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Grid.Column="2" Text="Cancel" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
+                            </Grid>
+                            <Label Text="{Binding CategoryManagement.StatusText}" IsVisible="{Binding CategoryManagement.IsAddingCategory}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -369,8 +318,29 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <!-- Data & Backup -->
+                <!-- Data & Security -->
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsDataCategorySelected}">
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="Security" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless. It's asked for once, when the app starts." Style="{StaticResource TertiaryLabel}" />
+
+                            <Label Text="A PIN is currently set." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet}" />
+                            <Label Text="No PIN is set - the app opens directly." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet, Converter={StaticResource InverseBoolConverter}}" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Entry Grid.Column="0" Text="{Binding Pin.NewPinText}" Placeholder="New PIN" IsPassword="True" Keyboard="Numeric" />
+                                <Entry Grid.Column="1" Text="{Binding Pin.ConfirmPinText}" Placeholder="Confirm PIN" IsPassword="True" Keyboard="Numeric" />
+                            </Grid>
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Set / change PIN" Command="{Binding Pin.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="Remove PIN" Command="{Binding Pin.RemovePinCommand}" IsVisible="{Binding Pin.IsPinSet}" Style="{StaticResource DestructiveButton}" />
+                            </HorizontalStackLayout>
+
+                            <Label Text="{Binding Pin.StatusText}" Style="{StaticResource SecondaryLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="12">
                             <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
@@ -474,5 +444,49 @@
 
             </VerticalStackLayout>
         </ScrollView>
+    </Grid>
+
+    <!-- Color-picker popup: a single shared overlay (not per-box inline) so its swatches can be
+         shown larger than any one box, and so tapping anywhere outside it closes it. The backdrop
+         Grid below catches every tap outside the popup's own bounds; a tap on the popup itself is
+         consumed by the popup's own content first and never reaches the backdrop beneath it. -->
+    <Grid IsVisible="{Binding CategoryManagement.IsColorPickerOpen}" Background="Transparent">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding CategoryManagement.CloseColorPickerCommand}" />
+        </Grid.GestureRecognizers>
+    </Grid>
+
+    <Border
+        Style="{StaticResource CardBorder}"
+        IsVisible="{Binding CategoryManagement.IsColorPickerOpen}"
+        HorizontalOptions="Center"
+        VerticalOptions="Center"
+        Padding="20"
+        WidthRequest="260">
+        <Border.Shadow>
+            <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.18" />
+        </Border.Shadow>
+        <VerticalStackLayout Spacing="14">
+            <Label Text="{Binding CategoryManagement.ActiveColorPickerBox.Name, StringFormat='Color for {0}'}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" />
+            <FlexLayout Wrap="Wrap" HorizontalOptions="Center" BindableLayout.ItemsSource="{Binding CategoryManagement.ActiveColorPickerBox.ColorSwatches}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
+                        <Border
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Margin="6"
+                            StrokeShape="RoundRectangle 20"
+                            Stroke="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}"
+                            StrokeThickness="{Binding SelectionStrokeThickness}"
+                            Background="{Binding Color}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </VerticalStackLayout>
+    </Border>
     </Grid>
 </ContentPage>

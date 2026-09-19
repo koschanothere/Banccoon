@@ -44,6 +44,17 @@ public sealed class TransactionsViewModel : ViewModelBase
     // that runs while it's active - it always calls ApplyFilters() itself once done anyway.
     private bool isRebuildingOptions;
 
+    // RebuildVisibleRows()'s Rows.Clear()+Add() loop can, while still mid-loop, synchronously
+    // trigger the CollectionView's own RemainingItemsThresholdReached (crossing the "5 from the
+    // end" threshold as rows are added back in) - which calls LoadMore(), which calls Rows.Add()
+    // again while the native control is still dispatching the CollectionChanged event from the
+    // rebuild's own Add() call. That reentrant Add() threw a real, user-hit
+    // "InvalidOperationException: Cannot change ObservableCollection during a CollectionChanged
+    // event" crash (caught via diagnostics.log). This flag makes a rebuild-in-progress the only
+    // thing allowed to touch Rows; a reentrant LoadMore() just no-ops, since RebuildVisibleRows
+    // already loads up to the current visibleCount itself.
+    private bool isUpdatingRows;
+
     private bool isLoading;
     private bool filterOpen;
     private bool selectMode;
@@ -391,29 +402,50 @@ public sealed class TransactionsViewModel : ViewModelBase
         // there previously raced the native control's own in-flight layout pass and threw a
         // "collection modification already in progress" COMException (caught via diagnostics.log).
         // Appending is a much smaller, additive change the control handles safely during a scroll.
-        var previousVisibleCount = visibleCount;
-        visibleCount += PageSize;
-
-        foreach (var transaction in filteredTransactions.Skip(previousVisibleCount).Take(visibleCount - previousVisibleCount))
+        if (isUpdatingRows)
         {
-            Rows.Add(BuildRow(transaction));
+            return;
         }
 
-        OnPropertyChanged(nameof(HasMoreRows));
-        OnPropertyChanged(nameof(RowCountText));
+        isUpdatingRows = true;
+        try
+        {
+            var previousVisibleCount = visibleCount;
+            visibleCount += PageSize;
+
+            foreach (var transaction in filteredTransactions.Skip(previousVisibleCount).Take(visibleCount - previousVisibleCount))
+            {
+                Rows.Add(BuildRow(transaction));
+            }
+
+            OnPropertyChanged(nameof(HasMoreRows));
+            OnPropertyChanged(nameof(RowCountText));
+        }
+        finally
+        {
+            isUpdatingRows = false;
+        }
     }
 
     private void RebuildVisibleRows()
     {
-        Rows.Clear();
-        foreach (var transaction in filteredTransactions.Take(visibleCount))
+        isUpdatingRows = true;
+        try
         {
-            Rows.Add(BuildRow(transaction));
-        }
+            Rows.Clear();
+            foreach (var transaction in filteredTransactions.Take(visibleCount))
+            {
+                Rows.Add(BuildRow(transaction));
+            }
 
-        OnPropertyChanged(nameof(HasMoreRows));
-        OnPropertyChanged(nameof(RowCountText));
-        UpdateSelectionSummary();
+            OnPropertyChanged(nameof(HasMoreRows));
+            OnPropertyChanged(nameof(RowCountText));
+            UpdateSelectionSummary();
+        }
+        finally
+        {
+            isUpdatingRows = false;
+        }
     }
 
     private TransactionRowViewModel BuildRow(Transaction transaction)

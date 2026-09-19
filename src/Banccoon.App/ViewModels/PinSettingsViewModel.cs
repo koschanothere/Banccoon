@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Windows.Input;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -6,23 +5,21 @@ using Banccoon.Core.Security;
 
 namespace Banccoon.App.ViewModels;
 
-public sealed class AppLockSettingsViewModel : ViewModelBase
+public sealed class PinSettingsViewModel : ViewModelBase
 {
     private readonly ISettingsRepository settingsRepository;
 
     private bool isPinSet;
     private string newPinText = string.Empty;
     private string confirmPinText = string.Empty;
-    private string autoLockMinutesText = "5";
     private string statusText = string.Empty;
 
-    public AppLockSettingsViewModel(ISettingsRepository settingsRepository)
+    public PinSettingsViewModel(ISettingsRepository settingsRepository)
     {
         this.settingsRepository = settingsRepository;
 
         SetPinCommand = new RelayCommand(() => _ = SetPinAsync());
         RemovePinCommand = new RelayCommand(() => _ = RemovePinAsync());
-        SaveAutoLockCommand = new RelayCommand(() => _ = SaveAutoLockAsync());
     }
 
     public bool IsPinSet
@@ -43,12 +40,6 @@ public sealed class AppLockSettingsViewModel : ViewModelBase
         set => SetProperty(ref confirmPinText, value);
     }
 
-    public string AutoLockMinutesText
-    {
-        get => autoLockMinutesText;
-        set => SetProperty(ref autoLockMinutesText, value);
-    }
-
     public string StatusText
     {
         get => statusText;
@@ -59,12 +50,9 @@ public sealed class AppLockSettingsViewModel : ViewModelBase
 
     public ICommand RemovePinCommand { get; }
 
-    public ICommand SaveAutoLockCommand { get; }
-
     public Task InitializeAsync(AppSettings settings)
     {
         IsPinSet = settings.AppLockPinHash is not null;
-        AutoLockMinutesText = settings.AppLockAutoLockMinutes.ToString(CultureInfo.InvariantCulture);
         NewPinText = string.Empty;
         ConfirmPinText = string.Empty;
         StatusText = string.Empty;
@@ -98,7 +86,7 @@ public sealed class AppLockSettingsViewModel : ViewModelBase
             IsPinSet = true;
             NewPinText = string.Empty;
             ConfirmPinText = string.Empty;
-            StatusText = "PIN set - the app will ask for it next time it locks.";
+            StatusText = "PIN set - the app will ask for it next time it starts.";
         });
     }
 
@@ -112,19 +100,5 @@ public sealed class AppLockSettingsViewModel : ViewModelBase
             IsPinSet = false;
             StatusText = "PIN removed.";
         });
-    }
-
-    private async Task SaveAutoLockAsync()
-    {
-        if (!int.TryParse(AutoLockMinutesText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var minutes) || minutes < 1)
-        {
-            StatusText = "Must be a whole number of at least 1 minute.";
-            return;
-        }
-
-        var settings = await settingsRepository.GetAsync();
-        await settingsRepository.SaveAsync(settings with { AppLockAutoLockMinutes = minutes });
-
-        await RunOnMainThreadAsync(() => StatusText = "Saved.");
     }
 }

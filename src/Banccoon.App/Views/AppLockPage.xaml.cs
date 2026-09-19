@@ -1,4 +1,3 @@
-using Banccoon.App.Formatting;
 using Banccoon.App.ViewModels;
 
 namespace Banccoon.App.Views;
@@ -31,8 +30,6 @@ public partial class AppLockPage : ContentPage
 
     private async void OnUnlocked()
     {
-        AppLockState.IsLockScreenActive = false;
-        AppLockState.RecordActivity();
         await Navigation.PopModalAsync();
     }
 }

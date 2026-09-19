@@ -8,17 +8,18 @@ namespace Banccoon.App.ViewModels;
 
 public sealed class CategoryBoxViewModel : ViewModelBase
 {
-    private bool isColorMenuOpen;
     private bool isRenaming;
+    private bool isSelected;
+    private bool isSelectModeActive;
     private string editName;
 
     public CategoryBoxViewModel(
         Category category,
+        Action<CategoryBoxViewModel> onTap,
         Action<CategoryBoxViewModel> onStartDrag,
         Action<CategoryBoxViewModel> onDrop,
         Func<CategoryBoxViewModel, string, Task> onRename,
-        Func<Guid, CategoryColor, Task> onSetColor,
-        Func<Guid, Task> onDelete)
+        Func<Guid, CategoryColor, Task> onSetColor)
     {
         Id = category.Id;
         Name = category.Name;
@@ -26,24 +27,14 @@ public sealed class CategoryBoxViewModel : ViewModelBase
         editName = Name;
 
         ColorSwatches = CategoryColorPalette.AllColors
-            .Select(color => new CategoryColorSwatchViewModel(color, category.Color == color, selectedColor =>
-            {
-                IsColorMenuOpen = false;
-                _ = onSetColor(Id, selectedColor);
-            }))
+            .Select(color => new CategoryColorSwatchViewModel(color, category.Color == color, selectedColor => _ = onSetColor(Id, selectedColor)))
             .ToList();
 
+        TapCommand = new RelayCommand(() => onTap(this));
         StartDragCommand = new RelayCommand(() => onStartDrag(this));
         DropCommand = new RelayCommand(() => onDrop(this));
-        ToggleColorMenuCommand = new RelayCommand(() => IsColorMenuOpen = !IsColorMenuOpen);
         StartRenameCommand = new RelayCommand(() => IsRenaming = true);
         CommitRenameCommand = new RelayCommand(() => _ = CommitRenameAsync(onRename));
-        CancelRenameCommand = new RelayCommand(() =>
-        {
-            EditName = Name;
-            IsRenaming = false;
-        });
-        DeleteCommand = new RelayCommand(() => _ = onDelete(Id));
     }
 
     public Guid Id { get; }
@@ -54,16 +45,26 @@ public sealed class CategoryBoxViewModel : ViewModelBase
 
     public IReadOnlyList<CategoryColorSwatchViewModel> ColorSwatches { get; }
 
-    public bool IsColorMenuOpen
-    {
-        get => isColorMenuOpen;
-        set => SetProperty(ref isColorMenuOpen, value);
-    }
-
+    // Settable (not just from within this class) so the parent can cancel an in-progress rename
+    // when the user switches attention to a different box instead of committing this one.
     public bool IsRenaming
     {
         get => isRenaming;
-        private set => SetProperty(ref isRenaming, value);
+        set => SetProperty(ref isRenaming, value);
+    }
+
+    public bool IsSelected
+    {
+        get => isSelected;
+        set => SetProperty(ref isSelected, value);
+    }
+
+    // Set by the parent when Select mode toggles - gates whether tapping/dragging this box means
+    // "toggle selection" or the normal color-picker/drag-to-merge behavior.
+    public bool IsSelectModeActive
+    {
+        get => isSelectModeActive;
+        set => SetProperty(ref isSelectModeActive, value);
     }
 
     public string EditName
@@ -72,19 +73,15 @@ public sealed class CategoryBoxViewModel : ViewModelBase
         set => SetProperty(ref editName, value);
     }
 
+    public ICommand TapCommand { get; }
+
     public ICommand StartDragCommand { get; }
 
     public ICommand DropCommand { get; }
 
-    public ICommand ToggleColorMenuCommand { get; }
-
     public ICommand StartRenameCommand { get; }
 
     public ICommand CommitRenameCommand { get; }
-
-    public ICommand CancelRenameCommand { get; }
-
-    public ICommand DeleteCommand { get; }
 
     private async Task CommitRenameAsync(Func<CategoryBoxViewModel, string, Task> onRename)
     {

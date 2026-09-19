@@ -5,8 +5,7 @@ namespace Banccoon.App.ViewModels;
 public enum SettingsCategory
 {
     General,
-    SecurityAndPrivacy,
     Dashboard,
     Transactions,
-    DataAndBackup
+    DataAndSecurity
 }
