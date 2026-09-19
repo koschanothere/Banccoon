@@ -63,7 +63,7 @@ public sealed class StatementImportServiceTests
         var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
         var row = Assert.Single(pending.Rows);
 
-        var result = await service.ApproveRowAsync(row.Id, category.Id);
+        var result = await service.ApproveRowAsync(row.Id, category.Id, type: null);
 
         var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);
         var updatedAccount = await store.Accounts.GetByIdAsync(account.Id);
@@ -131,7 +131,7 @@ public sealed class StatementImportServiceTests
                 "Lunch")
         ])]);
         var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
-        await service.ApproveRowAsync(Assert.Single(pending.Rows).Id, null);
+        await service.ApproveRowAsync(Assert.Single(pending.Rows).Id, null, type: null);
 
         var result = await service.CancelImportAsync(pending.Batch!.Id);
 

@@ -146,7 +146,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     private async Task ApproveRowAsync(StatementImportRowViewModel row)
     {
-        await statementImportService.ApproveRowAsync(row.Id, row.Category?.Id);
+        await statementImportService.ApproveRowAsync(row.Id, row.Category?.Id, row.Type);
         await RefreshRowsAsync();
     }
 
@@ -182,7 +182,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         var selected = Rows.Where(row => row.IsSelected).ToList();
         foreach (var row in selected)
         {
-            await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id);
+            await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id, row.Type);
         }
 
         // Touches UI-bound state after an await that may have resumed off the UI thread (see

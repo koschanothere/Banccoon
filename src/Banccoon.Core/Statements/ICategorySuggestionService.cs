@@ -1,10 +1,18 @@
+using Banccoon.Core.Models;
+
 namespace Banccoon.Core.Statements;
 
 public interface ICategorySuggestionService
 {
+    TransactionType? SuggestType(
+        ParsedStatementRow row,
+        Guid accountId,
+        IEnumerable<CategoryLearningRule> rules);
+
     CategorySuggestion? Suggest(
         ParsedStatementRow row,
         Guid accountId,
+        TransactionType type,
         IEnumerable<CategoryLearningRule> rules);
 
     CategoryLearningRule Learn(

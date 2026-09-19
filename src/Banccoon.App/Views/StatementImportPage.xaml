@@ -120,7 +120,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:StatementImportRowViewModel">
-                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
                                     <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" />
                                     <Label Grid.Column="1" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
                                     <VerticalStackLayout Grid.Column="2" Spacing="1">
@@ -129,9 +129,13 @@
                                                TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
                                     </VerticalStackLayout>
                                     <Label Grid.Column="3" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Picker Grid.Column="4" Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
-                                    <Button Grid.Column="5" Text="Skip" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="6" Text="Approve" Command="{Binding ApproveCommand}" Style="{StaticResource PrimaryButton}" />
+                                    <HorizontalStackLayout Grid.Column="4" Spacing="4">
+                                        <Button Text="Expense" Command="{Binding SetExpenseCommand}" Style="{StaticResource ExpenseButton}" />
+                                        <Button Text="Income" Command="{Binding SetIncomeCommand}" Style="{StaticResource IncomeButton}" />
+                                    </HorizontalStackLayout>
+                                    <Picker Grid.Column="5" Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
+                                    <Button Grid.Column="6" Text="Skip" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                    <Button Grid.Column="7" Text="Approve" Command="{Binding ApproveCommand}" Style="{StaticResource PrimaryButton}" />
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>

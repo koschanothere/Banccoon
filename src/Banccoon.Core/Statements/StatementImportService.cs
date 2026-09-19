@@ -159,6 +159,7 @@ public sealed class StatementImportService : IStatementImportService
     public async Task<StatementRowImportResult> ApproveRowAsync(
         Guid rowId,
         Guid? categoryId,
+        TransactionType? type,
         CancellationToken cancellationToken = default)
     {
         var row = await statementImportRepository.GetRowByIdAsync(rowId, cancellationToken)
@@ -182,8 +183,12 @@ public sealed class StatementImportService : IStatementImportService
         var account = await accountRepository.GetByIdAsync(batch.AccountId, cancellationToken)
             ?? throw new InvalidOperationException("The selected account could not be found.");
 
+        // The type can be corrected during review (e.g. a "Перевод" that's really an Expense or
+        // Income, not a Transfer) - that correction is also the training signal for SuggestType,
+        // via LearnCategoryAsync below reusing whatever type the approved row ends up with.
+        var finalType = type ?? row.Type;
         var finalCategoryId = categoryId ?? row.CategoryId ?? row.SuggestedCategoryId;
-        if (finalCategoryId is null && row.Type != TransactionType.Transfer)
+        if (finalCategoryId is null && finalType != TransactionType.Transfer)
         {
             finalCategoryId = await EnsureOtherCategoryAsync(cancellationToken);
         }
@@ -195,7 +200,7 @@ public sealed class StatementImportService : IStatementImportService
             batch.AccountId,
             finalCategoryId,
             CreateTransactionNotes(batch, row),
-            row.Type,
+            finalType,
             Name: CreateTransactionName(row));
 
         await accountRepository.SaveAsync(transactionBalanceService.Apply(account, transaction), cancellationToken);
@@ -203,6 +208,7 @@ public sealed class StatementImportService : IStatementImportService
 
         var approvedRow = row with
         {
+            Type = finalType,
             CategoryId = finalCategoryId,
             Status = StatementImportRowStatus.Approved,
             CreatedTransactionId = transaction.Id
@@ -274,7 +280,11 @@ public sealed class StatementImportService : IStatementImportService
             string.IsNullOrWhiteSpace(parsedRow.Counterparty)
                 ? parsedRow.Description
                 : parsedRow.Counterparty);
-        var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, rules);
+        // The parser only ever guesses Expense/Income from the +/- sign - a past correction for
+        // this same recipient (e.g. "this is actually a Transfer") overrides that guess before
+        // category suggestion runs, since categories are learned per-type.
+        var suggestedType = categorySuggestionService.SuggestType(parsedRow, accountId, rules) ?? parsedRow.Type;
+        var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, suggestedType, rules);
         var duplicateTransaction = FindDuplicate(parsedRow, normalizedDescription, existingTransactions);
 
         return new StatementImportRow(
@@ -282,7 +292,7 @@ public sealed class StatementImportService : IStatementImportService
             batchId,
             parsedRow.Date,
             Math.Abs(parsedRow.Amount),
-            parsedRow.Type,
+            suggestedType,
             parsedRow.Description.Trim(),
             normalizedDescription,
             CleanOptionalText(parsedRow.Counterparty),

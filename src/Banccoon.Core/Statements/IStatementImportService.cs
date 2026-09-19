@@ -1,3 +1,5 @@
+using Banccoon.Core.Models;
+
 namespace Banccoon.Core.Statements;
 
 public interface IStatementImportService
@@ -20,6 +22,7 @@ public interface IStatementImportService
     Task<StatementRowImportResult> ApproveRowAsync(
         Guid rowId,
         Guid? categoryId,
+        TransactionType? type,
         CancellationToken cancellationToken = default);
 
     Task<StatementImportRow> SkipRowAsync(

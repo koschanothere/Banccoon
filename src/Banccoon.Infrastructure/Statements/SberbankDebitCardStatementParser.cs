@@ -33,6 +33,10 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         @"(?:\*{2,}|\u2022{2,})\s*(?<last>\d{4})|\*{4}(?<last>\d{4})",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex AccountNumberPattern = new(
+        @"\u041d\u043e\u043c\u0435\u0440 \u0441\u0447\u0451\u0442\u0430\s+(?<number>[\d\s]+)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     public StatementParserDescriptor Descriptor { get; } = new(
         "sberbank-debit-card-pdf",
         "Sberbank debit card PDF",
@@ -107,6 +111,13 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             throw new InvalidDataException("No Sberbank statement operations were found.");
         }
 
+        // Rows are in the statement's own printed order (newest first for this bank), so rows[0]
+        // is the most recent operation. Its running balance is what the account actually holds -
+        // the "Остаток на <date>" summary line lower in the header has been observed to disagree
+        // with it, so it's only used as a fallback for parsers/paths that never captured a
+        // per-row balance at all.
+        var closingBalance = rows[0].BalanceAfter ?? (balances.Length == 0 ? null : balances.Last());
+
         return new ParsedStatement(
             Descriptor.Id,
             Descriptor.Name,
@@ -115,23 +126,23 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             periodStart,
             periodEnd,
             balances.FirstOrDefault(),
-            balances.Length == 0 ? null : balances.Last(),
+            closingBalance,
             ParseAccountNumber(lines),
             ParseCardLastFourDigits(lines));
     }
 
     private static string? ParseAccountNumber(IEnumerable<string> lines)
     {
-        foreach (var line in lines.Select(NormalizeWhitespace))
+        foreach (var line in lines)
         {
-            if (line.Contains('.', StringComparison.Ordinal)
-                || CardLastFourPattern.IsMatch(line))
+            var match = AccountNumberPattern.Match(NormalizeWhitespace(line));
+            if (!match.Success)
             {
                 continue;
             }
 
-            var digits = DigitsOnly(line);
-            if (digits.Length is >= 16 and <= 34)
+            var digits = DigitsOnly(match.Groups["number"].Value);
+            if (digits.Length > 0)
             {
                 return digits;
             }
@@ -142,15 +153,9 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
 
     private static string? ParseCardLastFourDigits(IEnumerable<string> lines)
     {
-        foreach (var line in lines.Select(NormalizeWhitespace))
+        foreach (var line in lines)
         {
-            if (!line.Contains("РљР°СЂС‚Р°", StringComparison.OrdinalIgnoreCase)
-                && !CardLastFourPattern.IsMatch(line))
-            {
-                continue;
-            }
-
-            var match = CardLastFourPattern.Match(line);
+            var match = CardLastFourPattern.Match(NormalizeWhitespace(line));
             if (match.Success)
             {
                 return match.Groups["last"].Value;
@@ -168,8 +173,22 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         foreach (var rawLine in lines)
         {
             var line = NormalizeWhitespace(rawLine);
-            if (ShouldIgnoreLine(line))
+            if (line.Length == 0)
             {
+                continue;
+            }
+
+            // The operations table's header repeats at the top of every page, and the statement
+            // ends with certificate/legal boilerplate. Both are unambiguous "the current table
+            // just ended" signals. Flushing here - rather than relying on an ever-growing list of
+            // ignored line prefixes - is what stops that boilerplate from silently gluing onto
+            // whichever transaction happened to still be pending when the page broke: previously
+            // any line that wasn't explicitly ignored got appended to the pending row's
+            // description, which on a real multi-page statement corrupted the last transaction
+            // before every page break plus the very last transaction in the document.
+            if (IsTableBoundary(line))
+            {
+                FlushPending(rows, ref pending);
                 continue;
             }
 
@@ -181,6 +200,7 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
                     ParseDate(operationMatch.Groups["date"].Value),
                     operationMatch.Groups["category"].Value.Trim(),
                     operationMatch.Groups["amount"].Value,
+                    ParseMoney(operationMatch.Groups["balance"].Value),
                     line);
                 continue;
             }
@@ -203,6 +223,13 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
 
         FlushPending(rows, ref pending);
         return rows;
+    }
+
+    private static bool IsTableBoundary(string line)
+    {
+        return line.StartsWith("ДАТА ОПЕРАЦИИ", StringComparison.OrdinalIgnoreCase)
+            || line.StartsWith("Продолжение", StringComparison.OrdinalIgnoreCase)
+            || line.StartsWith("Дата формирования", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void FlushPending(List<ParsedStatementRow> rows, ref PendingOperation? pending)
@@ -229,17 +256,17 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             string.IsNullOrWhiteSpace(description) ? pending.Category : description,
             Counterparty: string.IsNullOrWhiteSpace(description) ? pending.Category : description,
             ExternalReference: pending.ExternalReference,
-            RawText: rawText));
+            RawText: rawText,
+            BalanceAfter: pending.BalanceAfter));
 
         pending = null;
     }
 
     private static void AddDescriptionLine(PendingOperation pending, string line)
     {
-        var cleanedLine = NormalizeWhitespace(line);
-        if (!string.IsNullOrWhiteSpace(cleanedLine) && !ShouldIgnoreLine(cleanedLine))
+        if (!string.IsNullOrWhiteSpace(line))
         {
-            pending.DescriptionLines.Add(cleanedLine);
+            pending.DescriptionLines.Add(line);
         }
     }
 
@@ -312,26 +339,7 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         var cleaned = CardMaskPattern.Replace(text, string.Empty);
         cleaned = Regex.Replace(cleaned, @"\.?\s*Операция по карте\.?", string.Empty, RegexOptions.CultureInvariant);
         cleaned = Regex.Replace(cleaned, @"\s+", " ", RegexOptions.CultureInvariant);
-        return cleaned.Trim(' ', '.', '-');
-    }
-
-    private static bool ShouldIgnoreLine(string line)
-    {
-        return line.Length == 0
-            || line.StartsWith("ДАТА ОПЕРАЦИИ", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Дата обработки", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("и код авторизации", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Продолжение", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Для проверки", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Дата формирования", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("ПАО Сбербанк", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Денежные средства", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("В выписке", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Срок обработки", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Согласно статье", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Скачать электронный", StringComparison.OrdinalIgnoreCase)
-            || line.StartsWith("Проверить подпись", StringComparison.OrdinalIgnoreCase)
-            || line == "*";
+        return cleaned.Trim(' ', '.', '-', '*');
     }
 
     private static string NormalizeWhitespace(string value)
@@ -350,11 +358,13 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             DateOnly date,
             string category,
             string amountText,
+            decimal balanceAfter,
             string rawLine)
         {
             Date = date;
             Category = category;
             AmountText = amountText;
+            BalanceAfter = balanceAfter;
             RawLine = rawLine;
         }
 
@@ -363,6 +373,8 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         public string Category { get; }
 
         public string AmountText { get; }
+
+        public decimal BalanceAfter { get; }
 
         public string RawLine { get; }
 

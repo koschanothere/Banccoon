@@ -1,10 +1,16 @@
 using System.Globalization;
+using Banccoon.Core.Models;
 
 namespace Banccoon.Core.Statements;
 
 public sealed class CategorySuggestionService : ICategorySuggestionService
 {
-    public CategorySuggestion? Suggest(
+    // Rows straight off a parser only ever say Expense or Income (from the +/- sign) - the parser
+    // has no way to know a given recipient is usually a Transfer between the user's own accounts.
+    // This scans learning rules for the same recipient across ALL types (unlike Suggest, which is
+    // scoped to one type) so a past correction ("this recipient is actually a Transfer/Income")
+    // can override the raw sign-based guess before category suggestion ever runs.
+    public TransactionType? SuggestType(
         ParsedStatementRow row,
         Guid accountId,
         IEnumerable<CategoryLearningRule> rules)
@@ -19,7 +25,36 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         }
 
         return rules
-            .Where(rule => rule.Type == row.Type)
+            .Select(rule => new
+            {
+                Rule = rule,
+                Score = GetScore(rule, accountId, normalizedText, Math.Abs(row.Amount))
+            })
+            .Where(match => match.Score > 0)
+            .OrderByDescending(match => match.Score)
+            .ThenByDescending(match => match.Rule.MatchCount)
+            .ThenByDescending(match => match.Rule.UpdatedAt)
+            .Select(match => (TransactionType?)match.Rule.Type)
+            .FirstOrDefault();
+    }
+
+    public CategorySuggestion? Suggest(
+        ParsedStatementRow row,
+        Guid accountId,
+        TransactionType type,
+        IEnumerable<CategoryLearningRule> rules)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        ArgumentNullException.ThrowIfNull(rules);
+
+        var normalizedText = Normalize(GetMatchText(row.Description, row.Counterparty));
+        if (string.IsNullOrWhiteSpace(normalizedText))
+        {
+            return null;
+        }
+
+        return rules
+            .Where(rule => rule.Type == type)
             .Select(rule => new
             {
                 Rule = rule,
@@ -92,9 +127,27 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
 
     private static string GetMatchText(string description, string? counterparty)
     {
-        return string.IsNullOrWhiteSpace(counterparty)
+        var text = string.IsNullOrWhiteSpace(counterparty)
             ? description.Trim()
             : counterparty.Trim();
+        return TrimToCoreRecipientName(text);
+    }
+
+    // Statement descriptions often trail off into a store/reference number and sometimes a
+    // city/country code (e.g. "PYATEROCHKA 25673 MOSCOW RUS"). Truncating at the first
+    // purely-numeric token keeps different branches/locations of the same recipient recognizable
+    // as one recipient for learning, without needing a directory of city/country names.
+    private static string TrimToCoreRecipientName(string text)
+    {
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var coreWords = words.TakeWhile(word => !IsNumericToken(word)).ToArray();
+        return coreWords.Length == 0 ? text : string.Join(' ', coreWords);
+    }
+
+    private static bool IsNumericToken(string word)
+    {
+        var trimmed = word.Trim('.', ',', '#');
+        return trimmed.Length > 0 && trimmed.All(character => char.IsDigit(character) || character is '.' or ',');
     }
 
     private static int GetScore(

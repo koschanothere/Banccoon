@@ -9,4 +9,5 @@ public sealed record ParsedStatementRow(
     string Description,
     string? Counterparty = null,
     string? ExternalReference = null,
-    string? RawText = null);
+    string? RawText = null,
+    decimal? BalanceAfter = null);

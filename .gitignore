@@ -18,6 +18,10 @@ coverage.cobertura.xml
 
 # NuGet
 *.nupkg
+
+# Real bank statement samples used for parser development - contain real account numbers,
+# names, and transaction history. Never commit these.
+docs/statement_examples/
 packages/
 
 # Local app data and databases
