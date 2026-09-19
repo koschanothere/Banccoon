@@ -14,7 +14,7 @@ public sealed class StatementImportService : IStatementImportService
     private readonly IAccountRepository accountRepository;
     private readonly ICategoryRepository categoryRepository;
     private readonly ITransactionRepository transactionRepository;
-    private readonly ITransactionBalanceService transactionBalanceService;
+    private readonly ITransactionApplicationService transactionApplicationService;
     private readonly ICategorySuggestionService categorySuggestionService;
 
     public StatementImportService(
@@ -24,7 +24,7 @@ public sealed class StatementImportService : IStatementImportService
         IAccountRepository accountRepository,
         ICategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
-        ITransactionBalanceService transactionBalanceService,
+        ITransactionApplicationService transactionApplicationService,
         ICategorySuggestionService categorySuggestionService)
     {
         this.parserRegistry = parserRegistry;
@@ -33,7 +33,7 @@ public sealed class StatementImportService : IStatementImportService
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
-        this.transactionBalanceService = transactionBalanceService;
+        this.transactionApplicationService = transactionApplicationService;
         this.categorySuggestionService = categorySuggestionService;
     }
 
@@ -160,6 +160,7 @@ public sealed class StatementImportService : IStatementImportService
         Guid rowId,
         Guid? categoryId,
         TransactionType? type,
+        Guid? destinationAccountId,
         CancellationToken cancellationToken = default)
     {
         var row = await statementImportRepository.GetRowByIdAsync(rowId, cancellationToken)
@@ -187,34 +188,71 @@ public sealed class StatementImportService : IStatementImportService
         // Income, not a Transfer) - that correction is also the training signal for SuggestType,
         // via LearnCategoryAsync below reusing whatever type the approved row ends up with.
         var finalType = type ?? row.Type;
+        var finalDestinationAccountId = finalType == TransactionType.Transfer
+            ? destinationAccountId ?? row.DestinationAccountId
+            : null;
+        if (finalType == TransactionType.Transfer && finalDestinationAccountId is null)
+        {
+            throw new InvalidOperationException("Choose the other account for this transfer.");
+        }
+
+        // Transfers get a category too (e.g. "which savings goal"), same as every other type - no
+        // exemption here.
         var finalCategoryId = categoryId ?? row.CategoryId ?? row.SuggestedCategoryId;
-        if (finalCategoryId is null && finalType != TransactionType.Transfer)
+        if (finalCategoryId is null)
         {
             finalCategoryId = await EnsureOtherCategoryAsync(cancellationToken);
         }
+
+        // A Transaction's AccountId is always debited and DestinationAccountId always credited -
+        // but a row that arrived as money coming IN to this account (row.IsIncoming) needs the
+        // roles reversed from the usual "batch's own account is the source" assumption, since the
+        // batch's account is the one being credited in that case, not debited.
+        var transactionAccountId = finalType == TransactionType.Transfer && row.IsIncoming
+            ? finalDestinationAccountId!.Value
+            : batch.AccountId;
+        var transactionDestinationAccountId = finalType != TransactionType.Transfer
+            ? null
+            : row.IsIncoming ? batch.AccountId : finalDestinationAccountId;
 
         var transaction = new Transaction(
             Guid.NewGuid(),
             row.Date,
             Math.Abs(row.Amount),
-            batch.AccountId,
+            transactionAccountId,
             finalCategoryId,
             CreateTransactionNotes(batch, row),
             finalType,
-            Name: CreateTransactionName(row));
+            DestinationAccountId: transactionDestinationAccountId,
+            Name: CreateTransactionName(row),
+            Time: row.Time);
 
-        await accountRepository.SaveAsync(transactionBalanceService.Apply(account, transaction), cancellationToken);
+        var accountsById = new Dictionary<Guid, Account> { [account.Id] = account };
+        if (finalDestinationAccountId is { } otherAccountId && !accountsById.ContainsKey(otherAccountId))
+        {
+            var otherAccount = await accountRepository.GetByIdAsync(otherAccountId, cancellationToken)
+                ?? throw new InvalidOperationException("The other account could not be found.");
+            accountsById[otherAccountId] = otherAccount;
+        }
+
+        var updatedAccounts = transactionApplicationService.ApplyNewTransaction(transaction, accountsById);
+        foreach (var updatedAccount in updatedAccounts)
+        {
+            await accountRepository.SaveAsync(updatedAccount, cancellationToken);
+        }
+
         await transactionRepository.SaveAsync(transaction, cancellationToken);
 
         var approvedRow = row with
         {
             Type = finalType,
             CategoryId = finalCategoryId,
+            DestinationAccountId = finalDestinationAccountId,
             Status = StatementImportRowStatus.Approved,
             CreatedTransactionId = transaction.Id
         };
         await statementImportRepository.SaveRowAsync(approvedRow, cancellationToken);
-        await LearnCategoryAsync(approvedRow, batch.AccountId, finalCategoryId, cancellationToken);
+        await LearnCategoryAsync(approvedRow, batch.AccountId, finalCategoryId, finalDestinationAccountId, cancellationToken);
         await CompleteBatchIfReviewedAsync(batch, cancellationToken);
 
         return new StatementRowImportResult(approvedRow, transaction);
@@ -285,7 +323,14 @@ public sealed class StatementImportService : IStatementImportService
         // category suggestion runs, since categories are learned per-type.
         var suggestedType = categorySuggestionService.SuggestType(parsedRow, accountId, rules) ?? parsedRow.Type;
         var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, suggestedType, rules);
-        var duplicateTransaction = FindDuplicate(parsedRow, normalizedDescription, existingTransactions);
+        var suggestedDestinationAccountId = suggestedType == TransactionType.Transfer
+            ? categorySuggestionService.SuggestDestinationAccount(parsedRow, accountId, rules)
+            : null;
+        var duplicateTransaction = StatementDuplicateDetector.FindDuplicate(accountId, parsedRow, normalizedDescription, existingTransactions);
+        // Captured from the parser's own raw guess (never itself reclassified) so it survives even
+        // if suggestedType above overrides Income/Expense to Transfer - Transfer alone doesn't say
+        // which way the money moved, see StatementImportRow.IsIncoming.
+        var isIncoming = parsedRow.Type == TransactionType.Income;
 
         return new StatementImportRow(
             Guid.NewGuid(),
@@ -303,40 +348,10 @@ public sealed class StatementImportService : IStatementImportService
             StatementImportRowStatus.Pending,
             duplicateTransaction is not null,
             duplicateTransaction?.Id,
-            null);
-    }
-
-    private static Transaction? FindDuplicate(
-        ParsedStatementRow parsedRow,
-        string normalizedDescription,
-        IReadOnlyList<Transaction> existingTransactions)
-    {
-        return existingTransactions.FirstOrDefault(transaction =>
-            transaction.Date == parsedRow.Date
-            && transaction.Type == parsedRow.Type
-            && decimal.Round(Math.Abs(transaction.Amount), 2) == decimal.Round(Math.Abs(parsedRow.Amount), 2)
-            && IsDescriptionMatch(transaction.Notes, normalizedDescription, parsedRow.ExternalReference));
-    }
-
-    private static bool IsDescriptionMatch(
-        string? transactionNotes,
-        string normalizedDescription,
-        string? externalReference)
-    {
-        if (!string.IsNullOrWhiteSpace(externalReference)
-            && transactionNotes?.Contains(externalReference, StringComparison.OrdinalIgnoreCase) == true)
-        {
-            return true;
-        }
-
-        if (string.IsNullOrWhiteSpace(transactionNotes) || string.IsNullOrWhiteSpace(normalizedDescription))
-        {
-            return true;
-        }
-
-        var normalizedNotes = new CategorySuggestionService().Normalize(transactionNotes);
-        return normalizedNotes.Contains(normalizedDescription, StringComparison.OrdinalIgnoreCase)
-            || normalizedDescription.Contains(normalizedNotes, StringComparison.OrdinalIgnoreCase);
+            null,
+            parsedRow.Time,
+            suggestedDestinationAccountId,
+            isIncoming);
     }
 
     private async Task<Guid> EnsureOtherCategoryAsync(CancellationToken cancellationToken)
@@ -360,15 +375,16 @@ public sealed class StatementImportService : IStatementImportService
         StatementImportRow row,
         Guid accountId,
         Guid? categoryId,
+        Guid? destinationAccountId,
         CancellationToken cancellationToken)
     {
-        if (categoryId is null || row.Type == TransactionType.Transfer)
+        if (categoryId is null)
         {
             return;
         }
 
         var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
-        var rule = categorySuggestionService.Learn(row, accountId, categoryId.Value, rules, DateTimeOffset.UtcNow);
+        var rule = categorySuggestionService.Learn(row, accountId, categoryId.Value, destinationAccountId, rules, DateTimeOffset.UtcNow);
         await categoryLearningRuleRepository.SaveAsync(rule, cancellationToken);
     }
 

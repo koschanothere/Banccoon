@@ -12,4 +12,5 @@ public sealed record Transaction(
     Guid? DestinationGoalId = null,
     Guid? PaidScheduledTransactionId = null,
     DateOnly? PaidScheduledOccurrenceDate = null,
-    string Name = "");
+    string Name = "",
+    TimeOnly? Time = null);

@@ -21,7 +21,7 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, MatchText, NormalizedMatchText, Type, CategoryId, AccountId, AmountHint, MatchCount, CreatedAt, UpdatedAt
+            SELECT Id, MatchText, NormalizedMatchText, Type, CategoryId, AccountId, AmountHint, MatchCount, CreatedAt, UpdatedAt, DestinationAccountId
             FROM CategoryLearningRules
             ORDER BY UpdatedAt DESC;
             """;
@@ -43,7 +43,7 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, MatchText, NormalizedMatchText, Type, CategoryId, AccountId, AmountHint, MatchCount, CreatedAt, UpdatedAt
+            SELECT Id, MatchText, NormalizedMatchText, Type, CategoryId, AccountId, AmountHint, MatchCount, CreatedAt, UpdatedAt, DestinationAccountId
             FROM CategoryLearningRules
             WHERE Id = @Id;
             """;
@@ -70,7 +70,8 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
                 AmountHint,
                 MatchCount,
                 CreatedAt,
-                UpdatedAt
+                UpdatedAt,
+                DestinationAccountId
             )
             VALUES (
                 @Id,
@@ -82,7 +83,8 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
                 @AmountHint,
                 @MatchCount,
                 @CreatedAt,
-                @UpdatedAt
+                @UpdatedAt,
+                @DestinationAccountId
             )
             ON CONFLICT(Id) DO UPDATE SET
                 MatchText = excluded.MatchText,
@@ -93,7 +95,8 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
                 AmountHint = excluded.AmountHint,
                 MatchCount = excluded.MatchCount,
                 CreatedAt = excluded.CreatedAt,
-                UpdatedAt = excluded.UpdatedAt;
+                UpdatedAt = excluded.UpdatedAt,
+                DestinationAccountId = excluded.DestinationAccountId;
             """;
         AddParameter(command, "@Id", rule.Id.ToString());
         AddParameter(command, "@MatchText", rule.MatchText);
@@ -105,6 +108,7 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
         AddParameter(command, "@MatchCount", rule.MatchCount);
         AddParameter(command, "@CreatedAt", rule.CreatedAt.ToString("O"));
         AddParameter(command, "@UpdatedAt", rule.UpdatedAt.ToString("O"));
+        AddParameter(command, "@DestinationAccountId", SqliteData.ToDbValue(rule.DestinationAccountId));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -132,6 +136,7 @@ public sealed class SqliteCategoryLearningRuleRepository : SqliteRepositoryBase,
             SqliteData.ReadNullableDecimal(reader, "AmountHint"),
             reader.GetInt32(reader.GetOrdinal("MatchCount")),
             DateTimeOffset.Parse(SqliteData.ReadString(reader, "CreatedAt"), System.Globalization.CultureInfo.InvariantCulture),
-            DateTimeOffset.Parse(SqliteData.ReadString(reader, "UpdatedAt"), System.Globalization.CultureInfo.InvariantCulture));
+            DateTimeOffset.Parse(SqliteData.ReadString(reader, "UpdatedAt"), System.Globalization.CultureInfo.InvariantCulture),
+            SqliteData.ReadNullableGuid(reader, "DestinationAccountId"));
     }
 }

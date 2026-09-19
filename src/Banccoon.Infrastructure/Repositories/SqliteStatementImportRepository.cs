@@ -76,7 +76,10 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 Status,
                 IsDuplicate,
                 DuplicateTransactionId,
-                CreatedTransactionId
+                CreatedTransactionId,
+                Time,
+                DestinationAccountId,
+                IsIncoming
             FROM StatementImportRows
             WHERE BatchId = @BatchId
             ORDER BY Date DESC, Description;
@@ -109,7 +112,10 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 Status,
                 IsDuplicate,
                 DuplicateTransactionId,
-                CreatedTransactionId
+                CreatedTransactionId,
+                Time,
+                DestinationAccountId,
+                IsIncoming
             FROM StatementImportRows
             WHERE Id = @Id;
             """;
@@ -186,7 +192,10 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 Status,
                 IsDuplicate,
                 DuplicateTransactionId,
-                CreatedTransactionId
+                CreatedTransactionId,
+                Time,
+                DestinationAccountId,
+                IsIncoming
             )
             VALUES (
                 @Id,
@@ -204,7 +213,10 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 @Status,
                 @IsDuplicate,
                 @DuplicateTransactionId,
-                @CreatedTransactionId
+                @CreatedTransactionId,
+                @Time,
+                @DestinationAccountId,
+                @IsIncoming
             )
             ON CONFLICT(Id) DO UPDATE SET
                 BatchId = excluded.BatchId,
@@ -221,7 +233,10 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 Status = excluded.Status,
                 IsDuplicate = excluded.IsDuplicate,
                 DuplicateTransactionId = excluded.DuplicateTransactionId,
-                CreatedTransactionId = excluded.CreatedTransactionId;
+                CreatedTransactionId = excluded.CreatedTransactionId,
+                Time = excluded.Time,
+                DestinationAccountId = excluded.DestinationAccountId,
+                IsIncoming = excluded.IsIncoming;
             """;
         AddRowParameters(command, row);
 
@@ -305,6 +320,9 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         AddParameter(command, "@IsDuplicate", row.IsDuplicate ? 1 : 0);
         AddParameter(command, "@DuplicateTransactionId", SqliteData.ToDbValue(row.DuplicateTransactionId));
         AddParameter(command, "@CreatedTransactionId", SqliteData.ToDbValue(row.CreatedTransactionId));
+        AddParameter(command, "@Time", SqliteData.ToDbValue(row.Time));
+        AddParameter(command, "@DestinationAccountId", SqliteData.ToDbValue(row.DestinationAccountId));
+        AddParameter(command, "@IsIncoming", row.IsIncoming ? 1 : 0);
     }
 
     private static StatementImportBatch ReadBatch(System.Data.Common.DbDataReader reader)
@@ -339,6 +357,9 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
             Enum.Parse<StatementImportRowStatus>(SqliteData.ReadString(reader, "Status")),
             SqliteData.ReadBoolean(reader, "IsDuplicate"),
             SqliteData.ReadNullableGuid(reader, "DuplicateTransactionId"),
-            SqliteData.ReadNullableGuid(reader, "CreatedTransactionId"));
+            SqliteData.ReadNullableGuid(reader, "CreatedTransactionId"),
+            SqliteData.ReadNullableTime(reader, "Time"),
+            SqliteData.ReadNullableGuid(reader, "DestinationAccountId"),
+            SqliteData.ReadBoolean(reader, "IsIncoming"));
     }
 }

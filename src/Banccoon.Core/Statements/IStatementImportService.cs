@@ -23,6 +23,7 @@ public interface IStatementImportService
         Guid rowId,
         Guid? categoryId,
         TransactionType? type,
+        Guid? destinationAccountId,
         CancellationToken cancellationToken = default);
 
     Task<StatementImportRow> SkipRowAsync(

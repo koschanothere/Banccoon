@@ -11,8 +11,10 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private readonly IStatementImportService statementImportService;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryRepository categoryRepository;
+    private readonly IAccountRepository accountRepository;
 
     private Guid batchId;
+    private Guid accountId;
     private string currency = "EUR";
     private bool selectMode;
     private NamedOptionViewModel? bulkCategory;
@@ -24,14 +26,17 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     public StatementImportReviewViewModel(
         IStatementImportService statementImportService,
         IStatementImportRepository statementImportRepository,
-        ICategoryRepository categoryRepository)
+        ICategoryRepository categoryRepository,
+        IAccountRepository accountRepository)
     {
         this.statementImportService = statementImportService;
         this.statementImportRepository = statementImportRepository;
         this.categoryRepository = categoryRepository;
+        this.accountRepository = accountRepository;
 
         Rows = [];
         CategoryOptions = [];
+        OtherAccountOptions = [];
 
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
         ToggleAddCategoryCommand = new RelayCommand(() => IsAddingCategory = !IsAddingCategory);
@@ -44,6 +49,9 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     public ObservableCollection<StatementImportRowViewModel> Rows { get; }
 
     public ObservableCollection<NamedOptionViewModel> CategoryOptions { get; }
+
+    // Every other tracked account, offered as the "other side" when a row is marked Transfer.
+    public ObservableCollection<NamedOptionViewModel> OtherAccountOptions { get; }
 
     public bool IsComplete => Rows.Count == 0;
 
@@ -95,9 +103,10 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     public ICommand CancelImportCommand { get; }
 
-    public async Task LoadAsync(Guid batch, string currencyCode, CancellationToken cancellationToken = default)
+    public async Task LoadAsync(Guid batch, Guid batchAccountId, string currencyCode, CancellationToken cancellationToken = default)
     {
         batchId = batch;
+        accountId = batchAccountId;
         currency = currencyCode;
 
         // This method is itself called after another ViewModel's await chain (see
@@ -106,6 +115,11 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         await RunOnMainThreadAsync(() => StatusText = string.Empty);
 
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        var accounts = await accountRepository.GetAllAsync(cancellationToken);
+        var otherAccounts = accounts
+            .Where(account => !account.IsArchived && account.Id != accountId)
+            .OrderBy(account => account.Name)
+            .ToList();
 
         await RunOnMainThreadAsync(() =>
         {
@@ -113,6 +127,12 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             foreach (var category in categories.OrderBy(category => category.Name))
             {
                 CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
+            }
+
+            OtherAccountOptions.Clear();
+            foreach (var account in otherAccounts)
+            {
+                OtherAccountOptions.Add(new NamedOptionViewModel(account.Id, account.Name));
             }
         });
 
@@ -132,7 +152,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             Rows.Clear();
             foreach (var row in pendingRows)
             {
-                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, ApproveRowAsync, SkipRowAsync)
+                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync)
                 {
                     IsSelectModeActive = SelectMode
                 };
@@ -146,7 +166,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     private async Task ApproveRowAsync(StatementImportRowViewModel row)
     {
-        await statementImportService.ApproveRowAsync(row.Id, row.Category?.Id, row.Type);
+        await statementImportService.ApproveRowAsync(row.Id, row.Category?.Id, row.Type, row.OtherAccount?.Id);
         await RefreshRowsAsync();
     }
 
@@ -182,7 +202,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         var selected = Rows.Where(row => row.IsSelected).ToList();
         foreach (var row in selected)
         {
-            await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id, row.Type);
+            await statementImportService.ApproveRowAsync(row.Id, BulkCategory?.Id ?? row.Category?.Id, row.Type, row.OtherAccount?.Id);
         }
 
         // Touches UI-bound state after an await that may have resumed off the UI thread (see

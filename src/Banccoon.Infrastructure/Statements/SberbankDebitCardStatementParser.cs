@@ -198,6 +198,7 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
                 FlushPending(rows, ref pending);
                 pending = new PendingOperation(
                     ParseDate(operationMatch.Groups["date"].Value),
+                    ParseTime(operationMatch.Groups["time"].Value),
                     operationMatch.Groups["category"].Value.Trim(),
                     operationMatch.Groups["amount"].Value,
                     ParseMoney(operationMatch.Groups["balance"].Value),
@@ -257,7 +258,8 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             Counterparty: string.IsNullOrWhiteSpace(description) ? pending.Category : description,
             ExternalReference: pending.ExternalReference,
             RawText: rawText,
-            BalanceAfter: pending.BalanceAfter));
+            BalanceAfter: pending.BalanceAfter,
+            Time: pending.Time));
 
         pending = null;
     }
@@ -327,6 +329,11 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         return DateOnly.ParseExact(text, "dd.MM.yyyy", CultureInfo.InvariantCulture);
     }
 
+    private static TimeOnly ParseTime(string text)
+    {
+        return TimeOnly.ParseExact(text, "HH:mm", CultureInfo.InvariantCulture);
+    }
+
     private static decimal ParseMoney(string text)
     {
         var normalized = text.Replace(" ", string.Empty, StringComparison.Ordinal)
@@ -356,12 +363,14 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
     {
         public PendingOperation(
             DateOnly date,
+            TimeOnly time,
             string category,
             string amountText,
             decimal balanceAfter,
             string rawLine)
         {
             Date = date;
+            Time = time;
             Category = category;
             AmountText = amountText;
             BalanceAfter = balanceAfter;
@@ -369,6 +378,8 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
         }
 
         public DateOnly Date { get; }
+
+        public TimeOnly Time { get; }
 
         public string Category { get; }
 

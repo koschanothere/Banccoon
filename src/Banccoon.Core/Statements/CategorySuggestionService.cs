@@ -68,10 +68,40 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
             .FirstOrDefault();
     }
 
+    public Guid? SuggestDestinationAccount(
+        ParsedStatementRow row,
+        Guid accountId,
+        IEnumerable<CategoryLearningRule> rules)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        ArgumentNullException.ThrowIfNull(rules);
+
+        var normalizedText = Normalize(GetMatchText(row.Description, row.Counterparty));
+        if (string.IsNullOrWhiteSpace(normalizedText))
+        {
+            return null;
+        }
+
+        return rules
+            .Where(rule => rule.Type == TransactionType.Transfer && rule.DestinationAccountId.HasValue)
+            .Select(rule => new
+            {
+                Rule = rule,
+                Score = GetScore(rule, accountId, normalizedText, Math.Abs(row.Amount))
+            })
+            .Where(match => match.Score > 0)
+            .OrderByDescending(match => match.Score)
+            .ThenByDescending(match => match.Rule.MatchCount)
+            .ThenByDescending(match => match.Rule.UpdatedAt)
+            .Select(match => match.Rule.DestinationAccountId)
+            .FirstOrDefault();
+    }
+
     public CategoryLearningRule Learn(
         StatementImportRow row,
         Guid accountId,
         Guid categoryId,
+        Guid? destinationAccountId,
         IEnumerable<CategoryLearningRule> existingRules,
         DateTimeOffset now)
     {
@@ -96,13 +126,15 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
                 Math.Abs(row.Amount),
                 MatchCount: 1,
                 now,
-                now)
+                now,
+                destinationAccountId)
             : existingRule with
             {
                 CategoryId = categoryId,
                 AmountHint = Math.Abs(row.Amount),
                 MatchCount = existingRule.MatchCount + 1,
-                UpdatedAt = now
+                UpdatedAt = now,
+                DestinationAccountId = destinationAccountId ?? existingRule.DestinationAccountId
             };
     }
 

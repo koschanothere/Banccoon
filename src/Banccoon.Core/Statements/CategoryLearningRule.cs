@@ -12,4 +12,5 @@ public sealed record CategoryLearningRule(
     decimal? AmountHint,
     int MatchCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid? DestinationAccountId = null);

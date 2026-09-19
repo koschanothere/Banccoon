@@ -41,7 +41,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         this.settingsRepository = settingsRepository;
 
         Account = new StatementAccountViewModel(accountRepository);
-        Review = new StatementImportReviewViewModel(statementImportService, statementImportRepository, categoryRepository);
+        Review = new StatementImportReviewViewModel(statementImportService, statementImportRepository, categoryRepository, accountRepository);
 
         PickFileCommand = new RelayCommand(() => _ = PickFileAsync());
         ContinueFromPickCommand = new RelayCommand(() => _ = ContinueFromPickAsync());
@@ -243,7 +243,7 @@ public sealed class StatementImportViewModel : ViewModelBase
                 return;
             }
 
-            await Review.LoadAsync(result.Batch.Id, currency);
+            await Review.LoadAsync(result.Batch.Id, result.Batch.AccountId, currency);
             await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
         }
         finally

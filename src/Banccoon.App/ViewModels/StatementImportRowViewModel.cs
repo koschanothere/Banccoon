@@ -11,9 +11,11 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 {
     private readonly decimal amount;
     private readonly string currency;
+    private readonly bool isIncoming;
 
     private NamedOptionViewModel? category;
     private TransactionType type;
+    private NamedOptionViewModel? otherAccount;
     private bool isSelected;
     private bool isSelectModeActive;
 
@@ -21,16 +23,19 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         StatementImportRow row,
         string currency,
         ObservableCollection<NamedOptionViewModel> categoryOptions,
+        ObservableCollection<NamedOptionViewModel> otherAccountOptions,
         Func<StatementImportRowViewModel, Task> onApprove,
         Func<StatementImportRowViewModel, Task> onSkip)
     {
         Id = row.Id;
         amount = row.Amount;
         this.currency = currency;
+        isIncoming = row.IsIncoming;
         DateText = row.Date.ToString("dd/MM/yyyy");
         Description = string.IsNullOrWhiteSpace(row.Counterparty) ? row.Description : row.Counterparty;
         IsDuplicate = row.IsDuplicate;
         CategoryOptions = categoryOptions;
+        OtherAccountOptions = otherAccountOptions;
         type = row.Type;
 
         var selectedCategoryId = row.CategoryId ?? row.SuggestedCategoryId;
@@ -38,10 +43,15 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             ? categoryOptions.FirstOrDefault(option => option.Id == categoryId)
             : categoryOptions.FirstOrDefault();
 
+        otherAccount = row.DestinationAccountId is { } otherAccountId
+            ? otherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
+            : otherAccountOptions.FirstOrDefault();
+
         ApproveCommand = new RelayCommand(() => _ = onApprove(this));
         SkipCommand = new RelayCommand(() => _ = onSkip(this));
         SetExpenseCommand = new RelayCommand(() => Type = TransactionType.Expense);
         SetIncomeCommand = new RelayCommand(() => Type = TransactionType.Income);
+        SetTransferCommand = new RelayCommand(() => Type = TransactionType.Transfer);
     }
 
     public Guid Id { get; }
@@ -50,9 +60,14 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     public string Description { get; }
 
-    // Derived from Type rather than fixed at construction, since the type toggle below can flip
-    // it (e.g. a "Перевод" guessed as Expense corrected to Income) - the sign has to follow.
-    public string AmountText => MoneyFormat.Format(MoneyFlow.GetSignedAmount(amount, Type), currency);
+    // Expense/Income get their sign from Type directly (that's what those words mean). A Transfer
+    // doesn't inherently say which way money moved, so it falls back to the original statement's
+    // own +/- sign, captured once and preserved regardless of how Type gets reclassified.
+    public string AmountText => MoneyFormat.Format(
+        Type == TransactionType.Transfer
+            ? (isIncoming ? amount : -amount)
+            : MoneyFlow.GetSignedAmount(amount, Type),
+        currency);
 
     public bool IsDuplicate { get; }
 
@@ -64,6 +79,17 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         set => SetProperty(ref category, value);
     }
 
+    // The other account on a transfer - not always the semantic "destination" (see
+    // StatementImportRow.DestinationAccountId); the label in the review row is deliberately
+    // direction-neutral for this reason.
+    public ObservableCollection<NamedOptionViewModel> OtherAccountOptions { get; }
+
+    public NamedOptionViewModel? OtherAccount
+    {
+        get => otherAccount;
+        set => SetProperty(ref otherAccount, value);
+    }
+
     public TransactionType Type
     {
         get => type;
@@ -73,6 +99,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsExpenseType));
                 OnPropertyChanged(nameof(IsIncomeType));
+                OnPropertyChanged(nameof(IsTransferType));
                 OnPropertyChanged(nameof(AmountText));
             }
         }
@@ -81,6 +108,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public bool IsExpenseType => Type == TransactionType.Expense;
 
     public bool IsIncomeType => Type == TransactionType.Income;
+
+    public bool IsTransferType => Type == TransactionType.Transfer;
 
     public bool IsSelected
     {
@@ -101,4 +130,6 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public ICommand SetExpenseCommand { get; }
 
     public ICommand SetIncomeCommand { get; }
+
+    public ICommand SetTransferCommand { get; }
 }

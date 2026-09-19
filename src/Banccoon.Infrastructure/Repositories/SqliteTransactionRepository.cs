@@ -21,7 +21,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
-                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate, Time
             FROM Transactions
             ORDER BY Date DESC;
             """;
@@ -37,9 +37,9 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
-                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate, Time
             FROM Transactions
-            WHERE AccountId = @AccountId
+            WHERE AccountId = @AccountId OR DestinationAccountId = @AccountId
             ORDER BY Date DESC;
             """;
         AddParameter(command, "@AccountId", accountId.ToString());
@@ -55,7 +55,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
-                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate
+                   PaidScheduledTransactionId, PaidScheduledOccurrenceDate, Time
             FROM Transactions
             WHERE Id = @Id;
             """;
@@ -84,7 +84,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
                 Notes,
                 Type,
                 PaidScheduledTransactionId,
-                PaidScheduledOccurrenceDate)
+                PaidScheduledOccurrenceDate,
+                Time)
             VALUES (
                 @Id,
                 @Name,
@@ -97,7 +98,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
                 @Notes,
                 @Type,
                 @PaidScheduledTransactionId,
-                @PaidScheduledOccurrenceDate)
+                @PaidScheduledOccurrenceDate,
+                @Time)
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
                 Date = excluded.Date,
@@ -109,7 +111,8 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
                 Notes = excluded.Notes,
                 Type = excluded.Type,
                 PaidScheduledTransactionId = excluded.PaidScheduledTransactionId,
-                PaidScheduledOccurrenceDate = excluded.PaidScheduledOccurrenceDate;
+                PaidScheduledOccurrenceDate = excluded.PaidScheduledOccurrenceDate,
+                Time = excluded.Time;
             """;
         AddTransactionParameters(command, transaction);
 
@@ -167,6 +170,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         AddParameter(command, "@Type", transaction.Type.ToString());
         AddParameter(command, "@PaidScheduledTransactionId", SqliteData.ToDbValue(transaction.PaidScheduledTransactionId));
         AddParameter(command, "@PaidScheduledOccurrenceDate", SqliteData.ToDbValue(transaction.PaidScheduledOccurrenceDate));
+        AddParameter(command, "@Time", SqliteData.ToDbValue(transaction.Time));
     }
 
     private static Transaction ReadTransaction(System.Data.Common.DbDataReader reader)
@@ -183,6 +187,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
             SqliteData.ReadNullableGuid(reader, "DestinationGoalId"),
             SqliteData.ReadNullableGuid(reader, "PaidScheduledTransactionId"),
             SqliteData.ReadNullableDate(reader, "PaidScheduledOccurrenceDate"),
-            SqliteData.ReadString(reader, "Name"));
+            SqliteData.ReadString(reader, "Name"),
+            SqliteData.ReadNullableTime(reader, "Time"));
     }
 }

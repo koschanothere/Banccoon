@@ -111,6 +111,63 @@ public sealed class CategorySuggestionServiceTests
     }
 
     [Fact]
+    public void SuggestDestinationAccount_ReturnsLearnedAccountForTransferRecipient()
+    {
+        var accountId = Guid.NewGuid();
+        var destinationAccountId = Guid.NewGuid();
+        var rule = new CategoryLearningRule(
+            Guid.NewGuid(),
+            "Perevod Sberezheniya",
+            service.Normalize("Perevod Sberezheniya"),
+            TransactionType.Transfer,
+            Guid.NewGuid(),
+            accountId,
+            AmountHint: null,
+            MatchCount: 2,
+            DateTimeOffset.UtcNow.AddDays(-1),
+            DateTimeOffset.UtcNow,
+            destinationAccountId);
+        var row = new ParsedStatementRow(
+            new DateOnly(2026, 6, 12),
+            1000m,
+            TransactionType.Expense,
+            "Perevod Sberezheniya");
+
+        var suggested = service.SuggestDestinationAccount(row, accountId, [rule]);
+
+        Assert.Equal(destinationAccountId, suggested);
+    }
+
+    [Fact]
+    public void Learn_PersistsDestinationAccountId()
+    {
+        var accountId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        var destinationAccountId = Guid.NewGuid();
+        var row = new StatementImportRow(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 11),
+            500m,
+            TransactionType.Transfer,
+            "Perevod Sberezheniya",
+            service.Normalize("Perevod Sberezheniya"),
+            null,
+            null,
+            null,
+            null,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+
+        var learned = service.Learn(row, accountId, categoryId, destinationAccountId, [], DateTimeOffset.UtcNow);
+
+        Assert.Equal(destinationAccountId, learned.DestinationAccountId);
+    }
+
+    [Fact]
     public void Learn_UpdatesExistingRuleForSameAccountAndMerchant()
     {
         var accountId = Guid.NewGuid();
@@ -145,7 +202,7 @@ public sealed class CategorySuggestionServiceTests
             null,
             null);
 
-        var learned = service.Learn(row, accountId, newCategoryId, [existing], DateTimeOffset.UtcNow);
+        var learned = service.Learn(row, accountId, newCategoryId, destinationAccountId: null, [existing], DateTimeOffset.UtcNow);
 
         Assert.Equal(existing.Id, learned.Id);
         Assert.Equal(newCategoryId, learned.CategoryId);

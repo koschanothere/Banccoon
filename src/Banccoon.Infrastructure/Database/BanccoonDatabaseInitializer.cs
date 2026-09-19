@@ -94,6 +94,7 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 Type TEXT NOT NULL,
                 PaidScheduledTransactionId TEXT NULL,
                 PaidScheduledOccurrenceDate TEXT NULL,
+                Time TEXT NULL,
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE,
                 FOREIGN KEY (DestinationAccountId) REFERENCES Accounts(Id) ON DELETE SET NULL,
                 FOREIGN KEY (DestinationGoalId) REFERENCES SavingsGoals(Id) ON DELETE SET NULL,
@@ -131,7 +132,11 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 IsDuplicate INTEGER NOT NULL,
                 DuplicateTransactionId TEXT NULL,
                 CreatedTransactionId TEXT NULL,
+                Time TEXT NULL,
+                DestinationAccountId TEXT NULL,
+                IsIncoming INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (BatchId) REFERENCES StatementImportBatches(Id) ON DELETE CASCADE,
+                FOREIGN KEY (DestinationAccountId) REFERENCES Accounts(Id) ON DELETE SET NULL,
                 FOREIGN KEY (SuggestedCategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
                 FOREIGN KEY (DuplicateTransactionId) REFERENCES Transactions(Id) ON DELETE SET NULL,
@@ -149,8 +154,10 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 MatchCount INTEGER NOT NULL,
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,
+                DestinationAccountId TEXT NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE CASCADE,
-                FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE
+                FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE,
+                FOREIGN KEY (DestinationAccountId) REFERENCES Accounts(Id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS ScheduledTransactions (
@@ -363,6 +370,39 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "Settings",
             "PrimaryAccountId",
+            "TEXT NULL",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "Transactions",
+            "Time",
+            "TEXT NULL",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "StatementImportRows",
+            "Time",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "StatementImportRows",
+            "DestinationAccountId",
+            "TEXT NULL",
+            cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "StatementImportRows",
+            "IsIncoming",
+            "INTEGER NOT NULL DEFAULT 0",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "CategoryLearningRules",
+            "DestinationAccountId",
             "TEXT NULL",
             cancellationToken);
     }
