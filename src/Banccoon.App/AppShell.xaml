@@ -8,7 +8,6 @@
     x:DataType="viewModels:AppShellViewModel"
     Shell.FlyoutBehavior="Locked"
     Shell.NavBarIsVisible="False"
-    FlyoutWidth="230"
     FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource LightSidebarBackground}, Dark={StaticResource DarkSidebarBackground}}">
 
     <Shell.FlyoutHeaderTemplate>
