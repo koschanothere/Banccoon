@@ -49,10 +49,9 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
         ApproveCommand = new RelayCommand(() => _ = onApprove(this));
         SkipCommand = new RelayCommand(() => _ = onSkip(this));
-        SetExpenseCommand = new RelayCommand(() => Type = TransactionType.Expense);
-        SetIncomeCommand = new RelayCommand(() => Type = TransactionType.Income);
-        SetTransferCommand = new RelayCommand(() => Type = TransactionType.Transfer);
     }
+
+    public IReadOnlyList<TransactionType> TypeOptions { get; } = Enum.GetValues<TransactionType>();
 
     public Guid Id { get; }
 
@@ -97,17 +96,11 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         {
             if (SetProperty(ref type, value))
             {
-                OnPropertyChanged(nameof(IsExpenseType));
-                OnPropertyChanged(nameof(IsIncomeType));
                 OnPropertyChanged(nameof(IsTransferType));
                 OnPropertyChanged(nameof(AmountText));
             }
         }
     }
-
-    public bool IsExpenseType => Type == TransactionType.Expense;
-
-    public bool IsIncomeType => Type == TransactionType.Income;
 
     public bool IsTransferType => Type == TransactionType.Transfer;
 
@@ -126,10 +119,4 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public ICommand ApproveCommand { get; }
 
     public ICommand SkipCommand { get; }
-
-    public ICommand SetExpenseCommand { get; }
-
-    public ICommand SetIncomeCommand { get; }
-
-    public ICommand SetTransferCommand { get; }
 }

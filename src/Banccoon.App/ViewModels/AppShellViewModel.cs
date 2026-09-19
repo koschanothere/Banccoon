@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Banccoon.App.Diagnostics;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
@@ -38,8 +39,9 @@ public sealed class AppShellViewModel : ViewModelBase
                 }
             });
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
+            DiagnosticLog.Write($"RefreshFavoritesAsync swallowed exception: {ex}");
         }
     }
 }

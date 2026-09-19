@@ -13,6 +13,7 @@ namespace Banccoon.App.ViewModels;
 public sealed class TransactionsViewModel : ViewModelBase
 {
     private static readonly Guid AllOptionId = Guid.Empty;
+    private const int PageSize = 20;
 
     private readonly IAccountRepository accountRepository;
     private readonly ICategoryRepository categoryRepository;
@@ -23,6 +24,12 @@ public sealed class TransactionsViewModel : ViewModelBase
     private IReadOnlyList<Account> accounts = [];
     private IReadOnlyList<Category> categories = [];
     private IReadOnlyList<Transaction> allTransactions = [];
+    private IReadOnlyList<Transaction> filteredTransactions = [];
+    private IReadOnlyDictionary<Guid, Account> accountsById = new Dictionary<Guid, Account>();
+    private IReadOnlyDictionary<Guid, Category> categoriesById = new Dictionary<Guid, Category>();
+    private IReadOnlyDictionary<Guid, IReadOnlyDictionary<Guid, decimal>> balancesByAccount =
+        new Dictionary<Guid, IReadOnlyDictionary<Guid, decimal>>();
+    private int visibleCount = PageSize;
     private string currency = "EUR";
 
     private bool isLoading;
@@ -105,6 +112,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         OpenTransferFormCommand = new RelayCommand(() => OpenAddForm(TransactionType.Transfer));
         DeleteSelectedCommand = new RelayCommand(() => _ = DeleteSelectedAsync());
         AssignCategoryToSelectedCommand = new RelayCommand(() => _ = AssignCategoryToSelectedAsync());
+        LoadMoreCommand = new RelayCommand(LoadMore);
     }
 
     public bool IsLoading
@@ -167,6 +175,12 @@ public sealed class TransactionsViewModel : ViewModelBase
         set => SetProperty(ref bulkCategory, value);
     }
 
+    public bool HasMoreRows => visibleCount < filteredTransactions.Count;
+
+    public string RowCountText => filteredTransactions.Count == 0
+        ? string.Empty
+        : $"Showing {Rows.Count} of {filteredTransactions.Count}";
+
     public NewTransactionFormViewModel AddForm { get; }
 
     public ResolveUpcomingListViewModel ResolveUpcoming { get; }
@@ -202,6 +216,8 @@ public sealed class TransactionsViewModel : ViewModelBase
     public ICommand DeleteSelectedCommand { get; }
 
     public ICommand AssignCategoryToSelectedCommand { get; }
+
+    public ICommand LoadMoreCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -276,9 +292,9 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private void ApplyFilters()
     {
-        var accountsById = accounts.ToDictionary(account => account.Id);
-        var categoriesById = categories.ToDictionary(category => category.Id);
-        var balancesByAccount = accounts.ToDictionary(
+        accountsById = accounts.ToDictionary(account => account.Id);
+        categoriesById = categories.ToDictionary(category => category.Id);
+        balancesByAccount = accounts.ToDictionary(
             account => account.Id,
             account => transactionBalanceHistoryService.GetBalancesAfterEachTransaction(
                 account,
@@ -298,8 +314,23 @@ public sealed class TransactionsViewModel : ViewModelBase
             filtered = filtered.Where(transaction => transaction.CategoryId == CategoryFilter.Id);
         }
 
+        filteredTransactions = filtered.OrderByDescending(transaction => transaction.Date).ToList();
+        // Every filter change (account/category picker) starts back at page one - a "load more"
+        // scroll position from the previous filter wouldn't mean anything against a new result set.
+        visibleCount = PageSize;
+        RebuildVisibleRows();
+    }
+
+    private void LoadMore()
+    {
+        visibleCount += PageSize;
+        RebuildVisibleRows();
+    }
+
+    private void RebuildVisibleRows()
+    {
         Rows.Clear();
-        foreach (var transaction in filtered.OrderByDescending(transaction => transaction.Date))
+        foreach (var transaction in filteredTransactions.Take(visibleCount))
         {
             var descriptionText = GetCategoryOrDestinationText(transaction, accountsById);
             var balanceAfter = balancesByAccount.TryGetValue(transaction.AccountId, out var balances) && balances.TryGetValue(transaction.Id, out var balance)
@@ -323,6 +354,8 @@ public sealed class TransactionsViewModel : ViewModelBase
             Rows.Add(row);
         }
 
+        OnPropertyChanged(nameof(HasMoreRows));
+        OnPropertyChanged(nameof(RowCountText));
         UpdateSelectionSummary();
     }
 
