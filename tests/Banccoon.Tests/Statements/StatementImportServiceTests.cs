@@ -270,6 +270,80 @@ public sealed class StatementImportServiceTests
         Assert.True(destinationRow.IsDuplicate);
     }
 
+    [Fact]
+    public async Task ApproveRowAsync_WhenBatchCompletes_OverridesBalanceWithStatementClosingBalance()
+    {
+        // The account started this import already 15 off from reality (a prior missed/duplicated
+        // transaction, or just a wrong starting balance) - summing the one 25 expense from this
+        // statement on top of that wrong number would land on 75, but the statement's own most
+        // recent-operation balance says 60, and that should win once the batch is fully reviewed.
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser(
+            [
+                new ParsedStatementRow(
+                    new DateOnly(2026, 6, 10),
+                    25m,
+                    TransactionType.Expense,
+                    "Lunch")
+            ],
+            closingBalance: 60m)]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        var row = Assert.Single(pending.Rows);
+
+        await service.ApproveRowAsync(row.Id, categoryId: null, type: null, destinationAccountId: null);
+
+        Assert.Equal(60m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
+    }
+
+    [Fact]
+    public async Task SkipRowAsync_WhenBatchCompletes_StillOverridesBalanceWithStatementClosingBalance()
+    {
+        // Skipping a row means Banccoon never records that operation, but the real bank balance at
+        // the end of the statement already accounts for it regardless - the override should still
+        // apply once every row has been reviewed, skipped or not.
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser(
+            [
+                new ParsedStatementRow(
+                    new DateOnly(2026, 6, 10),
+                    25m,
+                    TransactionType.Expense,
+                    "Lunch")
+            ],
+            closingBalance: 60m)]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        await service.SkipRowAsync(Assert.Single(pending.Rows).Id);
+
+        Assert.Equal(60m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
+    }
+
+    [Fact]
+    public async Task ApproveRowAsync_WhenBatchNotYetComplete_DoesNotOverrideBalance()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser(
+            [
+                new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch"),
+                new ParsedStatementRow(new DateOnly(2026, 6, 11), 10m, TransactionType.Expense, "Coffee")
+            ],
+            closingBalance: 60m)]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        var firstRow = pending.Rows[0];
+
+        await service.ApproveRowAsync(firstRow.Id, categoryId: null, type: null, destinationAccountId: null);
+
+        // Only one of two rows reviewed - the statement's closing balance shouldn't apply yet,
+        // since it describes the state after ALL of the statement's operations, not just this one.
+        Assert.Equal(75m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
+    }
+
     private static StatementImportService CreateService(
         SqliteTestStore store,
         IEnumerable<IStatementParser> parsers)
@@ -299,10 +373,12 @@ public sealed class StatementImportServiceTests
     private sealed class FakeStatementParser : IStatementParser
     {
         private readonly IReadOnlyList<ParsedStatementRow> rows;
+        private readonly decimal? closingBalance;
 
-        public FakeStatementParser(IReadOnlyList<ParsedStatementRow> rows)
+        public FakeStatementParser(IReadOnlyList<ParsedStatementRow> rows, decimal? closingBalance = null)
         {
             this.rows = rows;
+            this.closingBalance = closingBalance;
         }
 
         public StatementParserDescriptor Descriptor { get; } = new(
@@ -323,7 +399,8 @@ public sealed class StatementImportServiceTests
                 Descriptor.Id,
                 Descriptor.Name,
                 Path.GetFileName(request.FilePath),
-                rows));
+                rows,
+                ClosingBalance: closingBalance));
         }
     }
 }

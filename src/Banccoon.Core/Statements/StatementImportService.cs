@@ -135,7 +135,8 @@ public sealed class StatementImportService : IStatementImportService
             filePath,
             DateTimeOffset.UtcNow,
             StatementImportBatchStatus.PendingReview,
-            parsedStatement.Rows.Count);
+            parsedStatement.Rows.Count,
+            parsedStatement.ClosingBalance);
 
         var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
         var existingTransactions = await transactionRepository.GetByAccountIdAsync(accountId, cancellationToken);
@@ -393,12 +394,30 @@ public sealed class StatementImportService : IStatementImportService
         CancellationToken cancellationToken)
     {
         var rows = await statementImportRepository.GetRowsByBatchIdAsync(batch.Id, cancellationToken);
-        if (rows.Count > 0 && rows.All(row => row.Status != StatementImportRowStatus.Pending))
+        if (rows.Count == 0 || rows.Any(row => row.Status == StatementImportRowStatus.Pending))
         {
-            await statementImportRepository.SaveBatchAsync(batch with
+            return;
+        }
+
+        await statementImportRepository.SaveBatchAsync(batch with
+        {
+            Status = StatementImportBatchStatus.Completed
+        }, cancellationToken);
+
+        // The statement's own closing balance (from its most recent operation's running balance,
+        // not its unreliable header summary line) is authoritative once every row has been
+        // reviewed - it reflects every real-world operation on the account regardless of which
+        // rows got Approved vs Skipped in Banccoon, and corrects for any drift that was already
+        // baked into the account's balance before this import even started (a missed prior
+        // transaction, a wrong starting balance, etc.). Applying it here, once, rather than trusting
+        // the sum of individually-applied transactions to land on the right number.
+        if (batch.ClosingBalance is { } closingBalance)
+        {
+            var account = await accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
+            if (account is not null && account.CurrentBalance != closingBalance)
             {
-                Status = StatementImportBatchStatus.Completed
-            }, cancellationToken);
+                await accountRepository.SaveAsync(account with { CurrentBalance = closingBalance }, cancellationToken);
+            }
         }
     }
 

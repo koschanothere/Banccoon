@@ -112,6 +112,7 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 ImportedAt TEXT NOT NULL,
                 Status TEXT NOT NULL,
                 RowCount INTEGER NOT NULL,
+                ClosingBalance TEXT NULL,
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE CASCADE
             );
 
@@ -403,6 +404,13 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             connection,
             "CategoryLearningRules",
             "DestinationAccountId",
+            "TEXT NULL",
+            cancellationToken);
+
+        await AddMissingColumnAsync(
+            connection,
+            "StatementImportBatches",
+            "ClosingBalance",
             "TEXT NULL",
             cancellationToken);
     }

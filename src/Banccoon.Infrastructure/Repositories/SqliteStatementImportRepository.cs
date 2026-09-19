@@ -21,7 +21,7 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, AccountId, ParserId, ParserName, SourceFileName, SourceFilePath, ImportedAt, Status, RowCount
+            SELECT Id, AccountId, ParserId, ParserName, SourceFileName, SourceFilePath, ImportedAt, Status, RowCount, ClosingBalance
             FROM StatementImportBatches
             ORDER BY ImportedAt DESC;
             """;
@@ -43,7 +43,7 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, AccountId, ParserId, ParserName, SourceFileName, SourceFilePath, ImportedAt, Status, RowCount
+            SELECT Id, AccountId, ParserId, ParserName, SourceFileName, SourceFilePath, ImportedAt, Status, RowCount, ClosingBalance
             FROM StatementImportBatches
             WHERE Id = @Id;
             """;
@@ -141,7 +141,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 SourceFilePath,
                 ImportedAt,
                 Status,
-                RowCount
+                RowCount,
+                ClosingBalance
             )
             VALUES (
                 @Id,
@@ -152,7 +153,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 @SourceFilePath,
                 @ImportedAt,
                 @Status,
-                @RowCount
+                @RowCount,
+                @ClosingBalance
             )
             ON CONFLICT(Id) DO UPDATE SET
                 AccountId = excluded.AccountId,
@@ -162,7 +164,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 SourceFilePath = excluded.SourceFilePath,
                 ImportedAt = excluded.ImportedAt,
                 Status = excluded.Status,
-                RowCount = excluded.RowCount;
+                RowCount = excluded.RowCount,
+                ClosingBalance = excluded.ClosingBalance;
             """;
         AddBatchParameters(command, batch);
 
@@ -300,6 +303,7 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         AddParameter(command, "@ImportedAt", batch.ImportedAt.ToString("O"));
         AddParameter(command, "@Status", batch.Status.ToString());
         AddParameter(command, "@RowCount", batch.RowCount);
+        AddParameter(command, "@ClosingBalance", SqliteData.ToDbValue(batch.ClosingBalance));
     }
 
     private static void AddRowParameters(Microsoft.Data.Sqlite.SqliteCommand command, StatementImportRow row)
@@ -336,7 +340,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
             SqliteData.ReadNullableString(reader, "SourceFilePath"),
             DateTimeOffset.Parse(SqliteData.ReadString(reader, "ImportedAt"), System.Globalization.CultureInfo.InvariantCulture),
             Enum.Parse<StatementImportBatchStatus>(SqliteData.ReadString(reader, "Status")),
-            reader.GetInt32(reader.GetOrdinal("RowCount")));
+            reader.GetInt32(reader.GetOrdinal("RowCount")),
+            SqliteData.ReadNullableDecimal(reader, "ClosingBalance"));
     }
 
     private static StatementImportRow ReadRow(System.Data.Common.DbDataReader reader)
