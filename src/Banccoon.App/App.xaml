@@ -11,6 +11,7 @@
             <converters:PositiveAmountColorConverter x:Key="PositiveAmountColorConverter" />
             <converters:IncreaseAmountColorConverter x:Key="IncreaseAmountColorConverter" />
             <converters:CurrentBarColorConverter x:Key="CurrentBarColorConverter" />
+            <converters:SelectedNavBackgroundConverter x:Key="SelectedNavBackgroundConverter" />
             <converters:ExpandedRotationConverter x:Key="ExpandedRotationConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
 

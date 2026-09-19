@@ -26,6 +26,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private IReadOnlyList<DashboardSection> dashboardSectionOrder = DashboardSectionOrdering.Default;
     private ForecastPeriod selectedForecastPeriod = ForecastPeriod.ThirtyDays;
     private string dashboardStatusText = string.Empty;
+    private SettingsCategory selectedCategory = SettingsCategory.General;
 
     public SettingsViewModel(
         ISettingsRepository settingsRepository,
@@ -42,6 +43,8 @@ public sealed class SettingsViewModel : ViewModelBase
         AppLock = new AppLockSettingsViewModel(settingsRepository);
         LearningRules = new CategoryLearningRulesViewModel(categoryLearningRuleRepository, categoryRepository, accountRepository);
         DashboardSectionRows = [];
+        Categories = [];
+        RebuildCategoryRows();
 
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
         SetDarkCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Dark));
@@ -63,6 +66,35 @@ public sealed class SettingsViewModel : ViewModelBase
     public AppLockSettingsViewModel AppLock { get; }
 
     public CategoryLearningRulesViewModel LearningRules { get; }
+
+    public ObservableCollection<SettingsCategoryRowViewModel> Categories { get; }
+
+    public SettingsCategory SelectedCategory
+    {
+        get => selectedCategory;
+        private set
+        {
+            if (SetProperty(ref selectedCategory, value))
+            {
+                OnPropertyChanged(nameof(IsGeneralCategorySelected));
+                OnPropertyChanged(nameof(IsSecurityCategorySelected));
+                OnPropertyChanged(nameof(IsDashboardCategorySelected));
+                OnPropertyChanged(nameof(IsTransactionsCategorySelected));
+                OnPropertyChanged(nameof(IsDataCategorySelected));
+                RebuildCategoryRows();
+            }
+        }
+    }
+
+    public bool IsGeneralCategorySelected => SelectedCategory == SettingsCategory.General;
+
+    public bool IsSecurityCategorySelected => SelectedCategory == SettingsCategory.SecurityAndPrivacy;
+
+    public bool IsDashboardCategorySelected => SelectedCategory == SettingsCategory.Dashboard;
+
+    public bool IsTransactionsCategorySelected => SelectedCategory == SettingsCategory.Transactions;
+
+    public bool IsDataCategorySelected => SelectedCategory == SettingsCategory.DataAndBackup;
 
     public ObservableCollection<DashboardSectionRowViewModel> DashboardSectionRows { get; }
 
@@ -223,6 +255,21 @@ public sealed class SettingsViewModel : ViewModelBase
         await AppLock.InitializeAsync(settings);
         await Data.InitializeAsync(settings);
         await LearningRules.InitializeAsync(cancellationToken);
+    }
+
+    private void RebuildCategoryRows()
+    {
+        Categories.Clear();
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.General, "General", IsGeneralCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.SecurityAndPrivacy, "Security & Privacy", IsSecurityCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Dashboard, "Dashboard", IsDashboardCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Transactions, "Transactions", IsTransactionsCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.DataAndBackup, "Data & Backup", IsDataCategorySelected, SelectCategory));
+    }
+
+    private void SelectCategory(SettingsCategory category)
+    {
+        SelectedCategory = category;
     }
 
     private void RebuildDashboardSectionRows()
