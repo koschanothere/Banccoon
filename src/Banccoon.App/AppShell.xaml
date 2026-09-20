@@ -7,13 +7,14 @@
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
     x:DataType="viewModels:AppShellViewModel"
     Shell.FlyoutBehavior="Locked"
+    Shell.FlyoutWidth="190"
     Shell.NavBarIsVisible="False"
     FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource LightSidebarBackground}, Dark={StaticResource DarkSidebarBackground}}">
 
     <Shell.FlyoutHeaderTemplate>
         <DataTemplate>
-            <HorizontalStackLayout Padding="20,14,20,14" Spacing="10">
-                <Border WidthRequest="40" HeightRequest="40" Padding="3" StrokeShape="RoundRectangle 12" Stroke="Transparent"
+            <HorizontalStackLayout Padding="16,12,16,12" Spacing="10">
+                <Border WidthRequest="48" HeightRequest="48" Padding="4" StrokeShape="RoundRectangle 14" Stroke="Transparent"
                         Background="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}">
                     <Image Source="{Binding CurrentTabImageSource}" Aspect="AspectFit" />
                 </Border>
