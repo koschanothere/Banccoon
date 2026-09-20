@@ -190,7 +190,7 @@
                                 <Button Grid.Column="1" Text="Cancel" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
                                 <Button Grid.Column="2" Text="Delete selected" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
                             </Grid>
-                            <Label Text="Tap a category to change its color - tap it again while the color picker is open to rename it. Press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="Tap a category to change its color. Press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
 
                             <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding CategoryManagement.Boxes}">
                                 <BindableLayout.ItemTemplate>
@@ -211,27 +211,12 @@
                                                 <DropGestureRecognizer AllowDrop="True" DropCommand="{Binding DropCommand}" />
                                             </Border.GestureRecognizers>
 
-                                            <Grid>
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding IsRenaming, Converter={StaticResource InverseBoolConverter}}">
-                                                    <Grid.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding TapCommand}" />
-                                                    </Grid.GestureRecognizers>
-                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" IsEnabled="False" Scale="0.8" />
-                                                    <Label Grid.Column="1" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
-                                                </Grid>
-
-                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding IsRenaming}">
-                                                    <Entry Grid.Column="0" Text="{Binding EditName}" BackgroundColor="White" TextColor="Black" WidthRequest="100" />
-                                                    <Button
-                                                        Grid.Column="1"
-                                                        Text="&#10003;"
-                                                        Command="{Binding CommitRenameCommand}"
-                                                        BackgroundColor="Transparent"
-                                                        TextColor="White"
-                                                        FontSize="14"
-                                                        Padding="0"
-                                                        WidthRequest="24" />
-                                                </Grid>
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding TapCommand}" />
+                                                </Grid.GestureRecognizers>
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" IsEnabled="False" Scale="0.8" />
+                                                <Label Grid.Column="1" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

@@ -8,12 +8,12 @@ using Banccoon.Core.Repositories;
 namespace Banccoon.App.ViewModels;
 
 // Renders categories as a "sea of boxes" (each box's background is its own color). Tapping a box
-// opens a single shared color-picker popup (ActiveColorPickerBox/IsColorPickerOpen, rendered by the
-// page as an overlay rather than inline, so the popup isn't constrained to the box's own compact
-// size); tapping the SAME box again while its own picker is open switches to renaming it instead of
-// needing a dedicated rename button. Dragging one box onto another merges the dragged category into
-// the drop target. Select mode replaces a per-box delete button with multi-select + one "Delete
-// selected" action, avoiding a delete affordance on every single box.
+// opens/closes a single shared color-picker popup (ActiveColorPickerBox/IsColorPickerOpen, rendered
+// by the page as an overlay rather than inline, so the popup isn't constrained to the box's own
+// compact size). Dragging one box onto another merges the dragged category into the drop target.
+// Select mode replaces a per-box delete button with multi-select + one "Delete selected" action,
+// avoiding a delete affordance on every single box. Renaming was tried (tap-while-picker-open) and
+// removed - it didn't work in practice and wasn't worth further iteration.
 public sealed class CategoryManagementViewModel : ViewModelBase
 {
     private readonly ICategoryRepository categoryRepository;
@@ -126,7 +126,6 @@ public sealed class CategoryManagementViewModel : ViewModelBase
                     HandleBoxTapped,
                     StartDrag,
                     box => _ = HandleDropAsync(box),
-                    (box, newName) => RenameAsync(box.Id, newName),
                     SetColorAsync)
                 {
                     IsSelectModeActive = IsSelectMode
@@ -145,22 +144,7 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             return;
         }
 
-        foreach (var other in Boxes)
-        {
-            if (other != box)
-            {
-                other.IsRenaming = false;
-            }
-        }
-
-        if (ActiveColorPickerBox == box)
-        {
-            ActiveColorPickerBox = null;
-            box.StartRenameCommand.Execute(null);
-            return;
-        }
-
-        ActiveColorPickerBox = box;
+        ActiveColorPickerBox = ActiveColorPickerBox == box ? null : box;
     }
 
     private void ToggleSelectMode()
@@ -194,19 +178,6 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         }
 
         await categoryManagementService.MergeAsync(source.Id, target.Id);
-        await RefreshAsync();
-        await onChanged();
-    }
-
-    private async Task RenameAsync(Guid id, string newName)
-    {
-        var category = await categoryRepository.GetByIdAsync(id);
-        if (category is null)
-        {
-            return;
-        }
-
-        await categoryRepository.SaveAsync(category with { Name = newName });
         await RefreshAsync();
         await onChanged();
     }
