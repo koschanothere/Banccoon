@@ -74,15 +74,29 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
         builder.Services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         builder.Services.AddSingleton<IBanccoonDatabaseInitializer, BanccoonDatabaseInitializer>();
-        builder.Services.AddSingleton<IAccountRepository, SqliteAccountRepository>();
-        builder.Services.AddSingleton<ICategoryRepository, SqliteCategoryRepository>();
-        builder.Services.AddSingleton<ITransactionRepository, SqliteTransactionRepository>();
-        builder.Services.AddSingleton<IScheduledTransactionRepository, SqliteScheduledTransactionRepository>();
-        builder.Services.AddSingleton<ISavingsGoalRepository, SqliteSavingsGoalRepository>();
-        builder.Services.AddSingleton<ISettingsRepository, SqliteSettingsRepository>();
+        // Every page's own repository reads run through a Cached* decorator wrapping the real
+        // SQLite repository (see EntityCache) - the whole local database is a few hundred KB, so
+        // keeping it in memory after the first load and patching it on every write is what makes
+        // switching tabs fast, instead of every OnAppearing re-querying SQLite from scratch.
+        // Statement import batches/rows are deliberately left uncached - that's an occasional
+        // guided workflow, not a page revisited on every navigation.
+        builder.Services.AddSingleton<SqliteAccountRepository>();
+        builder.Services.AddSingleton<IAccountRepository>(sp => new CachedAccountRepository(sp.GetRequiredService<SqliteAccountRepository>()));
+        builder.Services.AddSingleton<SqliteCategoryRepository>();
+        builder.Services.AddSingleton<ICategoryRepository>(sp => new CachedCategoryRepository(sp.GetRequiredService<SqliteCategoryRepository>()));
+        builder.Services.AddSingleton<SqliteTransactionRepository>();
+        builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>()));
+        builder.Services.AddSingleton<SqliteScheduledTransactionRepository>();
+        builder.Services.AddSingleton<IScheduledTransactionRepository>(sp => new CachedScheduledTransactionRepository(sp.GetRequiredService<SqliteScheduledTransactionRepository>()));
+        builder.Services.AddSingleton<SqliteSavingsGoalRepository>();
+        builder.Services.AddSingleton<ISavingsGoalRepository>(sp => new CachedSavingsGoalRepository(sp.GetRequiredService<SqliteSavingsGoalRepository>()));
+        builder.Services.AddSingleton<SqliteSettingsRepository>();
+        builder.Services.AddSingleton<ISettingsRepository>(sp => new CachedSettingsRepository(sp.GetRequiredService<SqliteSettingsRepository>()));
         builder.Services.AddSingleton<IStatementImportRepository, SqliteStatementImportRepository>();
-        builder.Services.AddSingleton<ICategoryLearningRuleRepository, SqliteCategoryLearningRuleRepository>();
-        builder.Services.AddSingleton<IScheduledOccurrenceOverrideRepository, SqliteScheduledOccurrenceOverrideRepository>();
+        builder.Services.AddSingleton<SqliteCategoryLearningRuleRepository>();
+        builder.Services.AddSingleton<ICategoryLearningRuleRepository>(sp => new CachedCategoryLearningRuleRepository(sp.GetRequiredService<SqliteCategoryLearningRuleRepository>()));
+        builder.Services.AddSingleton<SqliteScheduledOccurrenceOverrideRepository>();
+        builder.Services.AddSingleton<IScheduledOccurrenceOverrideRepository>(sp => new CachedScheduledOccurrenceOverrideRepository(sp.GetRequiredService<SqliteScheduledOccurrenceOverrideRepository>()));
         builder.Services.AddSingleton<IExportValidator, ExportValidator>();
         builder.Services.AddSingleton<IExportService, RepositoryExportService>();
         builder.Services.AddSingleton<ILocalDataResetService, LocalDataResetService>();
