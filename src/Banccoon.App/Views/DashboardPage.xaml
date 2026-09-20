@@ -10,7 +10,7 @@
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="32" Spacing="16">
+        <VerticalStackLayout Padding="40" Spacing="16">
 
             <VerticalStackLayout Spacing="2">
                 <Label Text="Dashboard" Style="{StaticResource ScreenTitleLabel}" />

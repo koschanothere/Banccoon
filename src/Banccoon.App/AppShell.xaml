@@ -13,9 +13,10 @@
 
     <Shell.FlyoutHeaderTemplate>
         <DataTemplate>
-            <HorizontalStackLayout Padding="16,12,16,12" Spacing="10">
-                <Border WidthRequest="48" HeightRequest="48" Padding="4" StrokeShape="RoundRectangle 14" Stroke="Transparent"
-                        Background="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}">
+            <HorizontalStackLayout Padding="14,10,14,10" Spacing="10">
+                <Border WidthRequest="64" HeightRequest="64" Padding="2" StrokeShape="RoundRectangle 18"
+                        Stroke="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}"
+                        StrokeThickness="2" Background="Transparent">
                     <Image Source="{Binding CurrentTabImageSource}" Aspect="AspectFit" />
                 </Border>
                 <Label Text="Banccoon" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
