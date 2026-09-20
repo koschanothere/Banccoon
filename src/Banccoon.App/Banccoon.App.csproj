@@ -19,10 +19,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.101" />
+    <PackageReference Include="Microsoft.Maui.Resizetizer" Version="10.0.101" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Banccoon.Core\Banccoon.Core.csproj" />
     <ProjectReference Include="..\Banccoon.Infrastructure\Banccoon.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Microsoft.NET.Sdk (not Microsoft.NET.Sdk.Maui) doesn't implicitly glob Resources\AppIcon or
+       Resources\Images into MauiIcon/MauiImage items, so they're declared explicitly here. -->
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\raccoon_main_icon.png" />
+    <MauiImage Include="Resources\Images\*.png" />
   </ItemGroup>
 </Project>

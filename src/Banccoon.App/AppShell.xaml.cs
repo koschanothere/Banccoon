@@ -59,6 +59,7 @@ public partial class AppShell : Shell
     private void OnNavigated(object? sender, ShellNavigatedEventArgs e)
     {
         _ = viewModel.RefreshFavoritesAsync();
+        viewModel.SetCurrentTab(e.Current?.Location?.OriginalString ?? string.Empty);
     }
 
     private async Task ShowLockScreenAsync()
