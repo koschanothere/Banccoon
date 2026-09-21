@@ -113,11 +113,11 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
     {
         return
         [
-            new("Every day", "FREQ=DAILY;INTERVAL=1;START=2026-06-07"),
-            new("Every 2 weeks on Monday", "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO;START=2026-06-07"),
-            new("Monthly on day 25", "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=25;START=2026-06-07"),
-            new("Last day of every month", "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=LAST;START=2026-06-07"),
-            new("Every year", "FREQ=YEARLY;INTERVAL=1;START=2026-06-07")
+            new("EveryDay", "FREQ=DAILY;INTERVAL=1;START=2026-06-07"),
+            new("Every2WeeksOnMonday", "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO;START=2026-06-07"),
+            new("MonthlyOnDay25", "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=25;START=2026-06-07"),
+            new("LastDayOfEveryMonth", "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=LAST;START=2026-06-07"),
+            new("EveryYear", "FREQ=YEARLY;INTERVAL=1;START=2026-06-07")
         ];
     }
 

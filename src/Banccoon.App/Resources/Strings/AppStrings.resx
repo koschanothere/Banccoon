@@ -251,4 +251,68 @@
   <data name="AppShell_NoFavoriteAccounts" xml:space="preserve">
     <value>Star an account to pin it here.</value>
   </data>
+  <!-- RecurrenceEditorView -->
+  <data name="RecurrenceEditor_Every" xml:space="preserve">
+    <value>Every</value>
+  </data>
+  <data name="RecurrenceEditor_FrequencyPickerTitle" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="RecurrenceEditor_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="RecurrenceEditor_DayOfWeekPickerTitle" xml:space="preserve">
+    <value>Day of week</value>
+  </data>
+  <data name="RecurrenceEditor_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="RecurrenceEditor_MonthlyModePickerTitle" xml:space="preserve">
+    <value>Monthly mode</value>
+  </data>
+  <data name="RecurrenceEditor_DayPlaceholder" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="RecurrenceEditor_Starts" xml:space="preserve">
+    <value>Starts</value>
+  </data>
+  <data name="RecurrenceEditor_Ends" xml:space="preserve">
+    <value>Ends</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxTitle" xml:space="preserve">
+    <value>Technical recurrence syntax</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxSubtitle" xml:space="preserve">
+    <value>Optional power-user mode. Friendly controls remain the default.</value>
+  </data>
+  <data name="RecurrenceEditor_ApplySyntaxButton" xml:space="preserve">
+    <value>Apply syntax</value>
+  </data>
+  <data name="RecurrenceEditor_ExamplesHeader" xml:space="preserve">
+    <value>Examples</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxNotParsed" xml:space="preserve">
+    <value>Syntax could not be parsed.</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxApplied" xml:space="preserve">
+    <value>Technical syntax applied.</value>
+  </data>
+  <data name="RecurrenceEditor_InvalidRecurrence" xml:space="preserve">
+    <value>Invalid recurrence</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
+    <value>Every day</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_Every2WeeksOnMonday" xml:space="preserve">
+    <value>Every 2 weeks on Monday</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_MonthlyOnDay25" xml:space="preserve">
+    <value>Monthly on day 25</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_LastDayOfEveryMonth" xml:space="preserve">
+    <value>Last day of every month</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
+    <value>Every year</value>
+  </data>
 </root>

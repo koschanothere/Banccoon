@@ -3,13 +3,14 @@
     x:Class="Banccoon.App.Controls.RecurrenceEditorView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:controls="clr-namespace:Banccoon.App.Controls">
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
+    xmlns:loc="clr-namespace:Banccoon.App.Localization">
     <VerticalStackLayout Spacing="12">
         <Grid ColumnDefinitions="Auto,96,160,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
             <Label
                 Grid.Row="0"
                 Grid.Column="0"
-                Text="Every"
+                Text="{loc:Translate RecurrenceEditor_Every}"
                 VerticalOptions="Center" />
             <Entry
                 Grid.Row="0"
@@ -20,7 +21,7 @@
             <Picker
                 Grid.Row="0"
                 Grid.Column="2"
-                Title="Frequency"
+                Title="{loc:Translate RecurrenceEditor_FrequencyPickerTitle}"
                 ItemsSource="{Binding Frequencies}"
                 ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                 SelectedItem="{Binding Frequency}" />
@@ -29,13 +30,13 @@
                 Grid.Row="1"
                 Grid.Column="0"
                 IsVisible="{Binding IsWeekly}"
-                Text="On"
+                Text="{loc:Translate RecurrenceEditor_On}"
                 VerticalOptions="Center" />
             <Picker
                 Grid.Row="1"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
-                Title="Day of week"
+                Title="{loc:Translate RecurrenceEditor_DayOfWeekPickerTitle}"
                 IsVisible="{Binding IsWeekly}"
                 ItemsSource="{Binding DaysOfWeek}"
                 SelectedItem="{Binding DayOfWeek}" />
@@ -44,13 +45,13 @@
                 Grid.Row="2"
                 Grid.Column="0"
                 IsVisible="{Binding IsMonthly}"
-                Text="Monthly"
+                Text="{loc:Translate RecurrenceEditor_Monthly}"
                 VerticalOptions="Center" />
             <Picker
                 Grid.Row="2"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
-                Title="Monthly mode"
+                Title="{loc:Translate RecurrenceEditor_MonthlyModePickerTitle}"
                 IsVisible="{Binding IsMonthly}"
                 ItemsSource="{Binding MonthlyModes}"
                 ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
@@ -60,13 +61,13 @@
                 Grid.Column="3"
                 IsVisible="{Binding UsesDayOfMonth}"
                 Keyboard="Numeric"
-                Placeholder="Day"
+                Placeholder="{loc:Translate RecurrenceEditor_DayPlaceholder}"
                 Text="{Binding DayOfMonth}" />
 
             <Label
                 Grid.Row="3"
                 Grid.Column="0"
-                Text="Starts"
+                Text="{loc:Translate RecurrenceEditor_Starts}"
                 VerticalOptions="Center" />
             <DatePicker
                 Grid.Row="3"
@@ -81,7 +82,7 @@
                 Spacing="8">
                 <CheckBox IsChecked="{Binding HasEndDate}" />
                 <Label
-                    Text="Ends"
+                    Text="{loc:Translate RecurrenceEditor_Ends}"
                     VerticalOptions="Center" />
                 <DatePicker
                     Date="{Binding EndDate}"
@@ -110,10 +111,10 @@
                     <VerticalStackLayout Spacing="2">
                         <Label
                             FontAttributes="Bold"
-                            Text="Technical recurrence syntax" />
+                            Text="{loc:Translate RecurrenceEditor_TechnicalSyntaxTitle}" />
                         <Label
                             Style="{StaticResource TertiaryLabel}"
-                            Text="Optional power-user mode. Friendly controls remain the default." />
+                            Text="{loc:Translate RecurrenceEditor_TechnicalSyntaxSubtitle}" />
                     </VerticalStackLayout>
                     <CheckBox
                         Grid.Column="1"
@@ -134,7 +135,7 @@
                         <Button
                             Command="{Binding ApplyTechnicalSyntaxCommand}"
                             Style="{StaticResource PrimaryButton}"
-                            Text="Apply syntax" />
+                            Text="{loc:Translate RecurrenceEditor_ApplySyntaxButton}" />
                     </HorizontalStackLayout>
                     <Label
                         Style="{StaticResource TertiaryLabel}"
@@ -142,7 +143,7 @@
                     <Label
                         FontAttributes="Bold"
                         FontSize="12"
-                        Text="Examples" />
+                        Text="{loc:Translate RecurrenceEditor_ExamplesHeader}" />
                     <CollectionView
                         HeightRequest="148"
                         ItemsSource="{Binding SyntaxExamples}">
@@ -152,7 +153,7 @@
                                     <Label
                                         FontAttributes="Bold"
                                         FontSize="12"
-                                        Text="{Binding Label}" />
+                                        Text="{Binding LabelText}" />
                                     <Label
                                         FontFamily="Consolas"
                                         FontSize="12"
