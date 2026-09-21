@@ -216,4 +216,20 @@
   <data name="Enum_MonthlyRecurrenceMode_LastDayOfMonth" xml:space="preserve">
     <value>Last Day of Month</value>
   </data>
+  <!-- AppLockPage -->
+  <data name="AppLock_Title" xml:space="preserve">
+    <value>Banccoon is locked</value>
+  </data>
+  <data name="AppLock_Subtitle" xml:space="preserve">
+    <value>Enter your PIN to continue.</value>
+  </data>
+  <data name="AppLock_PinPlaceholder" xml:space="preserve">
+    <value>PIN</value>
+  </data>
+  <data name="AppLock_UnlockButton" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="AppLock_IncorrectPin" xml:space="preserve">
+    <value>Incorrect PIN.</value>
+  </data>
 </root>
