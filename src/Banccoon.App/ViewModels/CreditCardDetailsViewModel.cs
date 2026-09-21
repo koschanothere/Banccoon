@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Models;
@@ -53,11 +54,11 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
 
     public string CurrentDebtText => Account?.CreditCardDetails?.CurrentDebt is { } debt
         ? MoneyFormat.Format(debt, Account.Currency)
-        : "Not set";
+        : Translator.Get("Accounts_NotSet");
 
     public string MinimumPaymentDisplayText => Account?.CreditCardDetails?.MinimumPayment is { } minimum
         ? MoneyFormat.Format(minimum, Account.Currency)
-        : "Not set";
+        : Translator.Get("Accounts_NotSet");
 
     public decimal ChosenPaymentAmount
     {
@@ -146,17 +147,17 @@ public sealed class CreditCardDetailsViewModel : ViewModelBase
         {
             if (PayoffPlan is null)
             {
-                return "Choose a payment amount to calculate payoff timing.";
+                return Translator.Get("Accounts_PayoffChooseAmount");
             }
 
             if (!PayoffPlan.IsPaidOff)
             {
-                return $"Not paid off within {PayoffPlan.MonthCount} months at this payment amount.";
+                return Translator.GetPlural("Accounts_PayoffNotWithinMonths", PayoffPlan.MonthCount);
             }
 
             return PayoffPlan.MonthCount == 1
-                ? "Paid off with the next payment."
-                : $"Paid off in {PayoffPlan.MonthCount} months.";
+                ? Translator.Get("Accounts_PayoffNextPayment")
+                : Translator.GetPlural("Accounts_PayoffInMonths", PayoffPlan.MonthCount);
         }
     }
 

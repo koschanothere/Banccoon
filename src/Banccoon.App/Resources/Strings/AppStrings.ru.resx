@@ -461,4 +461,137 @@
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Сначала укажите название новой категории.</value>
   </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <!-- AccountsPage -->
+  <data name="Accounts_AddAccountButton" xml:space="preserve">
+    <value>+ Добавить счёт</value>
+  </data>
+  <data name="Accounts_ShowActiveToggle" xml:space="preserve">
+    <value>Показать активные</value>
+  </data>
+  <data name="Accounts_ShowArchivedToggle" xml:space="preserve">
+    <value>Показать архивные</value>
+  </data>
+  <data name="Accounts_NewAccountTitle" xml:space="preserve">
+    <value>Новый счёт</value>
+  </data>
+  <data name="Accounts_EditAccountTitle" xml:space="preserve">
+    <value>Редактирование счёта</value>
+  </data>
+  <data name="Accounts_AccountNamePlaceholder" xml:space="preserve">
+    <value>Название счёта</value>
+  </data>
+  <data name="Accounts_CurrencyPlaceholder" xml:space="preserve">
+    <value>Валюта</value>
+  </data>
+  <data name="Accounts_BalancePlaceholder" xml:space="preserve">
+    <value>Баланс</value>
+  </data>
+  <data name="Accounts_GoalTargetPlaceholder" xml:space="preserve">
+    <value>Целевая сумма</value>
+  </data>
+  <data name="Accounts_MinimumPaymentPlaceholder" xml:space="preserve">
+    <value>Минимальный платёж</value>
+  </data>
+  <data name="Accounts_PlannedMonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Плановый ежемесячный платёж</value>
+  </data>
+  <data name="Accounts_AccountNumberOptionalPlaceholder" xml:space="preserve">
+    <value>Номер счёта (необязательно)</value>
+  </data>
+  <data name="Accounts_CardLastFourOptionalPlaceholder" xml:space="preserve">
+    <value>Последние 4 цифры карты (необязательно)</value>
+  </data>
+  <data name="Accounts_IncludeInDashboardTotals" xml:space="preserve">
+    <value>Учитывать в итогах на дашборде</value>
+  </data>
+  <data name="Accounts_NameRequired" xml:space="preserve">
+    <value>Укажите название.</value>
+  </data>
+  <data name="Accounts_CurrencyRequired" xml:space="preserve">
+    <value>Укажите валюту.</value>
+  </data>
+  <data name="Accounts_BalanceMustBeNumber" xml:space="preserve">
+    <value>Баланс должен быть числом.</value>
+  </data>
+  <data name="Accounts_GoalTargetMustBeNumber" xml:space="preserve">
+    <value>Целевая сумма должна быть числом.</value>
+  </data>
+  <data name="Accounts_CurrentDebtLabel" xml:space="preserve">
+    <value>Текущий долг</value>
+  </data>
+  <data name="Accounts_PayoffCalculatorHeader" xml:space="preserve">
+    <value>Калькулятор погашения</value>
+  </data>
+  <data name="Accounts_MonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Ежемесячный платёж</value>
+  </data>
+  <data name="Accounts_MonthlyFinanceChargeOptionalPlaceholder" xml:space="preserve">
+    <value>Ежемесячная комиссия (необязательно)</value>
+  </data>
+  <data name="Accounts_NotSet" xml:space="preserve">
+    <value>Не задано</value>
+  </data>
+  <data name="Accounts_PayoffChooseAmount" xml:space="preserve">
+    <value>Укажите сумму платежа, чтобы рассчитать срок погашения.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_One" xml:space="preserve">
+    <value>Не будет погашено за {0} месяц при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_Few" xml:space="preserve">
+    <value>Не будет погашено за {0} месяца при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_Many" xml:space="preserve">
+    <value>Не будет погашено за {0} месяцев при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNextPayment" xml:space="preserve">
+    <value>Будет погашено следующим платежом.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_One" xml:space="preserve">
+    <value>Будет погашено за {0} месяц.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_Few" xml:space="preserve">
+    <value>Будет погашено за {0} месяца.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_Many" xml:space="preserve">
+    <value>Будет погашено за {0} месяцев.</value>
+  </data>
+  <data name="Accounts_PrimaryBadge" xml:space="preserve">
+    <value>Основной</value>
+  </data>
+  <data name="Accounts_GoalProgressLabel" xml:space="preserve">
+    <value>Прогресс цели</value>
+  </data>
+  <data name="Accounts_ArchivedBadge" xml:space="preserve">
+    <value>В архиве</value>
+  </data>
+  <data name="Accounts_ViewTransactionsButton" xml:space="preserve">
+    <value>Показать транзакции</value>
+  </data>
+  <data name="Accounts_CardDetailsButton" xml:space="preserve">
+    <value>Данные карты</value>
+  </data>
+  <data name="Accounts_SetPrimaryButton" xml:space="preserve">
+    <value>Сделать основным</value>
+  </data>
+  <data name="Accounts_ArchiveButton" xml:space="preserve">
+    <value>Архивировать</value>
+  </data>
+  <data name="Accounts_UnarchiveButton" xml:space="preserve">
+    <value>Восстановить из архива</value>
+  </data>
+  <data name="Accounts_NoAccountsYet" xml:space="preserve">
+    <value>Пока нет счетов.</value>
+  </data>
+  <data name="Accounts_RevealShow" xml:space="preserve">
+    <value>Показать</value>
+  </data>
+  <data name="Accounts_RevealHide" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
 </root>

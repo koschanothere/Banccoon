@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 
@@ -12,7 +13,7 @@ public sealed class AccountFormViewModel : ViewModelBase
 
     private bool isOpen;
     private Guid? editingAccountId;
-    private string title = "New account";
+    private string title = Translator.Get("Accounts_NewAccountTitle");
     private string name = string.Empty;
     private AccountType type = AccountType.DebitCard;
     private string currency = "EUR";
@@ -137,7 +138,7 @@ public sealed class AccountFormViewModel : ViewModelBase
     public void OpenForCreate(string defaultCurrency)
     {
         editingAccountId = null;
-        Title = "New account";
+        Title = Translator.Get("Accounts_NewAccountTitle");
         Name = string.Empty;
         Type = AccountType.DebitCard;
         Currency = defaultCurrency;
@@ -156,7 +157,7 @@ public sealed class AccountFormViewModel : ViewModelBase
     public void OpenForEdit(Account account)
     {
         editingAccountId = account.Id;
-        Title = "Edit account";
+        Title = Translator.Get("Accounts_EditAccountTitle");
         Name = account.Name;
         Type = account.Type;
         Currency = account.Currency;
@@ -176,19 +177,19 @@ public sealed class AccountFormViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            StatusText = "Name is required.";
+            StatusText = Translator.Get("Accounts_NameRequired");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Currency))
         {
-            StatusText = "Currency is required.";
+            StatusText = Translator.Get("Accounts_CurrencyRequired");
             return;
         }
 
         if (!decimal.TryParse(BalanceText, NumberStyles.Number, CultureInfo.InvariantCulture, out var balance))
         {
-            StatusText = "Balance must be a number.";
+            StatusText = Translator.Get("Accounts_BalanceMustBeNumber");
             return;
         }
 
@@ -197,7 +198,7 @@ public sealed class AccountFormViewModel : ViewModelBase
         {
             if (!decimal.TryParse(GoalTargetText, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedTarget))
             {
-                StatusText = "Goal target must be a number.";
+                StatusText = Translator.Get("Accounts_GoalTargetMustBeNumber");
                 return;
             }
 
