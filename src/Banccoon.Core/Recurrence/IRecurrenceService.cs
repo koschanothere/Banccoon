@@ -6,5 +6,5 @@ public interface IRecurrenceService
 
     DateOnly? GetNextOccurrence(RecurrenceRule rule, DateOnly afterDate);
 
-    string Describe(RecurrenceRule rule);
+    RecurrenceDescriptionData Describe(RecurrenceRule rule);
 }

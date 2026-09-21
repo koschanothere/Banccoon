@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
@@ -153,7 +154,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
             soonestByScheduleId.TryGetValue(schedule.Id, out var soonestOccurrence);
             RuleRows.Add(new ScheduledRuleRowViewModel(
                 schedule,
-                recurrenceDescriptionService.Describe(schedule.RecurrenceRule),
+                RecurrenceDescriptionFormatter.Format(recurrenceDescriptionService.Describe(schedule.RecurrenceRule)),
                 currency,
                 soonestOccurrence,
                 onEdit: () => onEditRequested(schedule)));

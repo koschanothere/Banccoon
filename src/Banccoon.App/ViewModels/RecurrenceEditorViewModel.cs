@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Recurrence;
@@ -252,7 +253,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
             ? string.Empty
             : validationResult.Errors[0];
         Description = validationResult.IsValid
-            ? recurrenceDescriptionService.Describe(rule)
+            ? RecurrenceDescriptionFormatter.Format(recurrenceDescriptionService.Describe(rule))
             : "Invalid recurrence";
 
         if (validationResult.IsValid && !isUpdatingTechnicalSyntax)
