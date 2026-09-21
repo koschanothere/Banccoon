@@ -594,4 +594,125 @@
   <data name="Accounts_RevealHide" xml:space="preserve">
     <value>Скрыть</value>
   </data>
+  <data name="Common_NamePlaceholder" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Common_AmountPlaceholder" xml:space="preserve">
+    <value>Сумма</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Common_NameRequired" xml:space="preserve">
+    <value>Укажите название.</value>
+  </data>
+  <data name="Common_ChooseAnAccount" xml:space="preserve">
+    <value>Выберите счёт.</value>
+  </data>
+  <data name="Common_AmountMustBePositive" xml:space="preserve">
+    <value>Сумма должна быть положительным числом.</value>
+  </data>
+  <data name="Common_NameNewCategoryFirst" xml:space="preserve">
+    <value>Сначала укажите название новой категории.</value>
+  </data>
+  <!-- TransactionsPage -->
+  <data name="Transactions_FilterButton" xml:space="preserve">
+    <value>Фильтр</value>
+  </data>
+  <data name="Transactions_CheckInButton" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Transactions_ImportButton" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="Transactions_AddButton" xml:space="preserve">
+    <value>+ Добавить</value>
+  </data>
+  <data name="Transactions_ToAccountPickerTitle" xml:space="preserve">
+    <value>На счёт</value>
+  </data>
+  <data name="Transactions_ResolveUpcomingHeader" xml:space="preserve">
+    <value>Ближайшие платежи</value>
+  </data>
+  <data name="Transactions_NewRuleButton" xml:space="preserve">
+    <value>+ Новое правило</value>
+  </data>
+  <data name="Transactions_SaveRuleButton" xml:space="preserve">
+    <value>Сохранить правило</value>
+  </data>
+  <data name="Transactions_NothingDueRightNow" xml:space="preserve">
+    <value>Сейчас ничего не требуется.</value>
+  </data>
+  <data name="Transactions_DelayButton" xml:space="preserve">
+    <value>Отложить</value>
+  </data>
+  <data name="Transactions_MarkPaidButton" xml:space="preserve">
+    <value>Отметить оплаченным</value>
+  </data>
+  <data name="Transactions_NoScheduledRulesYet" xml:space="preserve">
+    <value>Пока нет запланированных правил.</value>
+  </data>
+  <data name="Transactions_SetCategoryPickerTitle" xml:space="preserve">
+    <value>Задать категорию</value>
+  </data>
+  <data name="Transactions_ApplyCategoryButton" xml:space="preserve">
+    <value>Применить категорию</value>
+  </data>
+  <data name="Transactions_DeleteSelectedButton" xml:space="preserve">
+    <value>Удалить выбранные</value>
+  </data>
+  <data name="Transactions_NoTransactionsYet" xml:space="preserve">
+    <value>Пока нет операций.</value>
+  </data>
+  <data name="Transactions_RowCountFormat" xml:space="preserve">
+    <value>Показано {0} из {1}</value>
+  </data>
+  <data name="Transactions_AllAccountsOption" xml:space="preserve">
+    <value>Все счета</value>
+  </data>
+  <data name="Transactions_AllCategoriesOption" xml:space="preserve">
+    <value>Все категории</value>
+  </data>
+  <data name="Transactions_TransferToFormat" xml:space="preserve">
+    <value>Перевод на {0}</value>
+  </data>
+  <data name="Transactions_OtherCategoryFallback" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <!-- NewTransactionFormViewModel -->
+  <data name="NewTransaction_ExpenseTitle" xml:space="preserve">
+    <value>Новый расход</value>
+  </data>
+  <data name="NewTransaction_IncomeTitle" xml:space="preserve">
+    <value>Новый доход</value>
+  </data>
+  <data name="NewTransaction_TransferTitle" xml:space="preserve">
+    <value>Новый перевод</value>
+  </data>
+  <data name="NewTransaction_ChooseDifferentDestination" xml:space="preserve">
+    <value>Выберите другой счёт назначения.</value>
+  </data>
+  <!-- ScheduleFormViewModel -->
+  <data name="Schedule_EditRuleTitle" xml:space="preserve">
+    <value>Изменение расписания</value>
+  </data>
+  <data name="Schedule_NewRuleTitle" xml:space="preserve">
+    <value>Новое расписание</value>
+  </data>
+  <data name="Schedule_FixRecurrenceRule" xml:space="preserve">
+    <value>Исправьте правило повторения.</value>
+  </data>
+  <!-- ResolveUpcoming / ScheduledRule row view models -->
+  <data name="ResolveUpcoming_OverdueSinceFormat" xml:space="preserve">
+    <value>просрочено с {0}</value>
+  </data>
+  <data name="ResolveUpcoming_DueToday" xml:space="preserve">
+    <value>срок сегодня</value>
+  </data>
+  <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
+    <value>срок {0}</value>
+  </data>
+  <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
+    <value>нет предстоящих платежей</value>
+  </data>
 </root>

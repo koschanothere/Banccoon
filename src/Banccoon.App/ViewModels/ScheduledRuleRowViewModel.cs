@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 
@@ -19,7 +20,7 @@ public sealed class ScheduledRuleRowViewModel
         AmountText = MoneyFormat.Format(MoneyFlow.GetSignedAmount(schedule.Amount, schedule.Type), currency);
         RecurrenceDescriptionText = recurrenceDescriptionText;
         HasUpcomingOccurrence = soonestOccurrence is not null;
-        NextDueText = soonestOccurrence?.DueText ?? "no upcoming occurrence";
+        NextDueText = soonestOccurrence?.DueText ?? Translator.Get("ScheduledRule_NoUpcomingOccurrence");
 
         MarkPaidCommand = soonestOccurrence?.MarkPaidCommand ?? new RelayCommand(() => { });
         EditCommand = new RelayCommand(() => _ = onEdit());

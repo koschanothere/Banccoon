@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Forecasting;
 
 namespace Banccoon.App.ViewModels;
@@ -20,10 +21,10 @@ public sealed class ResolveUpcomingRowViewModel
         AmountText = MoneyFormat.Format(scheduledEvent.SignedAmount, currency);
         IsOverdue = scheduledEvent.Date < today;
         DueText = IsOverdue
-            ? $"overdue since {scheduledEvent.Date:dd/MM/yyyy}"
+            ? string.Format(Translator.Get("ResolveUpcoming_OverdueSinceFormat"), scheduledEvent.Date.ToString("dd/MM/yyyy"))
             : scheduledEvent.Date == today
-                ? "due today"
-                : $"due {scheduledEvent.Date:dd/MM/yyyy}";
+                ? Translator.Get("ResolveUpcoming_DueToday")
+                : string.Format(Translator.Get("ResolveUpcoming_DueFormat"), scheduledEvent.Date.ToString("dd/MM/yyyy"));
 
         MarkPaidCommand = new RelayCommand(() => _ = onMarkPaid());
         SkipCommand = new RelayCommand(() => _ = onSkip());

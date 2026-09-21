@@ -576,4 +576,125 @@
   <data name="Accounts_RevealHide" xml:space="preserve">
     <value>Hide</value>
   </data>
+  <data name="Common_NamePlaceholder" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Common_AmountPlaceholder" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="Common_ChooseAnAccount" xml:space="preserve">
+    <value>Choose an account.</value>
+  </data>
+  <data name="Common_AmountMustBePositive" xml:space="preserve">
+    <value>Amount must be a positive number.</value>
+  </data>
+  <data name="Common_NameNewCategoryFirst" xml:space="preserve">
+    <value>Name the new category first.</value>
+  </data>
+  <!-- TransactionsPage -->
+  <data name="Transactions_FilterButton" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Transactions_CheckInButton" xml:space="preserve">
+    <value>Check-in</value>
+  </data>
+  <data name="Transactions_ImportButton" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Transactions_AddButton" xml:space="preserve">
+    <value>+ Add</value>
+  </data>
+  <data name="Transactions_ToAccountPickerTitle" xml:space="preserve">
+    <value>To account</value>
+  </data>
+  <data name="Transactions_ResolveUpcomingHeader" xml:space="preserve">
+    <value>Resolve upcoming</value>
+  </data>
+  <data name="Transactions_NewRuleButton" xml:space="preserve">
+    <value>+ New rule</value>
+  </data>
+  <data name="Transactions_SaveRuleButton" xml:space="preserve">
+    <value>Save rule</value>
+  </data>
+  <data name="Transactions_NothingDueRightNow" xml:space="preserve">
+    <value>Nothing due right now.</value>
+  </data>
+  <data name="Transactions_DelayButton" xml:space="preserve">
+    <value>Delay</value>
+  </data>
+  <data name="Transactions_MarkPaidButton" xml:space="preserve">
+    <value>Mark paid</value>
+  </data>
+  <data name="Transactions_NoScheduledRulesYet" xml:space="preserve">
+    <value>No scheduled rules yet.</value>
+  </data>
+  <data name="Transactions_SetCategoryPickerTitle" xml:space="preserve">
+    <value>Set category</value>
+  </data>
+  <data name="Transactions_ApplyCategoryButton" xml:space="preserve">
+    <value>Apply category</value>
+  </data>
+  <data name="Transactions_DeleteSelectedButton" xml:space="preserve">
+    <value>Delete selected</value>
+  </data>
+  <data name="Transactions_NoTransactionsYet" xml:space="preserve">
+    <value>No transactions yet.</value>
+  </data>
+  <data name="Transactions_RowCountFormat" xml:space="preserve">
+    <value>Showing {0} of {1}</value>
+  </data>
+  <data name="Transactions_AllAccountsOption" xml:space="preserve">
+    <value>All accounts</value>
+  </data>
+  <data name="Transactions_AllCategoriesOption" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="Transactions_TransferToFormat" xml:space="preserve">
+    <value>Transfer to {0}</value>
+  </data>
+  <data name="Transactions_OtherCategoryFallback" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <!-- NewTransactionFormViewModel -->
+  <data name="NewTransaction_ExpenseTitle" xml:space="preserve">
+    <value>New Expense</value>
+  </data>
+  <data name="NewTransaction_IncomeTitle" xml:space="preserve">
+    <value>New Income</value>
+  </data>
+  <data name="NewTransaction_TransferTitle" xml:space="preserve">
+    <value>New Transfer</value>
+  </data>
+  <data name="NewTransaction_ChooseDifferentDestination" xml:space="preserve">
+    <value>Choose a different destination account.</value>
+  </data>
+  <!-- ScheduleFormViewModel -->
+  <data name="Schedule_EditRuleTitle" xml:space="preserve">
+    <value>Edit scheduled rule</value>
+  </data>
+  <data name="Schedule_NewRuleTitle" xml:space="preserve">
+    <value>New scheduled rule</value>
+  </data>
+  <data name="Schedule_FixRecurrenceRule" xml:space="preserve">
+    <value>Fix the recurrence rule.</value>
+  </data>
+  <!-- ResolveUpcoming / ScheduledRule row view models -->
+  <data name="ResolveUpcoming_OverdueSinceFormat" xml:space="preserve">
+    <value>overdue since {0}</value>
+  </data>
+  <data name="ResolveUpcoming_DueToday" xml:space="preserve">
+    <value>due today</value>
+  </data>
+  <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
+    <value>due {0}</value>
+  </data>
+  <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
+    <value>no upcoming occurrence</value>
+  </data>
 </root>

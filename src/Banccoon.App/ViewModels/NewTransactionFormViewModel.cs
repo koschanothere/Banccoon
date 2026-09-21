@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
@@ -142,9 +143,9 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
         type = openType;
         Title = openType switch
         {
-            TransactionType.Expense => "New Expense",
-            TransactionType.Income => "New Income",
-            _ => "New Transfer"
+            TransactionType.Expense => Translator.Get("NewTransaction_ExpenseTitle"),
+            TransactionType.Income => Translator.Get("NewTransaction_IncomeTitle"),
+            _ => Translator.Get("NewTransaction_TransferTitle")
         };
 
         var accounts = await accountRepository.GetAllAsync(cancellationToken);
@@ -182,31 +183,31 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            StatusText = "Name is required.";
+            StatusText = Translator.Get("Common_NameRequired");
             return;
         }
 
         if (Account is null)
         {
-            StatusText = "Choose an account.";
+            StatusText = Translator.Get("Common_ChooseAnAccount");
             return;
         }
 
         if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0m)
         {
-            StatusText = "Amount must be a positive number.";
+            StatusText = Translator.Get("Common_AmountMustBePositive");
             return;
         }
 
         if (IsTransferForm && (DestinationAccount is null || DestinationAccount.Id == Account.Id))
         {
-            StatusText = "Choose a different destination account.";
+            StatusText = Translator.Get("NewTransaction_ChooseDifferentDestination");
             return;
         }
 
         if (!IsTransferForm && Category?.IsCreateNew == true && string.IsNullOrWhiteSpace(NewCategoryName))
         {
-            StatusText = "Name the new category first.";
+            StatusText = Translator.Get("Common_NameNewCategoryFirst");
             return;
         }
 
