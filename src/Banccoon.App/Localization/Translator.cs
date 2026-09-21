@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Resources;
+using Banccoon.Core.Localization;
 
 namespace Banccoon.App.Localization;
 
@@ -29,6 +30,30 @@ public sealed class Translator : INotifyPropertyChanged
     public string this[string key] => ResourceManager.GetString(key, currentCulture) ?? key;
 
     public static string Get(string key) => Instance[key];
+
+    // keyBase resolves to "{keyBase}_One"/"_Few"/"_Many"/"_Other" depending on count and the
+    // current language's plural rule (PluralRules.GetForm) - English only ever needs "_One" and
+    // "_Other", Russian only ever needs "_One"/"_Few"/"_Many", so each resx only defines the
+    // suffixes its own language's rule can produce. Falls back to "_Other" for a form whose key
+    // wasn't translated yet, then to the raw key, so a gap never comes back as a blank string.
+    // The resolved template takes a single {0} placeholder for the count.
+    public static string GetPlural(string keyBase, int count)
+    {
+        var form = PluralRules.GetForm(count, Instance.currentCulture.TwoLetterISOLanguageName);
+        var suffix = form switch
+        {
+            PluralForm.One => "One",
+            PluralForm.Few => "Few",
+            PluralForm.Many => "Many",
+            _ => "Other"
+        };
+
+        var template = ResourceManager.GetString($"{keyBase}_{suffix}", Instance.currentCulture)
+            ?? ResourceManager.GetString($"{keyBase}_Other", Instance.currentCulture)
+            ?? $"{keyBase}_{suffix}";
+
+        return string.Format(Instance.currentCulture, template, count);
+    }
 
     // languageCode matches AppSettings.DisplayLanguage / LanguageOption.Code ("en", "ru", ...).
     // An unrecognized code (a future language whose resx doesn't exist yet) falls back to the

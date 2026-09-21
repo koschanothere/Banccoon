@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
@@ -517,7 +518,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private void UpdateSelectionSummary()
     {
         var count = Rows.Count(row => row.IsSelected);
-        SelectionSummaryText = count == 1 ? "1 selected" : $"{count} selected";
+        SelectionSummaryText = Translator.GetPlural("Common_SelectionCount", count);
     }
 
     private void ToggleFilterPanel()

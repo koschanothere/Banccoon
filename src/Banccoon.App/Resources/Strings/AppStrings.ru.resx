@@ -120,4 +120,31 @@
   <data name="ForecastChart_Today" xml:space="preserve">
     <value>Сегодня</value>
   </data>
+  <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
+    <value>Изучено по {0} исправлению</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Few" xml:space="preserve">
+    <value>Изучено по {0} исправлениям</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Many" xml:space="preserve">
+    <value>Изучено по {0} исправлениям</value>
+  </data>
+  <data name="Common_SelectionCount_One" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="Common_SelectionCount_Few" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="Common_SelectionCount_Many" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="DataManagement_CategoryCount_One" xml:space="preserve">
+    <value>{0} категория</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Few" xml:space="preserve">
+    <value>{0} категории</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Many" xml:space="preserve">
+    <value>{0} категорий</value>
+  </data>
 </root>

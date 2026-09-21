@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -284,7 +285,7 @@ public sealed class DataManagementViewModel : ViewModelBase
             await RunOnMainThreadAsync(() =>
             {
                 RestoreStatusText = $"Restored {result.AccountsImported} account(s), {result.TransactionsImported} transaction(s), "
-                    + $"{result.CategoriesImported} categor{(result.CategoriesImported == 1 ? "y" : "ies")}, "
+                    + $"{Translator.GetPlural("DataManagement_CategoryCount", result.CategoriesImported)}, "
                     + $"{result.ScheduledTransactionsImported} scheduled rule(s), {result.SavingsGoalsImported} goal(s).";
                 pendingRestoreFilePath = null;
                 HasPendingRestore = false;

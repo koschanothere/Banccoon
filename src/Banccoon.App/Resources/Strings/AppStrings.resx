@@ -120,4 +120,22 @@
   <data name="ForecastChart_Today" xml:space="preserve">
     <value>Today</value>
   </data>
+  <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
+    <value>Learned from {0} correction</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Other" xml:space="preserve">
+    <value>Learned from {0} corrections</value>
+  </data>
+  <data name="Common_SelectionCount_One" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Common_SelectionCount_Other" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="DataManagement_CategoryCount_One" xml:space="preserve">
+    <value>{0} category</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Other" xml:space="preserve">
+    <value>{0} categories</value>
+  </data>
 </root>
