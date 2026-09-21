@@ -22,6 +22,7 @@
                 Grid.Column="2"
                 Title="Frequency"
                 ItemsSource="{Binding Frequencies}"
+                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                 SelectedItem="{Binding Frequency}" />
 
             <Label
@@ -52,6 +53,7 @@
                 Title="Monthly mode"
                 IsVisible="{Binding IsMonthly}"
                 ItemsSource="{Binding MonthlyModes}"
+                ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}"
                 SelectedItem="{Binding MonthlyMode}" />
             <Entry
                 Grid.Row="2"

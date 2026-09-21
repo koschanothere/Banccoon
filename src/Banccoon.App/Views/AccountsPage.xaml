@@ -31,7 +31,7 @@
                     <Entry Placeholder="Account name" Text="{Binding Form.Name}" />
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Picker Grid.Column="0" Title="Type" ItemsSource="{Binding Form.AccountTypes}" SelectedItem="{Binding Form.Type}" />
+                        <Picker Grid.Column="0" Title="Type" ItemsSource="{Binding Form.AccountTypes}" SelectedItem="{Binding Form.Type}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
                         <Entry Grid.Column="1" Placeholder="Currency" Text="{Binding Form.Currency}" />
                     </Grid>
 

@@ -69,7 +69,7 @@
 
                     <VerticalStackLayout Spacing="8" IsVisible="{Binding Account.IsCreatingNewAccount}">
                         <Entry Placeholder="Account name" Text="{Binding Account.NewAccountName}" />
-                        <Picker Title="Type" ItemsSource="{Binding Account.AccountTypes}" SelectedItem="{Binding Account.NewAccountType}" />
+                        <Picker Title="Type" ItemsSource="{Binding Account.AccountTypes}" SelectedItem="{Binding Account.NewAccountType}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
                         <Entry Placeholder="Starting balance" Text="{Binding Account.NewAccountStartingBalanceText}" Keyboard="Numeric" />
                     </VerticalStackLayout>
 
@@ -127,7 +127,7 @@
                                                TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
                                     </VerticalStackLayout>
                                     <Label Grid.Column="3" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Picker Grid.Column="4" Title="Type" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding Type}" WidthRequest="110" VerticalOptions="Center" />
+                                    <Picker Grid.Column="4" Title="Type" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding Type}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" WidthRequest="110" VerticalOptions="Center" />
                                     <HorizontalStackLayout Grid.Column="5" Spacing="6" VerticalOptions="Center">
                                         <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
                                             <Picker Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
