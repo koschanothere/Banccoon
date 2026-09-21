@@ -138,4 +138,82 @@
   <data name="DataManagement_CategoryCount_Other" xml:space="preserve">
     <value>{0} categories</value>
   </data>
+  <!-- AccountType -->
+  <data name="Enum_AccountType_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Enum_AccountType_DebitCard" xml:space="preserve">
+    <value>Debit Card</value>
+  </data>
+  <data name="Enum_AccountType_CreditCard" xml:space="preserve">
+    <value>Credit Card</value>
+  </data>
+  <data name="Enum_AccountType_Goal" xml:space="preserve">
+    <value>Goal</value>
+  </data>
+  <data name="Enum_AccountType_Savings" xml:space="preserve">
+    <value>Savings</value>
+  </data>
+  <data name="Enum_AccountType_Investment" xml:space="preserve">
+    <value>Investment</value>
+  </data>
+  <data name="Enum_AccountType_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <!-- ReminderFrequency -->
+  <data name="Enum_ReminderFrequency_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Enum_ReminderFrequency_TwiceWeekly" xml:space="preserve">
+    <value>Twice a Week</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Biweekly" xml:space="preserve">
+    <value>Every 2 Weeks</value>
+  </data>
+  <!-- ForecastPeriod -->
+  <data name="Enum_ForecastPeriod_SevenDays" xml:space="preserve">
+    <value>7 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_ThirtyDays" xml:space="preserve">
+    <value>30 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_SixtyDays" xml:space="preserve">
+    <value>60 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_NinetyDays" xml:space="preserve">
+    <value>90 Days</value>
+  </data>
+  <!-- TransactionType -->
+  <data name="Enum_TransactionType_Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Enum_TransactionType_Expense" xml:space="preserve">
+    <value>Expense</value>
+  </data>
+  <data name="Enum_TransactionType_Transfer" xml:space="preserve">
+    <value>Transfer</value>
+  </data>
+  <!-- RecurrenceFrequency -->
+  <data name="Enum_RecurrenceFrequency_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Yearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <!-- MonthlyRecurrenceMode -->
+  <data name="Enum_MonthlyRecurrenceMode_DayOfMonth" xml:space="preserve">
+    <value>Day of Month</value>
+  </data>
+  <data name="Enum_MonthlyRecurrenceMode_LastDayOfMonth" xml:space="preserve">
+    <value>Last Day of Month</value>
+  </data>
 </root>

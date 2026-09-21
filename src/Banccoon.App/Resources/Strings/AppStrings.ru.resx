@@ -147,4 +147,82 @@
   <data name="DataManagement_CategoryCount_Many" xml:space="preserve">
     <value>{0} категорий</value>
   </data>
+  <!-- AccountType -->
+  <data name="Enum_AccountType_Cash" xml:space="preserve">
+    <value>Наличные</value>
+  </data>
+  <data name="Enum_AccountType_DebitCard" xml:space="preserve">
+    <value>Дебетовая карта</value>
+  </data>
+  <data name="Enum_AccountType_CreditCard" xml:space="preserve">
+    <value>Кредитная карта</value>
+  </data>
+  <data name="Enum_AccountType_Goal" xml:space="preserve">
+    <value>Цель</value>
+  </data>
+  <data name="Enum_AccountType_Savings" xml:space="preserve">
+    <value>Накопления</value>
+  </data>
+  <data name="Enum_AccountType_Investment" xml:space="preserve">
+    <value>Инвестиции</value>
+  </data>
+  <data name="Enum_AccountType_Other" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <!-- ReminderFrequency -->
+  <data name="Enum_ReminderFrequency_Daily" xml:space="preserve">
+    <value>Ежедневно</value>
+  </data>
+  <data name="Enum_ReminderFrequency_TwiceWeekly" xml:space="preserve">
+    <value>Дважды в неделю</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Weekly" xml:space="preserve">
+    <value>Еженедельно</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Biweekly" xml:space="preserve">
+    <value>Раз в две недели</value>
+  </data>
+  <!-- ForecastPeriod -->
+  <data name="Enum_ForecastPeriod_SevenDays" xml:space="preserve">
+    <value>7 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_ThirtyDays" xml:space="preserve">
+    <value>30 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_SixtyDays" xml:space="preserve">
+    <value>60 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_NinetyDays" xml:space="preserve">
+    <value>90 дней</value>
+  </data>
+  <!-- TransactionType -->
+  <data name="Enum_TransactionType_Income" xml:space="preserve">
+    <value>Доход</value>
+  </data>
+  <data name="Enum_TransactionType_Expense" xml:space="preserve">
+    <value>Расход</value>
+  </data>
+  <data name="Enum_TransactionType_Transfer" xml:space="preserve">
+    <value>Перевод</value>
+  </data>
+  <!-- RecurrenceFrequency -->
+  <data name="Enum_RecurrenceFrequency_Daily" xml:space="preserve">
+    <value>Ежедневно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Weekly" xml:space="preserve">
+    <value>Еженедельно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Monthly" xml:space="preserve">
+    <value>Ежемесячно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Yearly" xml:space="preserve">
+    <value>Ежегодно</value>
+  </data>
+  <!-- MonthlyRecurrenceMode -->
+  <data name="Enum_MonthlyRecurrenceMode_DayOfMonth" xml:space="preserve">
+    <value>День месяца</value>
+  </data>
+  <data name="Enum_MonthlyRecurrenceMode_LastDayOfMonth" xml:space="preserve">
+    <value>Последний день месяца</value>
+  </data>
 </root>
