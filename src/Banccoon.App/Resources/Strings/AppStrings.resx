@@ -232,4 +232,23 @@
   <data name="AppLock_IncorrectPin" xml:space="preserve">
     <value>Incorrect PIN.</value>
   </data>
+  <!-- AppShell -->
+  <data name="AppShell_Nav_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="AppShell_Nav_Transactions" xml:space="preserve">
+    <value>Transactions</value>
+  </data>
+  <data name="AppShell_Nav_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="AppShell_Nav_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AppShell_AccountsSectionHeader" xml:space="preserve">
+    <value>ACCOUNTS</value>
+  </data>
+  <data name="AppShell_NoFavoriteAccounts" xml:space="preserve">
+    <value>Star an account to pin it here.</value>
+  </data>
 </root>

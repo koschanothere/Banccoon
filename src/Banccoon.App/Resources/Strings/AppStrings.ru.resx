@@ -241,4 +241,23 @@
   <data name="AppLock_IncorrectPin" xml:space="preserve">
     <value>Неверный PIN-код.</value>
   </data>
+  <!-- AppShell -->
+  <data name="AppShell_Nav_Dashboard" xml:space="preserve">
+    <value>Дашборд</value>
+  </data>
+  <data name="AppShell_Nav_Transactions" xml:space="preserve">
+    <value>Транзакции</value>
+  </data>
+  <data name="AppShell_Nav_Accounts" xml:space="preserve">
+    <value>Счета</value>
+  </data>
+  <data name="AppShell_Nav_Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="AppShell_AccountsSectionHeader" xml:space="preserve">
+    <value>СЧЕТА</value>
+  </data>
+  <data name="AppShell_NoFavoriteAccounts" xml:space="preserve">
+    <value>Отметьте счёт звездой, чтобы закрепить его здесь.</value>
+  </data>
 </root>
