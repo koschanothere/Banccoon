@@ -1137,4 +1137,7 @@
   <data name="Settings_RestoredGoalsCount_Many" xml:space="preserve">
     <value>{0} целей</value>
   </data>
+  <data name="AccountNumber_Hidden" xml:space="preserve">
+    <value>скрыто</value>
+  </data>
 </root>

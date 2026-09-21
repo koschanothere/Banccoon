@@ -1107,4 +1107,7 @@
   <data name="Settings_RestoredGoalsCount_Other" xml:space="preserve">
     <value>{0} goals</value>
   </data>
+  <data name="AccountNumber_Hidden" xml:space="preserve">
+    <value>hidden</value>
+  </data>
 </root>
