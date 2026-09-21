@@ -338,7 +338,7 @@ public sealed class SettingsViewModel : ViewModelBase
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
 
-        await RunOnMainThreadAsync(() => DashboardStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => DashboardStatusText = Translator.Get("Common_Saved"));
     }
 
     private async Task SetPrimaryMetricAsync(DashboardPrimaryMetric metric)
@@ -390,7 +390,7 @@ public sealed class SettingsViewModel : ViewModelBase
             MajorPaymentThreshold = majorPaymentThreshold
         });
 
-        await RunOnMainThreadAsync(() => FreeToSpendStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => FreeToSpendStatusText = Translator.Get("Common_Saved"));
     }
 
     private async Task SaveResolveUpcomingAsync()
@@ -404,7 +404,7 @@ public sealed class SettingsViewModel : ViewModelBase
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { ResolveUpcomingNearTermDays = nearTermDays });
 
-        await RunOnMainThreadAsync(() => ResolveUpcomingStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => ResolveUpcomingStatusText = Translator.Get("Common_Saved"));
     }
 
     private static void ApplyTheme(AppThemeMode mode)

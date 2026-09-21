@@ -94,7 +94,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(DefaultCurrencyText))
         {
-            StatusText = "Currency is required.";
+            StatusText = Translator.Get("Accounts_CurrencyRequired");
             return;
         }
 
@@ -117,7 +117,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
             PrivacyMode.IsEnabled = PrivacyModeEnabled;
             Translator.SetLanguage(SelectedLanguage.Code);
             DefaultCurrencyText = normalizedCurrency;
-            StatusText = "Saved.";
+            StatusText = Translator.Get("Common_Saved");
         });
     }
 }

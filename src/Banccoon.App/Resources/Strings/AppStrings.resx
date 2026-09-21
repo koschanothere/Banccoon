@@ -945,4 +945,166 @@
   <data name="Settings_UnknownCategory" xml:space="preserve">
     <value>Unknown category</value>
   </data>
+  <data name="Common_Saved" xml:space="preserve">
+    <value>Saved.</value>
+  </data>
+  <!-- PinSettingsViewModel -->
+  <data name="Settings_PinMinDigits" xml:space="preserve">
+    <value>PIN must be at least 4 digits.</value>
+  </data>
+  <data name="Settings_PinsDontMatch" xml:space="preserve">
+    <value>PINs don't match.</value>
+  </data>
+  <data name="Settings_PinSetConfirmation" xml:space="preserve">
+    <value>PIN set - the app will ask for it next time it starts.</value>
+  </data>
+  <data name="Settings_PinRemoved" xml:space="preserve">
+    <value>PIN removed.</value>
+  </data>
+  <!-- DataManagementViewModel -->
+  <data name="Settings_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="Settings_SavedToFormat" xml:space="preserve">
+    <value>Saved to {0}</value>
+  </data>
+  <data name="Settings_ExportFailedFormat" xml:space="preserve">
+    <value>Export failed: {0}</value>
+  </data>
+  <data name="Settings_ChooseBackupFilePickerTitle" xml:space="preserve">
+    <value>Choose a Banccoon backup file</value>
+  </data>
+  <data name="Settings_BackupFileValid" xml:space="preserve">
+    <value>This file looks valid and is ready to restore.</value>
+  </data>
+  <data name="Settings_CouldNotReadFileFormat" xml:space="preserve">
+    <value>Could not read that file: {0}</value>
+  </data>
+  <data name="Settings_RestoreFailedFormat" xml:space="preserve">
+    <value>Restore failed: {0}</value>
+  </data>
+  <data name="Settings_AllDataDeleted" xml:space="preserve">
+    <value>All local data deleted.</value>
+  </data>
+  <data name="Settings_DeleteFailedFormat" xml:space="preserve">
+    <value>Delete failed: {0}</value>
+  </data>
+  <data name="Settings_FrequencyMustBeAtLeast1Day" xml:space="preserve">
+    <value>Frequency must be a whole number of at least 1 day.</value>
+  </data>
+  <data name="Settings_RetentionMustBeAtLeast1" xml:space="preserve">
+    <value>Retention count must be a whole number of at least 1.</value>
+  </data>
+  <data name="Settings_NoDiagnosticsLogYet" xml:space="preserve">
+    <value>No diagnostics log yet - nothing has been recorded.</value>
+  </data>
+  <!-- SettingsPage: Data & Security tab -->
+  <data name="Settings_SecurityHeader" xml:space="preserve">
+    <value>Security</value>
+  </data>
+  <data name="Settings_SecurityHint" xml:space="preserve">
+    <value>A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless. It's asked for once, when the app starts.</value>
+  </data>
+  <data name="Settings_PinIsSet" xml:space="preserve">
+    <value>A PIN is currently set.</value>
+  </data>
+  <data name="Settings_NoPinSet" xml:space="preserve">
+    <value>No PIN is set - the app opens directly.</value>
+  </data>
+  <data name="Settings_NewPinPlaceholder" xml:space="preserve">
+    <value>New PIN</value>
+  </data>
+  <data name="Settings_ConfirmPinPlaceholder" xml:space="preserve">
+    <value>Confirm PIN</value>
+  </data>
+  <data name="Settings_SetChangePinButton" xml:space="preserve">
+    <value>Set / change PIN</value>
+  </data>
+  <data name="Settings_RemovePinButton" xml:space="preserve">
+    <value>Remove PIN</value>
+  </data>
+  <data name="Settings_DataHeader" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Settings_BackupLabel" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Settings_ExportBackupButton" xml:space="preserve">
+    <value>Export backup</value>
+  </data>
+  <data name="Settings_AutomaticBackupsLabel" xml:space="preserve">
+    <value>Automatic backups</value>
+  </data>
+  <data name="Settings_EnableAutomaticBackups" xml:space="preserve">
+    <value>Enable automatic backups</value>
+  </data>
+  <data name="Settings_EveryDaysLabel" xml:space="preserve">
+    <value>Every (days)</value>
+  </data>
+  <data name="Settings_KeepLastNBackupsLabel" xml:space="preserve">
+    <value>Keep last N backups</value>
+  </data>
+  <data name="Settings_LastAutomaticBackupFormat" xml:space="preserve">
+    <value>Last automatic backup: {0}</value>
+  </data>
+  <data name="Settings_DiagnosticsLabel" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="Settings_OpenDiagnosticsLogButton" xml:space="preserve">
+    <value>Open diagnostics log</value>
+  </data>
+  <data name="Settings_OpenDataFolderButton" xml:space="preserve">
+    <value>Open data folder</value>
+  </data>
+  <data name="Settings_RestoreFromBackupLabel" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="Settings_ChooseBackupFileButton" xml:space="preserve">
+    <value>Choose backup file</value>
+  </data>
+  <data name="Settings_MergeButton" xml:space="preserve">
+    <value>Merge</value>
+  </data>
+  <data name="Settings_ReplaceEverythingButton" xml:space="preserve">
+    <value>Replace everything</value>
+  </data>
+  <data name="Settings_DeleteAllLocalDataLabel" xml:space="preserve">
+    <value>Delete all local data</value>
+  </data>
+  <data name="Settings_DeleteAllWarning" xml:space="preserve">
+    <value>This permanently deletes every account, transaction, category, scheduled rule, and goal. This cannot be undone.</value>
+  </data>
+  <data name="Settings_YesDeleteEverything" xml:space="preserve">
+    <value>Yes, delete everything</value>
+  </data>
+  <data name="Settings_ColorForFormat" xml:space="preserve">
+    <value>Color for {0}</value>
+  </data>
+  <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
+    <value>Restored {0}, {1}, {2}, {3}, {4}.</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_One" xml:space="preserve">
+    <value>{0} account</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Other" xml:space="preserve">
+    <value>{0} accounts</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_One" xml:space="preserve">
+    <value>{0} transaction</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Other" xml:space="preserve">
+    <value>{0} transactions</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_One" xml:space="preserve">
+    <value>{0} scheduled rule</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Other" xml:space="preserve">
+    <value>{0} scheduled rules</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_One" xml:space="preserve">
+    <value>{0} goal</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Other" xml:space="preserve">
+    <value>{0} goals</value>
+  </data>
 </root>

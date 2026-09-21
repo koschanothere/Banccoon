@@ -963,4 +963,178 @@
   <data name="Settings_UnknownCategory" xml:space="preserve">
     <value>Неизвестная категория</value>
   </data>
+  <data name="Common_Saved" xml:space="preserve">
+    <value>Сохранено.</value>
+  </data>
+  <!-- PinSettingsViewModel -->
+  <data name="Settings_PinMinDigits" xml:space="preserve">
+    <value>PIN-код должен содержать не менее 4 цифр.</value>
+  </data>
+  <data name="Settings_PinsDontMatch" xml:space="preserve">
+    <value>PIN-коды не совпадают.</value>
+  </data>
+  <data name="Settings_PinSetConfirmation" xml:space="preserve">
+    <value>PIN-код установлен - приложение запросит его при следующем запуске.</value>
+  </data>
+  <data name="Settings_PinRemoved" xml:space="preserve">
+    <value>PIN-код удалён.</value>
+  </data>
+  <!-- DataManagementViewModel -->
+  <data name="Settings_Never" xml:space="preserve">
+    <value>Никогда</value>
+  </data>
+  <data name="Settings_SavedToFormat" xml:space="preserve">
+    <value>Сохранено в {0}</value>
+  </data>
+  <data name="Settings_ExportFailedFormat" xml:space="preserve">
+    <value>Экспорт не удался: {0}</value>
+  </data>
+  <data name="Settings_ChooseBackupFilePickerTitle" xml:space="preserve">
+    <value>Выберите файл резервной копии Banccoon</value>
+  </data>
+  <data name="Settings_BackupFileValid" xml:space="preserve">
+    <value>Файл выглядит корректным и готов к восстановлению.</value>
+  </data>
+  <data name="Settings_CouldNotReadFileFormat" xml:space="preserve">
+    <value>Не удалось прочитать файл: {0}</value>
+  </data>
+  <data name="Settings_RestoreFailedFormat" xml:space="preserve">
+    <value>Восстановление не удалось: {0}</value>
+  </data>
+  <data name="Settings_AllDataDeleted" xml:space="preserve">
+    <value>Все локальные данные удалены.</value>
+  </data>
+  <data name="Settings_DeleteFailedFormat" xml:space="preserve">
+    <value>Удаление не удалось: {0}</value>
+  </data>
+  <data name="Settings_FrequencyMustBeAtLeast1Day" xml:space="preserve">
+    <value>Частота должна быть целым числом не менее 1 дня.</value>
+  </data>
+  <data name="Settings_RetentionMustBeAtLeast1" xml:space="preserve">
+    <value>Количество хранимых копий должно быть целым числом не менее 1.</value>
+  </data>
+  <data name="Settings_NoDiagnosticsLogYet" xml:space="preserve">
+    <value>Журнал диагностики пока пуст - ничего не записано.</value>
+  </data>
+  <!-- SettingsPage: Data & Security tab -->
+  <data name="Settings_SecurityHeader" xml:space="preserve">
+    <value>Безопасность</value>
+  </data>
+  <data name="Settings_SecurityHint" xml:space="preserve">
+    <value>PIN-код — это защита от случайного просмотра, а не шифрование: сам файл данных остаётся незашифрованным. Код запрашивается один раз, при запуске приложения.</value>
+  </data>
+  <data name="Settings_PinIsSet" xml:space="preserve">
+    <value>PIN-код установлен.</value>
+  </data>
+  <data name="Settings_NoPinSet" xml:space="preserve">
+    <value>PIN-код не установлен - приложение открывается сразу.</value>
+  </data>
+  <data name="Settings_NewPinPlaceholder" xml:space="preserve">
+    <value>Новый PIN-код</value>
+  </data>
+  <data name="Settings_ConfirmPinPlaceholder" xml:space="preserve">
+    <value>Подтвердите PIN-код</value>
+  </data>
+  <data name="Settings_SetChangePinButton" xml:space="preserve">
+    <value>Установить / изменить PIN</value>
+  </data>
+  <data name="Settings_RemovePinButton" xml:space="preserve">
+    <value>Удалить PIN</value>
+  </data>
+  <data name="Settings_DataHeader" xml:space="preserve">
+    <value>Данные</value>
+  </data>
+  <data name="Settings_BackupLabel" xml:space="preserve">
+    <value>Резервное копирование</value>
+  </data>
+  <data name="Settings_ExportBackupButton" xml:space="preserve">
+    <value>Экспортировать копию</value>
+  </data>
+  <data name="Settings_AutomaticBackupsLabel" xml:space="preserve">
+    <value>Автоматическое резервное копирование</value>
+  </data>
+  <data name="Settings_EnableAutomaticBackups" xml:space="preserve">
+    <value>Включить автоматическое резервное копирование</value>
+  </data>
+  <data name="Settings_EveryDaysLabel" xml:space="preserve">
+    <value>Каждые (дней)</value>
+  </data>
+  <data name="Settings_KeepLastNBackupsLabel" xml:space="preserve">
+    <value>Хранить последние N копий</value>
+  </data>
+  <data name="Settings_LastAutomaticBackupFormat" xml:space="preserve">
+    <value>Последняя автоматическая копия: {0}</value>
+  </data>
+  <data name="Settings_DiagnosticsLabel" xml:space="preserve">
+    <value>Диагностика</value>
+  </data>
+  <data name="Settings_OpenDiagnosticsLogButton" xml:space="preserve">
+    <value>Открыть журнал диагностики</value>
+  </data>
+  <data name="Settings_OpenDataFolderButton" xml:space="preserve">
+    <value>Открыть папку данных</value>
+  </data>
+  <data name="Settings_RestoreFromBackupLabel" xml:space="preserve">
+    <value>Восстановление из резервной копии</value>
+  </data>
+  <data name="Settings_ChooseBackupFileButton" xml:space="preserve">
+    <value>Выбрать файл копии</value>
+  </data>
+  <data name="Settings_MergeButton" xml:space="preserve">
+    <value>Объединить</value>
+  </data>
+  <data name="Settings_ReplaceEverythingButton" xml:space="preserve">
+    <value>Заменить всё</value>
+  </data>
+  <data name="Settings_DeleteAllLocalDataLabel" xml:space="preserve">
+    <value>Удалить все локальные данные</value>
+  </data>
+  <data name="Settings_DeleteAllWarning" xml:space="preserve">
+    <value>Это безвозвратно удалит все счета, транзакции, категории, запланированные правила и цели. Отменить это действие нельзя.</value>
+  </data>
+  <data name="Settings_YesDeleteEverything" xml:space="preserve">
+    <value>Да, удалить всё</value>
+  </data>
+  <data name="Settings_ColorForFormat" xml:space="preserve">
+    <value>Цвет для {0}</value>
+  </data>
+  <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
+    <value>Восстановлено: {0}, {1}, {2}, {3}, {4}.</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_One" xml:space="preserve">
+    <value>{0} счёт</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Few" xml:space="preserve">
+    <value>{0} счета</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Many" xml:space="preserve">
+    <value>{0} счетов</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_One" xml:space="preserve">
+    <value>{0} транзакция</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Few" xml:space="preserve">
+    <value>{0} транзакции</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Many" xml:space="preserve">
+    <value>{0} транзакций</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_One" xml:space="preserve">
+    <value>{0} правило</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Few" xml:space="preserve">
+    <value>{0} правила</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Many" xml:space="preserve">
+    <value>{0} правил</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_One" xml:space="preserve">
+    <value>{0} цель</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Few" xml:space="preserve">
+    <value>{0} цели</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Many" xml:space="preserve">
+    <value>{0} целей</value>
+  </data>
 </root>

@@ -308,19 +308,19 @@
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsDataCategorySelected}">
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="12">
-                            <Label Text="Security" Style="{StaticResource SectionTitleLabel}" />
-                            <Label Text="A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless. It's asked for once, when the app starts." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Settings_SecurityHeader}" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate Settings_SecurityHint}" Style="{StaticResource TertiaryLabel}" />
 
-                            <Label Text="A PIN is currently set." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet}" />
-                            <Label Text="No PIN is set - the app opens directly." Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet, Converter={StaticResource InverseBoolConverter}}" />
+                            <Label Text="{loc:Translate Settings_PinIsSet}" Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet}" />
+                            <Label Text="{loc:Translate Settings_NoPinSet}" Style="{StaticResource SecondaryLabel}" IsVisible="{Binding Pin.IsPinSet, Converter={StaticResource InverseBoolConverter}}" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Entry Grid.Column="0" Text="{Binding Pin.NewPinText}" Placeholder="New PIN" IsPassword="True" Keyboard="Numeric" />
-                                <Entry Grid.Column="1" Text="{Binding Pin.ConfirmPinText}" Placeholder="Confirm PIN" IsPassword="True" Keyboard="Numeric" />
+                                <Entry Grid.Column="0" Text="{Binding Pin.NewPinText}" Placeholder="{loc:Translate Settings_NewPinPlaceholder}" IsPassword="True" Keyboard="Numeric" />
+                                <Entry Grid.Column="1" Text="{Binding Pin.ConfirmPinText}" Placeholder="{loc:Translate Settings_ConfirmPinPlaceholder}" IsPassword="True" Keyboard="Numeric" />
                             </Grid>
                             <HorizontalStackLayout Spacing="8">
-                                <Button Text="Set / change PIN" Command="{Binding Pin.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Text="Remove PIN" Command="{Binding Pin.RemovePinCommand}" IsVisible="{Binding Pin.IsPinSet}" Style="{StaticResource DestructiveButton}" />
+                                <Button Text="{loc:Translate Settings_SetChangePinButton}" Command="{Binding Pin.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="{loc:Translate Settings_RemovePinButton}" Command="{Binding Pin.RemovePinCommand}" IsVisible="{Binding Pin.IsPinSet}" Style="{StaticResource DestructiveButton}" />
                             </HorizontalStackLayout>
 
                             <Label Text="{Binding Pin.StatusText}" Style="{StaticResource SecondaryLabel}" />
@@ -329,35 +329,35 @@
 
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="12">
-                            <Label Text="Data" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate Settings_DataHeader}" Style="{StaticResource SectionTitleLabel}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Backup" Style="{StaticResource SecondaryLabel}" />
-                                <Button Text="Export backup" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                                <Label Text="{loc:Translate Settings_BackupLabel}" Style="{StaticResource SecondaryLabel}" />
+                                <Button Text="{loc:Translate Settings_ExportBackupButton}" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
                                 <Label Text="{Binding Data.ExportStatusText}" Style="{StaticResource TertiaryLabel}" />
                             </VerticalStackLayout>
 
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Automatic backups" Style="{StaticResource SecondaryLabel}" />
+                                <Label Text="{loc:Translate Settings_AutomaticBackupsLabel}" Style="{StaticResource SecondaryLabel}" />
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Grid.Column="0" Text="Enable automatic backups" VerticalOptions="Center" />
+                                    <Label Grid.Column="0" Text="{loc:Translate Settings_EnableAutomaticBackups}" VerticalOptions="Center" />
                                     <Switch Grid.Column="1" IsToggled="{Binding Data.AutoBackupEnabled}" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                     <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                        <Label Text="Every (days)" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Text="{loc:Translate Settings_EveryDaysLabel}" Style="{StaticResource TertiaryLabel}" />
                                         <Entry Text="{Binding Data.AutoBackupFrequencyDaysText}" Keyboard="Numeric" WidthRequest="100" HorizontalOptions="Start" />
                                     </VerticalStackLayout>
                                     <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                        <Label Text="Keep last N backups" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Text="{loc:Translate Settings_KeepLastNBackupsLabel}" Style="{StaticResource TertiaryLabel}" />
                                         <Entry Text="{Binding Data.AutoBackupRetentionCountText}" Keyboard="Numeric" WidthRequest="100" HorizontalOptions="Start" />
                                     </VerticalStackLayout>
                                 </Grid>
-                                <Label Text="{Binding Data.LastAutoBackupText, StringFormat='Last automatic backup: {0}'}" Style="{StaticResource TertiaryLabel}" />
+                                <Label Text="{Binding Data.LastAutoBackupText}" Style="{StaticResource TertiaryLabel}" />
                                 <HorizontalStackLayout Spacing="10">
-                                    <Button Text="Save" Command="{Binding Data.SaveAutoBackupSettingsCommand}" Style="{StaticResource PrimaryButton}" />
+                                    <Button Text="{loc:Translate Common_Save}" Command="{Binding Data.SaveAutoBackupSettingsCommand}" Style="{StaticResource PrimaryButton}" />
                                     <Label Text="{Binding Data.AutoBackupStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
@@ -365,11 +365,11 @@
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Diagnostics" Style="{StaticResource SecondaryLabel}" />
+                                <Label Text="{loc:Translate Settings_DiagnosticsLabel}" Style="{StaticResource SecondaryLabel}" />
                                 <Label Text="{Binding Data.AppVersionText}" Style="{StaticResource TertiaryLabel}" />
                                 <HorizontalStackLayout Spacing="8">
-                                    <Button Text="Open diagnostics log" Command="{Binding Data.OpenDiagnosticsLogCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Text="Open data folder" Command="{Binding Data.OpenDataFolderCommand}" Style="{StaticResource QuietButton}" />
+                                    <Button Text="{loc:Translate Settings_OpenDiagnosticsLogButton}" Command="{Binding Data.OpenDiagnosticsLogCommand}" Style="{StaticResource QuietButton}" />
+                                    <Button Text="{loc:Translate Settings_OpenDataFolderButton}" Command="{Binding Data.OpenDataFolderCommand}" Style="{StaticResource QuietButton}" />
                                 </HorizontalStackLayout>
                                 <Label Text="{Binding Data.DiagnosticsStatusText}" Style="{StaticResource TertiaryLabel}" />
                             </VerticalStackLayout>
@@ -377,9 +377,9 @@
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Restore from backup" Style="{StaticResource SecondaryLabel}" />
+                                <Label Text="{loc:Translate Settings_RestoreFromBackupLabel}" Style="{StaticResource SecondaryLabel}" />
                                 <Button
-                                    Text="Choose backup file"
+                                    Text="{loc:Translate Settings_ChooseBackupFileButton}"
                                     Command="{Binding Data.PickRestoreFileCommand}"
                                     IsVisible="{Binding Data.HasPendingRestore, Converter={StaticResource InverseBoolConverter}}"
                                     Style="{StaticResource QuietButton}"
@@ -389,9 +389,9 @@
                                     <Label Text="{Binding Data.PendingRestoreFileName}" />
                                     <Label Text="{Binding Data.PendingRestoreSummaryText}" Style="{StaticResource TertiaryLabel}" />
                                     <HorizontalStackLayout Spacing="8">
-                                        <Button Text="Merge" Command="{Binding Data.ConfirmMergeCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
-                                        <Button Text="Replace everything" Command="{Binding Data.ConfirmReplaceCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource DestructiveButton}" />
-                                        <Button Text="Cancel" Command="{Binding Data.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Text="{loc:Translate Settings_MergeButton}" Command="{Binding Data.ConfirmMergeCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
+                                        <Button Text="{loc:Translate Settings_ReplaceEverythingButton}" Command="{Binding Data.ConfirmReplaceCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource DestructiveButton}" />
+                                        <Button Text="{loc:Translate Common_Cancel}" Command="{Binding Data.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
 
@@ -401,9 +401,9 @@
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Delete all local data" Style="{StaticResource SecondaryLabel}" />
+                                <Label Text="{loc:Translate Settings_DeleteAllLocalDataLabel}" Style="{StaticResource SecondaryLabel}" />
                                 <Button
-                                    Text="Delete all local data"
+                                    Text="{loc:Translate Settings_DeleteAllLocalDataLabel}"
                                     Command="{Binding Data.RequestDeleteAllCommand}"
                                     IsVisible="{Binding Data.IsConfirmingDeleteAll, Converter={StaticResource InverseBoolConverter}}"
                                     Style="{StaticResource DestructiveButton}"
@@ -411,12 +411,12 @@
 
                                 <VerticalStackLayout Spacing="6" IsVisible="{Binding Data.IsConfirmingDeleteAll}">
                                     <Label
-                                        Text="This permanently deletes every account, transaction, category, scheduled rule, and goal. This cannot be undone."
+                                        Text="{loc:Translate Settings_DeleteAllWarning}"
                                         Style="{StaticResource TertiaryLabel}"
                                         TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                                     <HorizontalStackLayout Spacing="8">
-                                        <Button Text="Yes, delete everything" Command="{Binding Data.ConfirmDeleteAllCommand}" Style="{StaticResource DestructiveButton}" />
-                                        <Button Text="Cancel" Command="{Binding Data.CancelDeleteAllCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Text="{loc:Translate Settings_YesDeleteEverything}" Command="{Binding Data.ConfirmDeleteAllCommand}" Style="{StaticResource DestructiveButton}" />
+                                        <Button Text="{loc:Translate Common_Cancel}" Command="{Binding Data.CancelDeleteAllCommand}" Style="{StaticResource QuietButton}" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
 
@@ -453,7 +453,7 @@
             <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.18" />
         </Border.Shadow>
         <VerticalStackLayout Spacing="14">
-            <Label Text="{Binding CategoryManagement.ActiveColorPickerBox.Name, StringFormat='Color for {0}'}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding CategoryManagement.ActiveColorPickerBoxColorForLabel}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" />
             <FlexLayout Wrap="Wrap" HorizontalOptions="Center" BindableLayout.ItemsSource="{Binding CategoryManagement.ActiveColorPickerBox.ColorSwatches}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">

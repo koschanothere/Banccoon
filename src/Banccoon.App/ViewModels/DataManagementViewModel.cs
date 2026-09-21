@@ -32,7 +32,7 @@ public sealed class DataManagementViewModel : ViewModelBase
     private string autoBackupFrequencyDaysText = "30";
     private string autoBackupRetentionCountText = "5";
     private string autoBackupStatusText = string.Empty;
-    private string lastAutoBackupText = "Never";
+    private string lastAutoBackupText = string.Format(Translator.Get("Settings_LastAutomaticBackupFormat"), Translator.Get("Settings_Never"));
     private string diagnosticsStatusText = string.Empty;
 
     public DataManagementViewModel(
@@ -187,11 +187,11 @@ public sealed class DataManagementViewModel : ViewModelBase
 
             await backupService.CreateBackupAsync(filePath);
 
-            await RunOnMainThreadAsync(() => ExportStatusText = $"Saved to {filePath}");
+            await RunOnMainThreadAsync(() => ExportStatusText = string.Format(Translator.Get("Settings_SavedToFormat"), filePath));
         }
         catch (Exception ex)
         {
-            await RunOnMainThreadAsync(() => ExportStatusText = $"Export failed: {ex.Message}");
+            await RunOnMainThreadAsync(() => ExportStatusText = string.Format(Translator.Get("Settings_ExportFailedFormat"), ex.Message));
         }
         finally
         {
@@ -206,7 +206,7 @@ public sealed class DataManagementViewModel : ViewModelBase
         {
             result = await FilePicker.Default.PickAsync(new PickOptions
             {
-                PickerTitle = "Choose a Banccoon backup file",
+                PickerTitle = Translator.Get("Settings_ChooseBackupFilePickerTitle"),
                 FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
                 {
                     { DevicePlatform.WinUI, new[] { ".json" } }
@@ -215,7 +215,7 @@ public sealed class DataManagementViewModel : ViewModelBase
         }
         catch (Exception)
         {
-            await RunOnMainThreadAsync(() => RestoreStatusText = "Could not open the file picker.");
+            await RunOnMainThreadAsync(() => RestoreStatusText = Translator.Get("StatementImport_CouldNotOpenFilePicker"));
             return;
         }
 
@@ -243,14 +243,14 @@ public sealed class DataManagementViewModel : ViewModelBase
                 PendingRestoreFileName = pickedFileName;
                 PendingRestoreIsValid = validation.Validation.IsValid;
                 PendingRestoreSummaryText = validation.Validation.IsValid
-                    ? "This file looks valid and is ready to restore."
+                    ? Translator.Get("Settings_BackupFileValid")
                     : string.Join(" ", validation.Validation.Errors);
                 HasPendingRestore = true;
             });
         }
         catch (Exception ex)
         {
-            await RunOnMainThreadAsync(() => RestoreStatusText = $"Could not read that file: {ex.Message}");
+            await RunOnMainThreadAsync(() => RestoreStatusText = string.Format(Translator.Get("Settings_CouldNotReadFileFormat"), ex.Message));
         }
         finally
         {
@@ -284,9 +284,13 @@ public sealed class DataManagementViewModel : ViewModelBase
 
             await RunOnMainThreadAsync(() =>
             {
-                RestoreStatusText = $"Restored {result.AccountsImported} account(s), {result.TransactionsImported} transaction(s), "
-                    + $"{Translator.GetPlural("DataManagement_CategoryCount", result.CategoriesImported)}, "
-                    + $"{result.ScheduledTransactionsImported} scheduled rule(s), {result.SavingsGoalsImported} goal(s).";
+                RestoreStatusText = string.Format(
+                    Translator.Get("Settings_RestoredSummaryFormat"),
+                    Translator.GetPlural("Settings_RestoredAccountsCount", result.AccountsImported),
+                    Translator.GetPlural("Settings_RestoredTransactionsCount", result.TransactionsImported),
+                    Translator.GetPlural("DataManagement_CategoryCount", result.CategoriesImported),
+                    Translator.GetPlural("Settings_RestoredScheduledRulesCount", result.ScheduledTransactionsImported),
+                    Translator.GetPlural("Settings_RestoredGoalsCount", result.SavingsGoalsImported));
                 pendingRestoreFilePath = null;
                 HasPendingRestore = false;
                 PendingRestoreFileName = string.Empty;
@@ -296,7 +300,7 @@ public sealed class DataManagementViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await RunOnMainThreadAsync(() => RestoreStatusText = $"Restore failed: {ex.Message}");
+            await RunOnMainThreadAsync(() => RestoreStatusText = string.Format(Translator.Get("Settings_RestoreFailedFormat"), ex.Message));
         }
         finally
         {
@@ -313,13 +317,13 @@ public sealed class DataManagementViewModel : ViewModelBase
 
             await RunOnMainThreadAsync(() =>
             {
-                DeleteAllStatusText = "All local data deleted.";
+                DeleteAllStatusText = Translator.Get("Settings_AllDataDeleted");
                 IsConfirmingDeleteAll = false;
             });
         }
         catch (Exception ex)
         {
-            await RunOnMainThreadAsync(() => DeleteAllStatusText = $"Delete failed: {ex.Message}");
+            await RunOnMainThreadAsync(() => DeleteAllStatusText = string.Format(Translator.Get("Settings_DeleteFailedFormat"), ex.Message));
         }
         finally
         {
@@ -332,9 +336,11 @@ public sealed class DataManagementViewModel : ViewModelBase
         AutoBackupEnabled = settings.AutoBackupEnabled;
         AutoBackupFrequencyDaysText = settings.AutoBackupFrequencyDays.ToString(CultureInfo.InvariantCulture);
         AutoBackupRetentionCountText = settings.AutoBackupRetentionCount.ToString(CultureInfo.InvariantCulture);
-        LastAutoBackupText = settings.LastAutoBackupAt is { } lastAutoBackupAt
-            ? lastAutoBackupAt.ToLocalTime().ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture)
-            : "Never";
+        LastAutoBackupText = string.Format(
+            Translator.Get("Settings_LastAutomaticBackupFormat"),
+            settings.LastAutoBackupAt is { } lastAutoBackupAt
+                ? lastAutoBackupAt.ToLocalTime().ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture)
+                : Translator.Get("Settings_Never"));
         AutoBackupStatusText = string.Empty;
         return Task.CompletedTask;
     }
@@ -343,13 +349,13 @@ public sealed class DataManagementViewModel : ViewModelBase
     {
         if (!int.TryParse(AutoBackupFrequencyDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var frequencyDays) || frequencyDays < 1)
         {
-            AutoBackupStatusText = "Frequency must be a whole number of at least 1 day.";
+            AutoBackupStatusText = Translator.Get("Settings_FrequencyMustBeAtLeast1Day");
             return;
         }
 
         if (!int.TryParse(AutoBackupRetentionCountText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var retentionCount) || retentionCount < 1)
         {
-            AutoBackupStatusText = "Retention count must be a whole number of at least 1.";
+            AutoBackupStatusText = Translator.Get("Settings_RetentionMustBeAtLeast1");
             return;
         }
 
@@ -361,7 +367,7 @@ public sealed class DataManagementViewModel : ViewModelBase
             AutoBackupRetentionCount = retentionCount
         });
 
-        await RunOnMainThreadAsync(() => AutoBackupStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => AutoBackupStatusText = Translator.Get("Common_Saved"));
     }
 
     private void OpenDiagnosticsLog()
@@ -373,7 +379,7 @@ public sealed class DataManagementViewModel : ViewModelBase
 
         if (!File.Exists(logPath))
         {
-            DiagnosticsStatusText = "No diagnostics log yet - nothing has been recorded.";
+            DiagnosticsStatusText = Translator.Get("Settings_NoDiagnosticsLogYet");
             return;
         }
 
