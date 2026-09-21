@@ -779,4 +779,74 @@
   <data name="Dashboard_NoExpensesRecordedYet" xml:space="preserve">
     <value>No expenses recorded yet.</value>
   </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Other account</value>
+  </data>
+  <!-- SettingsPage: sidebar + General tab -->
+  <data name="Settings_SidebarGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_SidebarDataSecurity" xml:space="preserve">
+    <value>Data &amp; Security</value>
+  </data>
+  <data name="Settings_AppearanceHeader" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_ThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings_ThemeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Settings_CategoryColorsLabel" xml:space="preserve">
+    <value>Category colors</value>
+  </data>
+  <data name="Settings_CategoryColorsHint" xml:space="preserve">
+    <value>Set per-category in Settings -&gt; Transactions -&gt; Manage categories. Exact shades still TBD.</value>
+  </data>
+  <data name="Settings_GeneralHeader" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_LanguageHint" xml:space="preserve">
+    <value>Switches the app's own interface between English and Russian.</value>
+  </data>
+  <data name="Settings_RemindersLabel" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="Settings_RemindersHint" xml:space="preserve">
+    <value>How often to be reminded of upcoming bills. Desktop notification delivery isn't wired up yet - this saves the preference for when it is.</value>
+  </data>
+  <data name="Settings_FrequencyPickerTitle" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="Settings_NewAccountDefaultsLabel" xml:space="preserve">
+    <value>New account defaults</value>
+  </data>
+  <data name="Settings_DefaultCurrencyLabel" xml:space="preserve">
+    <value>Default currency</value>
+  </data>
+  <data name="Settings_DefaultAccountTypeLabel" xml:space="preserve">
+    <value>Default account type</value>
+  </data>
+  <data name="Settings_PrivacyModeLabel" xml:space="preserve">
+    <value>Privacy mode</value>
+  </data>
+  <data name="Settings_PrivacyModeHint" xml:space="preserve">
+    <value>Hides every amount behind &#8226;&#8226;&#8226;&#8226; app-wide.</value>
+  </data>
 </root>

@@ -290,10 +290,10 @@ public sealed class SettingsViewModel : ViewModelBase
     private void RebuildCategoryRows()
     {
         Categories.Clear();
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.General, "General", IsGeneralCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Dashboard, "Dashboard", IsDashboardCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Transactions, "Transactions", IsTransactionsCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.DataAndSecurity, "Data & Security", IsDataCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.General, Translator.Get("Settings_SidebarGeneral"), IsGeneralCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Dashboard, Translator.Get("AppShell_Nav_Dashboard"), IsDashboardCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Transactions, Translator.Get("AppShell_Nav_Transactions"), IsTransactionsCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.DataAndSecurity, Translator.Get("Settings_SidebarDataSecurity"), IsDataCategorySelected, SelectCategory));
     }
 
     private void SelectCategory(SettingsCategory category)
