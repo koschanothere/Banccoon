@@ -1110,4 +1110,23 @@
   <data name="AccountNumber_Hidden" xml:space="preserve">
     <value>hidden</value>
   </data>
+  <!-- Final sweep: strays found via a repo-wide grep after the per-screen commits -->
+  <data name="Settings_RollingDaysMustBeAtLeast1" xml:space="preserve">
+    <value>Rolling days must be a whole number of at least 1.</value>
+  </data>
+  <data name="Settings_SafetyBufferMustBeAtLeast0" xml:space="preserve">
+    <value>Safety buffer must be a number of 0 or more.</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdMustBeAtLeast0" xml:space="preserve">
+    <value>Major payment threshold must be a number of 0 or more.</value>
+  </data>
+  <data name="Settings_MustBeAtLeast0" xml:space="preserve">
+    <value>Must be a whole number of 0 or more.</value>
+  </data>
+  <data name="Common_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
 </root>

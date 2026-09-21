@@ -365,19 +365,19 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         if (!int.TryParse(WindowDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var windowDays) || windowDays < 1)
         {
-            FreeToSpendStatusText = "Rolling days must be a whole number of at least 1.";
+            FreeToSpendStatusText = Translator.Get("Settings_RollingDaysMustBeAtLeast1");
             return;
         }
 
         if (!decimal.TryParse(SafetyBufferText, NumberStyles.Number, CultureInfo.InvariantCulture, out var safetyBuffer) || safetyBuffer < 0m)
         {
-            FreeToSpendStatusText = "Safety buffer must be a number of 0 or more.";
+            FreeToSpendStatusText = Translator.Get("Settings_SafetyBufferMustBeAtLeast0");
             return;
         }
 
         if (!decimal.TryParse(MajorPaymentThresholdText, NumberStyles.Number, CultureInfo.InvariantCulture, out var majorPaymentThreshold) || majorPaymentThreshold < 0m)
         {
-            FreeToSpendStatusText = "Major payment threshold must be a number of 0 or more.";
+            FreeToSpendStatusText = Translator.Get("Settings_MajorPaymentThresholdMustBeAtLeast0");
             return;
         }
 
@@ -397,7 +397,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         if (!int.TryParse(ResolveUpcomingNearTermDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var nearTermDays) || nearTermDays < 0)
         {
-            ResolveUpcomingStatusText = "Must be a whole number of 0 or more.";
+            ResolveUpcomingStatusText = Translator.Get("Settings_MustBeAtLeast0");
             return;
         }
 
