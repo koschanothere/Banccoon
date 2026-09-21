@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.Core.Models;
 
 namespace Banccoon.App.ViewModels;
@@ -13,13 +14,7 @@ public sealed class DashboardSectionRowViewModel
         Action<DashboardSection> onMoveDown)
     {
         Section = section;
-        Name = section switch
-        {
-            DashboardSection.Upcoming => "Upcoming",
-            DashboardSection.Analytics => "Analytics",
-            DashboardSection.Goals => "Goals",
-            _ => section.ToString()
-        };
+        Name = DisplayText.Format(section);
         CanMoveUp = canMoveUp;
         CanMoveDown = canMoveDown;
 

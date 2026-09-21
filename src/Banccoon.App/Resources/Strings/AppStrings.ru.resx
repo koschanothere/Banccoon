@@ -867,4 +867,60 @@
   <data name="Settings_PrivacyModeHint" xml:space="preserve">
     <value>Скрывает все суммы за &#8226;&#8226;&#8226;&#8226; по всему приложению.</value>
   </data>
+  <!-- SettingsPage: Dashboard tab -->
+  <data name="Settings_SectionOrderLabel" xml:space="preserve">
+    <value>Порядок разделов</value>
+  </data>
+  <data name="Settings_ForecastPeriodLabel" xml:space="preserve">
+    <value>Период прогноза</value>
+  </data>
+  <data name="Settings_ForecastPeriodHint" xml:space="preserve">
+    <value>Используется для окна прогноза на графике баланса.</value>
+  </data>
+  <data name="Settings_PeriodPickerTitle" xml:space="preserve">
+    <value>Период</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberLabel" xml:space="preserve">
+    <value>Основное число</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberHint" xml:space="preserve">
+    <value>Какое число показывать крупно на дашборде - второе всё равно отображается рядом, но меньше.</value>
+  </data>
+  <data name="Settings_WindowLabel" xml:space="preserve">
+    <value>Окно</value>
+  </data>
+  <data name="Settings_WindowRollingDays" xml:space="preserve">
+    <value>Скользящие дни</value>
+  </data>
+  <data name="Settings_WindowThisWeek" xml:space="preserve">
+    <value>Эта неделя</value>
+  </data>
+  <data name="Settings_WindowThisMonth" xml:space="preserve">
+    <value>Этот месяц</value>
+  </data>
+  <data name="Settings_WindowUntilMajorPayment" xml:space="preserve">
+    <value>До следующего крупного платежа</value>
+  </data>
+  <data name="Settings_RollingWindowDaysLabel" xml:space="preserve">
+    <value>Скользящее окно, в днях</value>
+  </data>
+  <data name="Settings_DaysPlaceholder" xml:space="preserve">
+    <value>Дней</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdLabel" xml:space="preserve">
+    <value>Порог крупного платежа</value>
+  </data>
+  <data name="Settings_SafetyBufferLabel" xml:space="preserve">
+    <value>Резерв безопасности (всегда исключён из «Свободно к расходованию»)</value>
+  </data>
+  <!-- DashboardSection (previously hand-written, not enum-driven; now uses DisplayText.Format) -->
+  <data name="Enum_DashboardSection_Upcoming" xml:space="preserve">
+    <value>Предстоящее</value>
+  </data>
+  <data name="Enum_DashboardSection_Analytics" xml:space="preserve">
+    <value>Аналитика</value>
+  </data>
+  <data name="Enum_DashboardSection_Goals" xml:space="preserve">
+    <value>Цели</value>
+  </data>
 </root>

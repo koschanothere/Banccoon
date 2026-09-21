@@ -110,9 +110,9 @@
                 <VerticalStackLayout Spacing="16" IsVisible="{Binding IsDashboardCategorySelected}">
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="12">
-                            <Label Text="Dashboard" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate AppShell_Nav_Dashboard}" Style="{StaticResource SectionTitleLabel}" />
 
-                            <Label Text="Section order" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{loc:Translate Settings_SectionOrderLabel}" Style="{StaticResource SecondaryLabel}" />
                             <CollectionView ItemsSource="{Binding DashboardSectionRows}">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:DashboardSectionRowViewModel">
@@ -127,54 +127,54 @@
 
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                            <Label Text="Forecast period" Style="{StaticResource SecondaryLabel}" />
-                            <Label Text="Used by the balance graph's forward-looking window." Style="{StaticResource TertiaryLabel}" />
-                            <Picker Title="Period" ItemsSource="{Binding ForecastPeriods}" SelectedItem="{Binding SelectedForecastPeriod}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" WidthRequest="160" HorizontalOptions="Start" />
+                            <Label Text="{loc:Translate Settings_ForecastPeriodLabel}" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{loc:Translate Settings_ForecastPeriodHint}" Style="{StaticResource TertiaryLabel}" />
+                            <Picker Title="{loc:Translate Settings_PeriodPickerTitle}" ItemsSource="{Binding ForecastPeriods}" SelectedItem="{Binding SelectedForecastPeriod}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" WidthRequest="160" HorizontalOptions="Start" />
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="Save" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding DashboardStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
 
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                            <Label Text="Primary hero number" Style="{StaticResource SecondaryLabel}" />
-                            <Label Text="Which number shows big on the dashboard - the other still shows smaller alongside it." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Settings_PrimaryHeroNumberLabel}" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{loc:Translate Settings_PrimaryHeroNumberHint}" Style="{StaticResource TertiaryLabel}" />
                             <HorizontalStackLayout Spacing="6">
-                                <Button Text="Free to spend" Command="{Binding SetFreeToSpendPrimaryCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="Current balance" Command="{Binding SetCurrentBalancePrimaryCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Dashboard_FreeToSpendLabel}" Command="{Binding SetFreeToSpendPrimaryCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Dashboard_CurrentBalanceLabel}" Command="{Binding SetCurrentBalancePrimaryCommand}" Style="{StaticResource QuietButton}" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="12">
-                            <Label Text="Free to spend" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate Dashboard_FreeToSpendLabel}" Style="{StaticResource SectionTitleLabel}" />
 
-                            <Label Text="Window" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{loc:Translate Settings_WindowLabel}" Style="{StaticResource SecondaryLabel}" />
                             <HorizontalStackLayout Spacing="6">
-                                <Button Text="Rolling days" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="This week" Command="{Binding SetWindowCalendarWeekCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="This month" Command="{Binding SetWindowCalendarMonthCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="Until next major payment" Command="{Binding SetWindowUntilMajorPaymentCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_WindowRollingDays}" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_WindowThisWeek}" Command="{Binding SetWindowCalendarWeekCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_WindowThisMonth}" Command="{Binding SetWindowCalendarMonthCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_WindowUntilMajorPayment}" Command="{Binding SetWindowUntilMajorPaymentCommand}" Style="{StaticResource QuietButton}" />
                             </HorizontalStackLayout>
 
                             <VerticalStackLayout Spacing="4" IsVisible="{Binding IsRollingDaysFieldVisible}">
-                                <Label Text="Rolling window, in days" Style="{StaticResource SecondaryLabel}" />
-                                <Entry Text="{Binding WindowDaysText}" Placeholder="Days" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                                <Label Text="{loc:Translate Settings_RollingWindowDaysLabel}" Style="{StaticResource SecondaryLabel}" />
+                                <Entry Text="{Binding WindowDaysText}" Placeholder="{loc:Translate Settings_DaysPlaceholder}" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Spacing="4" IsVisible="{Binding IsMajorPaymentThresholdFieldVisible}">
-                                <Label Text="Major payment threshold" Style="{StaticResource SecondaryLabel}" />
-                                <Entry Text="{Binding MajorPaymentThresholdText}" Placeholder="Amount" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                                <Label Text="{loc:Translate Settings_MajorPaymentThresholdLabel}" Style="{StaticResource SecondaryLabel}" />
+                                <Entry Text="{Binding MajorPaymentThresholdText}" Placeholder="{loc:Translate Common_AmountPlaceholder}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Safety buffer (always kept out of Free to spend)" Style="{StaticResource SecondaryLabel}" />
-                                <Entry Text="{Binding SafetyBufferText}" Placeholder="Amount" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
+                                <Label Text="{loc:Translate Settings_SafetyBufferLabel}" Style="{StaticResource SecondaryLabel}" />
+                                <Entry Text="{Binding SafetyBufferText}" Placeholder="{loc:Translate Common_AmountPlaceholder}" Keyboard="Numeric" WidthRequest="160" HorizontalOptions="Start" />
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="Save" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding FreeToSpendStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>

@@ -849,4 +849,60 @@
   <data name="Settings_PrivacyModeHint" xml:space="preserve">
     <value>Hides every amount behind &#8226;&#8226;&#8226;&#8226; app-wide.</value>
   </data>
+  <!-- SettingsPage: Dashboard tab -->
+  <data name="Settings_SectionOrderLabel" xml:space="preserve">
+    <value>Section order</value>
+  </data>
+  <data name="Settings_ForecastPeriodLabel" xml:space="preserve">
+    <value>Forecast period</value>
+  </data>
+  <data name="Settings_ForecastPeriodHint" xml:space="preserve">
+    <value>Used by the balance graph's forward-looking window.</value>
+  </data>
+  <data name="Settings_PeriodPickerTitle" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberLabel" xml:space="preserve">
+    <value>Primary hero number</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberHint" xml:space="preserve">
+    <value>Which number shows big on the dashboard - the other still shows smaller alongside it.</value>
+  </data>
+  <data name="Settings_WindowLabel" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Settings_WindowRollingDays" xml:space="preserve">
+    <value>Rolling days</value>
+  </data>
+  <data name="Settings_WindowThisWeek" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="Settings_WindowThisMonth" xml:space="preserve">
+    <value>This month</value>
+  </data>
+  <data name="Settings_WindowUntilMajorPayment" xml:space="preserve">
+    <value>Until next major payment</value>
+  </data>
+  <data name="Settings_RollingWindowDaysLabel" xml:space="preserve">
+    <value>Rolling window, in days</value>
+  </data>
+  <data name="Settings_DaysPlaceholder" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdLabel" xml:space="preserve">
+    <value>Major payment threshold</value>
+  </data>
+  <data name="Settings_SafetyBufferLabel" xml:space="preserve">
+    <value>Safety buffer (always kept out of Free to spend)</value>
+  </data>
+  <!-- DashboardSection (previously hand-written, not enum-driven; now uses DisplayText.Format) -->
+  <data name="Enum_DashboardSection_Upcoming" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="Enum_DashboardSection_Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="Enum_DashboardSection_Goals" xml:space="preserve">
+    <value>Goals</value>
+  </data>
 </root>
