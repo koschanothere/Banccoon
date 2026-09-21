@@ -3,13 +3,28 @@ namespace Banccoon.Core.Recurrence;
 public sealed class RecurrenceService : IRecurrenceService
 {
     private const int NextOccurrenceSearchYears = 100;
+    private readonly IRecurrenceDescriptionService recurrenceDescriptionService;
+    private readonly IRecurrenceValidationService recurrenceValidationService;
+
+    public RecurrenceService()
+        : this(new RecurrenceDescriptionService(), new RecurrenceValidationService())
+    {
+    }
+
+    public RecurrenceService(
+        IRecurrenceDescriptionService recurrenceDescriptionService,
+        IRecurrenceValidationService recurrenceValidationService)
+    {
+        this.recurrenceDescriptionService = recurrenceDescriptionService;
+        this.recurrenceValidationService = recurrenceValidationService;
+    }
 
     public IReadOnlyList<DateOnly> GetOccurrences(
         RecurrenceRule rule,
         DateOnly fromInclusive,
         DateOnly toInclusive)
     {
-        Validate(rule);
+        recurrenceValidationService.ThrowIfInvalid(rule);
 
         if (fromInclusive > toInclusive)
         {
@@ -43,22 +58,7 @@ public sealed class RecurrenceService : IRecurrenceService
 
     public string Describe(RecurrenceRule rule)
     {
-        Validate(rule);
-
-        return rule.Frequency switch
-        {
-            RecurrenceFrequency.Daily when rule.Interval == 1 => "Every day",
-            RecurrenceFrequency.Daily => $"Every {rule.Interval} days",
-            RecurrenceFrequency.Weekly when rule.Interval == 1 => $"Every week on {rule.DayOfWeek ?? rule.StartDate.DayOfWeek}",
-            RecurrenceFrequency.Weekly => $"Every {rule.Interval} weeks on {rule.DayOfWeek ?? rule.StartDate.DayOfWeek}",
-            RecurrenceFrequency.Monthly when rule.MonthlyMode == MonthlyRecurrenceMode.LastDayOfMonth && rule.Interval == 1 => "Every month on the last day",
-            RecurrenceFrequency.Monthly when rule.MonthlyMode == MonthlyRecurrenceMode.LastDayOfMonth => $"Every {rule.Interval} months on the last day",
-            RecurrenceFrequency.Monthly when rule.Interval == 1 => $"Every month on day {rule.DayOfMonth ?? rule.StartDate.Day}",
-            RecurrenceFrequency.Monthly => $"Every {rule.Interval} months on day {rule.DayOfMonth ?? rule.StartDate.Day}",
-            RecurrenceFrequency.Yearly when rule.Interval == 1 => "Every year",
-            RecurrenceFrequency.Yearly => $"Every {rule.Interval} years",
-            _ => throw new NotSupportedException($"Unsupported recurrence frequency: {rule.Frequency}")
-        };
+        return recurrenceDescriptionService.Describe(rule);
     }
 
     private static IReadOnlyList<DateOnly> GetDailyOccurrences(
@@ -220,16 +220,4 @@ public sealed class RecurrenceService : IRecurrenceService
         return (value + divisor - 1) / divisor;
     }
 
-    private static void Validate(RecurrenceRule rule)
-    {
-        if (rule.Interval < 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rule), "Recurrence interval must be at least 1.");
-        }
-
-        if (rule.DayOfMonth is < 1 or > 31)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rule), "Day of month must be between 1 and 31.");
-        }
-    }
 }

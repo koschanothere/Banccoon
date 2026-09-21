@@ -1,0 +1,461 @@
+using Banccoon.Core.Models;
+using Banccoon.Core.Repositories;
+using Banccoon.Core.Transactions;
+
+namespace Banccoon.Core.Statements;
+
+public sealed class StatementImportService : IStatementImportService
+{
+    private const string OtherCategoryName = "Other";
+
+    private readonly IStatementParserRegistry parserRegistry;
+    private readonly IStatementImportRepository statementImportRepository;
+    private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly IAccountRepository accountRepository;
+    private readonly ICategoryRepository categoryRepository;
+    private readonly ITransactionRepository transactionRepository;
+    private readonly ITransactionApplicationService transactionApplicationService;
+    private readonly ICategorySuggestionService categorySuggestionService;
+
+    public StatementImportService(
+        IStatementParserRegistry parserRegistry,
+        IStatementImportRepository statementImportRepository,
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        IAccountRepository accountRepository,
+        ICategoryRepository categoryRepository,
+        ITransactionRepository transactionRepository,
+        ITransactionApplicationService transactionApplicationService,
+        ICategorySuggestionService categorySuggestionService)
+    {
+        this.parserRegistry = parserRegistry;
+        this.statementImportRepository = statementImportRepository;
+        this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.accountRepository = accountRepository;
+        this.categoryRepository = categoryRepository;
+        this.transactionRepository = transactionRepository;
+        this.transactionApplicationService = transactionApplicationService;
+        this.categorySuggestionService = categorySuggestionService;
+    }
+
+    public async Task<StatementPreviewResult> PreviewAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new StatementPreviewResult(
+                ParserAvailable: false,
+                "Choose a bank statement file first.",
+                null);
+        }
+
+        var request = new StatementParseRequest(filePath);
+        var parser = parserRegistry.FindParser(request);
+        if (parser is null)
+        {
+            return new StatementPreviewResult(
+                ParserAvailable: false,
+                "No parser is available for this statement yet.",
+                null);
+        }
+
+        var parsedStatement = await parser.ParseAsync(request, cancellationToken);
+        return new StatementPreviewResult(
+            ParserAvailable: true,
+            $"{parsedStatement.Rows.Count} statement row(s) found.",
+            parsedStatement);
+    }
+
+    public async Task<StatementImportCreateResult> CreatePendingImportAsync(
+        Guid accountId,
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new StatementImportCreateResult(
+                ParserAvailable: false,
+                "Choose a bank statement file first.",
+                null,
+                Array.Empty<StatementImportRow>());
+        }
+
+        var account = await accountRepository.GetByIdAsync(accountId, cancellationToken);
+        if (account is null)
+        {
+            throw new InvalidOperationException("The selected account could not be found.");
+        }
+
+        var request = new StatementParseRequest(filePath, accountId);
+        var parser = parserRegistry.FindParser(request);
+        if (parser is null)
+        {
+            return new StatementImportCreateResult(
+                ParserAvailable: false,
+                "No parser is available for this statement yet. Add a bank-specific parser after a redacted sample is provided.",
+                null,
+                Array.Empty<StatementImportRow>());
+        }
+
+        var parsedStatement = await parser.ParseAsync(request, cancellationToken);
+        return await CreatePendingImportAsync(accountId, filePath, parsedStatement, cancellationToken);
+    }
+
+    public async Task<StatementImportCreateResult> CreatePendingImportAsync(
+        Guid accountId,
+        string filePath,
+        ParsedStatement parsedStatement,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parsedStatement);
+
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new StatementImportCreateResult(
+                ParserAvailable: false,
+                "Choose a bank statement file first.",
+                null,
+                Array.Empty<StatementImportRow>());
+        }
+
+        var account = await accountRepository.GetByIdAsync(accountId, cancellationToken);
+        if (account is null)
+        {
+            throw new InvalidOperationException("The selected account could not be found.");
+        }
+
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            accountId,
+            parsedStatement.ParserId,
+            parsedStatement.ParserName,
+            string.IsNullOrWhiteSpace(parsedStatement.SourceName)
+                ? Path.GetFileName(filePath)
+                : parsedStatement.SourceName,
+            filePath,
+            DateTimeOffset.UtcNow,
+            StatementImportBatchStatus.PendingReview,
+            parsedStatement.Rows.Count,
+            parsedStatement.ClosingBalance);
+
+        var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
+        var existingTransactions = await transactionRepository.GetByAccountIdAsync(accountId, cancellationToken);
+        var rows = parsedStatement.Rows
+            .Select(row => CreateImportRow(batch.Id, row, accountId, rules, existingTransactions))
+            .ToArray();
+
+        await statementImportRepository.SaveBatchAsync(batch, cancellationToken);
+        foreach (var row in rows)
+        {
+            await statementImportRepository.SaveRowAsync(row, cancellationToken);
+        }
+
+        return new StatementImportCreateResult(
+            ParserAvailable: true,
+            $"{rows.Length} statement row(s) are ready for review.",
+            batch,
+            rows);
+    }
+
+    public async Task<StatementRowImportResult> ApproveRowAsync(
+        Guid rowId,
+        Guid? categoryId,
+        TransactionType? type,
+        Guid? destinationAccountId,
+        CancellationToken cancellationToken = default)
+    {
+        var row = await statementImportRepository.GetRowByIdAsync(rowId, cancellationToken)
+            ?? throw new InvalidOperationException("The statement row could not be found.");
+
+        if (row.Status == StatementImportRowStatus.Approved)
+        {
+            var existingTransaction = row.CreatedTransactionId.HasValue
+                ? await transactionRepository.GetByIdAsync(row.CreatedTransactionId.Value, cancellationToken)
+                : null;
+            return new StatementRowImportResult(row, existingTransaction);
+        }
+
+        if (row.Status == StatementImportRowStatus.Skipped)
+        {
+            throw new InvalidOperationException("Skipped statement rows cannot be approved.");
+        }
+
+        var batch = await statementImportRepository.GetBatchByIdAsync(row.BatchId, cancellationToken)
+            ?? throw new InvalidOperationException("The statement import batch could not be found.");
+        var account = await accountRepository.GetByIdAsync(batch.AccountId, cancellationToken)
+            ?? throw new InvalidOperationException("The selected account could not be found.");
+
+        // The type can be corrected during review (e.g. a "Перевод" that's really an Expense or
+        // Income, not a Transfer) - that correction is also the training signal for SuggestType,
+        // via LearnCategoryAsync below reusing whatever type the approved row ends up with.
+        var finalType = type ?? row.Type;
+        var finalDestinationAccountId = finalType == TransactionType.Transfer
+            ? destinationAccountId ?? row.DestinationAccountId
+            : null;
+        if (finalType == TransactionType.Transfer && finalDestinationAccountId is null)
+        {
+            throw new InvalidOperationException("Choose the other account for this transfer.");
+        }
+
+        // Transfers get a category too (e.g. "which savings goal"), same as every other type - no
+        // exemption here.
+        var finalCategoryId = categoryId ?? row.CategoryId ?? row.SuggestedCategoryId;
+        if (finalCategoryId is null)
+        {
+            finalCategoryId = await EnsureOtherCategoryAsync(cancellationToken);
+        }
+
+        // A Transaction's AccountId is always debited and DestinationAccountId always credited -
+        // but a row that arrived as money coming IN to this account (row.IsIncoming) needs the
+        // roles reversed from the usual "batch's own account is the source" assumption, since the
+        // batch's account is the one being credited in that case, not debited.
+        var transactionAccountId = finalType == TransactionType.Transfer && row.IsIncoming
+            ? finalDestinationAccountId!.Value
+            : batch.AccountId;
+        var transactionDestinationAccountId = finalType != TransactionType.Transfer
+            ? null
+            : row.IsIncoming ? batch.AccountId : finalDestinationAccountId;
+
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            row.Date,
+            Math.Abs(row.Amount),
+            transactionAccountId,
+            finalCategoryId,
+            CreateTransactionNotes(batch, row),
+            finalType,
+            DestinationAccountId: transactionDestinationAccountId,
+            Name: CreateTransactionName(row),
+            Time: row.Time);
+
+        var accountsById = new Dictionary<Guid, Account> { [account.Id] = account };
+        if (finalDestinationAccountId is { } otherAccountId && !accountsById.ContainsKey(otherAccountId))
+        {
+            var otherAccount = await accountRepository.GetByIdAsync(otherAccountId, cancellationToken)
+                ?? throw new InvalidOperationException("The other account could not be found.");
+            accountsById[otherAccountId] = otherAccount;
+        }
+
+        var updatedAccounts = transactionApplicationService.ApplyNewTransaction(transaction, accountsById);
+        foreach (var updatedAccount in updatedAccounts)
+        {
+            await accountRepository.SaveAsync(updatedAccount, cancellationToken);
+        }
+
+        await transactionRepository.SaveAsync(transaction, cancellationToken);
+
+        var approvedRow = row with
+        {
+            Type = finalType,
+            CategoryId = finalCategoryId,
+            DestinationAccountId = finalDestinationAccountId,
+            Status = StatementImportRowStatus.Approved,
+            CreatedTransactionId = transaction.Id
+        };
+        await statementImportRepository.SaveRowAsync(approvedRow, cancellationToken);
+        await LearnCategoryAsync(approvedRow, batch.AccountId, finalCategoryId, finalDestinationAccountId, cancellationToken);
+        await CompleteBatchIfReviewedAsync(batch, cancellationToken);
+
+        return new StatementRowImportResult(approvedRow, transaction);
+    }
+
+    public async Task<StatementImportRow> SkipRowAsync(
+        Guid rowId,
+        CancellationToken cancellationToken = default)
+    {
+        var row = await statementImportRepository.GetRowByIdAsync(rowId, cancellationToken)
+            ?? throw new InvalidOperationException("The statement row could not be found.");
+
+        if (row.Status == StatementImportRowStatus.Approved)
+        {
+            throw new InvalidOperationException("Approved statement rows cannot be skipped.");
+        }
+
+        var skippedRow = row with
+        {
+            Status = StatementImportRowStatus.Skipped
+        };
+        await statementImportRepository.SaveRowAsync(skippedRow, cancellationToken);
+
+        var batch = await statementImportRepository.GetBatchByIdAsync(row.BatchId, cancellationToken);
+        if (batch is not null)
+        {
+            await CompleteBatchIfReviewedAsync(batch, cancellationToken);
+        }
+
+        return skippedRow;
+    }
+
+    public async Task<StatementImportCancelResult> CancelImportAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default)
+    {
+        var batch = await statementImportRepository.GetBatchByIdAsync(batchId, cancellationToken);
+        if (batch is null)
+        {
+            return new StatementImportCancelResult(false, "The statement import could not be found.");
+        }
+
+        var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
+        if (rows.Any(row => row.Status == StatementImportRowStatus.Approved))
+        {
+            return new StatementImportCancelResult(
+                false,
+                "This statement already created transactions, so the import batch cannot be cancelled.");
+        }
+
+        await statementImportRepository.DeleteBatchAsync(batchId, cancellationToken);
+        return new StatementImportCancelResult(true, "Statement import cancelled.");
+    }
+
+    private StatementImportRow CreateImportRow(
+        Guid batchId,
+        ParsedStatementRow parsedRow,
+        Guid accountId,
+        IReadOnlyList<CategoryLearningRule> rules,
+        IReadOnlyList<Transaction> existingTransactions)
+    {
+        var normalizedDescription = categorySuggestionService.Normalize(
+            string.IsNullOrWhiteSpace(parsedRow.Counterparty)
+                ? parsedRow.Description
+                : parsedRow.Counterparty);
+        // The parser only ever guesses Expense/Income from the +/- sign - a past correction for
+        // this same recipient (e.g. "this is actually a Transfer") overrides that guess before
+        // category suggestion runs, since categories are learned per-type.
+        var suggestedType = categorySuggestionService.SuggestType(parsedRow, accountId, rules) ?? parsedRow.Type;
+        var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, suggestedType, rules);
+        var suggestedDestinationAccountId = suggestedType == TransactionType.Transfer
+            ? categorySuggestionService.SuggestDestinationAccount(parsedRow, accountId, rules)
+            : null;
+        var duplicateTransaction = StatementDuplicateDetector.FindDuplicate(accountId, parsedRow, normalizedDescription, existingTransactions);
+        // Captured from the parser's own raw guess (never itself reclassified) so it survives even
+        // if suggestedType above overrides Income/Expense to Transfer - Transfer alone doesn't say
+        // which way the money moved, see StatementImportRow.IsIncoming.
+        var isIncoming = parsedRow.Type == TransactionType.Income;
+
+        return new StatementImportRow(
+            Guid.NewGuid(),
+            batchId,
+            parsedRow.Date,
+            Math.Abs(parsedRow.Amount),
+            suggestedType,
+            parsedRow.Description.Trim(),
+            normalizedDescription,
+            CleanOptionalText(parsedRow.Counterparty),
+            CleanOptionalText(parsedRow.ExternalReference),
+            CleanOptionalText(parsedRow.RawText),
+            suggestion?.CategoryId,
+            null,
+            StatementImportRowStatus.Pending,
+            duplicateTransaction is not null,
+            duplicateTransaction?.Id,
+            null,
+            parsedRow.Time,
+            suggestedDestinationAccountId,
+            isIncoming);
+    }
+
+    private async Task<Guid> EnsureOtherCategoryAsync(CancellationToken cancellationToken)
+    {
+        var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        var other = categories.FirstOrDefault(category =>
+            string.Equals(category.Name, OtherCategoryName, StringComparison.OrdinalIgnoreCase)
+            && category.Type is null);
+
+        if (other is not null)
+        {
+            return other.Id;
+        }
+
+        var category = new Category(Guid.NewGuid(), OtherCategoryName);
+        await categoryRepository.SaveAsync(category, cancellationToken);
+        return category.Id;
+    }
+
+    private async Task LearnCategoryAsync(
+        StatementImportRow row,
+        Guid accountId,
+        Guid? categoryId,
+        Guid? destinationAccountId,
+        CancellationToken cancellationToken)
+    {
+        if (categoryId is null)
+        {
+            return;
+        }
+
+        var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
+        var rule = categorySuggestionService.Learn(row, accountId, categoryId.Value, destinationAccountId, rules, DateTimeOffset.UtcNow);
+        await categoryLearningRuleRepository.SaveAsync(rule, cancellationToken);
+    }
+
+    private async Task CompleteBatchIfReviewedAsync(
+        StatementImportBatch batch,
+        CancellationToken cancellationToken)
+    {
+        var rows = await statementImportRepository.GetRowsByBatchIdAsync(batch.Id, cancellationToken);
+        if (rows.Count == 0 || rows.Any(row => row.Status == StatementImportRowStatus.Pending))
+        {
+            return;
+        }
+
+        await statementImportRepository.SaveBatchAsync(batch with
+        {
+            Status = StatementImportBatchStatus.Completed
+        }, cancellationToken);
+
+        // The statement's own closing balance (from its most recent operation's running balance,
+        // not its unreliable header summary line) is authoritative once every row has been
+        // reviewed - it reflects every real-world operation on the account regardless of which
+        // rows got Approved vs Skipped in Banccoon, and corrects for any drift that was already
+        // baked into the account's balance before this import even started (a missed prior
+        // transaction, a wrong starting balance, etc.). Applying it here, once, rather than trusting
+        // the sum of individually-applied transactions to land on the right number.
+        if (batch.ClosingBalance is { } closingBalance)
+        {
+            var account = await accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
+            if (account is not null && account.CurrentBalance != closingBalance)
+            {
+                await accountRepository.SaveAsync(account with { CurrentBalance = closingBalance }, cancellationToken);
+            }
+        }
+    }
+
+    private static string CreateTransactionNotes(
+        StatementImportBatch batch,
+        StatementImportRow row)
+    {
+        var parts = new List<string>
+        {
+            $"Statement import: {row.Description}",
+            $"Source: {batch.SourceFileName}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(row.Counterparty))
+        {
+            parts.Add($"Counterparty: {row.Counterparty}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.ExternalReference))
+        {
+            parts.Add($"Reference: {row.ExternalReference}");
+        }
+
+        return string.Join(" | ", parts);
+    }
+
+    private static string CreateTransactionName(StatementImportRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.Counterparty))
+        {
+            return row.Counterparty.Trim();
+        }
+
+        return row.Description.Trim();
+    }
+
+    private static string? CleanOptionalText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+}

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Banccoon.App</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -14,14 +14,23 @@
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationManifest>Platforms\Windows\app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.101" />
+    <PackageReference Include="Microsoft.Maui.Resizetizer" Version="10.0.101" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Banccoon.Core\Banccoon.Core.csproj" />
     <ProjectReference Include="..\Banccoon.Infrastructure\Banccoon.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Microsoft.NET.Sdk (not Microsoft.NET.Sdk.Maui) doesn't implicitly glob Resources\AppIcon or
+       Resources\Images into MauiIcon/MauiImage items, so they're declared explicitly here. -->
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\raccoon_main_icon.png" />
+    <MauiImage Include="Resources\Images\*.png" />
   </ItemGroup>
 </Project>

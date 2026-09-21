@@ -139,4 +139,18 @@ public sealed class RecurrenceServiceTests
 
         Assert.Equal(new DateOnly(2026, 6, 3), occurrence);
     }
+
+    [Fact]
+    public void GetOccurrences_WhenRuleIsInvalid_ThrowsValidationException()
+    {
+        var rule = new RecurrenceRule(
+            RecurrenceFrequency.Daily,
+            0,
+            new DateOnly(2026, 6, 1));
+
+        Assert.Throws<RecurrenceValidationException>(() => service.GetOccurrences(
+            rule,
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7)));
+    }
 }

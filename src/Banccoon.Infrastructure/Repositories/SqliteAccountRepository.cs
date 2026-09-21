@@ -32,9 +32,15 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits,
+                PlanningValue,
+                IsFavorite,
+                SortOrder
             FROM Accounts
-            ORDER BY Name;
+            ORDER BY SortOrder, Name;
             """;
 
         var accounts = new List<Account>();
@@ -66,7 +72,13 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits,
+                PlanningValue,
+                IsFavorite,
+                SortOrder
             FROM Accounts
             WHERE Id = @Id;
             """;
@@ -95,7 +107,13 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth,
                 PaymentDueDayOfMonth,
                 MinimumPayment,
-                PlannedPaymentAmount
+                PlannedPaymentAmount,
+                IncludeInDashboardTotals,
+                AccountNumber,
+                CardLastFourDigits,
+                PlanningValue,
+                IsFavorite,
+                SortOrder
             )
             VALUES (
                 @Id,
@@ -109,7 +127,13 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 @StatementDayOfMonth,
                 @PaymentDueDayOfMonth,
                 @MinimumPayment,
-                @PlannedPaymentAmount
+                @PlannedPaymentAmount,
+                @IncludeInDashboardTotals,
+                @AccountNumber,
+                @CardLastFourDigits,
+                @PlanningValue,
+                @IsFavorite,
+                @SortOrder
             )
             ON CONFLICT(Id) DO UPDATE SET
                 Name = excluded.Name,
@@ -122,7 +146,13 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
                 StatementDayOfMonth = excluded.StatementDayOfMonth,
                 PaymentDueDayOfMonth = excluded.PaymentDueDayOfMonth,
                 MinimumPayment = excluded.MinimumPayment,
-                PlannedPaymentAmount = excluded.PlannedPaymentAmount;
+                PlannedPaymentAmount = excluded.PlannedPaymentAmount,
+                IncludeInDashboardTotals = excluded.IncludeInDashboardTotals,
+                AccountNumber = excluded.AccountNumber,
+                CardLastFourDigits = excluded.CardLastFourDigits,
+                PlanningValue = excluded.PlanningValue,
+                IsFavorite = excluded.IsFavorite,
+                SortOrder = excluded.SortOrder;
             """;
 
         AddParameter(command, "@Id", account.Id.ToString());
@@ -137,6 +167,12 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         AddParameter(command, "@PaymentDueDayOfMonth", account.CreditCardDetails?.PaymentDueDayOfMonth ?? (object)DBNull.Value);
         AddParameter(command, "@MinimumPayment", SqliteData.ToDbValue(account.CreditCardDetails?.MinimumPayment));
         AddParameter(command, "@PlannedPaymentAmount", SqliteData.ToDbValue(account.CreditCardDetails?.PlannedPaymentAmount));
+        AddParameter(command, "@IncludeInDashboardTotals", account.IncludeInDashboardTotals ? 1 : 0);
+        AddParameter(command, "@AccountNumber", SqliteData.ToDbValue(account.AccountNumber));
+        AddParameter(command, "@CardLastFourDigits", SqliteData.ToDbValue(account.CardLastFourDigits));
+        AddParameter(command, "@PlanningValue", SqliteData.ToDbValue(account.PlanningValue));
+        AddParameter(command, "@IsFavorite", account.IsFavorite ? 1 : 0);
+        AddParameter(command, "@SortOrder", account.SortOrder);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -149,6 +185,17 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
         await using var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM Accounts WHERE Id = @Id;";
         AddParameter(command, "@Id", id.ToString());
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Accounts;";
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -179,6 +226,12 @@ public sealed class SqliteAccountRepository : SqliteRepositoryBase, IAccountRepo
             SqliteData.ReadString(reader, "Currency"),
             DateTimeOffset.Parse(SqliteData.ReadString(reader, "CreatedDate"), System.Globalization.CultureInfo.InvariantCulture),
             SqliteData.ReadBoolean(reader, "IsArchived"),
-            creditCardDetails);
+            creditCardDetails,
+            SqliteData.ReadBoolean(reader, "IncludeInDashboardTotals"),
+            SqliteData.ReadNullableString(reader, "AccountNumber"),
+            SqliteData.ReadNullableString(reader, "CardLastFourDigits"),
+            SqliteData.ReadNullableDecimal(reader, "PlanningValue"),
+            SqliteData.ReadBoolean(reader, "IsFavorite"),
+            SqliteData.ReadInt32(reader, "SortOrder"));
     }
 }

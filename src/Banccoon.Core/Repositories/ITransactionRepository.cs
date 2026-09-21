@@ -13,4 +13,6 @@ public interface ITransactionRepository
     Task SaveAsync(Transaction transaction, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

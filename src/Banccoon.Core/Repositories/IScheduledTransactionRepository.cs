@@ -11,4 +11,6 @@ public interface IScheduledTransactionRepository
     Task SaveAsync(ScheduledTransaction scheduledTransaction, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

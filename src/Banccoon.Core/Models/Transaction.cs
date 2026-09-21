@@ -7,4 +7,10 @@ public sealed record Transaction(
     Guid AccountId,
     Guid? CategoryId,
     string? Notes,
-    TransactionType Type);
+    TransactionType Type,
+    Guid? DestinationAccountId = null,
+    Guid? DestinationGoalId = null,
+    Guid? PaidScheduledTransactionId = null,
+    DateOnly? PaidScheduledOccurrenceDate = null,
+    string Name = "",
+    TimeOnly? Time = null);

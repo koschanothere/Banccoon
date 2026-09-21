@@ -8,4 +8,10 @@ public sealed record Account(
     string Currency,
     DateTimeOffset CreatedDate,
     bool IsArchived = false,
-    CreditCardDetails? CreditCardDetails = null);
+    CreditCardDetails? CreditCardDetails = null,
+    bool IncludeInDashboardTotals = true,
+    string? AccountNumber = null,
+    string? CardLastFourDigits = null,
+    decimal? PlanningValue = null,
+    bool IsFavorite = false,
+    int SortOrder = 0);

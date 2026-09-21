@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Banccoon.App.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
+    xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    x:DataType="viewModels:DashboardViewModel"
+    Title="Dashboard"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="40" Spacing="16">
+
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Dashboard" Style="{StaticResource ScreenTitleLabel}" />
+                <Label Text="{Binding FreeToSpendWindowText}" Style="{StaticResource SecondaryLabel}" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="14">
+                    <VerticalStackLayout Spacing="1" IsVisible="{Binding IsFreeToSpendPrimary}">
+                        <Label Text="Free to spend" Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{Binding FreeToSpendText}" Style="{StaticResource HeroAmountLabel}" />
+                        <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
+                            <Label Text="Current balance:" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{Binding CurrentBalanceText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="1" IsVisible="{Binding IsCurrentBalancePrimary}">
+                        <Label Text="Current balance" Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{Binding CurrentBalanceText}" Style="{StaticResource HeroAmountLabel}" />
+                        <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
+                            <Label Text="Free to spend:" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{Binding FreeToSpendText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Button
+                        Text="How it's calculated"
+                        Command="{Binding ToggleCalcCommand}"
+                        Style="{StaticResource QuietButton}"
+                        HorizontalOptions="Start" />
+
+                    <VerticalStackLayout Spacing="7" IsVisible="{Binding IsCalcOpen}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Lowest forecasted balance" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="1" Text="{Binding LowestForecastedBalanceText}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Reserved for goals" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="1" Text="{Binding ReservedForGoalsText}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Safety buffer" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="1" Text="{Binding SafetyBufferText}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Free to spend" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="{Binding FreeToSpendText}" FontAttributes="Bold" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                            <Label Text="Balance history &amp; forecast" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
+                        </VerticalStackLayout>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="6">
+                            <DatePicker Date="{Binding RangeStartDate}" Format="dd MMM" WidthRequest="110" />
+                            <Label Text="&#8594;" VerticalOptions="Center" Style="{StaticResource TertiaryLabel}" />
+                            <DatePicker Date="{Binding RangeEndDate}" Format="dd MMM" WidthRequest="110" />
+                            <Button Text="Apply" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="Reset" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Label
+                        Text="{Binding GraphStatusText}"
+                        Style="{StaticResource TertiaryLabel}"
+                        TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                    <controls:ForecastChartView Points="{Binding ChartPoints}" HeightRequest="240" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+            <Border Grid.Row="{Binding UpcomingSectionRow}" Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Upcoming" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions." Style="{StaticResource TertiaryLabel}" />
+                    <CollectionView ItemsSource="{Binding UpcomingObligations}">
+                        <CollectionView.EmptyView>
+                            <Label Text="Nothing coming up." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:UpcomingObligationRowViewModel">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="0,4">
+                                    <Label Grid.Column="0" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Grid.Row="{Binding AnalyticsSectionRow}" Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Button Grid.Column="0" Text="&#8592;" Command="{Binding Analytics.PreviousMonthCommand}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                        <Label Grid.Column="1" Text="{Binding Analytics.MonthLabel}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                        <Button Grid.Column="2" Text="&#8594;" Command="{Binding Analytics.NextMonthCommand}" IsEnabled="{Binding Analytics.CanGoToNextMonth}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="Income" Style="{StaticResource TertiaryLabel}" />
+                            <Label
+                                Text="{Binding Analytics.IncomeText}"
+                                Style="{StaticResource SummaryAmountLabel}"
+                                TextColor="{AppThemeBinding Light={StaticResource LightStatusGreen}, Dark={StaticResource DarkStatusGreen}}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Expense" Style="{StaticResource TertiaryLabel}" />
+                            <Label
+                                Text="{Binding Analytics.ExpenseText}"
+                                Style="{StaticResource SummaryAmountLabel}"
+                                TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                            <Label Text="Net" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{Binding Analytics.NetText}" Style="{StaticResource SummaryAmountLabel}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Spending breakdown" Style="{StaticResource SecondaryLabel}" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                        <controls:DonutChartView
+                            Grid.Column="0"
+                            WidthRequest="140"
+                            HeightRequest="140"
+                            Segments="{Binding Analytics.DonutSegments}"
+                            HighlightedSegment="{Binding Analytics.HighlightedSegment, Mode=TwoWay}" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                            <Label Text="{Binding Analytics.DonutCaptionText}" Style="{StaticResource SecondaryLabel}" LineBreakMode="WordWrap" />
+                            <Label Text="Hover a slice for details." Style="{StaticResource TertiaryLabel}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Top movers" Style="{StaticResource SecondaryLabel}" />
+                    <CollectionView ItemsSource="{Binding Analytics.TopMovers}">
+                        <CollectionView.EmptyView>
+                            <Label Text="Nothing has changed much yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding DrillDownCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Label Grid.Column="0" Text="{Binding CategoryName}" VerticalOptions="Center" />
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding ChangeText}"
+                                        HorizontalTextAlignment="End"
+                                        VerticalOptions="Center"
+                                        TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+
+                    <Label Text="Spending by category" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="Last 6 months. Tap a category to see its transactions." Style="{StaticResource TertiaryLabel}" />
+                    <CollectionView ItemsSource="{Binding Analytics.CategoryRows}">
+                        <CollectionView.EmptyView>
+                            <Label Text="No expenses recorded yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Padding="0,8">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding DrillDownCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
+                                        <Label Text="{Binding CategoryName}" />
+                                        <Label
+                                            Text="{Binding ChangeText}"
+                                            Style="{StaticResource TertiaryLabel}"
+                                            TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
+                                    </VerticalStackLayout>
+                                    <HorizontalStackLayout
+                                        Grid.Column="1"
+                                        Spacing="3"
+                                        VerticalOptions="End"
+                                        BindableLayout.ItemsSource="{Binding Bars}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="viewModels:AnalyticsBarViewModel">
+                                                <BoxView
+                                                    WidthRequest="6"
+                                                    HeightRequest="{Binding Height}"
+                                                    VerticalOptions="End"
+                                                    CornerRadius="2"
+                                                    Color="{Binding IsCurrent, Converter={StaticResource CurrentBarColorConverter}}" />
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding CurrentTotalText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Grid.Row="{Binding GoalsSectionRow}" Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Goals" Style="{StaticResource SectionTitleLabel}" />
+                    <CollectionView ItemsSource="{Binding Goals}">
+                        <CollectionView.EmptyView>
+                            <Label Text="No savings goals yet." Style="{StaticResource TertiaryLabel}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:SavingsGoalRowViewModel">
+                                <VerticalStackLayout Spacing="4" Padding="0,6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding Name}" />
+                                        <Label Grid.Column="1" Text="{Binding TargetDateText}" IsVisible="{Binding HasTargetDate}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                    </Grid>
+                                    <ProgressBar Progress="{Binding Progress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding CurrentText}" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Grid.Column="1" Text="{Binding TargetText}" Style="{StaticResource TertiaryLabel}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

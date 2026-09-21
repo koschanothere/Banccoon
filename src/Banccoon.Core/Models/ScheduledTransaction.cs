@@ -11,4 +11,5 @@ public sealed record ScheduledTransaction(
     TransactionType Type,
     RecurrenceRule RecurrenceRule,
     DateOnly NextOccurrence,
-    bool Active);
+    bool Active,
+    string? Notes = null);

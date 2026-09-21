@@ -6,6 +6,7 @@ namespace Banccoon.Infrastructure.Database;
 internal static class SqliteData
 {
     private const string DateFormat = "yyyy-MM-dd";
+    private const string TimeFormat = "HH:mm";
 
     public static object ToDbValue(string? value)
     {
@@ -25,6 +26,11 @@ internal static class SqliteData
     public static object ToDbValue(decimal? value)
     {
         return value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : DBNull.Value;
+    }
+
+    public static object ToDbValue(TimeOnly? value)
+    {
+        return value.HasValue ? value.Value.ToString(TimeFormat, CultureInfo.InvariantCulture) : DBNull.Value;
     }
 
     public static string DateToText(DateOnly value)
@@ -59,6 +65,12 @@ internal static class SqliteData
         return value is null ? null : decimal.Parse(value, CultureInfo.InvariantCulture);
     }
 
+    public static TimeOnly? ReadNullableTime(DbDataReader reader, string name)
+    {
+        var value = ReadNullableString(reader, name);
+        return value is null ? null : TimeOnly.ParseExact(value, TimeFormat, CultureInfo.InvariantCulture);
+    }
+
     public static Guid ReadGuid(DbDataReader reader, string name)
     {
         return Guid.Parse(ReadString(reader, name));
@@ -85,6 +97,11 @@ internal static class SqliteData
     {
         var ordinal = reader.GetOrdinal(name);
         return reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
+    }
+
+    public static int ReadInt32(DbDataReader reader, string name)
+    {
+        return reader.GetInt32(reader.GetOrdinal(name));
     }
 
     public static bool ReadBoolean(DbDataReader reader, string name)

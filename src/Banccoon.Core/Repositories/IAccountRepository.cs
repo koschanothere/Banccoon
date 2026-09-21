@@ -11,4 +11,6 @@ public interface IAccountRepository
     Task SaveAsync(Account account, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

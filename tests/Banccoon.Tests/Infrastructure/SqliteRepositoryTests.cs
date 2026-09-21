@@ -1,8 +1,8 @@
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.Appearance;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
-using Banccoon.Infrastructure.Database;
-using Banccoon.Infrastructure.Repositories;
+using Banccoon.Core.Statements;
 using Xunit;
 
 namespace Banccoon.Tests.Infrastructure;
@@ -26,7 +26,11 @@ public sealed class SqliteRepositoryTests
                 StatementDayOfMonth: 10,
                 PaymentDueDayOfMonth: 25,
                 MinimumPayment: 25m,
-                PlannedPaymentAmount: 100m));
+                PlannedPaymentAmount: 100m),
+            IncludeInDashboardTotals: false,
+            AccountNumber: "ACC-001",
+            CardLastFourDigits: "1234",
+            PlanningValue: 12.5m);
 
         await store.Accounts.SaveAsync(account);
 
@@ -36,17 +40,39 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task AccountRepository_SaveAndGetAll_RoundTripsIsFavorite()
+    {
+        await using var store = new SqliteTestStore();
+        var favorite = CreateAccount("Favorite checking") with { IsFavorite = true };
+        var other = CreateAccount("Other checking");
+
+        await store.Accounts.SaveAsync(favorite);
+        await store.Accounts.SaveAsync(other);
+
+        var all = await store.Accounts.GetAllAsync();
+        var loadedFavorite = all.Single(account => account.Id == favorite.Id);
+        var loadedOther = all.Single(account => account.Id == other.Id);
+
+        Assert.True(loadedFavorite.IsFavorite);
+        Assert.False(loadedOther.IsFavorite);
+    }
+
+    [Fact]
     public async Task CategoryRepository_SaveUpdateAndDelete_PersistsChanges()
     {
         await using var store = new SqliteTestStore();
-        var category = new Category(Guid.NewGuid(), "Food");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
 
         await store.Categories.SaveAsync(category);
-        await store.Categories.SaveAsync(category with { Name = "Groceries" });
+        var updated = category with { Name = "Groceries", Color = CategoryColor.Violet };
+        await store.Categories.SaveAsync(updated);
+        var saved = await store.Categories.GetByIdAsync(category.Id);
         await store.Categories.DeleteAsync(category.Id);
 
         var loaded = await store.Categories.GetByIdAsync(category.Id);
 
+        Assert.Equal(updated, saved);
+        Assert.Equal(CategoryColor.Violet, saved?.Color);
         Assert.Null(loaded);
     }
 
@@ -56,6 +82,20 @@ public sealed class SqliteRepositoryTests
         await using var store = new SqliteTestStore();
         var account = CreateAccount("Checking");
         var category = new Category(Guid.NewGuid(), "Utilities");
+        var scheduledTransaction = new ScheduledTransaction(
+            Guid.NewGuid(),
+            "Power bill",
+            45.50m,
+            account.Id,
+            category.Id,
+            TransactionType.Expense,
+            new RecurrenceRule(
+                RecurrenceFrequency.Monthly,
+                1,
+                new DateOnly(2026, 6, 9),
+                DayOfMonth: 9),
+            new DateOnly(2026, 6, 9),
+            Active: true);
         var transaction = new Transaction(
             Guid.NewGuid(),
             new DateOnly(2026, 6, 10),
@@ -63,13 +103,42 @@ public sealed class SqliteRepositoryTests
             account.Id,
             category.Id,
             "Electricity",
-            TransactionType.Expense);
+            TransactionType.Expense,
+            PaidScheduledTransactionId: scheduledTransaction.Id,
+            PaidScheduledOccurrenceDate: new DateOnly(2026, 6, 9),
+            Name: "Power bill");
 
         await store.Accounts.SaveAsync(account);
         await store.Categories.SaveAsync(category);
+        await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
         await store.Transactions.SaveAsync(transaction);
 
         var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);
+
+        Assert.Equal(transaction, Assert.Single(transactions));
+    }
+
+    [Fact]
+    public async Task TransactionRepository_SaveAndGetByAccountId_RoundTripsTransferDestination()
+    {
+        await using var store = new SqliteTestStore();
+        var source = CreateAccount("Checking");
+        var destination = CreateAccount("Savings");
+        var transaction = new Transaction(
+            Guid.NewGuid(),
+            new DateOnly(2026, 6, 11),
+            100m,
+            source.Id,
+            null,
+            "Transfer to savings",
+            TransactionType.Transfer,
+            destination.Id);
+
+        await store.Accounts.SaveAsync(source);
+        await store.Accounts.SaveAsync(destination);
+        await store.Transactions.SaveAsync(transaction);
+
+        var transactions = await store.Transactions.GetByAccountIdAsync(source.Id);
 
         Assert.Equal(transaction, Assert.Single(transactions));
     }
@@ -92,7 +161,8 @@ public sealed class SqliteRepositoryTests
                 new DateOnly(2026, 6, 1),
                 DayOfMonth: 25),
             new DateOnly(2026, 6, 25),
-            Active: true);
+            Active: true,
+            "Landlord transfer");
 
         await store.Accounts.SaveAsync(account);
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
@@ -133,6 +203,11 @@ public sealed class SqliteRepositoryTests
         Assert.Equal("EUR", settings.DefaultCurrency);
         Assert.Equal(ForecastPeriod.ThirtyDays, settings.DefaultForecastPeriod);
         Assert.Equal(ReminderFrequency.Weekly, settings.ReminderFrequency);
+        Assert.Equal(DateDisplayFormat.DayMonthYear, settings.DateDisplayFormat);
+        Assert.Equal(AppThemeMode.System, settings.ThemeMode);
+        Assert.Equal(AccentColor.Emerald, settings.AccentColor);
+        Assert.Equal(NavigationStyle.Rail, settings.NavigationStyle);
+        Assert.False(settings.ShowPowerUserFeatures);
     }
 
     [Fact]
@@ -142,13 +217,197 @@ public sealed class SqliteRepositoryTests
         var settings = new AppSettings(
             "USD",
             ForecastPeriod.NinetyDays,
-            ReminderFrequency.Biweekly);
+            ReminderFrequency.Biweekly,
+            DateDisplayFormat.MonthDayYear,
+            AppThemeMode.Dark,
+            AccentColor.Blue,
+            NavigationStyle.TopTabs,
+            ShowPowerUserFeatures: true);
 
         await store.Settings.SaveAsync(settings);
 
         var loaded = await store.Settings.GetAsync();
 
         Assert.Equal(settings, loaded);
+    }
+
+    [Fact]
+    public async Task SettingsRepository_SaveAndGet_RoundTripsFreeToSpendSettings()
+    {
+        await using var store = new SqliteTestStore();
+        var primaryAccountId = Guid.NewGuid();
+        var settings = new AppSettings(
+            "EUR",
+            ForecastPeriod.ThirtyDays,
+            ReminderFrequency.Weekly)
+        {
+            FreeToSpendWindowMode = FreeToSpendWindowMode.UntilNextMajorPayment,
+            FreeToSpendWindowDays = 14,
+            SafetyBuffer = 4880m,
+            MajorPaymentThreshold = 10000m,
+            ResolveUpcomingNearTermDays = 10,
+            PrimaryAccountId = primaryAccountId
+        };
+
+        await store.Settings.SaveAsync(settings);
+
+        var loaded = await store.Settings.GetAsync();
+
+        Assert.Equal(FreeToSpendWindowMode.UntilNextMajorPayment, loaded.FreeToSpendWindowMode);
+        Assert.Equal(14, loaded.FreeToSpendWindowDays);
+        Assert.Equal(4880m, loaded.SafetyBuffer);
+        Assert.Equal(10000m, loaded.MajorPaymentThreshold);
+        Assert.Equal(10, loaded.ResolveUpcomingNearTermDays);
+        Assert.Equal(primaryAccountId, loaded.PrimaryAccountId);
+    }
+
+    [Fact]
+    public async Task StatementImportRepository_SaveAndGet_RoundTripsBatchAndRows()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake parser",
+            "statement.fake",
+            "C:\\statement.fake",
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 1);
+        var row = new StatementImportRow(
+            Guid.NewGuid(),
+            batch.Id,
+            new DateOnly(2026, 6, 10),
+            25m,
+            TransactionType.Expense,
+            "Lunch",
+            "LUNCH",
+            "Cafe",
+            "ref-1",
+            "raw line",
+            category.Id,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(category);
+        await store.StatementImports.SaveBatchAsync(batch);
+        await store.StatementImports.SaveRowAsync(row);
+
+        var batches = await store.StatementImports.GetAllBatchesAsync();
+        var rows = await store.StatementImports.GetRowsByBatchIdAsync(batch.Id);
+
+        Assert.Equal(batch, Assert.Single(batches));
+        Assert.Equal(row, Assert.Single(rows));
+    }
+
+    [Fact]
+    public async Task StatementImportRepository_DeleteBatch_RemovesBatchAndRows()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake parser",
+            "statement.fake",
+            "C:\\statement.fake",
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 1);
+        var row = new StatementImportRow(
+            Guid.NewGuid(),
+            batch.Id,
+            new DateOnly(2026, 6, 10),
+            25m,
+            TransactionType.Expense,
+            "Lunch",
+            "LUNCH",
+            null,
+            null,
+            null,
+            null,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+
+        await store.Accounts.SaveAsync(account);
+        await store.StatementImports.SaveBatchAsync(batch);
+        await store.StatementImports.SaveRowAsync(row);
+
+        await store.StatementImports.DeleteBatchAsync(batch.Id);
+
+        Assert.Empty(await store.StatementImports.GetAllBatchesAsync());
+        Assert.Empty(await store.StatementImports.GetRowsByBatchIdAsync(batch.Id));
+    }
+
+    [Fact]
+    public async Task CategoryLearningRuleRepository_SaveAndGet_RoundTripsRule()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        var rule = new CategoryLearningRule(
+            Guid.NewGuid(),
+            "Cafe",
+            "CAFE",
+            TransactionType.Expense,
+            category.Id,
+            account.Id,
+            25m,
+            MatchCount: 2,
+            new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero));
+
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(category);
+        await store.CategoryLearningRules.SaveAsync(rule);
+
+        var loaded = await store.CategoryLearningRules.GetByIdAsync(rule.Id);
+
+        Assert.Equal(rule, loaded);
+    }
+
+    [Fact]
+    public async Task ScheduledOccurrenceOverrideRepository_SaveAndGetAll_RoundTripsSkipAndDelay()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        await store.Accounts.SaveAsync(account);
+        var scheduledTransaction = new ScheduledTransaction(
+            Guid.NewGuid(),
+            "Rent",
+            1000m,
+            account.Id,
+            null,
+            TransactionType.Expense,
+            new RecurrenceRule(RecurrenceFrequency.Monthly, 1, new DateOnly(2026, 6, 10)),
+            new DateOnly(2026, 6, 10),
+            Active: true);
+        await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
+
+        var skip = new ScheduledOccurrenceOverride(
+            Guid.NewGuid(), scheduledTransaction.Id, new DateOnly(2026, 6, 10), ScheduledOccurrenceOverrideKind.Skipped);
+        var delay = new ScheduledOccurrenceOverride(
+            Guid.NewGuid(), scheduledTransaction.Id, new DateOnly(2026, 7, 10), ScheduledOccurrenceOverrideKind.Delayed, new DateOnly(2026, 7, 17));
+
+        await store.ScheduledOccurrenceOverrides.SaveAsync(skip);
+        await store.ScheduledOccurrenceOverrides.SaveAsync(delay);
+
+        var all = await store.ScheduledOccurrenceOverrides.GetAllAsync();
+
+        Assert.Equal(2, all.Count);
+        Assert.Contains(all, item => item == skip);
+        Assert.Contains(all, item => item == delay);
     }
 
     private static Account CreateAccount(string name)
@@ -160,57 +419,5 @@ public sealed class SqliteRepositoryTests
             1000m,
             "EUR",
             new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
-    }
-
-    private sealed class SqliteTestStore : IAsyncDisposable
-    {
-        private readonly string databasePath;
-
-        public SqliteTestStore()
-        {
-            var testDirectory = Path.Combine(Path.GetTempPath(), "Banccoon.Tests");
-            Directory.CreateDirectory(testDirectory);
-            databasePath = Path.Combine(testDirectory, $"{Guid.NewGuid():N}.db");
-
-            var pathProvider = new StaticDatabasePathProvider(databasePath);
-            var connectionFactory = new SqliteConnectionFactory(pathProvider);
-            var initializer = new BanccoonDatabaseInitializer(connectionFactory);
-
-            Accounts = new SqliteAccountRepository(connectionFactory, initializer);
-            Categories = new SqliteCategoryRepository(connectionFactory, initializer);
-            Transactions = new SqliteTransactionRepository(connectionFactory, initializer);
-            ScheduledTransactions = new SqliteScheduledTransactionRepository(connectionFactory, initializer);
-            SavingsGoals = new SqliteSavingsGoalRepository(connectionFactory, initializer);
-            Settings = new SqliteSettingsRepository(connectionFactory, initializer);
-        }
-
-        public SqliteAccountRepository Accounts { get; }
-
-        public SqliteCategoryRepository Categories { get; }
-
-        public SqliteTransactionRepository Transactions { get; }
-
-        public SqliteScheduledTransactionRepository ScheduledTransactions { get; }
-
-        public SqliteSavingsGoalRepository SavingsGoals { get; }
-
-        public SqliteSettingsRepository Settings { get; }
-
-        public ValueTask DisposeAsync()
-        {
-            DeleteIfExists(databasePath);
-            DeleteIfExists($"{databasePath}-shm");
-            DeleteIfExists($"{databasePath}-wal");
-
-            return ValueTask.CompletedTask;
-        }
-
-        private static void DeleteIfExists(string path)
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
     }
 }
