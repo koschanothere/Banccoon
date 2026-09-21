@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Analytics;
 using Banccoon.Core.Models;
@@ -29,7 +30,7 @@ public sealed class AnalyticsViewModel : ViewModelBase
     private bool canGoToNextMonth;
     private decimal donutTotal;
     private AnalyticsCategoryRowViewModel? highlightedSegment;
-    private string donutCaptionText = "Hover a slice to see its share.";
+    private string donutCaptionText = Translator.Get("Dashboard_HoverSliceShare");
 
     public AnalyticsViewModel(
         IDateProvider dateProvider,
@@ -174,8 +175,8 @@ public sealed class AnalyticsViewModel : ViewModelBase
         if (HighlightedSegment is null)
         {
             DonutCaptionText = donutTotal > 0m
-                ? $"Total spend: {MoneyFormat.Format(donutTotal, currency)}"
-                : "No expenses recorded yet.";
+                ? string.Format(Translator.Get("Dashboard_TotalSpendFormat"), MoneyFormat.Format(donutTotal, currency))
+                : Translator.Get("Dashboard_NoExpensesRecordedYet");
             return;
         }
 

@@ -5,15 +5,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:DashboardViewModel"
-    Title="Dashboard"
+    Title="{loc:Translate AppShell_Nav_Dashboard}"
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
     <ScrollView>
         <VerticalStackLayout Padding="40" Spacing="16">
 
             <VerticalStackLayout Spacing="2">
-                <Label Text="Dashboard" Style="{StaticResource ScreenTitleLabel}" />
+                <Label Text="{loc:Translate AppShell_Nav_Dashboard}" Style="{StaticResource ScreenTitleLabel}" />
                 <Label Text="{Binding FreeToSpendWindowText}" Style="{StaticResource SecondaryLabel}" />
             </VerticalStackLayout>
 
@@ -22,19 +23,19 @@
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="14">
                     <VerticalStackLayout Spacing="1" IsVisible="{Binding IsFreeToSpendPrimary}">
-                        <Label Text="Free to spend" Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{loc:Translate Dashboard_FreeToSpendLabel}" Style="{StaticResource SecondaryLabel}" />
                         <Label Text="{Binding FreeToSpendText}" Style="{StaticResource HeroAmountLabel}" />
                         <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
-                            <Label Text="Current balance:" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_CurrentBalancePrefix}" Style="{StaticResource TertiaryLabel}" />
                             <Label Text="{Binding CurrentBalanceText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Spacing="1" IsVisible="{Binding IsCurrentBalancePrimary}">
-                        <Label Text="Current balance" Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{loc:Translate Dashboard_CurrentBalanceLabel}" Style="{StaticResource SecondaryLabel}" />
                         <Label Text="{Binding CurrentBalanceText}" Style="{StaticResource HeroAmountLabel}" />
                         <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
-                            <Label Text="Free to spend:" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_FreeToSpendPrefix}" Style="{StaticResource TertiaryLabel}" />
                             <Label Text="{Binding FreeToSpendText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
@@ -42,26 +43,26 @@
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                     <Button
-                        Text="How it's calculated"
+                        Text="{loc:Translate Dashboard_HowCalculated}"
                         Command="{Binding ToggleCalcCommand}"
                         Style="{StaticResource QuietButton}"
                         HorizontalOptions="Start" />
 
                     <VerticalStackLayout Spacing="7" IsVisible="{Binding IsCalcOpen}">
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Lowest forecasted balance" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="0" Text="{loc:Translate Dashboard_LowestForecastedBalance}" Style="{StaticResource SecondaryLabel}" />
                             <Label Grid.Column="1" Text="{Binding LowestForecastedBalanceText}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Reserved for goals" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="0" Text="{loc:Translate Dashboard_ReservedForGoals}" Style="{StaticResource SecondaryLabel}" />
                             <Label Grid.Column="1" Text="{Binding ReservedForGoalsText}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Safety buffer" Style="{StaticResource SecondaryLabel}" />
+                            <Label Grid.Column="0" Text="{loc:Translate Dashboard_SafetyBuffer}" Style="{StaticResource SecondaryLabel}" />
                             <Label Grid.Column="1" Text="{Binding SafetyBufferText}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Free to spend" FontAttributes="Bold" />
+                            <Label Grid.Column="0" Text="{loc:Translate Dashboard_FreeToSpendLabel}" FontAttributes="Bold" />
                             <Label Grid.Column="1" Text="{Binding FreeToSpendText}" FontAttributes="Bold" />
                         </Grid>
                     </VerticalStackLayout>
@@ -72,15 +73,15 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="1">
-                            <Label Text="Balance history &amp; forecast" Style="{StaticResource SecondaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_BalanceHistoryHeader}" Style="{StaticResource SecondaryLabel}" />
                             <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
                         <HorizontalStackLayout Grid.Column="1" Spacing="6">
                             <DatePicker Date="{Binding RangeStartDate}" Format="dd MMM" WidthRequest="110" />
                             <Label Text="&#8594;" VerticalOptions="Center" Style="{StaticResource TertiaryLabel}" />
                             <DatePicker Date="{Binding RangeEndDate}" Format="dd MMM" WidthRequest="110" />
-                            <Button Text="Apply" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
-                            <Button Text="Reset" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="{loc:Translate Dashboard_ApplyButton}" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="{loc:Translate Dashboard_ResetButton}" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
                         </HorizontalStackLayout>
                     </Grid>
                     <Label
@@ -94,11 +95,11 @@
             <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
             <Border Grid.Row="{Binding UpcomingSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Upcoming" Style="{StaticResource SectionTitleLabel}" />
-                    <Label Text="Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions." Style="{StaticResource TertiaryLabel}" />
+                    <Label Text="{loc:Translate Dashboard_UpcomingHeader}" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{loc:Translate Dashboard_UpcomingSubtitle}" Style="{StaticResource TertiaryLabel}" />
                     <CollectionView ItemsSource="{Binding UpcomingObligations}">
                         <CollectionView.EmptyView>
-                            <Label Text="Nothing coming up." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_NothingComingUp}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:UpcomingObligationRowViewModel">
@@ -123,28 +124,28 @@
 
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
-                            <Label Text="Income" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Enum_TransactionType_Income}" Style="{StaticResource TertiaryLabel}" />
                             <Label
                                 Text="{Binding Analytics.IncomeText}"
                                 Style="{StaticResource SummaryAmountLabel}"
                                 TextColor="{AppThemeBinding Light={StaticResource LightStatusGreen}, Dark={StaticResource DarkStatusGreen}}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
-                            <Label Text="Expense" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Enum_TransactionType_Expense}" Style="{StaticResource TertiaryLabel}" />
                             <Label
                                 Text="{Binding Analytics.ExpenseText}"
                                 Style="{StaticResource SummaryAmountLabel}"
                                 TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="2" Spacing="2">
-                            <Label Text="Net" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_NetLabel}" Style="{StaticResource TertiaryLabel}" />
                             <Label Text="{Binding Analytics.NetText}" Style="{StaticResource SummaryAmountLabel}" />
                         </VerticalStackLayout>
                     </Grid>
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                    <Label Text="Spending breakdown" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="{loc:Translate Dashboard_SpendingBreakdown}" Style="{StaticResource SecondaryLabel}" />
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
                         <controls:DonutChartView
                             Grid.Column="0"
@@ -154,16 +155,16 @@
                             HighlightedSegment="{Binding Analytics.HighlightedSegment, Mode=TwoWay}" />
                         <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
                             <Label Text="{Binding Analytics.DonutCaptionText}" Style="{StaticResource SecondaryLabel}" LineBreakMode="WordWrap" />
-                            <Label Text="Hover a slice for details." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_HoverSliceDetails}" Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
                     </Grid>
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                    <Label Text="Top movers" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="{loc:Translate Dashboard_TopMovers}" Style="{StaticResource SecondaryLabel}" />
                     <CollectionView ItemsSource="{Binding Analytics.TopMovers}">
                         <CollectionView.EmptyView>
-                            <Label Text="Nothing has changed much yet." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_NothingChangedMuchYet}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
@@ -185,11 +186,11 @@
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                    <Label Text="Spending by category" Style="{StaticResource SecondaryLabel}" />
-                    <Label Text="Last 6 months. Tap a category to see its transactions." Style="{StaticResource TertiaryLabel}" />
+                    <Label Text="{loc:Translate Dashboard_SpendingByCategory}" Style="{StaticResource SecondaryLabel}" />
+                    <Label Text="{loc:Translate Dashboard_Last6MonthsSubtitle}" Style="{StaticResource TertiaryLabel}" />
                     <CollectionView ItemsSource="{Binding Analytics.CategoryRows}">
                         <CollectionView.EmptyView>
-                            <Label Text="No expenses recorded yet." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_NoExpensesRecordedYet}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
@@ -230,10 +231,10 @@
 
             <Border Grid.Row="{Binding GoalsSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Goals" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{loc:Translate Dashboard_GoalsHeader}" Style="{StaticResource SectionTitleLabel}" />
                     <CollectionView ItemsSource="{Binding Goals}">
                         <CollectionView.EmptyView>
-                            <Label Text="No savings goals yet." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Dashboard_NoSavingsGoalsYet}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:SavingsGoalRowViewModel">

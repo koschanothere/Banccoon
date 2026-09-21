@@ -715,4 +715,86 @@
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>нет предстоящих платежей</value>
   </data>
+  <!-- DashboardPage -->
+  <data name="Dashboard_FreeToSpendLabel" xml:space="preserve">
+    <value>Свободно к расходованию</value>
+  </data>
+  <data name="Dashboard_CurrentBalancePrefix" xml:space="preserve">
+    <value>Текущий баланс:</value>
+  </data>
+  <data name="Dashboard_CurrentBalanceLabel" xml:space="preserve">
+    <value>Текущий баланс</value>
+  </data>
+  <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
+    <value>Свободно к расходованию:</value>
+  </data>
+  <data name="Dashboard_HowCalculated" xml:space="preserve">
+    <value>Как это рассчитывается</value>
+  </data>
+  <data name="Dashboard_LowestForecastedBalance" xml:space="preserve">
+    <value>Наименьший прогнозируемый баланс</value>
+  </data>
+  <data name="Dashboard_ReservedForGoals" xml:space="preserve">
+    <value>Зарезервировано на цели</value>
+  </data>
+  <data name="Dashboard_SafetyBuffer" xml:space="preserve">
+    <value>Резерв безопасности</value>
+  </data>
+  <data name="Dashboard_BalanceHistoryHeader" xml:space="preserve">
+    <value>История баланса и прогноз</value>
+  </data>
+  <data name="Dashboard_ApplyButton" xml:space="preserve">
+    <value>Применить</value>
+  </data>
+  <data name="Dashboard_ResetButton" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="Dashboard_UpcomingHeader" xml:space="preserve">
+    <value>Ближайшие платежи</value>
+  </data>
+  <data name="Dashboard_UpcomingSubtitle" xml:space="preserve">
+    <value>Ближайшие счета и расходы. Чтобы отметить оплату, пропустить или отложить платёж, используйте раздел «Транзакции».</value>
+  </data>
+  <data name="Dashboard_NothingComingUp" xml:space="preserve">
+    <value>Пока ничего не предстоит.</value>
+  </data>
+  <data name="Dashboard_NetLabel" xml:space="preserve">
+    <value>Итого</value>
+  </data>
+  <data name="Dashboard_SpendingBreakdown" xml:space="preserve">
+    <value>Структура расходов</value>
+  </data>
+  <data name="Dashboard_HoverSliceDetails" xml:space="preserve">
+    <value>Наведите на сегмент, чтобы увидеть детали.</value>
+  </data>
+  <data name="Dashboard_TopMovers" xml:space="preserve">
+    <value>Наибольшие изменения</value>
+  </data>
+  <data name="Dashboard_NothingChangedMuchYet" xml:space="preserve">
+    <value>Пока существенных изменений нет.</value>
+  </data>
+  <data name="Dashboard_SpendingByCategory" xml:space="preserve">
+    <value>Расходы по категориям</value>
+  </data>
+  <data name="Dashboard_Last6MonthsSubtitle" xml:space="preserve">
+    <value>Последние 6 месяцев. Нажмите на категорию, чтобы увидеть операции.</value>
+  </data>
+  <data name="Dashboard_GoalsHeader" xml:space="preserve">
+    <value>Цели</value>
+  </data>
+  <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
+    <value>Пока нет накопительных целей.</value>
+  </data>
+  <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
+    <value>Дата окончания должна быть не раньше даты начала.</value>
+  </data>
+  <data name="Dashboard_HoverSliceShare" xml:space="preserve">
+    <value>Наведите на сегмент, чтобы увидеть долю.</value>
+  </data>
+  <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
+    <value>Всего потрачено: {0}</value>
+  </data>
+  <data name="Dashboard_NoExpensesRecordedYet" xml:space="preserve">
+    <value>Пока нет расходов.</value>
+  </data>
 </root>

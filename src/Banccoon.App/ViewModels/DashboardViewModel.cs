@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.App.Services;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Analytics;
@@ -337,7 +338,7 @@ public sealed class DashboardViewModel : ViewModelBase
         var rangeEnd = DateOnly.FromDateTime(RangeEndDate);
         if (rangeEnd < rangeStart)
         {
-            GraphStatusText = "End date must be on or after the start date.";
+            GraphStatusText = Translator.Get("Dashboard_EndDateMustBeAfterStart");
             return;
         }
 

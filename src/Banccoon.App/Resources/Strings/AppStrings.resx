@@ -697,4 +697,86 @@
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>no upcoming occurrence</value>
   </data>
+  <!-- DashboardPage -->
+  <data name="Dashboard_FreeToSpendLabel" xml:space="preserve">
+    <value>Free to spend</value>
+  </data>
+  <data name="Dashboard_CurrentBalancePrefix" xml:space="preserve">
+    <value>Current balance:</value>
+  </data>
+  <data name="Dashboard_CurrentBalanceLabel" xml:space="preserve">
+    <value>Current balance</value>
+  </data>
+  <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
+    <value>Free to spend:</value>
+  </data>
+  <data name="Dashboard_HowCalculated" xml:space="preserve">
+    <value>How it's calculated</value>
+  </data>
+  <data name="Dashboard_LowestForecastedBalance" xml:space="preserve">
+    <value>Lowest forecasted balance</value>
+  </data>
+  <data name="Dashboard_ReservedForGoals" xml:space="preserve">
+    <value>Reserved for goals</value>
+  </data>
+  <data name="Dashboard_SafetyBuffer" xml:space="preserve">
+    <value>Safety buffer</value>
+  </data>
+  <data name="Dashboard_BalanceHistoryHeader" xml:space="preserve">
+    <value>Balance history &amp; forecast</value>
+  </data>
+  <data name="Dashboard_ApplyButton" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Dashboard_ResetButton" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Dashboard_UpcomingHeader" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="Dashboard_UpcomingSubtitle" xml:space="preserve">
+    <value>Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions.</value>
+  </data>
+  <data name="Dashboard_NothingComingUp" xml:space="preserve">
+    <value>Nothing coming up.</value>
+  </data>
+  <data name="Dashboard_NetLabel" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="Dashboard_SpendingBreakdown" xml:space="preserve">
+    <value>Spending breakdown</value>
+  </data>
+  <data name="Dashboard_HoverSliceDetails" xml:space="preserve">
+    <value>Hover a slice for details.</value>
+  </data>
+  <data name="Dashboard_TopMovers" xml:space="preserve">
+    <value>Top movers</value>
+  </data>
+  <data name="Dashboard_NothingChangedMuchYet" xml:space="preserve">
+    <value>Nothing has changed much yet.</value>
+  </data>
+  <data name="Dashboard_SpendingByCategory" xml:space="preserve">
+    <value>Spending by category</value>
+  </data>
+  <data name="Dashboard_Last6MonthsSubtitle" xml:space="preserve">
+    <value>Last 6 months. Tap a category to see its transactions.</value>
+  </data>
+  <data name="Dashboard_GoalsHeader" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
+    <value>No savings goals yet.</value>
+  </data>
+  <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
+    <value>End date must be on or after the start date.</value>
+  </data>
+  <data name="Dashboard_HoverSliceShare" xml:space="preserve">
+    <value>Hover a slice to see its share.</value>
+  </data>
+  <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
+    <value>Total spend: {0}</value>
+  </data>
+  <data name="Dashboard_NoExpensesRecordedYet" xml:space="preserve">
+    <value>No expenses recorded yet.</value>
+  </data>
 </root>
