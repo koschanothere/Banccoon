@@ -21,7 +21,7 @@ Concrete look decisions: typography, shape, density, and color. For the underlyi
 - **Current state (temporary, explicitly acceptable for now):** every button in the app — header actions (Filter, Categories, Check-in, Select, Import, Add), form actions (Save, Close, Mark Paid, Skip, Delay, Rename, Delete, Merge) — uses a plain text label. This was a deliberate "get it working first" choice, not a design decision.
 - **Eventual requirement:** icon-based buttons are one of the actual design principles (the reference app used icon glyphs for header-level actions, not text), so text-label buttons need to be replaced app-wide once the underlying screens/flows are further along.
 - **Do not do this incrementally per-screen.** Explicitly called out by the user as a *global* fix to do in one pass near the end of the build, once more of the app exists — not something to chase screen-by-screen as new buttons get added, since that would mean re-touching the same buttons twice.
-- When it happens: needs an actual icon set decision first (a bundled icon font/SVG set, since MAUI has no built-in icon glyphs) — not yet chosen.
+- **Icon set: decided — [Heroicons](https://heroicons.com/).** Which specific glyph goes on which button is not decided yet; the user will work through that mapping button-by-button in a separate session later. Nothing to implement here until that mapping exists.
 
 ## Dark Mode
 

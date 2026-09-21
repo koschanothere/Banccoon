@@ -56,7 +56,7 @@ public sealed class RecurrenceService : IRecurrenceService
         return occurrences.Count > 0 ? occurrences[0] : null;
     }
 
-    public string Describe(RecurrenceRule rule)
+    public RecurrenceDescriptionData Describe(RecurrenceRule rule)
     {
         return recurrenceDescriptionService.Describe(rule);
     }

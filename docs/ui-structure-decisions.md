@@ -26,11 +26,12 @@ Decisions made in the UI planning walkthrough, before any visual/look design. Th
 
 - Spending by category, current period vs. last period **and** vs. last few periods (multi-period, not just a 2-period comparison).
 - Independent date range from the main graph, defaults to current month.
-- Functional scope (visual treatment TBD in the "look" phase):
+- Functional scope — **done**, including visual treatment (see the Analytics entries in `docs/development-phases.md`):
   - Multi-period trend per category (line/bar over last N months)
   - Top movers / biggest changes auto-surfaced (e.g. "Dining out up 40%")
   - Drill-down: clicking a category filters straight into Transactions for that category/period
   - Income vs. expense breakdown, not just expense categories
+  - Donut chart of the viewed month's category spend, hover-highlighted per slice
 
 ## Money Model: Free to Spend
 
