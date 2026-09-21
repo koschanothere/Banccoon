@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 
@@ -114,6 +115,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             PrivacyMode.IsEnabled = PrivacyModeEnabled;
+            Translator.SetLanguage(SelectedLanguage.Code);
             DefaultCurrencyText = normalizedCurrency;
             StatusText = "Saved.";
         });

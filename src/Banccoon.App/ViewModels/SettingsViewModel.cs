@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
@@ -276,6 +277,7 @@ public sealed class SettingsViewModel : ViewModelBase
             RebuildDashboardSectionRows();
 
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
+            Translator.SetLanguage(settings.DisplayLanguage);
         });
 
         await General.InitializeAsync(settings);
