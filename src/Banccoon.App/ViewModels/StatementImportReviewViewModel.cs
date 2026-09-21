@@ -160,7 +160,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     {
         if (row.IsCreatingNewCategory && string.IsNullOrWhiteSpace(row.NewCategoryName))
         {
-            await RunOnMainThreadAsync(() => StatusText = "Name the new category first.");
+            await RunOnMainThreadAsync(() => StatusText = Translator.Get("StatementImport_NameNewCategoryFirst"));
             return;
         }
 
@@ -205,7 +205,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     {
         if (IsCreatingNewBulkCategory && string.IsNullOrWhiteSpace(NewBulkCategoryName))
         {
-            await RunOnMainThreadAsync(() => StatusText = "Name the new category first.");
+            await RunOnMainThreadAsync(() => StatusText = Translator.Get("StatementImport_NameNewCategoryFirst"));
             return;
         }
 

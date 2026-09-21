@@ -315,4 +315,138 @@
   <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
     <value>Every year</value>
   </data>
+  <!-- Common (reusable generic UI verbs/nouns across screens) -->
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Common_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Common_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Common_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Common_Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Common_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Common_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Common_Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Common_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Common_NewCategoryNamePlaceholder" xml:space="preserve">
+    <value>New category name</value>
+  </data>
+  <!-- StatementImportPage -->
+  <data name="StatementImport_Title" xml:space="preserve">
+    <value>Import Statement</value>
+  </data>
+  <data name="StatementImport_Header" xml:space="preserve">
+    <value>Import statement</value>
+  </data>
+  <data name="StatementImport_Step1Header" xml:space="preserve">
+    <value>1. Choose a statement file</value>
+  </data>
+  <data name="StatementImport_ChooseFileButton" xml:space="preserve">
+    <value>Choose file</value>
+  </data>
+  <data name="StatementImport_ParserLabel" xml:space="preserve">
+    <value>Parser</value>
+  </data>
+  <data name="StatementImport_PeriodLabel" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="StatementImport_RowsFoundLabel" xml:space="preserve">
+    <value>Rows found</value>
+  </data>
+  <data name="StatementImport_DetectedBalanceLabel" xml:space="preserve">
+    <value>Detected balance</value>
+  </data>
+  <data name="StatementImport_DetectedAccountLabel" xml:space="preserve">
+    <value>Detected account</value>
+  </data>
+  <data name="StatementImport_Step2Header" xml:space="preserve">
+    <value>2. Confirm the account</value>
+  </data>
+  <data name="StatementImport_ExistingAccountButton" xml:space="preserve">
+    <value>Existing account</value>
+  </data>
+  <data name="StatementImport_NewAccountButton" xml:space="preserve">
+    <value>New account</value>
+  </data>
+  <data name="StatementImport_AccountNamePlaceholder" xml:space="preserve">
+    <value>Account name</value>
+  </data>
+  <data name="StatementImport_StartingBalancePlaceholder" xml:space="preserve">
+    <value>Starting balance</value>
+  </data>
+  <data name="StatementImport_Step3Header" xml:space="preserve">
+    <value>3. Review transactions</value>
+  </data>
+  <data name="StatementImport_CancelImportButton" xml:space="preserve">
+    <value>Cancel import</value>
+  </data>
+  <data name="StatementImport_ApproveSelectedButton" xml:space="preserve">
+    <value>Approve selected</value>
+  </data>
+  <data name="StatementImport_SkipSelectedButton" xml:space="preserve">
+    <value>Skip selected</value>
+  </data>
+  <data name="StatementImport_AllRowsReviewed" xml:space="preserve">
+    <value>All rows reviewed.</value>
+  </data>
+  <data name="StatementImport_PossibleDuplicate" xml:space="preserve">
+    <value>Possible duplicate</value>
+  </data>
+  <data name="StatementImport_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Other account</value>
+  </data>
+  <data name="StatementImport_ChooseFileToBegin" xml:space="preserve">
+    <value>Choose a bank statement file to begin.</value>
+  </data>
+  <data name="StatementImport_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="StatementImport_NotDetected" xml:space="preserve">
+    <value>Not detected</value>
+  </data>
+  <data name="StatementImport_CardEndingFormat" xml:space="preserve">
+    <value>Card ending {0}</value>
+  </data>
+  <data name="StatementImport_RowCount_One" xml:space="preserve">
+    <value>{0} row</value>
+  </data>
+  <data name="StatementImport_RowCount_Other" xml:space="preserve">
+    <value>{0} rows</value>
+  </data>
+  <data name="StatementImport_FilePickerTitle" xml:space="preserve">
+    <value>Choose a bank statement file</value>
+  </data>
+  <data name="StatementImport_CouldNotOpenFilePicker" xml:space="preserve">
+    <value>Could not open the file picker.</value>
+  </data>
+  <data name="StatementImport_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="StatementImport_StartingBalanceMustBeNumber" xml:space="preserve">
+    <value>Starting balance must be a number.</value>
+  </data>
+  <data name="StatementImport_ChooseAnAccount" xml:space="preserve">
+    <value>Choose an account.</value>
+  </data>
+  <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
+    <value>Name the new category first.</value>
+  </data>
 </root>
