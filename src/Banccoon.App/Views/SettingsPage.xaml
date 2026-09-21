@@ -186,12 +186,12 @@
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                <Label Grid.Column="0" Text="Manage categories" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
-                                <Button Grid.Column="1" Text="Select" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
-                                <Button Grid.Column="1" Text="Cancel" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
-                                <Button Grid.Column="2" Text="Delete selected" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
+                                <Label Grid.Column="0" Text="{loc:Translate Settings_ManageCategoriesHeader}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="{loc:Translate Common_Select}" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                                <Button Grid.Column="1" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
+                                <Button Grid.Column="2" Text="{loc:Translate Transactions_DeleteSelectedButton}" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
                             </Grid>
-                            <Label Text="Tap a category to change its color. Press and drag one onto another to merge them together." Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate Settings_ManageCategoriesHint}" Style="{StaticResource TertiaryLabel}" />
 
                             <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding CategoryManagement.Boxes}">
                                 <BindableLayout.ItemTemplate>
@@ -225,16 +225,16 @@
                             </FlexLayout>
 
                             <Button
-                                Text="+ Add category"
+                                Text="{loc:Translate Settings_AddCategoryButton}"
                                 Command="{Binding CategoryManagement.StartAddCategoryCommand}"
                                 IsVisible="{Binding CategoryManagement.IsAddingCategory, Converter={StaticResource InverseBoolConverter}}"
                                 Style="{StaticResource QuietButton}"
                                 HorizontalOptions="Start" />
 
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding CategoryManagement.IsAddingCategory}">
-                                <Entry Grid.Column="0" Text="{Binding CategoryManagement.NewCategoryName}" Placeholder="Category name" />
-                                <Button Grid.Column="1" Text="Add" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Grid.Column="2" Text="Cancel" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
+                                <Entry Grid.Column="0" Text="{Binding CategoryManagement.NewCategoryName}" Placeholder="{loc:Translate Settings_CategoryNamePlaceholder}" />
+                                <Button Grid.Column="1" Text="{loc:Translate Common_Add}" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Grid.Column="2" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
                             </Grid>
                             <Label Text="{Binding CategoryManagement.StatusText}" IsVisible="{Binding CategoryManagement.IsAddingCategory}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
@@ -242,15 +242,15 @@
 
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
-                            <Label Text="Transactions" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate AppShell_Nav_Transactions}" Style="{StaticResource SectionTitleLabel}" />
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Resolve upcoming: days ahead to show while collapsed" Style="{StaticResource SecondaryLabel}" />
-                                <Entry Text="{Binding ResolveUpcomingNearTermDaysText}" Placeholder="Days" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
+                                <Label Text="{loc:Translate Settings_ResolveUpcomingDaysLabel}" Style="{StaticResource SecondaryLabel}" />
+                                <Entry Text="{Binding ResolveUpcomingNearTermDaysText}" Placeholder="{loc:Translate Settings_DaysPlaceholder}" Keyboard="Numeric" WidthRequest="120" HorizontalOptions="Start" />
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="Save" Command="{Binding SaveResolveUpcomingCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveResolveUpcomingCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding ResolveUpcomingStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
@@ -258,12 +258,12 @@
 
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
-                            <Label Text="Learned categorization rules" Style="{StaticResource SectionTitleLabel}" />
-                            <Label Text="What the app has auto-learned from your corrections during statement import. Edit one that learned wrong, or forget it entirely." Style="{StaticResource TertiaryLabel}" />
-                            <SearchBar Placeholder="Search by recipient or category" Text="{Binding LearningRules.SearchText}" />
+                            <Label Text="{loc:Translate Settings_LearnedRulesHeader}" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate Settings_LearnedRulesHint}" Style="{StaticResource TertiaryLabel}" />
+                            <SearchBar Placeholder="{loc:Translate Settings_SearchByRecipientPlaceholder}" Text="{Binding LearningRules.SearchText}" />
                             <CollectionView ItemsSource="{Binding LearningRules.Rows}">
                                 <CollectionView.EmptyView>
-                                    <Label Text="Nothing learned yet." Style="{StaticResource TertiaryLabel}" />
+                                    <Label Text="{loc:Translate Settings_NothingLearnedYet}" Style="{StaticResource TertiaryLabel}" />
                                 </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:CategoryLearningRuleRowViewModel">
@@ -277,21 +277,21 @@
                                                     <Label Style="{StaticResource TertiaryLabel}" Text="{Binding DestinationAccountName}" IsVisible="{Binding HasDestinationAccount}" />
                                                     <Label Style="{StaticResource TertiaryLabel}" Text="{Binding MatchCountText}" />
                                                 </VerticalStackLayout>
-                                                <Button Grid.Column="1" Text="Edit" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" VerticalOptions="Center" />
-                                                <Button Grid.Column="2" Text="Forget" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
+                                                <Button Grid.Column="1" Text="{loc:Translate Common_Edit}" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="{loc:Translate Settings_ForgetButton}" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
                                             </Grid>
 
                                             <!-- Edit mode -->
                                             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditing}">
-                                                <Entry Text="{Binding EditMatchText}" Placeholder="Recipient text" />
+                                                <Entry Text="{Binding EditMatchText}" Placeholder="{loc:Translate Settings_RecipientTextPlaceholder}" />
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                                    <Picker Grid.Column="0" Title="Type" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding EditType}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
-                                                    <Picker Grid.Column="1" Title="Category" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding EditCategory}" />
+                                                    <Picker Grid.Column="0" Title="{loc:Translate Common_Type}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding EditType}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
+                                                    <Picker Grid.Column="1" Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding EditCategory}" />
                                                 </Grid>
-                                                <Picker Title="Other account" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding EditDestinationAccount}" IsVisible="{Binding IsEditTransferType}" />
+                                                <Picker Title="{loc:Translate Common_OtherAccountPickerTitle}" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding EditDestinationAccount}" IsVisible="{Binding IsEditTransferType}" />
                                                 <HorizontalStackLayout Spacing="8">
-                                                    <Button Text="Save" Command="{Binding SaveEditCommand}" Style="{StaticResource PrimaryButton}" />
-                                                    <Button Text="Cancel" Command="{Binding CancelEditCommand}" Style="{StaticResource QuietButton}" />
+                                                    <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveEditCommand}" Style="{StaticResource PrimaryButton}" />
+                                                    <Button Text="{loc:Translate Common_Cancel}" Command="{Binding CancelEditCommand}" Style="{StaticResource QuietButton}" />
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
 

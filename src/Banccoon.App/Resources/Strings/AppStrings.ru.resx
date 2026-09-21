@@ -923,4 +923,44 @@
   <data name="Enum_DashboardSection_Goals" xml:space="preserve">
     <value>Цели</value>
   </data>
+  <!-- SettingsPage: Transactions tab -->
+  <data name="Settings_ManageCategoriesHeader" xml:space="preserve">
+    <value>Управление категориями</value>
+  </data>
+  <data name="Settings_ManageCategoriesHint" xml:space="preserve">
+    <value>Нажмите на категорию, чтобы изменить её цвет. Перетащите одну категорию на другую, чтобы объединить их.</value>
+  </data>
+  <data name="Settings_AddCategoryButton" xml:space="preserve">
+    <value>+ Добавить категорию</value>
+  </data>
+  <data name="Settings_CategoryNamePlaceholder" xml:space="preserve">
+    <value>Название категории</value>
+  </data>
+  <data name="Settings_ResolveUpcomingDaysLabel" xml:space="preserve">
+    <value>Ближайшие платежи: сколько дней показывать в свёрнутом виде</value>
+  </data>
+  <data name="Settings_LearnedRulesHeader" xml:space="preserve">
+    <value>Изученные правила категоризации</value>
+  </data>
+  <data name="Settings_LearnedRulesHint" xml:space="preserve">
+    <value>То, что приложение самостоятельно изучило по вашим исправлениям при импорте выписок. Исправьте неверно изученное правило или полностью забудьте его.</value>
+  </data>
+  <data name="Settings_SearchByRecipientPlaceholder" xml:space="preserve">
+    <value>Поиск по получателю или категории</value>
+  </data>
+  <data name="Settings_NothingLearnedYet" xml:space="preserve">
+    <value>Пока ничего не изучено.</value>
+  </data>
+  <data name="Settings_ForgetButton" xml:space="preserve">
+    <value>Забыть</value>
+  </data>
+  <data name="Settings_RecipientTextPlaceholder" xml:space="preserve">
+    <value>Текст получателя</value>
+  </data>
+  <data name="Settings_EnterCategoryName" xml:space="preserve">
+    <value>Введите название категории.</value>
+  </data>
+  <data name="Settings_UnknownCategory" xml:space="preserve">
+    <value>Неизвестная категория</value>
+  </data>
 </root>

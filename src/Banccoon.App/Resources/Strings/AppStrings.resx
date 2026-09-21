@@ -905,4 +905,44 @@
   <data name="Enum_DashboardSection_Goals" xml:space="preserve">
     <value>Goals</value>
   </data>
+  <!-- SettingsPage: Transactions tab -->
+  <data name="Settings_ManageCategoriesHeader" xml:space="preserve">
+    <value>Manage categories</value>
+  </data>
+  <data name="Settings_ManageCategoriesHint" xml:space="preserve">
+    <value>Tap a category to change its color. Press and drag one onto another to merge them together.</value>
+  </data>
+  <data name="Settings_AddCategoryButton" xml:space="preserve">
+    <value>+ Add category</value>
+  </data>
+  <data name="Settings_CategoryNamePlaceholder" xml:space="preserve">
+    <value>Category name</value>
+  </data>
+  <data name="Settings_ResolveUpcomingDaysLabel" xml:space="preserve">
+    <value>Resolve upcoming: days ahead to show while collapsed</value>
+  </data>
+  <data name="Settings_LearnedRulesHeader" xml:space="preserve">
+    <value>Learned categorization rules</value>
+  </data>
+  <data name="Settings_LearnedRulesHint" xml:space="preserve">
+    <value>What the app has auto-learned from your corrections during statement import. Edit one that learned wrong, or forget it entirely.</value>
+  </data>
+  <data name="Settings_SearchByRecipientPlaceholder" xml:space="preserve">
+    <value>Search by recipient or category</value>
+  </data>
+  <data name="Settings_NothingLearnedYet" xml:space="preserve">
+    <value>Nothing learned yet.</value>
+  </data>
+  <data name="Settings_ForgetButton" xml:space="preserve">
+    <value>Forget</value>
+  </data>
+  <data name="Settings_RecipientTextPlaceholder" xml:space="preserve">
+    <value>Recipient text</value>
+  </data>
+  <data name="Settings_EnterCategoryName" xml:space="preserve">
+    <value>Enter a category name.</value>
+  </data>
+  <data name="Settings_UnknownCategory" xml:space="preserve">
+    <value>Unknown category</value>
+  </data>
 </root>

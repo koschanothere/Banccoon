@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
@@ -92,7 +93,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
 
         foreach (var rule in matching.OrderByDescending(rule => rule.UpdatedAt))
         {
-            var categoryName = categoriesById.TryGetValue(rule.CategoryId, out var foundCategory) ? foundCategory.Name : "Unknown category";
+            var categoryName = categoriesById.TryGetValue(rule.CategoryId, out var foundCategory) ? foundCategory.Name : Translator.Get("Settings_UnknownCategory");
             var destinationAccountName = rule.DestinationAccountId is { } destinationAccountId && accountsById.TryGetValue(destinationAccountId, out var destinationAccount)
                 ? destinationAccount.Name
                 : null;
