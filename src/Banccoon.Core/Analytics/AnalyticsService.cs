@@ -28,12 +28,39 @@ public sealed class AnalyticsService : IAnalyticsService
             .Where(transaction => transaction.Type == TransactionType.Expense)
             .ToList();
 
-        var categoryKeys = expenseTransactions
-            .Select(transaction => transaction.CategoryId)
-            .Distinct();
+        // Bucket every expense into its (category, period) slot in one pass instead of the
+        // previous approach of re-scanning the full expense list once per category per period
+        // (O(categories * periods * transactions)) - that was the dominant cost of every Dashboard
+        // load, since this runs on every InitializeAsync and every month navigation.
+        // Guid.Empty stands in for "uncategorized" (CategoryId is null) - safe as a dictionary key
+        // sentinel since every real category Id comes from Guid.NewGuid().
+        var totalsByCategory = new Dictionary<Guid, decimal[]>();
+        var firstPeriodStart = periods[0].Start;
+        foreach (var transaction in expenseTransactions)
+        {
+            var periodIndex = ((transaction.Date.Year - firstPeriodStart.Year) * 12)
+                + transaction.Date.Month - firstPeriodStart.Month;
+            if (periodIndex < 0 || periodIndex >= periods.Count)
+            {
+                continue;
+            }
 
-        var trends = categoryKeys
-            .Select(categoryId => BuildTrend(categoryId, categoryNamesById, expenseTransactions, periods))
+            var key = transaction.CategoryId ?? Guid.Empty;
+            if (!totalsByCategory.TryGetValue(key, out var totals))
+            {
+                totals = new decimal[periods.Count];
+                totalsByCategory[key] = totals;
+            }
+
+            totals[periodIndex] += Math.Abs(transaction.Amount);
+        }
+
+        var trends = totalsByCategory
+            .Select(entry => BuildTrend(
+                entry.Key == Guid.Empty ? null : entry.Key,
+                categoryNamesById,
+                entry.Value,
+                periods))
             .OrderByDescending(trend => trend.CurrentPeriodTotal)
             .ToList();
 
@@ -60,7 +87,7 @@ public sealed class AnalyticsService : IAnalyticsService
     private static AnalyticsCategoryTrend BuildTrend(
         Guid? categoryId,
         IReadOnlyDictionary<Guid, string> categoryNamesById,
-        IReadOnlyList<Transaction> expenseTransactions,
+        IReadOnlyList<decimal> periodTotals,
         IReadOnlyList<MonthlyPeriod> periods)
     {
         var categoryName = categoryId is { } id && categoryNamesById.TryGetValue(id, out var name)
@@ -68,14 +95,7 @@ public sealed class AnalyticsService : IAnalyticsService
             : "Uncategorized";
 
         var points = periods
-            .Select(period => new AnalyticsCategoryPoint(
-                period.Start,
-                period.Label,
-                expenseTransactions
-                    .Where(transaction => transaction.CategoryId == categoryId
-                        && transaction.Date >= period.Start
-                        && transaction.Date <= period.End)
-                    .Sum(transaction => Math.Abs(transaction.Amount))))
+            .Select((period, index) => new AnalyticsCategoryPoint(period.Start, period.Label, periodTotals[index]))
             .ToList();
 
         var currentTotal = points[^1].Total;

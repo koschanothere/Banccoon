@@ -113,10 +113,33 @@ public static class MauiProgram
         builder.Services.AddTransient<StatementImportViewModel>();
         builder.Services.AddTransient<AppLockViewModel>();
 
-        builder.Services.AddTransient<DashboardPage>();
-        builder.Services.AddTransient<TransactionsPage>();
-        builder.Services.AddTransient<AccountsPage>();
-        builder.Services.AddTransient<SettingsPage>();
+        // Singleton, not transient: each of these is one FlyoutItem's ShellContent
+        // (ContentTemplate="{DataTemplate views:XPage}"), and Shell re-invokes that DataTemplate -
+        // i.e. resolves a fresh instance from this container - on every single tab switch, not
+        // just the first visit. Confirmed via diagnostics.log timing: InitializeComponent() alone
+        // (building the whole native XAML visual tree from scratch) cost 50-150ms on every switch,
+        // which was the entire "delay before content appears" complaint - the ViewModel/data work
+        // was already sub-millisecond after the first load. Singleton means the container hands
+        // back the same already-built page forever, so that cost is paid once per app run instead
+        // of once per navigation. The ViewModels stay Transient (no change needed) - since the page
+        // is now only ever constructed once, its ViewModel is also only ever resolved once, simply
+        // by virtue of being a constructor parameter of a page that's no longer rebuilt.
+        //
+        // Side effect worth knowing: transient UI state on these ViewModels (SelectMode/FilterOpen
+        // on Transactions, IsCalcOpen on Dashboard, SelectedCategory on Settings, etc.) used to
+        // silently reset every time you left and returned to a tab, because the whole
+        // page+ViewModel pair was being thrown away and recreated. Now it persists across tab
+        // switches instead, since the same instance sticks around - e.g. leaving Transactions with
+        // the filter panel open and coming back will show it still open. InitializeAsync's own data
+        // refresh on every OnAppearing is unaffected either way.
+        //
+        // StatementImportPage/AppLockPage stay Transient deliberately - they're one-off
+        // modal-style flows (GoToAsync/PushModalAsync, not a FlyoutItem tab), where fresh state
+        // per visit is correct, not an accident to fix.
+        builder.Services.AddSingleton<DashboardPage>();
+        builder.Services.AddSingleton<TransactionsPage>();
+        builder.Services.AddSingleton<AccountsPage>();
+        builder.Services.AddSingleton<SettingsPage>();
         builder.Services.AddTransient<StatementImportPage>();
         builder.Services.AddTransient<AppLockPage>();
 

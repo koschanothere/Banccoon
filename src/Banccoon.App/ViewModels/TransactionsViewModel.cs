@@ -259,6 +259,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             accounts = await accountRepository.GetAllAsync();
             categories = await categoryRepository.GetAllAsync();
             allTransactions = await transactionRepository.GetAllAsync();
+            RebuildLookups();
 
             // Both mutate collections bound to live UI (Pickers/CollectionView) - must run on the
             // UI thread, which the awaits above may have hopped off of (see ViewModelBase.RunOnMainThreadAsync).
@@ -363,7 +364,13 @@ public sealed class TransactionsViewModel : ViewModelBase
         pendingAccountFilterId = null;
     }
 
-    private void ApplyFilters()
+    // Only depends on accounts/categories/allTransactions, which are only re-fetched from
+    // InitializeAsync - not on AccountFilter/CategoryFilter, so this must not run from
+    // ApplyFilters(). It used to, which meant every filter-picker change (and the pending-filter
+    // re-application below) recomputed a full running-balance history for every account from
+    // scratch - wasted work that grows with the account's transaction count and made the filter
+    // panel feel sluggish on accounts with a lot of history.
+    private void RebuildLookups()
     {
         accountsById = accounts.ToDictionary(account => account.Id);
         categoriesById = categories.ToDictionary(category => category.Id);
@@ -374,7 +381,10 @@ public sealed class TransactionsViewModel : ViewModelBase
                 allTransactions
                     .Where(transaction => transaction.AccountId == account.Id || transaction.DestinationAccountId == account.Id)
                     .ToList()));
+    }
 
+    private void ApplyFilters()
+    {
         var filtered = allTransactions.AsEnumerable();
         if (AccountFilter is not null && AccountFilter.Id != AllOptionId)
         {
@@ -481,13 +491,9 @@ public sealed class TransactionsViewModel : ViewModelBase
                 : "Transfer";
         }
 
-        if (transaction.CategoryId is { } categoryId)
+        if (transaction.CategoryId is { } categoryId && categoriesById.TryGetValue(categoryId, out var category))
         {
-            var category = categories.FirstOrDefault(category => category.Id == categoryId);
-            if (category is not null)
-            {
-                return category.Name;
-            }
+            return category.Name;
         }
 
         return "Other";

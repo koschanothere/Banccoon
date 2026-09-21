@@ -118,10 +118,50 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             ActiveColorPickerBox = null;
-            Boxes.Clear();
-            foreach (var category in ordered)
+            ReconcileBoxes(ordered);
+            StatusText = string.Empty;
+        });
+    }
+
+    // Updates Boxes to match `ordered` by reusing/updating existing CategoryBoxViewModel instances
+    // wherever the category still exists, instead of the previous Clear()+rebuild-everything
+    // approach - see CategoryBoxViewModel.UpdateColor for why that mattered (BindableLayout isn't
+    // virtualized, so every Add() was a real native view built from scratch). RefreshAsync runs on
+    // every single Settings visit via InitializeAsync, not just after an actual edit, so most calls
+    // had nothing to change at all. Category names are immutable once created (renaming was tried
+    // and removed - see the class remarks above), so the only things that can differ between calls
+    // are additions, removals, and a color change - never a reorder of two otherwise-unchanged
+    // categories.
+    private void ReconcileBoxes(IReadOnlyList<Category> ordered)
+    {
+        var existingById = Boxes.ToDictionary(box => box.Id);
+        var orderedIds = new HashSet<Guid>(ordered.Select(category => category.Id));
+
+        for (var index = Boxes.Count - 1; index >= 0; index--)
+        {
+            if (!orderedIds.Contains(Boxes[index].Id))
             {
-                Boxes.Add(new CategoryBoxViewModel(
+                Boxes.RemoveAt(index);
+            }
+        }
+
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            var category = ordered[index];
+            if (existingById.TryGetValue(category.Id, out var existingBox))
+            {
+                existingBox.UpdateColor(category.Color);
+                existingBox.IsSelectModeActive = IsSelectMode;
+
+                var currentIndex = Boxes.IndexOf(existingBox);
+                if (currentIndex != index)
+                {
+                    Boxes.Move(currentIndex, index);
+                }
+            }
+            else
+            {
+                Boxes.Insert(index, new CategoryBoxViewModel(
                     category,
                     HandleBoxTapped,
                     StartDrag,
@@ -131,9 +171,7 @@ public sealed class CategoryManagementViewModel : ViewModelBase
                     IsSelectModeActive = IsSelectMode
                 });
             }
-
-            StatusText = string.Empty;
-        });
+        }
     }
 
     private void HandleBoxTapped(CategoryBoxViewModel box)
