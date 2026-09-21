@@ -2,7 +2,9 @@ namespace Banccoon.Core.Analytics;
 
 public sealed record AnalyticsCategoryTrend(
     Guid? CategoryId,
-    string CategoryName,
+    // Null when CategoryId is null (uncategorized) - Core stays UI-language-agnostic, so the
+    // "Uncategorized" display label is the App layer's job at format time, not Core's.
+    string? CategoryName,
     IReadOnlyList<AnalyticsCategoryPoint> Points,
     decimal CurrentPeriodTotal,
     decimal PreviousPeriodTotal)
