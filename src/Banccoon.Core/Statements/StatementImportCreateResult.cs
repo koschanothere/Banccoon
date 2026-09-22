@@ -2,6 +2,6 @@ namespace Banccoon.Core.Statements;
 
 public sealed record StatementImportCreateResult(
     bool ParserAvailable,
-    string Message,
+    StatementImportMessage Message,
     StatementImportBatch? Batch,
     IReadOnlyList<StatementImportRow> Rows);

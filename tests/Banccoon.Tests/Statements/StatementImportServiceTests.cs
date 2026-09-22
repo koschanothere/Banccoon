@@ -20,7 +20,61 @@ public sealed class StatementImportServiceTests
 
         Assert.False(result.ParserAvailable);
         Assert.Null(result.Batch);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.NoParserAvailable), result.Message);
         Assert.Empty(await store.StatementImports.GetAllBatchesAsync());
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WhenNoFileChosen_ReturnsNoFileChosenMessage()
+    {
+        await using var store = new SqliteTestStore();
+        var service = CreateService(store, Array.Empty<IStatementParser>());
+
+        var result = await service.PreviewAsync("  ");
+
+        Assert.False(result.ParserAvailable);
+        Assert.Null(result.Statement);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.NoFileChosen), result.Message);
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WhenNoParserAvailable_ReturnsNoParserMessage()
+    {
+        await using var store = new SqliteTestStore();
+        var service = CreateService(store, Array.Empty<IStatementParser>());
+
+        var result = await service.PreviewAsync("statement.unknown");
+
+        Assert.False(result.ParserAvailable);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.NoParserAvailable), result.Message);
+    }
+
+    [Fact]
+    public async Task CreatePendingImportAsync_ReportsRowCountReadyForReview()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 11), 40m, TransactionType.Expense, "Dinner")
+        ])]);
+
+        var result = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.RowsReadyForReview, 2), result.Message);
+    }
+
+    [Fact]
+    public async Task CancelImportAsync_WhenBatchDoesNotExist_ReturnsImportNotFound()
+    {
+        await using var store = new SqliteTestStore();
+        var service = CreateService(store, Array.Empty<IStatementParser>());
+
+        var result = await service.CancelImportAsync(Guid.NewGuid());
+
+        Assert.False(result.Cancelled);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.ImportNotFound), result.Message);
     }
 
     [Fact]
@@ -41,6 +95,7 @@ public sealed class StatementImportServiceTests
         Assert.NotNull(result.Statement);
         Assert.Equal("fake", result.Statement.ParserId);
         Assert.Single(result.Statement.Rows);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.RowsFound, 1), result.Message);
     }
 
     [Fact]
@@ -113,6 +168,7 @@ public sealed class StatementImportServiceTests
         var result = await service.CancelImportAsync(pending.Batch!.Id);
 
         Assert.True(result.Cancelled);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.Cancelled), result.Message);
         Assert.Empty(await store.StatementImports.GetAllBatchesAsync());
         Assert.Empty(await store.StatementImports.GetRowsByBatchIdAsync(pending.Batch.Id));
     }
@@ -136,6 +192,7 @@ public sealed class StatementImportServiceTests
         var result = await service.CancelImportAsync(pending.Batch!.Id);
 
         Assert.False(result.Cancelled);
+        Assert.Equal(new StatementImportMessage(StatementImportMessageCode.CannotCancelAfterApproval), result.Message);
         Assert.NotNull(await store.StatementImports.GetBatchByIdAsync(pending.Batch.Id));
     }
 

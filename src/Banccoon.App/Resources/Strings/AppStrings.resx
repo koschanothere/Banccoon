@@ -479,6 +479,33 @@
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Name the new category first.</value>
   </data>
+  <data name="StatementImportMessage_NoFileChosen" xml:space="preserve">
+    <value>Choose a bank statement file first.</value>
+  </data>
+  <data name="StatementImportMessage_NoParserAvailable" xml:space="preserve">
+    <value>No parser is available for this statement yet.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_One" xml:space="preserve">
+    <value>{0} statement row found.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_Other" xml:space="preserve">
+    <value>{0} statement rows found.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_One" xml:space="preserve">
+    <value>{0} statement row is ready for review.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_Other" xml:space="preserve">
+    <value>{0} statement rows are ready for review.</value>
+  </data>
+  <data name="StatementImportMessage_ImportNotFound" xml:space="preserve">
+    <value>The statement import could not be found.</value>
+  </data>
+  <data name="StatementImportMessage_CannotCancelAfterApproval" xml:space="preserve">
+    <value>This statement already created transactions, so the import batch cannot be cancelled.</value>
+  </data>
+  <data name="StatementImportMessage_Cancelled" xml:space="preserve">
+    <value>Statement import cancelled.</value>
+  </data>
   <data name="Common_Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -1158,6 +1185,81 @@
   </data>
   <data name="Settings_MustBeAtLeast0" xml:space="preserve">
     <value>Must be a whole number of 0 or more.</value>
+  </data>
+  <data name="ImportValidation_UnsupportedFormatVersion" xml:space="preserve">
+    <value>Unsupported export format version: {0}.</value>
+  </data>
+  <data name="ImportValidation_ApplicationVersionRequired" xml:space="preserve">
+    <value>Application version is required.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Account" xml:space="preserve">
+    <value>Account id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Category" xml:space="preserve">
+    <value>Category id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Transaction" xml:space="preserve">
+    <value>Transaction id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_ScheduledTransaction" xml:space="preserve">
+    <value>Scheduled transaction id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_SavingsGoal" xml:space="preserve">
+    <value>Savings goal id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportBatch" xml:space="preserve">
+    <value>Statement import batch id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportRow" xml:space="preserve">
+    <value>Statement import row id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_CategoryLearningRule" xml:space="preserve">
+    <value>Category learning rule id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Generic" xml:space="preserve">
+    <value>Id {0} appears more than once.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Account" xml:space="preserve">
+    <value>Transaction {0} references missing account {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Category" xml:space="preserve">
+    <value>Transaction {0} references missing category {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Account" xml:space="preserve">
+    <value>Scheduled transaction {0} references missing account {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Category" xml:space="preserve">
+    <value>Scheduled transaction {0} references missing category {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_SavingsGoal_Account" xml:space="preserve">
+    <value>Savings goal {0} references missing account {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportBatch_Account" xml:space="preserve">
+    <value>Statement import batch {0} references missing account {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Batch" xml:space="preserve">
+    <value>Statement import row {0} references missing batch {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_SuggestedCategory" xml:space="preserve">
+    <value>Statement import row {0} references missing suggested category {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Category" xml:space="preserve">
+    <value>Statement import row {0} references missing category {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_DuplicateTransaction" xml:space="preserve">
+    <value>Statement import row {0} references missing duplicate transaction {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_CreatedTransaction" xml:space="preserve">
+    <value>Statement import row {0} references missing created transaction {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Category" xml:space="preserve">
+    <value>Category learning rule {0} references missing category {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Account" xml:space="preserve">
+    <value>Category learning rule {0} references missing account {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Generic" xml:space="preserve">
+    <value>Record {0} references a missing record {1}.</value>
   </data>
   <data name="Common_Next" xml:space="preserve">
     <value>Next</value>

@@ -60,7 +60,68 @@ public sealed class ImportExportServiceTests
         var validation = await services.ImportService.ValidateAsync(export);
 
         Assert.False(validation.IsValid);
-        Assert.Contains(validation.Errors, error => error.Contains("references missing account", StringComparison.Ordinal));
+        Assert.Contains(
+            ImportValidationError.MissingReference(ImportEntityType.Transaction, transaction.Id, ImportReferenceKind.Account, transaction.AccountId),
+            validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenFormatVersionUnsupported_ReturnsErrorCarryingTheVersion()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var export = CreateExportEnvelope(CreateAccount("Checking")) with { ExportFormatVersion = 99 };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.False(validation.IsValid);
+        Assert.Equal([ImportValidationError.UnsupportedFormatVersion(99)], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenApplicationVersionMissing_ReturnsError()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var export = CreateExportEnvelope(CreateAccount("Checking")) with { ApplicationVersion = " " };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Equal([ImportValidationError.ApplicationVersionRequired()], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenAccountIdRepeats_ReturnsDuplicateIdOnce()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var account = CreateAccount("Checking");
+        var export = CreateExportEnvelope(account);
+        export = export with { Data = export.Data with { Accounts = [account, account with { Name = "Copy" }] } };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Equal([ImportValidationError.DuplicateId(ImportEntityType.Account, account.Id)], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenStatementRowReferencesMissingBatch_IdentifiesTheReferenceKind()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var sample = await SeedSampleDataAsync(store);
+        var export = await services.ExportService.CreateExportAsync();
+        export = export with { Data = export.Data with { StatementImportBatches = Array.Empty<StatementImportBatch>() } };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Contains(
+            ImportValidationError.MissingReference(
+                ImportEntityType.StatementImportRow,
+                sample.StatementImportRow.Id,
+                ImportReferenceKind.Batch,
+                sample.StatementImportBatch.Id),
+            validation.Errors);
     }
 
     [Fact]

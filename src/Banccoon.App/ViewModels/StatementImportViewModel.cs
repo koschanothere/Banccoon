@@ -190,7 +190,7 @@ public sealed class StatementImportViewModel : ViewModelBase
             await RunOnMainThreadAsync(() =>
             {
                 statement = preview.Statement;
-                PreviewStatusText = preview.Message;
+                PreviewStatusText = StatementImportMessageFormatter.Format(preview.Message);
             });
         }
         finally
@@ -240,7 +240,7 @@ public sealed class StatementImportViewModel : ViewModelBase
             var result = await statementImportService.CreatePendingImportAsync(accountId.Value, filePath, statement);
             if (!result.ParserAvailable || result.Batch is null)
             {
-                await RunOnMainThreadAsync(() => Account.SetStatus(result.Message));
+                await RunOnMainThreadAsync(() => Account.SetStatus(StatementImportMessageFormatter.Format(result.Message)));
                 return;
             }
 

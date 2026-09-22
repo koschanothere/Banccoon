@@ -45,7 +45,7 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementPreviewResult(
                 ParserAvailable: false,
-                "Choose a bank statement file first.",
+                new StatementImportMessage(StatementImportMessageCode.NoFileChosen),
                 null);
         }
 
@@ -55,14 +55,14 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementPreviewResult(
                 ParserAvailable: false,
-                "No parser is available for this statement yet.",
+                new StatementImportMessage(StatementImportMessageCode.NoParserAvailable),
                 null);
         }
 
         var parsedStatement = await parser.ParseAsync(request, cancellationToken);
         return new StatementPreviewResult(
             ParserAvailable: true,
-            $"{parsedStatement.Rows.Count} statement row(s) found.",
+            new StatementImportMessage(StatementImportMessageCode.RowsFound, parsedStatement.Rows.Count),
             parsedStatement);
     }
 
@@ -75,7 +75,7 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementImportCreateResult(
                 ParserAvailable: false,
-                "Choose a bank statement file first.",
+                new StatementImportMessage(StatementImportMessageCode.NoFileChosen),
                 null,
                 Array.Empty<StatementImportRow>());
         }
@@ -92,7 +92,7 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementImportCreateResult(
                 ParserAvailable: false,
-                "No parser is available for this statement yet. Add a bank-specific parser after a redacted sample is provided.",
+                new StatementImportMessage(StatementImportMessageCode.NoParserAvailable),
                 null,
                 Array.Empty<StatementImportRow>());
         }
@@ -113,7 +113,7 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementImportCreateResult(
                 ParserAvailable: false,
-                "Choose a bank statement file first.",
+                new StatementImportMessage(StatementImportMessageCode.NoFileChosen),
                 null,
                 Array.Empty<StatementImportRow>());
         }
@@ -152,7 +152,7 @@ public sealed class StatementImportService : IStatementImportService
 
         return new StatementImportCreateResult(
             ParserAvailable: true,
-            $"{rows.Length} statement row(s) are ready for review.",
+            new StatementImportMessage(StatementImportMessageCode.RowsReadyForReview, rows.Length),
             batch,
             rows);
     }
@@ -293,7 +293,7 @@ public sealed class StatementImportService : IStatementImportService
         var batch = await statementImportRepository.GetBatchByIdAsync(batchId, cancellationToken);
         if (batch is null)
         {
-            return new StatementImportCancelResult(false, "The statement import could not be found.");
+            return new StatementImportCancelResult(false, new StatementImportMessage(StatementImportMessageCode.ImportNotFound));
         }
 
         var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
@@ -301,11 +301,11 @@ public sealed class StatementImportService : IStatementImportService
         {
             return new StatementImportCancelResult(
                 false,
-                "This statement already created transactions, so the import batch cannot be cancelled.");
+                new StatementImportMessage(StatementImportMessageCode.CannotCancelAfterApproval));
         }
 
         await statementImportRepository.DeleteBatchAsync(batchId, cancellationToken);
-        return new StatementImportCancelResult(true, "Statement import cancelled.");
+        return new StatementImportCancelResult(true, new StatementImportMessage(StatementImportMessageCode.Cancelled));
     }
 
     private StatementImportRow CreateImportRow(

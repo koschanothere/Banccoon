@@ -491,6 +491,39 @@
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Сначала укажите название новой категории.</value>
   </data>
+  <data name="StatementImportMessage_NoFileChosen" xml:space="preserve">
+    <value>Сначала выберите файл банковской выписки.</value>
+  </data>
+  <data name="StatementImportMessage_NoParserAvailable" xml:space="preserve">
+    <value>Для этой выписки пока нет подходящего парсера.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_One" xml:space="preserve">
+    <value>Найдена {0} строка выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_Few" xml:space="preserve">
+    <value>Найдено {0} строки выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_Many" xml:space="preserve">
+    <value>Найдено {0} строк выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_One" xml:space="preserve">
+    <value>{0} строка выписки готова к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_Few" xml:space="preserve">
+    <value>{0} строки выписки готовы к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_Many" xml:space="preserve">
+    <value>{0} строк выписки готово к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_ImportNotFound" xml:space="preserve">
+    <value>Импорт выписки не найден.</value>
+  </data>
+  <data name="StatementImportMessage_CannotCancelAfterApproval" xml:space="preserve">
+    <value>По этой выписке уже созданы транзакции, поэтому импорт нельзя отменить.</value>
+  </data>
+  <data name="StatementImportMessage_Cancelled" xml:space="preserve">
+    <value>Импорт выписки отменён.</value>
+  </data>
   <data name="Common_Save" xml:space="preserve">
     <value>Сохранить</value>
   </data>
@@ -1191,6 +1224,81 @@
   </data>
   <data name="Settings_MustBeAtLeast0" xml:space="preserve">
     <value>Должно быть целым числом не менее 0.</value>
+  </data>
+  <data name="ImportValidation_UnsupportedFormatVersion" xml:space="preserve">
+    <value>Неподдерживаемая версия формата экспорта: {0}.</value>
+  </data>
+  <data name="ImportValidation_ApplicationVersionRequired" xml:space="preserve">
+    <value>Не указана версия приложения.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Account" xml:space="preserve">
+    <value>Счёт с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Category" xml:space="preserve">
+    <value>Категория с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Transaction" xml:space="preserve">
+    <value>Транзакция с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_ScheduledTransaction" xml:space="preserve">
+    <value>Запланированное правило с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_SavingsGoal" xml:space="preserve">
+    <value>Накопительная цель с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportBatch" xml:space="preserve">
+    <value>Импорт выписки с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportRow" xml:space="preserve">
+    <value>Строка выписки с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_CategoryLearningRule" xml:space="preserve">
+    <value>Правило категоризации с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Generic" xml:space="preserve">
+    <value>Идентификатор {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Account" xml:space="preserve">
+    <value>Транзакция {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Category" xml:space="preserve">
+    <value>Транзакция {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Account" xml:space="preserve">
+    <value>Запланированное правило {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Category" xml:space="preserve">
+    <value>Запланированное правило {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_SavingsGoal_Account" xml:space="preserve">
+    <value>Накопительная цель {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportBatch_Account" xml:space="preserve">
+    <value>Импорт выписки {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Batch" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующий импорт выписки {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_SuggestedCategory" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую предложенную категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Category" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_DuplicateTransaction" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую дублирующую транзакцию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_CreatedTransaction" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую созданную транзакцию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Category" xml:space="preserve">
+    <value>Правило категоризации {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Account" xml:space="preserve">
+    <value>Правило категоризации {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Generic" xml:space="preserve">
+    <value>Запись {0} ссылается на отсутствующую запись {1}.</value>
   </data>
   <data name="Common_Next" xml:space="preserve">
     <value>Далее</value>

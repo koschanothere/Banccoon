@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -267,7 +268,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
         await RunOnMainThreadAsync(() =>
         {
-            StatusText = result.Message;
+            StatusText = StatementImportMessageFormatter.Format(result.Message);
             if (result.Cancelled)
             {
                 Rows.Clear();
