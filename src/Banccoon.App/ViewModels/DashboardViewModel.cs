@@ -352,12 +352,21 @@ public sealed class DashboardViewModel : ViewModelBase
         // chosen range reaches in either direction - a forecast can only ever project forward
         // from the account's actual current balance, never from some other day.
         var historicalEnd = rangeStart > today ? rangeStart : (rangeEnd < today ? rangeEnd : today.AddDays(-1));
+
+        // Today's own recorded transactions are what move the line from yesterday's point to
+        // today's, so they're listed on today's (first forecast) point below.
+        IReadOnlyList<string> todaysRecordedSummaries = [];
         if (rangeStart <= today)
         {
+            // Always walk back from today, then drop the days past historicalEnd: the service's
+            // currentTotalBalance is the total at the END of its endDate, and the accounts' live
+            // balances are the total at the end of today. Walking back from historicalEnd instead
+            // would show today's balance as yesterday's (or, for a range entirely in the past,
+            // ignore every transaction between the range's end and today).
             var currentTotalBalance = dashboardAccounts.Sum(account => account.CurrentBalance);
             var historicalPoints = historicalBalanceService.GetHistoricalBalances(
                 rangeStart,
-                historicalEnd,
+                today,
                 currentTotalBalance,
                 dashboardAccountIds,
                 allTransactions);
@@ -367,11 +376,14 @@ public sealed class DashboardViewModel : ViewModelBase
                 ChartPoints.Add(new ForecastChartPointViewModel(
                     point.Date,
                     point.Balance,
-                    Array.Empty<string>(),
+                    FormatHistoricalEvents(point.Events),
                     settings.DefaultCurrency,
                     settings.DateDisplayFormat,
                     isHistorical: true));
             }
+
+            todaysRecordedSummaries = FormatHistoricalEvents(
+                historicalPoints.FirstOrDefault(point => point.Date == today)?.Events ?? []);
         }
 
         if (rangeEnd >= today)
@@ -380,12 +392,21 @@ public sealed class DashboardViewModel : ViewModelBase
             var graphRequest = new ForecastRequest(forecastStart, rangeEnd, dashboardAccounts, scheduledTransactions);
             var graphForecast = forecastService.CreateForecast(graphRequest);
             var eventsByDate = graphForecast.Events.ToLookup(forecastEvent => forecastEvent.Date);
+            var todaysRecordedSummariesShown = false;
 
             foreach (var point in graphForecast.ProjectedBalances)
             {
                 var eventSummaries = eventsByDate[point.Date]
-                    .Select(forecastEvent => $"{forecastEvent.Name}: {MoneyFormat.Format(forecastEvent.SignedAmount, settings.DefaultCurrency)}")
+                    .Select(forecastEvent => ChartEventSummaryFormat.Format(forecastEvent, settings.DefaultCurrency))
                     .ToArray();
+
+                // Only on the first of today's points - a day with several scheduled events has
+                // several points dated today, and repeating the list on each would be noise.
+                if (point.Date == today && !todaysRecordedSummariesShown)
+                {
+                    eventSummaries = [.. todaysRecordedSummaries, .. eventSummaries];
+                    todaysRecordedSummariesShown = true;
+                }
 
                 ChartPoints.Add(new ForecastChartPointViewModel(
                     point.Date,
@@ -396,5 +417,12 @@ public sealed class DashboardViewModel : ViewModelBase
                     isCurrentDate: point.Date == today));
             }
         }
+    }
+
+    private string[] FormatHistoricalEvents(IReadOnlyList<HistoricalBalanceEvent> events)
+    {
+        return events
+            .Select(historicalEvent => ChartEventSummaryFormat.Format(historicalEvent, settings.DefaultCurrency))
+            .ToArray();
     }
 }

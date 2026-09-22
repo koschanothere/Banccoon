@@ -120,6 +120,18 @@
   <data name="ForecastChart_Today" xml:space="preserve">
     <value>Сегодня</value>
   </data>
+  <data name="ForecastChart_CurrentBalance" xml:space="preserve">
+    <value>Текущий баланс</value>
+  </data>
+  <data name="ForecastChart_NoAccountChanges" xml:space="preserve">
+    <value>Без изменений по счетам</value>
+  </data>
+  <data name="ForecastChart_NoPlannedEvents" xml:space="preserve">
+    <value>Нет запланированных операций</value>
+  </data>
+  <data name="ForecastChart_InternalTransferFormat" xml:space="preserve">
+    <value>{0}: {1} (перевод)</value>
+  </data>
   <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
     <value>Изучено по {0} исправлению</value>
   </data>

@@ -1,4 +1,5 @@
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 
 namespace Banccoon.App.ViewModels;
@@ -23,7 +24,9 @@ public sealed class ForecastChartPointViewModel
         ShortDateText = DateDisplay.FormatShortWithoutYear(date, dateDisplayFormat);
         BalanceText = MoneyFormat.Format(balance, currency);
         EventsText = eventSummaries.Count == 0
-            ? isCurrentDate ? "Current balance" : isHistorical ? "No account changes" : "No planned events"
+            ? Translator.Get(isCurrentDate
+                ? "ForecastChart_CurrentBalance"
+                : isHistorical ? "ForecastChart_NoAccountChanges" : "ForecastChart_NoPlannedEvents")
             : string.Join(" | ", eventSummaries);
     }
 

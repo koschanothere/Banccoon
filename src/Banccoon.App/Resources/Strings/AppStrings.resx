@@ -120,6 +120,18 @@
   <data name="ForecastChart_Today" xml:space="preserve">
     <value>Today</value>
   </data>
+  <data name="ForecastChart_CurrentBalance" xml:space="preserve">
+    <value>Current balance</value>
+  </data>
+  <data name="ForecastChart_NoAccountChanges" xml:space="preserve">
+    <value>No account changes</value>
+  </data>
+  <data name="ForecastChart_NoPlannedEvents" xml:space="preserve">
+    <value>No planned events</value>
+  </data>
+  <data name="ForecastChart_InternalTransferFormat" xml:space="preserve">
+    <value>{0}: {1} (transfer)</value>
+  </data>
   <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
     <value>Learned from {0} correction</value>
   </data>
