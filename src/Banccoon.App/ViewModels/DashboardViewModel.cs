@@ -8,6 +8,7 @@ using Banccoon.Core.Analytics;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Savings;
 
 namespace Banccoon.App.ViewModels;
 
@@ -20,7 +21,6 @@ public sealed class DashboardViewModel : ViewModelBase
     private readonly IAccountRepository accountRepository;
     private readonly ITransactionRepository transactionRepository;
     private readonly IScheduledTransactionRepository scheduledTransactionRepository;
-    private readonly ISavingsGoalRepository savingsGoalRepository;
     private readonly ISettingsRepository settingsRepository;
     private readonly IForecastService forecastService;
     private readonly IAvailableToSpendService availableToSpendService;
@@ -61,7 +61,6 @@ public sealed class DashboardViewModel : ViewModelBase
         IAccountRepository accountRepository,
         ITransactionRepository transactionRepository,
         IScheduledTransactionRepository scheduledTransactionRepository,
-        ISavingsGoalRepository savingsGoalRepository,
         ISettingsRepository settingsRepository,
         IForecastService forecastService,
         IAvailableToSpendService availableToSpendService,
@@ -75,7 +74,6 @@ public sealed class DashboardViewModel : ViewModelBase
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.scheduledTransactionRepository = scheduledTransactionRepository;
-        this.savingsGoalRepository = savingsGoalRepository;
         this.settingsRepository = settingsRepository;
         this.forecastService = forecastService;
         this.availableToSpendService = availableToSpendService;
@@ -95,6 +93,7 @@ public sealed class DashboardViewModel : ViewModelBase
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
         ApplyRangeCommand = new RelayCommand(() => RedrawChart());
         ResetRangeCommand = new RelayCommand(() => ResetRange());
+        AddGoalCommand = new RelayCommand(() => _ = AddGoalRequested?.Invoke());
     }
 
     // The Analytics section's "drill down into this category" action needs Shell navigation,
@@ -102,6 +101,10 @@ public sealed class DashboardViewModel : ViewModelBase
     // OnCloseClicked for the established convention) - so it's surfaced as an event for
     // DashboardPage's code-behind to act on instead.
     public event Func<Guid?, Task>? CategoryDrillDownRequested;
+
+    // Goals are Goal-type accounts, created through Accounts' own add form - the page navigates
+    // there (preset to AccountType.Goal) rather than this widget growing a second goal editor.
+    public event Func<Task>? AddGoalRequested;
 
     public bool IsLoading
     {
@@ -185,7 +188,7 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ObservableCollection<UpcomingObligationRowViewModel> UpcomingObligations { get; }
 
-    public ObservableCollection<SavingsGoalRowViewModel> Goals { get; }
+    public ObservableCollection<GoalAccountRowViewModel> Goals { get; }
 
     public AnalyticsViewModel Analytics { get; }
 
@@ -213,6 +216,8 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ICommand ResetRangeCommand { get; }
 
+    public ICommand AddGoalCommand { get; }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
@@ -225,7 +230,11 @@ public sealed class DashboardViewModel : ViewModelBase
             dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
             scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
             allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
-            var savingsGoals = await savingsGoalRepository.GetAllAsync(cancellationToken);
+            // Every non-archived goal, including ones excluded from dashboard totals - excluding
+            // one from "free to spend" doesn't stop it being a goal worth tracking here.
+            var goalAccounts = accounts
+                .Where(account => account.Type == AccountType.Goal && !account.IsArchived)
+                .ToList();
             today = dateProvider.Today;
             defaultRangeStart = today.AddDays(-DefaultHistoricalDays);
             defaultRangeEnd = today.AddDays((int)settings.DefaultForecastPeriod - 1);
@@ -243,7 +252,7 @@ public sealed class DashboardViewModel : ViewModelBase
                 GoalsSectionRow = order.IndexOf(DashboardSection.Goals);
             });
 
-            await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, savingsGoals);
+            await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, goalAccounts);
             await LoadUpcomingObligationsAsync(today, settings, dashboardAccounts, scheduledTransactions);
             await RunOnMainThreadAsync(() => RedrawChart());
             await Analytics.InitializeAsync(settings.DefaultCurrency, cancellationToken);
@@ -267,12 +276,16 @@ public sealed class DashboardViewModel : ViewModelBase
         AppSettings appSettings,
         IReadOnlyList<Account> accountsForTotals,
         IReadOnlyList<ScheduledTransaction> scheduled,
-        IReadOnlyList<SavingsGoal> savingsGoals)
+        IReadOnlyList<Account> goalAccounts)
     {
         var window = freeToSpendWindowService.GetWindow(asOfToday, appSettings, scheduled);
         var request = new ForecastRequest(window.StartDate, window.EndDate, accountsForTotals, scheduled);
         var forecast = forecastService.CreateForecast(request);
-        var breakdown = availableToSpendService.Calculate(forecast, savingsGoals, appSettings.SafetyBuffer);
+        // Reserve the money held in goal accounts that the forecast itself counted (see GoalAccounts).
+        var breakdown = availableToSpendService.Calculate(
+            forecast,
+            GoalAccounts.AsSavingsGoals(accountsForTotals),
+            appSettings.SafetyBuffer);
 
         // Called from InitializeAsync after several awaits that may have resumed off the UI
         // thread (see ViewModelBase.RunOnMainThreadAsync) - this is the dashboard's hero card, the
@@ -293,9 +306,9 @@ public sealed class DashboardViewModel : ViewModelBase
             FreeToSpendWindowText = Translator.GetPlural("Dashboard_FreeToSpendWindowDuration", windowDayCount);
 
             Goals.Clear();
-            foreach (var goal in savingsGoals)
+            foreach (var goalAccount in goalAccounts)
             {
-                Goals.Add(new SavingsGoalRowViewModel(goal, appSettings.DefaultCurrency, appSettings.DateDisplayFormat));
+                Goals.Add(new GoalAccountRowViewModel(goalAccount));
             }
         });
     }

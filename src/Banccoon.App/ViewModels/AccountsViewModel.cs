@@ -4,6 +4,7 @@ using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
+using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
@@ -15,6 +16,7 @@ public sealed class AccountsViewModel : ViewModelBase
 
     private string currency = "EUR";
     private Guid? primaryAccountId;
+    private AccountType? pendingAddAccountType;
     private bool isLoading;
     private bool showArchived;
     private AccountRowViewModel? detailAccount;
@@ -146,6 +148,14 @@ public sealed class AccountsViewModel : ViewModelBase
 
     public ICommand OpenAddAccountCommand { get; }
 
+    // Set when navigated here from the Dashboard's "+ Add goal" (see AccountsPage.ApplyQueryAttributes,
+    // which Shell calls before OnAppearing -> InitializeAsync). Consumed once, at the end of the
+    // next InitializeAsync, so it opens the add form over a freshly loaded list.
+    public void SetPendingAddAccountType(AccountType type)
+    {
+        pendingAddAccountType = type;
+    }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
@@ -193,6 +203,12 @@ public sealed class AccountsViewModel : ViewModelBase
             // Touches UI-bound state after an await that may have resumed off the UI thread (see
             // ViewModelBase.RunOnMainThreadAsync).
             await RunOnMainThreadAsync(() => IsLoading = false);
+        }
+
+        if (pendingAddAccountType is { } addType)
+        {
+            pendingAddAccountType = null;
+            await RunOnMainThreadAsync(() => Form.OpenForCreate(currency, addType));
         }
     }
 

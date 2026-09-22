@@ -135,12 +135,14 @@ public sealed class AccountFormViewModel : ViewModelBase
 
     public void Close() => IsOpen = false;
 
-    public void OpenForCreate(string defaultCurrency)
+    // type: preset for entry points that already know what's being created (the Dashboard's
+    // "+ Add goal" opens this preset to AccountType.Goal, which reveals the goal-target field).
+    public void OpenForCreate(string defaultCurrency, AccountType type = AccountType.DebitCard)
     {
         editingAccountId = null;
         Title = Translator.Get("Accounts_NewAccountTitle");
         Name = string.Empty;
-        Type = AccountType.DebitCard;
+        Type = type;
         Currency = defaultCurrency;
         BalanceText = "0";
         AccountNumberText = string.Empty;

@@ -987,7 +987,10 @@
     <value>Цели</value>
   </data>
   <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
-    <value>Пока нет накопительных целей.</value>
+    <value>Пока нет целей. Цель — это счёт с типом «Цель» и, при желании, целевой суммой.</value>
+  </data>
+  <data name="Dashboard_AddGoalButton" xml:space="preserve">
+    <value>+ Добавить цель</value>
   </data>
   <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
     <value>Дата окончания должна быть не раньше даты начала.</value>

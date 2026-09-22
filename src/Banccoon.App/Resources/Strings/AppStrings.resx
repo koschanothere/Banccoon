@@ -948,7 +948,10 @@
     <value>Goals</value>
   </data>
   <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
-    <value>No savings goals yet.</value>
+    <value>No goals yet. A goal is an account of type Goal, with an optional target amount.</value>
+  </data>
+  <data name="Dashboard_AddGoalButton" xml:space="preserve">
+    <value>+ Add goal</value>
   </data>
   <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
     <value>End date must be on or after the start date.</value>

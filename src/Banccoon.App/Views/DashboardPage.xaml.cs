@@ -1,4 +1,5 @@
 using Banccoon.App.ViewModels;
+using Banccoon.Core.Models;
 
 namespace Banccoon.App.Views;
 
@@ -12,6 +13,7 @@ public partial class DashboardPage : ContentPage
         this.viewModel = viewModel;
         BindingContext = viewModel;
         viewModel.CategoryDrillDownRequested += OnCategoryDrillDownRequestedAsync;
+        viewModel.AddGoalRequested += OnAddGoalRequestedAsync;
     }
 
     protected override async void OnAppearing()
@@ -24,5 +26,11 @@ public partial class DashboardPage : ContentPage
     {
         var route = categoryId is { } id ? $"//transactions?categoryId={id}" : "//transactions";
         return Shell.Current.GoToAsync(route);
+    }
+
+    // Opens Accounts' own add-account form, preset to a Goal - see AccountsPage.ApplyQueryAttributes.
+    private static Task OnAddGoalRequestedAsync()
+    {
+        return Shell.Current.GoToAsync($"//accounts?addAccountType={AccountType.Goal}");
     }
 }

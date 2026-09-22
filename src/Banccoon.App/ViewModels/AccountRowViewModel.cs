@@ -51,11 +51,11 @@ public sealed class AccountRowViewModel : ViewModelBase
             : hasCardDigits ? $"**** {account.CardLastFourDigits}" : string.Empty;
 
         IsGoal = account.Type == AccountType.Goal;
-        if (IsGoal && account.PlanningValue is { } target && target > 0m)
+        if (Formatting.GoalProgress.Of(account) is { } progress)
         {
             HasGoalTarget = true;
-            GoalTargetText = MoneyFormat.Format(target, account.Currency);
-            GoalProgress = (double)Math.Clamp(account.CurrentBalance / target, 0m, 1m);
+            GoalTargetText = MoneyFormat.Format(account.PlanningValue!.Value, account.Currency);
+            GoalProgress = progress;
         }
 
         IsCreditCard = account.Type == AccountType.CreditCard;
