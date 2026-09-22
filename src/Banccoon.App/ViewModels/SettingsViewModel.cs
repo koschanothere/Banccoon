@@ -51,6 +51,14 @@ public sealed class SettingsViewModel : ViewModelBase
         Categories = [];
         RebuildCategoryRows();
 
+        // Categories.Add(...) below bakes each Translator.Get(...) result into a plain immutable
+        // Name string rather than a live {loc:Translate} XAML binding, so it doesn't participate in
+        // the null-property-name "everything changed" signal Translator fires on language switch
+        // (see Translator.SetLanguage) - needs its own rebuild on that signal. Both places that call
+        // SetLanguage (here, and GeneralPreferencesViewModel.SaveAsync) already do so from inside
+        // RunOnMainThreadAsync, so this handler is safe to mutate Categories synchronously.
+        Translator.Instance.PropertyChanged += (_, _) => RebuildCategoryRows();
+
         SetLightCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Light));
         SetDarkCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.Dark));
         SetSystemCommand = new RelayCommand(() => _ = SetThemeModeAsync(AppThemeMode.System));
