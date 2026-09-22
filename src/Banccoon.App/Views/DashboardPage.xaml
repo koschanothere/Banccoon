@@ -15,7 +15,6 @@
 
             <VerticalStackLayout Spacing="2">
                 <Label Text="{loc:Translate AppShell_Nav_Dashboard}" Style="{StaticResource ScreenTitleLabel}" />
-                <Label Text="{Binding FreeToSpendWindowText}" Style="{StaticResource SecondaryLabel}" />
             </VerticalStackLayout>
 
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
@@ -24,7 +23,10 @@
                 <VerticalStackLayout Spacing="14">
                     <VerticalStackLayout Spacing="1" IsVisible="{Binding IsFreeToSpendPrimary}">
                         <Label Text="{loc:Translate Dashboard_FreeToSpendLabel}" Style="{StaticResource SecondaryLabel}" />
-                        <Label Text="{Binding FreeToSpendText}" Style="{StaticResource HeroAmountLabel}" />
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Label Grid.Column="0" Text="{Binding FreeToSpendText}" Style="{StaticResource HeroAmountLabel}" VerticalOptions="End" />
+                            <Label Grid.Column="1" Text="{Binding FreeToSpendWindowText}" VerticalOptions="End" HorizontalOptions="End" />
+                        </Grid>
                         <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
                             <Label Text="{loc:Translate Dashboard_CurrentBalancePrefix}" Style="{StaticResource TertiaryLabel}" />
                             <Label Text="{Binding CurrentBalanceText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
@@ -37,6 +39,7 @@
                         <HorizontalStackLayout Spacing="6" Margin="0,4,0,0">
                             <Label Text="{loc:Translate Dashboard_FreeToSpendPrefix}" Style="{StaticResource TertiaryLabel}" />
                             <Label Text="{Binding FreeToSpendText}" Style="{StaticResource TertiaryLabel}" FontAttributes="Bold" />
+                            <Label Text="{Binding FreeToSpendWindowText}" Style="{StaticResource TertiaryLabel}" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 

@@ -43,9 +43,33 @@
                             <Label Text="{loc:Translate Settings_AppearanceHeader}" Style="{StaticResource SectionTitleLabel}" />
                             <Label Text="{loc:Translate Settings_ThemeLabel}" Style="{StaticResource SecondaryLabel}" />
                             <HorizontalStackLayout Spacing="6">
-                                <Button Text="{loc:Translate Settings_ThemeLight}" Command="{Binding SetLightCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Settings_ThemeDark}" Command="{Binding SetDarkCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Settings_ThemeSystem}" Command="{Binding SetSystemCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_ThemeLight}" Command="{Binding SetLightCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsLightSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Settings_ThemeDark}" Command="{Binding SetDarkCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsDarkSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Settings_ThemeSystem}" Command="{Binding SetSystemCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsSystemSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
                             </HorizontalStackLayout>
 
                             <Label Text="{loc:Translate Settings_CategoryColorsLabel}" Style="{StaticResource SecondaryLabel}" />
@@ -140,8 +164,24 @@
                             <Label Text="{loc:Translate Settings_PrimaryHeroNumberLabel}" Style="{StaticResource SecondaryLabel}" />
                             <Label Text="{loc:Translate Settings_PrimaryHeroNumberHint}" Style="{StaticResource TertiaryLabel}" />
                             <HorizontalStackLayout Spacing="6">
-                                <Button Text="{loc:Translate Dashboard_FreeToSpendLabel}" Command="{Binding SetFreeToSpendPrimaryCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Dashboard_CurrentBalanceLabel}" Command="{Binding SetCurrentBalancePrimaryCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Dashboard_FreeToSpendLabel}" Command="{Binding SetFreeToSpendPrimaryCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsFreeToSpendPrimarySelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Dashboard_CurrentBalanceLabel}" Command="{Binding SetCurrentBalancePrimaryCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsCurrentBalancePrimarySelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
@@ -152,10 +192,42 @@
 
                             <Label Text="{loc:Translate Settings_WindowLabel}" Style="{StaticResource SecondaryLabel}" />
                             <HorizontalStackLayout Spacing="6">
-                                <Button Text="{loc:Translate Settings_WindowRollingDays}" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Settings_WindowThisWeek}" Command="{Binding SetWindowCalendarWeekCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Settings_WindowThisMonth}" Command="{Binding SetWindowCalendarMonthCommand}" Style="{StaticResource QuietButton}" />
-                                <Button Text="{loc:Translate Settings_WindowUntilMajorPayment}" Command="{Binding SetWindowUntilMajorPaymentCommand}" Style="{StaticResource QuietButton}" />
+                                <Button Text="{loc:Translate Settings_WindowRollingDays}" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsWindowRollingSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Settings_WindowThisWeek}" Command="{Binding SetWindowCalendarWeekCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsWindowCalendarWeekSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Settings_WindowThisMonth}" Command="{Binding SetWindowCalendarMonthCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsWindowCalendarMonthSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="{loc:Translate Settings_WindowUntilMajorPayment}" Command="{Binding SetWindowUntilMajorPaymentCommand}" Style="{StaticResource QuietButton}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding IsWindowUntilMajorPaymentSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                            <Setter Property="TextColor" Value="#FFFFFF" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
                             </HorizontalStackLayout>
 
                             <VerticalStackLayout Spacing="4" IsVisible="{Binding IsRollingDaysFieldVisible}">

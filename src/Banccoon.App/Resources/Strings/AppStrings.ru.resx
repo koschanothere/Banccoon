@@ -740,6 +740,15 @@
   <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
     <value>Свободно к расходованию:</value>
   </data>
+  <data name="Dashboard_FreeToSpendWindowDuration_One" xml:space="preserve">
+    <value>на ближайший {0} день</value>
+  </data>
+  <data name="Dashboard_FreeToSpendWindowDuration_Few" xml:space="preserve">
+    <value>на ближайшие {0} дня</value>
+  </data>
+  <data name="Dashboard_FreeToSpendWindowDuration_Many" xml:space="preserve">
+    <value>на ближайшие {0} дней</value>
+  </data>
   <data name="Dashboard_HowCalculated" xml:space="preserve">
     <value>Как это рассчитывается</value>
   </data>

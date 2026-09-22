@@ -722,6 +722,12 @@
   <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
     <value>Free to spend:</value>
   </data>
+  <data name="Dashboard_FreeToSpendWindowDuration_One" xml:space="preserve">
+    <value>for the next {0} day</value>
+  </data>
+  <data name="Dashboard_FreeToSpendWindowDuration_Other" xml:space="preserve">
+    <value>for the next {0} days</value>
+  </data>
   <data name="Dashboard_HowCalculated" xml:space="preserve">
     <value>How it's calculated</value>
   </data>

@@ -289,7 +289,8 @@ public sealed class DashboardViewModel : ViewModelBase
             LowestForecastedBalanceText = MoneyFormat.Format(breakdown.LowestForecastedBalance, appSettings.DefaultCurrency);
             ReservedForGoalsText = MoneyFormat.Format(-breakdown.ReservedForSavingsGoals, appSettings.DefaultCurrency);
             SafetyBufferText = MoneyFormat.Format(-breakdown.SafetyBuffer, appSettings.DefaultCurrency);
-            FreeToSpendWindowText = $"{DateDisplay.Format(window.StartDate, appSettings.DateDisplayFormat)} – {DateDisplay.Format(window.EndDate, appSettings.DateDisplayFormat)}";
+            var windowDayCount = window.EndDate.DayNumber - window.StartDate.DayNumber + 1;
+            FreeToSpendWindowText = Translator.GetPlural("Dashboard_FreeToSpendWindowDuration", windowDayCount);
 
             Goals.Clear();
             foreach (var goal in savingsGoals)
