@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Security;
 
@@ -56,7 +57,7 @@ public sealed class AppLockViewModel : ViewModelBase
             }
             else
             {
-                StatusText = "Incorrect PIN.";
+                StatusText = Translator.Get("AppLock_IncorrectPin");
             }
         });
     }

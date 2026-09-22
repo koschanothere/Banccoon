@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Banccoon.App.Localization;
 
 namespace Banccoon.App.ViewModels;
 
@@ -12,8 +13,8 @@ public sealed class WorkflowOverlayViewModel : ViewModelBase
     private string bodyText = string.Empty;
     private string stepTitle = string.Empty;
     private string errorMessage = string.Empty;
-    private string primaryActionText = "Next";
-    private string secondaryActionText = "Back";
+    private string primaryActionText = Translator.Get("Common_Next");
+    private string secondaryActionText = Translator.Get("Common_Back");
     private int stepIndex = 1;
     private int stepCount = 1;
 
@@ -177,7 +178,7 @@ public sealed class WorkflowOverlayViewModel : ViewModelBase
 
     public bool HasStepProgress => StepCount > 1;
 
-    public string StepProgressText => $"Step {StepIndex} of {StepCount}";
+    public string StepProgressText => string.Format(Translator.Get("WorkflowOverlay_StepProgressFormat"), StepIndex, StepCount);
 
     public bool CanMovePrevious => !IsBusy && StepIndex > 1;
 
@@ -259,7 +260,7 @@ public sealed class WorkflowOverlayViewModel : ViewModelBase
         ErrorMessage = string.Empty;
         StepIndex = 1;
         StepCount = 1;
-        PrimaryActionText = "Next";
-        SecondaryActionText = "Back";
+        PrimaryActionText = Translator.Get("Common_Next");
+        SecondaryActionText = Translator.Get("Common_Back");
     }
 }

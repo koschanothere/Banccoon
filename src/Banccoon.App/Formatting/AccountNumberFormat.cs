@@ -1,3 +1,5 @@
+using Banccoon.App.Localization;
+
 namespace Banccoon.App.Formatting;
 
 public static class AccountNumberFormat
@@ -18,7 +20,7 @@ public static class AccountNumberFormat
         var normalized = Normalize(value);
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            return "hidden";
+            return Translator.Get("AccountNumber_Hidden");
         }
 
         var visibleDigits = normalized.Length <= 4

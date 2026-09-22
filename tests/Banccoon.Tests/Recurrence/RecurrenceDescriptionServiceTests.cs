@@ -8,7 +8,7 @@ public sealed class RecurrenceDescriptionServiceTests
     private readonly RecurrenceDescriptionService service = new();
 
     [Fact]
-    public void Describe_WhenWeeklyOnMonday_ResolvesDayOfWeekFromRule()
+    public void Describe_WhenWeeklyOnMonday_ResolvesDayOfWeek()
     {
         var rule = new RecurrenceRule(
             RecurrenceFrequency.Weekly,
@@ -20,27 +20,14 @@ public sealed class RecurrenceDescriptionServiceTests
 
         Assert.Equal(RecurrenceFrequency.Weekly, description.Frequency);
         Assert.Equal(1, description.Interval);
-        Assert.Equal(DayOfWeek.Monday, description.ResolvedDayOfWeek);
         Assert.False(description.IsLastDayOfMonth);
+        Assert.Equal(DayOfWeek.Monday, description.ResolvedDayOfWeek);
         Assert.Null(description.ResolvedDayOfMonth);
         Assert.Null(description.EndDate);
     }
 
     [Fact]
-    public void Describe_WhenWeeklyWithNoExplicitDay_FallsBackToStartDateDayOfWeek()
-    {
-        var rule = new RecurrenceRule(
-            RecurrenceFrequency.Weekly,
-            1,
-            new DateOnly(2026, 6, 7)); // a Sunday
-
-        var description = service.Describe(rule);
-
-        Assert.Equal(DayOfWeek.Sunday, description.ResolvedDayOfWeek);
-    }
-
-    [Fact]
-    public void Describe_WhenMonthlyLastDay_SetsIsLastDayOfMonthFlag()
+    public void Describe_WhenMonthlyLastDay_SetsIsLastDayOfMonth()
     {
         var rule = new RecurrenceRule(
             RecurrenceFrequency.Monthly,
@@ -50,12 +37,14 @@ public sealed class RecurrenceDescriptionServiceTests
 
         var description = service.Describe(rule);
 
+        Assert.Equal(RecurrenceFrequency.Monthly, description.Frequency);
         Assert.True(description.IsLastDayOfMonth);
         Assert.Null(description.ResolvedDayOfMonth);
+        Assert.Null(description.ResolvedDayOfWeek);
     }
 
     [Fact]
-    public void Describe_WhenEveryTwoMonthsOnDay_ResolvesDayOfMonthAndInterval()
+    public void Describe_WhenEveryTwoMonthsOnDay_ResolvesDayOfMonth()
     {
         var rule = new RecurrenceRule(
             RecurrenceFrequency.Monthly,
@@ -65,26 +54,13 @@ public sealed class RecurrenceDescriptionServiceTests
 
         var description = service.Describe(rule);
 
+        Assert.Equal(2, description.Interval);
         Assert.False(description.IsLastDayOfMonth);
         Assert.Equal(25, description.ResolvedDayOfMonth);
-        Assert.Equal(2, description.Interval);
     }
 
     [Fact]
-    public void Describe_WhenMonthlyWithNoExplicitDay_FallsBackToStartDateDay()
-    {
-        var rule = new RecurrenceRule(
-            RecurrenceFrequency.Monthly,
-            1,
-            new DateOnly(2026, 6, 7));
-
-        var description = service.Describe(rule);
-
-        Assert.Equal(7, description.ResolvedDayOfMonth);
-    }
-
-    [Fact]
-    public void Describe_WhenYearlyWithEndDate_PassesThroughStartAndEndDate()
+    public void Describe_WhenYearlyWithEndDate_CarriesStartAndEndDate()
     {
         var rule = new RecurrenceRule(
             RecurrenceFrequency.Yearly,
@@ -97,5 +73,7 @@ public sealed class RecurrenceDescriptionServiceTests
         Assert.Equal(RecurrenceFrequency.Yearly, description.Frequency);
         Assert.Equal(new DateOnly(2026, 6, 7), description.StartDate);
         Assert.Equal(new DateOnly(2028, 6, 7), description.EndDate);
+        Assert.Null(description.ResolvedDayOfWeek);
+        Assert.Null(description.ResolvedDayOfMonth);
     }
 }

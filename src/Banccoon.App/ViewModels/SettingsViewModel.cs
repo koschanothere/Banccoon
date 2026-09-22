@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
@@ -276,6 +277,7 @@ public sealed class SettingsViewModel : ViewModelBase
             RebuildDashboardSectionRows();
 
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
+            Translator.SetLanguage(settings.DisplayLanguage);
         });
 
         await General.InitializeAsync(settings);
@@ -288,10 +290,10 @@ public sealed class SettingsViewModel : ViewModelBase
     private void RebuildCategoryRows()
     {
         Categories.Clear();
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.General, "General", IsGeneralCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Dashboard, "Dashboard", IsDashboardCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Transactions, "Transactions", IsTransactionsCategorySelected, SelectCategory));
-        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.DataAndSecurity, "Data & Security", IsDataCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.General, Translator.Get("Settings_SidebarGeneral"), IsGeneralCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Dashboard, Translator.Get("AppShell_Nav_Dashboard"), IsDashboardCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.Transactions, Translator.Get("AppShell_Nav_Transactions"), IsTransactionsCategorySelected, SelectCategory));
+        Categories.Add(new SettingsCategoryRowViewModel(SettingsCategory.DataAndSecurity, Translator.Get("Settings_SidebarDataSecurity"), IsDataCategorySelected, SelectCategory));
     }
 
     private void SelectCategory(SettingsCategory category)
@@ -336,7 +338,7 @@ public sealed class SettingsViewModel : ViewModelBase
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { DefaultForecastPeriod = SelectedForecastPeriod });
 
-        await RunOnMainThreadAsync(() => DashboardStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => DashboardStatusText = Translator.Get("Common_Saved"));
     }
 
     private async Task SetPrimaryMetricAsync(DashboardPrimaryMetric metric)
@@ -363,19 +365,19 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         if (!int.TryParse(WindowDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var windowDays) || windowDays < 1)
         {
-            FreeToSpendStatusText = "Rolling days must be a whole number of at least 1.";
+            FreeToSpendStatusText = Translator.Get("Settings_RollingDaysMustBeAtLeast1");
             return;
         }
 
         if (!decimal.TryParse(SafetyBufferText, NumberStyles.Number, CultureInfo.InvariantCulture, out var safetyBuffer) || safetyBuffer < 0m)
         {
-            FreeToSpendStatusText = "Safety buffer must be a number of 0 or more.";
+            FreeToSpendStatusText = Translator.Get("Settings_SafetyBufferMustBeAtLeast0");
             return;
         }
 
         if (!decimal.TryParse(MajorPaymentThresholdText, NumberStyles.Number, CultureInfo.InvariantCulture, out var majorPaymentThreshold) || majorPaymentThreshold < 0m)
         {
-            FreeToSpendStatusText = "Major payment threshold must be a number of 0 or more.";
+            FreeToSpendStatusText = Translator.Get("Settings_MajorPaymentThresholdMustBeAtLeast0");
             return;
         }
 
@@ -388,21 +390,21 @@ public sealed class SettingsViewModel : ViewModelBase
             MajorPaymentThreshold = majorPaymentThreshold
         });
 
-        await RunOnMainThreadAsync(() => FreeToSpendStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => FreeToSpendStatusText = Translator.Get("Common_Saved"));
     }
 
     private async Task SaveResolveUpcomingAsync()
     {
         if (!int.TryParse(ResolveUpcomingNearTermDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var nearTermDays) || nearTermDays < 0)
         {
-            ResolveUpcomingStatusText = "Must be a whole number of 0 or more.";
+            ResolveUpcomingStatusText = Translator.Get("Settings_MustBeAtLeast0");
             return;
         }
 
         var settings = await settingsRepository.GetAsync();
         await settingsRepository.SaveAsync(settings with { ResolveUpcomingNearTermDays = nearTermDays });
 
-        await RunOnMainThreadAsync(() => ResolveUpcomingStatusText = "Saved.");
+        await RunOnMainThreadAsync(() => ResolveUpcomingStatusText = Translator.Get("Common_Saved"));
     }
 
     private static void ApplyTheme(AppThemeMode mode)

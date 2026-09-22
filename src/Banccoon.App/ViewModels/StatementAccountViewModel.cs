@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
@@ -128,13 +129,13 @@ public sealed class StatementAccountViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(NewAccountName))
             {
-                StatusText = "Name is required.";
+                StatusText = Translator.Get("StatementImport_NameRequired");
                 return null;
             }
 
             if (!decimal.TryParse(NewAccountStartingBalanceText, NumberStyles.Number, CultureInfo.InvariantCulture, out var startingBalance))
             {
-                StatusText = "Starting balance must be a number.";
+                StatusText = Translator.Get("StatementImport_StartingBalanceMustBeNumber");
                 return null;
             }
 
@@ -154,7 +155,7 @@ public sealed class StatementAccountViewModel : ViewModelBase
 
         if (SelectedAccount is null)
         {
-            StatusText = "Choose an account.";
+            StatusText = Translator.Get("StatementImport_ChooseAnAccount");
             return null;
         }
 

@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 
 namespace Banccoon.App.ViewModels;
@@ -102,7 +103,9 @@ public sealed class AccountRowViewModel : ViewModelBase
 
     public string IdentifierText => IsNumberRevealed ? fullIdentifierText : maskedIdentifierText;
 
-    public string RevealToggleText => IsNumberRevealed ? "Hide" : "Show";
+    public string RevealToggleText => IsNumberRevealed
+        ? Translator.Get("Accounts_RevealHide")
+        : Translator.Get("Accounts_RevealShow");
 
     public bool IsNumberRevealed
     {

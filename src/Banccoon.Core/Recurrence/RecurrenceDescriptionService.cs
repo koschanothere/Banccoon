@@ -18,28 +18,24 @@ public sealed class RecurrenceDescriptionService : IRecurrenceDescriptionService
     {
         recurrenceValidationService.ThrowIfInvalid(rule);
 
-        return rule.Frequency switch
-        {
-            RecurrenceFrequency.Daily => new RecurrenceDescriptionData(
-                rule.Frequency, rule.Interval, false, null, null, rule.StartDate, rule.EndDate),
-            RecurrenceFrequency.Weekly => new RecurrenceDescriptionData(
-                rule.Frequency, rule.Interval, false, rule.DayOfWeek ?? rule.StartDate.DayOfWeek, null, rule.StartDate, rule.EndDate),
-            RecurrenceFrequency.Monthly => DescribeMonthly(rule),
-            RecurrenceFrequency.Yearly => new RecurrenceDescriptionData(
-                rule.Frequency, rule.Interval, false, null, null, rule.StartDate, rule.EndDate),
-            _ => throw new NotSupportedException($"Unsupported recurrence frequency: {rule.Frequency}")
-        };
-    }
+        var isLastDayOfMonth = rule.Frequency == RecurrenceFrequency.Monthly
+            && rule.MonthlyMode == MonthlyRecurrenceMode.LastDayOfMonth;
 
-    private static RecurrenceDescriptionData DescribeMonthly(RecurrenceRule rule)
-    {
-        if (rule.MonthlyMode == MonthlyRecurrenceMode.LastDayOfMonth)
-        {
-            return new RecurrenceDescriptionData(
-                rule.Frequency, rule.Interval, true, null, null, rule.StartDate, rule.EndDate);
-        }
+        var resolvedDayOfWeek = rule.Frequency == RecurrenceFrequency.Weekly
+            ? rule.DayOfWeek ?? rule.StartDate.DayOfWeek
+            : (DayOfWeek?)null;
+
+        var resolvedDayOfMonth = rule.Frequency == RecurrenceFrequency.Monthly && !isLastDayOfMonth
+            ? rule.DayOfMonth ?? rule.StartDate.Day
+            : (int?)null;
 
         return new RecurrenceDescriptionData(
-            rule.Frequency, rule.Interval, false, null, rule.DayOfMonth ?? rule.StartDate.Day, rule.StartDate, rule.EndDate);
+            rule.Frequency,
+            rule.Interval,
+            isLastDayOfMonth,
+            resolvedDayOfWeek,
+            resolvedDayOfMonth,
+            rule.StartDate,
+            rule.EndDate);
     }
 }

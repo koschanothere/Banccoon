@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
@@ -196,7 +197,7 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public string RowCountText => filteredTransactions.Count == 0
         ? string.Empty
-        : $"Showing {Rows.Count} of {filteredTransactions.Count}";
+        : string.Format(Translator.Get("Transactions_RowCountFormat"), Rows.Count, filteredTransactions.Count);
 
     public NewTransactionFormViewModel AddForm { get; }
 
@@ -290,14 +291,14 @@ public sealed class TransactionsViewModel : ViewModelBase
             var previousBulkCategoryId = BulkCategory?.Id;
 
             AccountOptions.Clear();
-            AccountOptions.Add(new NamedOptionViewModel(AllOptionId, "All accounts"));
+            AccountOptions.Add(new NamedOptionViewModel(AllOptionId, Translator.Get("Transactions_AllAccountsOption")));
             foreach (var account in accounts.Where(account => !account.IsArchived).OrderBy(account => account.Name))
             {
                 AccountOptions.Add(new NamedOptionViewModel(account.Id, account.Name));
             }
 
             CategoryOptions.Clear();
-            CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, "All categories"));
+            CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, Translator.Get("Transactions_AllCategoriesOption")));
             BulkCategoryOptions.Clear();
             foreach (var category in categories.OrderBy(category => category.Name))
             {
@@ -487,8 +488,8 @@ public sealed class TransactionsViewModel : ViewModelBase
         if (transaction.Type == TransactionType.Transfer && transaction.DestinationAccountId is { } destinationId)
         {
             return accountsById.TryGetValue(destinationId, out var destination)
-                ? $"Transfer to {destination.Name}"
-                : "Transfer";
+                ? string.Format(Translator.Get("Transactions_TransferToFormat"), destination.Name)
+                : Translator.Get("Enum_TransactionType_Transfer");
         }
 
         if (transaction.CategoryId is { } categoryId && categoriesById.TryGetValue(categoryId, out var category))
@@ -496,7 +497,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             return category.Name;
         }
 
-        return "Other";
+        return Translator.Get("Transactions_OtherCategoryFallback");
     }
 
     private void ToggleSelectMode()
@@ -517,7 +518,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private void UpdateSelectionSummary()
     {
         var count = Rows.Count(row => row.IsSelected);
-        SelectionSummaryText = count == 1 ? "1 selected" : $"{count} selected";
+        SelectionSummaryText = Translator.GetPlural("Common_SelectionCount", count);
     }
 
     private void ToggleFilterPanel()

@@ -112,7 +112,7 @@ public sealed class AnalyticsServiceTests
 
         var trend = Assert.Single(report.CategoryTrends);
         Assert.Null(trend.CategoryId);
-        Assert.Equal("Uncategorized", trend.CategoryName);
+        Assert.Null(trend.CategoryName);
         Assert.Equal(20m, trend.CurrentPeriodTotal);
     }
 

@@ -1,0 +1,1132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ForecastChart_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
+    <value>Learned from {0} correction</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Other" xml:space="preserve">
+    <value>Learned from {0} corrections</value>
+  </data>
+  <data name="Common_SelectionCount_One" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Common_SelectionCount_Other" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="DataManagement_CategoryCount_One" xml:space="preserve">
+    <value>{0} category</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Other" xml:space="preserve">
+    <value>{0} categories</value>
+  </data>
+  <!-- AccountType -->
+  <data name="Enum_AccountType_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Enum_AccountType_DebitCard" xml:space="preserve">
+    <value>Debit Card</value>
+  </data>
+  <data name="Enum_AccountType_CreditCard" xml:space="preserve">
+    <value>Credit Card</value>
+  </data>
+  <data name="Enum_AccountType_Goal" xml:space="preserve">
+    <value>Goal</value>
+  </data>
+  <data name="Enum_AccountType_Savings" xml:space="preserve">
+    <value>Savings</value>
+  </data>
+  <data name="Enum_AccountType_Investment" xml:space="preserve">
+    <value>Investment</value>
+  </data>
+  <data name="Enum_AccountType_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <!-- ReminderFrequency -->
+  <data name="Enum_ReminderFrequency_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Enum_ReminderFrequency_TwiceWeekly" xml:space="preserve">
+    <value>Twice a Week</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Biweekly" xml:space="preserve">
+    <value>Every 2 Weeks</value>
+  </data>
+  <!-- ForecastPeriod -->
+  <data name="Enum_ForecastPeriod_SevenDays" xml:space="preserve">
+    <value>7 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_ThirtyDays" xml:space="preserve">
+    <value>30 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_SixtyDays" xml:space="preserve">
+    <value>60 Days</value>
+  </data>
+  <data name="Enum_ForecastPeriod_NinetyDays" xml:space="preserve">
+    <value>90 Days</value>
+  </data>
+  <!-- TransactionType -->
+  <data name="Enum_TransactionType_Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Enum_TransactionType_Expense" xml:space="preserve">
+    <value>Expense</value>
+  </data>
+  <data name="Enum_TransactionType_Transfer" xml:space="preserve">
+    <value>Transfer</value>
+  </data>
+  <!-- RecurrenceFrequency -->
+  <data name="Enum_RecurrenceFrequency_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Yearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <!-- MonthlyRecurrenceMode -->
+  <data name="Enum_MonthlyRecurrenceMode_DayOfMonth" xml:space="preserve">
+    <value>Day of Month</value>
+  </data>
+  <data name="Enum_MonthlyRecurrenceMode_LastDayOfMonth" xml:space="preserve">
+    <value>Last Day of Month</value>
+  </data>
+  <!-- AppLockPage -->
+  <data name="AppLock_Title" xml:space="preserve">
+    <value>Banccoon is locked</value>
+  </data>
+  <data name="AppLock_Subtitle" xml:space="preserve">
+    <value>Enter your PIN to continue.</value>
+  </data>
+  <data name="AppLock_PinPlaceholder" xml:space="preserve">
+    <value>PIN</value>
+  </data>
+  <data name="AppLock_UnlockButton" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="AppLock_IncorrectPin" xml:space="preserve">
+    <value>Incorrect PIN.</value>
+  </data>
+  <!-- AppShell -->
+  <data name="AppShell_Nav_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="AppShell_Nav_Transactions" xml:space="preserve">
+    <value>Transactions</value>
+  </data>
+  <data name="AppShell_Nav_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="AppShell_Nav_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AppShell_AccountsSectionHeader" xml:space="preserve">
+    <value>ACCOUNTS</value>
+  </data>
+  <data name="AppShell_NoFavoriteAccounts" xml:space="preserve">
+    <value>Star an account to pin it here.</value>
+  </data>
+  <!-- RecurrenceEditorView -->
+  <data name="RecurrenceEditor_Every" xml:space="preserve">
+    <value>Every</value>
+  </data>
+  <data name="RecurrenceEditor_FrequencyPickerTitle" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="RecurrenceEditor_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="RecurrenceEditor_DayOfWeekPickerTitle" xml:space="preserve">
+    <value>Day of week</value>
+  </data>
+  <data name="RecurrenceEditor_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="RecurrenceEditor_MonthlyModePickerTitle" xml:space="preserve">
+    <value>Monthly mode</value>
+  </data>
+  <data name="RecurrenceEditor_DayPlaceholder" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="RecurrenceEditor_Starts" xml:space="preserve">
+    <value>Starts</value>
+  </data>
+  <data name="RecurrenceEditor_Ends" xml:space="preserve">
+    <value>Ends</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxTitle" xml:space="preserve">
+    <value>Technical recurrence syntax</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxSubtitle" xml:space="preserve">
+    <value>Optional power-user mode. Friendly controls remain the default.</value>
+  </data>
+  <data name="RecurrenceEditor_ApplySyntaxButton" xml:space="preserve">
+    <value>Apply syntax</value>
+  </data>
+  <data name="RecurrenceEditor_ExamplesHeader" xml:space="preserve">
+    <value>Examples</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxNotParsed" xml:space="preserve">
+    <value>Syntax could not be parsed.</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxApplied" xml:space="preserve">
+    <value>Technical syntax applied.</value>
+  </data>
+  <data name="RecurrenceEditor_InvalidRecurrence" xml:space="preserve">
+    <value>Invalid recurrence</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
+    <value>Every day</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_Every2WeeksOnMonday" xml:space="preserve">
+    <value>Every 2 weeks on Monday</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_MonthlyOnDay25" xml:space="preserve">
+    <value>Monthly on day 25</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_LastDayOfEveryMonth" xml:space="preserve">
+    <value>Last day of every month</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
+    <value>Every year</value>
+  </data>
+  <!-- Common (reusable generic UI verbs/nouns across screens) -->
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Common_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Common_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Common_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Common_Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Common_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Common_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Common_Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Common_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Common_NewCategoryNamePlaceholder" xml:space="preserve">
+    <value>New category name</value>
+  </data>
+  <!-- StatementImportPage -->
+  <data name="StatementImport_Title" xml:space="preserve">
+    <value>Import Statement</value>
+  </data>
+  <data name="StatementImport_Header" xml:space="preserve">
+    <value>Import statement</value>
+  </data>
+  <data name="StatementImport_Step1Header" xml:space="preserve">
+    <value>1. Choose a statement file</value>
+  </data>
+  <data name="StatementImport_ChooseFileButton" xml:space="preserve">
+    <value>Choose file</value>
+  </data>
+  <data name="StatementImport_ParserLabel" xml:space="preserve">
+    <value>Parser</value>
+  </data>
+  <data name="StatementImport_PeriodLabel" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="StatementImport_RowsFoundLabel" xml:space="preserve">
+    <value>Rows found</value>
+  </data>
+  <data name="StatementImport_DetectedBalanceLabel" xml:space="preserve">
+    <value>Detected balance</value>
+  </data>
+  <data name="StatementImport_DetectedAccountLabel" xml:space="preserve">
+    <value>Detected account</value>
+  </data>
+  <data name="StatementImport_Step2Header" xml:space="preserve">
+    <value>2. Confirm the account</value>
+  </data>
+  <data name="StatementImport_ExistingAccountButton" xml:space="preserve">
+    <value>Existing account</value>
+  </data>
+  <data name="StatementImport_NewAccountButton" xml:space="preserve">
+    <value>New account</value>
+  </data>
+  <data name="StatementImport_AccountNamePlaceholder" xml:space="preserve">
+    <value>Account name</value>
+  </data>
+  <data name="StatementImport_StartingBalancePlaceholder" xml:space="preserve">
+    <value>Starting balance</value>
+  </data>
+  <data name="StatementImport_Step3Header" xml:space="preserve">
+    <value>3. Review transactions</value>
+  </data>
+  <data name="StatementImport_CancelImportButton" xml:space="preserve">
+    <value>Cancel import</value>
+  </data>
+  <data name="StatementImport_ApproveSelectedButton" xml:space="preserve">
+    <value>Approve selected</value>
+  </data>
+  <data name="StatementImport_SkipSelectedButton" xml:space="preserve">
+    <value>Skip selected</value>
+  </data>
+  <data name="StatementImport_AllRowsReviewed" xml:space="preserve">
+    <value>All rows reviewed.</value>
+  </data>
+  <data name="StatementImport_PossibleDuplicate" xml:space="preserve">
+    <value>Possible duplicate</value>
+  </data>
+  <data name="StatementImport_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Other account</value>
+  </data>
+  <data name="StatementImport_ChooseFileToBegin" xml:space="preserve">
+    <value>Choose a bank statement file to begin.</value>
+  </data>
+  <data name="StatementImport_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="StatementImport_NotDetected" xml:space="preserve">
+    <value>Not detected</value>
+  </data>
+  <data name="StatementImport_CardEndingFormat" xml:space="preserve">
+    <value>Card ending {0}</value>
+  </data>
+  <data name="StatementImport_RowCount_One" xml:space="preserve">
+    <value>{0} row</value>
+  </data>
+  <data name="StatementImport_RowCount_Other" xml:space="preserve">
+    <value>{0} rows</value>
+  </data>
+  <data name="StatementImport_FilePickerTitle" xml:space="preserve">
+    <value>Choose a bank statement file</value>
+  </data>
+  <data name="StatementImport_CouldNotOpenFilePicker" xml:space="preserve">
+    <value>Could not open the file picker.</value>
+  </data>
+  <data name="StatementImport_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="StatementImport_StartingBalanceMustBeNumber" xml:space="preserve">
+    <value>Starting balance must be a number.</value>
+  </data>
+  <data name="StatementImport_ChooseAnAccount" xml:space="preserve">
+    <value>Choose an account.</value>
+  </data>
+  <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
+    <value>Name the new category first.</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <!-- AccountsPage -->
+  <data name="Accounts_AddAccountButton" xml:space="preserve">
+    <value>+ Add account</value>
+  </data>
+  <data name="Accounts_ShowActiveToggle" xml:space="preserve">
+    <value>Show active</value>
+  </data>
+  <data name="Accounts_ShowArchivedToggle" xml:space="preserve">
+    <value>Show archived</value>
+  </data>
+  <data name="Accounts_NewAccountTitle" xml:space="preserve">
+    <value>New account</value>
+  </data>
+  <data name="Accounts_EditAccountTitle" xml:space="preserve">
+    <value>Edit account</value>
+  </data>
+  <data name="Accounts_AccountNamePlaceholder" xml:space="preserve">
+    <value>Account name</value>
+  </data>
+  <data name="Accounts_CurrencyPlaceholder" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Accounts_BalancePlaceholder" xml:space="preserve">
+    <value>Balance</value>
+  </data>
+  <data name="Accounts_GoalTargetPlaceholder" xml:space="preserve">
+    <value>Goal target amount</value>
+  </data>
+  <data name="Accounts_MinimumPaymentPlaceholder" xml:space="preserve">
+    <value>Minimum payment</value>
+  </data>
+  <data name="Accounts_PlannedMonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Planned monthly payment</value>
+  </data>
+  <data name="Accounts_AccountNumberOptionalPlaceholder" xml:space="preserve">
+    <value>Account number (optional)</value>
+  </data>
+  <data name="Accounts_CardLastFourOptionalPlaceholder" xml:space="preserve">
+    <value>Card last 4 digits (optional)</value>
+  </data>
+  <data name="Accounts_IncludeInDashboardTotals" xml:space="preserve">
+    <value>Include in dashboard totals</value>
+  </data>
+  <data name="Accounts_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="Accounts_CurrencyRequired" xml:space="preserve">
+    <value>Currency is required.</value>
+  </data>
+  <data name="Accounts_BalanceMustBeNumber" xml:space="preserve">
+    <value>Balance must be a number.</value>
+  </data>
+  <data name="Accounts_GoalTargetMustBeNumber" xml:space="preserve">
+    <value>Goal target must be a number.</value>
+  </data>
+  <data name="Accounts_CurrentDebtLabel" xml:space="preserve">
+    <value>Current debt</value>
+  </data>
+  <data name="Accounts_PayoffCalculatorHeader" xml:space="preserve">
+    <value>Payoff calculator</value>
+  </data>
+  <data name="Accounts_MonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Monthly payment</value>
+  </data>
+  <data name="Accounts_MonthlyFinanceChargeOptionalPlaceholder" xml:space="preserve">
+    <value>Monthly finance charge (optional)</value>
+  </data>
+  <data name="Accounts_NotSet" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="Accounts_PayoffChooseAmount" xml:space="preserve">
+    <value>Choose a payment amount to calculate payoff timing.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_One" xml:space="preserve">
+    <value>Not paid off within {0} month at this payment amount.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_Other" xml:space="preserve">
+    <value>Not paid off within {0} months at this payment amount.</value>
+  </data>
+  <data name="Accounts_PayoffNextPayment" xml:space="preserve">
+    <value>Paid off with the next payment.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_One" xml:space="preserve">
+    <value>Paid off in {0} month.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_Other" xml:space="preserve">
+    <value>Paid off in {0} months.</value>
+  </data>
+  <data name="Accounts_PrimaryBadge" xml:space="preserve">
+    <value>Primary</value>
+  </data>
+  <data name="Accounts_GoalProgressLabel" xml:space="preserve">
+    <value>Goal progress</value>
+  </data>
+  <data name="Accounts_ArchivedBadge" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Accounts_ViewTransactionsButton" xml:space="preserve">
+    <value>View transactions</value>
+  </data>
+  <data name="Accounts_CardDetailsButton" xml:space="preserve">
+    <value>Card details</value>
+  </data>
+  <data name="Accounts_SetPrimaryButton" xml:space="preserve">
+    <value>Set primary</value>
+  </data>
+  <data name="Accounts_ArchiveButton" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Accounts_UnarchiveButton" xml:space="preserve">
+    <value>Unarchive</value>
+  </data>
+  <data name="Accounts_NoAccountsYet" xml:space="preserve">
+    <value>No accounts yet.</value>
+  </data>
+  <data name="Accounts_RevealShow" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Accounts_RevealHide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="Common_NamePlaceholder" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Common_AmountPlaceholder" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="Common_ChooseAnAccount" xml:space="preserve">
+    <value>Choose an account.</value>
+  </data>
+  <data name="Common_AmountMustBePositive" xml:space="preserve">
+    <value>Amount must be a positive number.</value>
+  </data>
+  <data name="Common_NameNewCategoryFirst" xml:space="preserve">
+    <value>Name the new category first.</value>
+  </data>
+  <!-- TransactionsPage -->
+  <data name="Transactions_FilterButton" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Transactions_CheckInButton" xml:space="preserve">
+    <value>Check-in</value>
+  </data>
+  <data name="Transactions_ImportButton" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Transactions_AddButton" xml:space="preserve">
+    <value>+ Add</value>
+  </data>
+  <data name="Transactions_ToAccountPickerTitle" xml:space="preserve">
+    <value>To account</value>
+  </data>
+  <data name="Transactions_ResolveUpcomingHeader" xml:space="preserve">
+    <value>Resolve upcoming</value>
+  </data>
+  <data name="Transactions_NewRuleButton" xml:space="preserve">
+    <value>+ New rule</value>
+  </data>
+  <data name="Transactions_SaveRuleButton" xml:space="preserve">
+    <value>Save rule</value>
+  </data>
+  <data name="Transactions_NothingDueRightNow" xml:space="preserve">
+    <value>Nothing due right now.</value>
+  </data>
+  <data name="Transactions_DelayButton" xml:space="preserve">
+    <value>Delay</value>
+  </data>
+  <data name="Transactions_MarkPaidButton" xml:space="preserve">
+    <value>Mark paid</value>
+  </data>
+  <data name="Transactions_NoScheduledRulesYet" xml:space="preserve">
+    <value>No scheduled rules yet.</value>
+  </data>
+  <data name="Transactions_SetCategoryPickerTitle" xml:space="preserve">
+    <value>Set category</value>
+  </data>
+  <data name="Transactions_ApplyCategoryButton" xml:space="preserve">
+    <value>Apply category</value>
+  </data>
+  <data name="Transactions_DeleteSelectedButton" xml:space="preserve">
+    <value>Delete selected</value>
+  </data>
+  <data name="Transactions_NoTransactionsYet" xml:space="preserve">
+    <value>No transactions yet.</value>
+  </data>
+  <data name="Transactions_RowCountFormat" xml:space="preserve">
+    <value>Showing {0} of {1}</value>
+  </data>
+  <data name="Transactions_AllAccountsOption" xml:space="preserve">
+    <value>All accounts</value>
+  </data>
+  <data name="Transactions_AllCategoriesOption" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="Transactions_TransferToFormat" xml:space="preserve">
+    <value>Transfer to {0}</value>
+  </data>
+  <data name="Transactions_OtherCategoryFallback" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <!-- NewTransactionFormViewModel -->
+  <data name="NewTransaction_ExpenseTitle" xml:space="preserve">
+    <value>New Expense</value>
+  </data>
+  <data name="NewTransaction_IncomeTitle" xml:space="preserve">
+    <value>New Income</value>
+  </data>
+  <data name="NewTransaction_TransferTitle" xml:space="preserve">
+    <value>New Transfer</value>
+  </data>
+  <data name="NewTransaction_ChooseDifferentDestination" xml:space="preserve">
+    <value>Choose a different destination account.</value>
+  </data>
+  <!-- ScheduleFormViewModel -->
+  <data name="Schedule_EditRuleTitle" xml:space="preserve">
+    <value>Edit scheduled rule</value>
+  </data>
+  <data name="Schedule_NewRuleTitle" xml:space="preserve">
+    <value>New scheduled rule</value>
+  </data>
+  <data name="Schedule_FixRecurrenceRule" xml:space="preserve">
+    <value>Fix the recurrence rule.</value>
+  </data>
+  <!-- ResolveUpcoming / ScheduledRule row view models -->
+  <data name="ResolveUpcoming_OverdueSinceFormat" xml:space="preserve">
+    <value>overdue since {0}</value>
+  </data>
+  <data name="ResolveUpcoming_DueToday" xml:space="preserve">
+    <value>due today</value>
+  </data>
+  <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
+    <value>due {0}</value>
+  </data>
+  <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
+    <value>no upcoming occurrence</value>
+  </data>
+  <!-- DashboardPage -->
+  <data name="Dashboard_FreeToSpendLabel" xml:space="preserve">
+    <value>Free to spend</value>
+  </data>
+  <data name="Dashboard_CurrentBalancePrefix" xml:space="preserve">
+    <value>Current balance:</value>
+  </data>
+  <data name="Dashboard_CurrentBalanceLabel" xml:space="preserve">
+    <value>Current balance</value>
+  </data>
+  <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
+    <value>Free to spend:</value>
+  </data>
+  <data name="Dashboard_HowCalculated" xml:space="preserve">
+    <value>How it's calculated</value>
+  </data>
+  <data name="Dashboard_LowestForecastedBalance" xml:space="preserve">
+    <value>Lowest forecasted balance</value>
+  </data>
+  <data name="Dashboard_ReservedForGoals" xml:space="preserve">
+    <value>Reserved for goals</value>
+  </data>
+  <data name="Dashboard_SafetyBuffer" xml:space="preserve">
+    <value>Safety buffer</value>
+  </data>
+  <data name="Dashboard_BalanceHistoryHeader" xml:space="preserve">
+    <value>Balance history &amp; forecast</value>
+  </data>
+  <data name="Dashboard_ApplyButton" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Dashboard_ResetButton" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Dashboard_UpcomingHeader" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="Dashboard_UpcomingSubtitle" xml:space="preserve">
+    <value>Next few bills and expenses. To mark one paid, skip it, or delay it, use Transactions.</value>
+  </data>
+  <data name="Dashboard_NothingComingUp" xml:space="preserve">
+    <value>Nothing coming up.</value>
+  </data>
+  <data name="Dashboard_NetLabel" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="Dashboard_SpendingBreakdown" xml:space="preserve">
+    <value>Spending breakdown</value>
+  </data>
+  <data name="Dashboard_HoverSliceDetails" xml:space="preserve">
+    <value>Hover a slice for details.</value>
+  </data>
+  <data name="Dashboard_TopMovers" xml:space="preserve">
+    <value>Top movers</value>
+  </data>
+  <data name="Dashboard_NothingChangedMuchYet" xml:space="preserve">
+    <value>Nothing has changed much yet.</value>
+  </data>
+  <data name="Dashboard_SpendingByCategory" xml:space="preserve">
+    <value>Spending by category</value>
+  </data>
+  <data name="Dashboard_Last6MonthsSubtitle" xml:space="preserve">
+    <value>Last 6 months. Tap a category to see its transactions.</value>
+  </data>
+  <data name="Dashboard_GoalsHeader" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
+    <value>No savings goals yet.</value>
+  </data>
+  <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
+    <value>End date must be on or after the start date.</value>
+  </data>
+  <data name="Dashboard_HoverSliceShare" xml:space="preserve">
+    <value>Hover a slice to see its share.</value>
+  </data>
+  <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
+    <value>Total spend: {0}</value>
+  </data>
+  <data name="Dashboard_NoExpensesRecordedYet" xml:space="preserve">
+    <value>No expenses recorded yet.</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Other account</value>
+  </data>
+  <!-- SettingsPage: sidebar + General tab -->
+  <data name="Settings_SidebarGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_SidebarDataSecurity" xml:space="preserve">
+    <value>Data &amp; Security</value>
+  </data>
+  <data name="Settings_AppearanceHeader" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_ThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings_ThemeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Settings_CategoryColorsLabel" xml:space="preserve">
+    <value>Category colors</value>
+  </data>
+  <data name="Settings_CategoryColorsHint" xml:space="preserve">
+    <value>Set per-category in Settings -&gt; Transactions -&gt; Manage categories. Exact shades still TBD.</value>
+  </data>
+  <data name="Settings_GeneralHeader" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_LanguageHint" xml:space="preserve">
+    <value>Switches the app's own interface between English and Russian.</value>
+  </data>
+  <data name="Settings_RemindersLabel" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="Settings_RemindersHint" xml:space="preserve">
+    <value>How often to be reminded of upcoming bills. Desktop notification delivery isn't wired up yet - this saves the preference for when it is.</value>
+  </data>
+  <data name="Settings_FrequencyPickerTitle" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="Settings_NewAccountDefaultsLabel" xml:space="preserve">
+    <value>New account defaults</value>
+  </data>
+  <data name="Settings_DefaultCurrencyLabel" xml:space="preserve">
+    <value>Default currency</value>
+  </data>
+  <data name="Settings_DefaultAccountTypeLabel" xml:space="preserve">
+    <value>Default account type</value>
+  </data>
+  <data name="Settings_PrivacyModeLabel" xml:space="preserve">
+    <value>Privacy mode</value>
+  </data>
+  <data name="Settings_PrivacyModeHint" xml:space="preserve">
+    <value>Hides every amount behind &#8226;&#8226;&#8226;&#8226; app-wide.</value>
+  </data>
+  <!-- SettingsPage: Dashboard tab -->
+  <data name="Settings_SectionOrderLabel" xml:space="preserve">
+    <value>Section order</value>
+  </data>
+  <data name="Settings_ForecastPeriodLabel" xml:space="preserve">
+    <value>Forecast period</value>
+  </data>
+  <data name="Settings_ForecastPeriodHint" xml:space="preserve">
+    <value>Used by the balance graph's forward-looking window.</value>
+  </data>
+  <data name="Settings_PeriodPickerTitle" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberLabel" xml:space="preserve">
+    <value>Primary hero number</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberHint" xml:space="preserve">
+    <value>Which number shows big on the dashboard - the other still shows smaller alongside it.</value>
+  </data>
+  <data name="Settings_WindowLabel" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Settings_WindowRollingDays" xml:space="preserve">
+    <value>Rolling days</value>
+  </data>
+  <data name="Settings_WindowThisWeek" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="Settings_WindowThisMonth" xml:space="preserve">
+    <value>This month</value>
+  </data>
+  <data name="Settings_WindowUntilMajorPayment" xml:space="preserve">
+    <value>Until next major payment</value>
+  </data>
+  <data name="Settings_RollingWindowDaysLabel" xml:space="preserve">
+    <value>Rolling window, in days</value>
+  </data>
+  <data name="Settings_DaysPlaceholder" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdLabel" xml:space="preserve">
+    <value>Major payment threshold</value>
+  </data>
+  <data name="Settings_SafetyBufferLabel" xml:space="preserve">
+    <value>Safety buffer (always kept out of Free to spend)</value>
+  </data>
+  <!-- DashboardSection (previously hand-written, not enum-driven; now uses DisplayText.Format) -->
+  <data name="Enum_DashboardSection_Upcoming" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="Enum_DashboardSection_Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="Enum_DashboardSection_Goals" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <!-- SettingsPage: Transactions tab -->
+  <data name="Settings_ManageCategoriesHeader" xml:space="preserve">
+    <value>Manage categories</value>
+  </data>
+  <data name="Settings_ManageCategoriesHint" xml:space="preserve">
+    <value>Tap a category to change its color. Press and drag one onto another to merge them together.</value>
+  </data>
+  <data name="Settings_AddCategoryButton" xml:space="preserve">
+    <value>+ Add category</value>
+  </data>
+  <data name="Settings_CategoryNamePlaceholder" xml:space="preserve">
+    <value>Category name</value>
+  </data>
+  <data name="Settings_ResolveUpcomingDaysLabel" xml:space="preserve">
+    <value>Resolve upcoming: days ahead to show while collapsed</value>
+  </data>
+  <data name="Settings_LearnedRulesHeader" xml:space="preserve">
+    <value>Learned categorization rules</value>
+  </data>
+  <data name="Settings_LearnedRulesHint" xml:space="preserve">
+    <value>What the app has auto-learned from your corrections during statement import. Edit one that learned wrong, or forget it entirely.</value>
+  </data>
+  <data name="Settings_SearchByRecipientPlaceholder" xml:space="preserve">
+    <value>Search by recipient or category</value>
+  </data>
+  <data name="Settings_NothingLearnedYet" xml:space="preserve">
+    <value>Nothing learned yet.</value>
+  </data>
+  <data name="Settings_ForgetButton" xml:space="preserve">
+    <value>Forget</value>
+  </data>
+  <data name="Settings_RecipientTextPlaceholder" xml:space="preserve">
+    <value>Recipient text</value>
+  </data>
+  <data name="Settings_EnterCategoryName" xml:space="preserve">
+    <value>Enter a category name.</value>
+  </data>
+  <data name="Settings_UnknownCategory" xml:space="preserve">
+    <value>Unknown category</value>
+  </data>
+  <data name="Common_Saved" xml:space="preserve">
+    <value>Saved.</value>
+  </data>
+  <!-- PinSettingsViewModel -->
+  <data name="Settings_PinMinDigits" xml:space="preserve">
+    <value>PIN must be at least 4 digits.</value>
+  </data>
+  <data name="Settings_PinsDontMatch" xml:space="preserve">
+    <value>PINs don't match.</value>
+  </data>
+  <data name="Settings_PinSetConfirmation" xml:space="preserve">
+    <value>PIN set - the app will ask for it next time it starts.</value>
+  </data>
+  <data name="Settings_PinRemoved" xml:space="preserve">
+    <value>PIN removed.</value>
+  </data>
+  <!-- DataManagementViewModel -->
+  <data name="Settings_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="Settings_SavedToFormat" xml:space="preserve">
+    <value>Saved to {0}</value>
+  </data>
+  <data name="Settings_ExportFailedFormat" xml:space="preserve">
+    <value>Export failed: {0}</value>
+  </data>
+  <data name="Settings_ChooseBackupFilePickerTitle" xml:space="preserve">
+    <value>Choose a Banccoon backup file</value>
+  </data>
+  <data name="Settings_BackupFileValid" xml:space="preserve">
+    <value>This file looks valid and is ready to restore.</value>
+  </data>
+  <data name="Settings_CouldNotReadFileFormat" xml:space="preserve">
+    <value>Could not read that file: {0}</value>
+  </data>
+  <data name="Settings_RestoreFailedFormat" xml:space="preserve">
+    <value>Restore failed: {0}</value>
+  </data>
+  <data name="Settings_AllDataDeleted" xml:space="preserve">
+    <value>All local data deleted.</value>
+  </data>
+  <data name="Settings_DeleteFailedFormat" xml:space="preserve">
+    <value>Delete failed: {0}</value>
+  </data>
+  <data name="Settings_FrequencyMustBeAtLeast1Day" xml:space="preserve">
+    <value>Frequency must be a whole number of at least 1 day.</value>
+  </data>
+  <data name="Settings_RetentionMustBeAtLeast1" xml:space="preserve">
+    <value>Retention count must be a whole number of at least 1.</value>
+  </data>
+  <data name="Settings_NoDiagnosticsLogYet" xml:space="preserve">
+    <value>No diagnostics log yet - nothing has been recorded.</value>
+  </data>
+  <!-- SettingsPage: Data & Security tab -->
+  <data name="Settings_SecurityHeader" xml:space="preserve">
+    <value>Security</value>
+  </data>
+  <data name="Settings_SecurityHint" xml:space="preserve">
+    <value>A PIN is a privacy speedbump against casual snooping, not encryption - the underlying data file stays unencrypted regardless. It's asked for once, when the app starts.</value>
+  </data>
+  <data name="Settings_PinIsSet" xml:space="preserve">
+    <value>A PIN is currently set.</value>
+  </data>
+  <data name="Settings_NoPinSet" xml:space="preserve">
+    <value>No PIN is set - the app opens directly.</value>
+  </data>
+  <data name="Settings_NewPinPlaceholder" xml:space="preserve">
+    <value>New PIN</value>
+  </data>
+  <data name="Settings_ConfirmPinPlaceholder" xml:space="preserve">
+    <value>Confirm PIN</value>
+  </data>
+  <data name="Settings_SetChangePinButton" xml:space="preserve">
+    <value>Set / change PIN</value>
+  </data>
+  <data name="Settings_RemovePinButton" xml:space="preserve">
+    <value>Remove PIN</value>
+  </data>
+  <data name="Settings_DataHeader" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Settings_BackupLabel" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Settings_ExportBackupButton" xml:space="preserve">
+    <value>Export backup</value>
+  </data>
+  <data name="Settings_AutomaticBackupsLabel" xml:space="preserve">
+    <value>Automatic backups</value>
+  </data>
+  <data name="Settings_EnableAutomaticBackups" xml:space="preserve">
+    <value>Enable automatic backups</value>
+  </data>
+  <data name="Settings_EveryDaysLabel" xml:space="preserve">
+    <value>Every (days)</value>
+  </data>
+  <data name="Settings_KeepLastNBackupsLabel" xml:space="preserve">
+    <value>Keep last N backups</value>
+  </data>
+  <data name="Settings_LastAutomaticBackupFormat" xml:space="preserve">
+    <value>Last automatic backup: {0}</value>
+  </data>
+  <data name="Settings_DiagnosticsLabel" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="Settings_OpenDiagnosticsLogButton" xml:space="preserve">
+    <value>Open diagnostics log</value>
+  </data>
+  <data name="Settings_OpenDataFolderButton" xml:space="preserve">
+    <value>Open data folder</value>
+  </data>
+  <data name="Settings_RestoreFromBackupLabel" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="Settings_ChooseBackupFileButton" xml:space="preserve">
+    <value>Choose backup file</value>
+  </data>
+  <data name="Settings_MergeButton" xml:space="preserve">
+    <value>Merge</value>
+  </data>
+  <data name="Settings_ReplaceEverythingButton" xml:space="preserve">
+    <value>Replace everything</value>
+  </data>
+  <data name="Settings_DeleteAllLocalDataLabel" xml:space="preserve">
+    <value>Delete all local data</value>
+  </data>
+  <data name="Settings_DeleteAllWarning" xml:space="preserve">
+    <value>This permanently deletes every account, transaction, category, scheduled rule, and goal. This cannot be undone.</value>
+  </data>
+  <data name="Settings_YesDeleteEverything" xml:space="preserve">
+    <value>Yes, delete everything</value>
+  </data>
+  <data name="Settings_ColorForFormat" xml:space="preserve">
+    <value>Color for {0}</value>
+  </data>
+  <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
+    <value>Restored {0}, {1}, {2}, {3}, {4}.</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_One" xml:space="preserve">
+    <value>{0} account</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Other" xml:space="preserve">
+    <value>{0} accounts</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_One" xml:space="preserve">
+    <value>{0} transaction</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Other" xml:space="preserve">
+    <value>{0} transactions</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_One" xml:space="preserve">
+    <value>{0} scheduled rule</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Other" xml:space="preserve">
+    <value>{0} scheduled rules</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_One" xml:space="preserve">
+    <value>{0} goal</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Other" xml:space="preserve">
+    <value>{0} goals</value>
+  </data>
+  <data name="AccountNumber_Hidden" xml:space="preserve">
+    <value>hidden</value>
+  </data>
+  <!-- Final sweep: strays found via a repo-wide grep after the per-screen commits -->
+  <data name="Settings_RollingDaysMustBeAtLeast1" xml:space="preserve">
+    <value>Rolling days must be a whole number of at least 1.</value>
+  </data>
+  <data name="Settings_SafetyBufferMustBeAtLeast0" xml:space="preserve">
+    <value>Safety buffer must be a number of 0 or more.</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdMustBeAtLeast0" xml:space="preserve">
+    <value>Major payment threshold must be a number of 0 or more.</value>
+  </data>
+  <data name="Settings_MustBeAtLeast0" xml:space="preserve">
+    <value>Must be a whole number of 0 or more.</value>
+  </data>
+  <data name="Common_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
+</root>

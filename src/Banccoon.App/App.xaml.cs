@@ -1,3 +1,4 @@
+using Banccoon.App.Localization;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Repositories;
 
@@ -9,10 +10,10 @@ public partial class App : Application
     {
         InitializeComponent();
         MainPage = new AppShell();
-        _ = ApplyStartupThemeAsync(settingsRepository);
+        _ = ApplyStartupPreferencesAsync(settingsRepository);
     }
 
-    private async Task ApplyStartupThemeAsync(ISettingsRepository settingsRepository)
+    private async Task ApplyStartupPreferencesAsync(ISettingsRepository settingsRepository)
     {
         var settings = await settingsRepository.GetAsync();
         UserAppTheme = settings.ThemeMode switch
@@ -21,5 +22,7 @@ public partial class App : Application
             AppThemeMode.Dark => AppTheme.Dark,
             _ => AppTheme.Unspecified
         };
+
+        Translator.SetLanguage(settings.DisplayLanguage);
     }
 }

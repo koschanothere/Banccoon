@@ -13,7 +13,7 @@ public sealed class AnalyticsCategoryRowViewModel
     public AnalyticsCategoryRowViewModel(AnalyticsCategoryTrend trend, Color color, string currency, Func<Guid?, Task> onSelected)
     {
         CategoryId = trend.CategoryId;
-        CategoryName = trend.CategoryName;
+        CategoryName = trend.CategoryName ?? "Uncategorized";
         Amount = trend.CurrentPeriodTotal;
         Color = color;
         CurrentTotalText = MoneyFormat.Format(trend.CurrentPeriodTotal, currency);

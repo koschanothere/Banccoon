@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
@@ -69,7 +70,9 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
     public bool IsEditing => editingScheduledTransactionId.HasValue;
 
-    public string FormTitle => IsEditing ? "Edit scheduled rule" : "New scheduled rule";
+    public string FormTitle => IsEditing
+        ? Translator.Get("Schedule_EditRuleTitle")
+        : Translator.Get("Schedule_NewRuleTitle");
 
     public TransactionType Type
     {
@@ -218,33 +221,33 @@ public sealed class ScheduleFormViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            StatusText = "Name is required.";
+            StatusText = Translator.Get("Common_NameRequired");
             return;
         }
 
         if (Account is null)
         {
-            StatusText = "Choose an account.";
+            StatusText = Translator.Get("Common_ChooseAnAccount");
             return;
         }
 
         if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0m)
         {
-            StatusText = "Amount must be a positive number.";
+            StatusText = Translator.Get("Common_AmountMustBePositive");
             return;
         }
 
         if (!Recurrence.IsValid)
         {
             StatusText = string.IsNullOrEmpty(Recurrence.ValidationMessage)
-                ? "Fix the recurrence rule."
+                ? Translator.Get("Schedule_FixRecurrenceRule")
                 : Recurrence.ValidationMessage;
             return;
         }
 
         if (Category?.IsCreateNew == true && string.IsNullOrWhiteSpace(NewCategoryName))
         {
-            StatusText = "Name the new category first.";
+            StatusText = Translator.Get("Common_NameNewCategoryFirst");
             return;
         }
 

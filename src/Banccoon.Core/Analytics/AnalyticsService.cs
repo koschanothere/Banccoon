@@ -92,7 +92,7 @@ public sealed class AnalyticsService : IAnalyticsService
     {
         var categoryName = categoryId is { } id && categoryNamesById.TryGetValue(id, out var name)
             ? name
-            : "Uncategorized";
+            : null;
 
         var points = periods
             .Select((period, index) => new AnalyticsCategoryPoint(period.Start, period.Label, periodTotals[index]))

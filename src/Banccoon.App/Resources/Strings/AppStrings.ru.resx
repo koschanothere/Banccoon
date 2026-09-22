@@ -1,0 +1,1162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ForecastChart_Today" xml:space="preserve">
+    <value>Сегодня</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
+    <value>Изучено по {0} исправлению</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Few" xml:space="preserve">
+    <value>Изучено по {0} исправлениям</value>
+  </data>
+  <data name="CategoryLearning_MatchCount_Many" xml:space="preserve">
+    <value>Изучено по {0} исправлениям</value>
+  </data>
+  <data name="Common_SelectionCount_One" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="Common_SelectionCount_Few" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="Common_SelectionCount_Many" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
+  <data name="DataManagement_CategoryCount_One" xml:space="preserve">
+    <value>{0} категория</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Few" xml:space="preserve">
+    <value>{0} категории</value>
+  </data>
+  <data name="DataManagement_CategoryCount_Many" xml:space="preserve">
+    <value>{0} категорий</value>
+  </data>
+  <!-- AccountType -->
+  <data name="Enum_AccountType_Cash" xml:space="preserve">
+    <value>Наличные</value>
+  </data>
+  <data name="Enum_AccountType_DebitCard" xml:space="preserve">
+    <value>Дебетовая карта</value>
+  </data>
+  <data name="Enum_AccountType_CreditCard" xml:space="preserve">
+    <value>Кредитная карта</value>
+  </data>
+  <data name="Enum_AccountType_Goal" xml:space="preserve">
+    <value>Цель</value>
+  </data>
+  <data name="Enum_AccountType_Savings" xml:space="preserve">
+    <value>Накопления</value>
+  </data>
+  <data name="Enum_AccountType_Investment" xml:space="preserve">
+    <value>Инвестиции</value>
+  </data>
+  <data name="Enum_AccountType_Other" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <!-- ReminderFrequency -->
+  <data name="Enum_ReminderFrequency_Daily" xml:space="preserve">
+    <value>Ежедневно</value>
+  </data>
+  <data name="Enum_ReminderFrequency_TwiceWeekly" xml:space="preserve">
+    <value>Дважды в неделю</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Weekly" xml:space="preserve">
+    <value>Еженедельно</value>
+  </data>
+  <data name="Enum_ReminderFrequency_Biweekly" xml:space="preserve">
+    <value>Раз в две недели</value>
+  </data>
+  <!-- ForecastPeriod -->
+  <data name="Enum_ForecastPeriod_SevenDays" xml:space="preserve">
+    <value>7 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_ThirtyDays" xml:space="preserve">
+    <value>30 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_SixtyDays" xml:space="preserve">
+    <value>60 дней</value>
+  </data>
+  <data name="Enum_ForecastPeriod_NinetyDays" xml:space="preserve">
+    <value>90 дней</value>
+  </data>
+  <!-- TransactionType -->
+  <data name="Enum_TransactionType_Income" xml:space="preserve">
+    <value>Доход</value>
+  </data>
+  <data name="Enum_TransactionType_Expense" xml:space="preserve">
+    <value>Расход</value>
+  </data>
+  <data name="Enum_TransactionType_Transfer" xml:space="preserve">
+    <value>Перевод</value>
+  </data>
+  <!-- RecurrenceFrequency -->
+  <data name="Enum_RecurrenceFrequency_Daily" xml:space="preserve">
+    <value>Ежедневно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Weekly" xml:space="preserve">
+    <value>Еженедельно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Monthly" xml:space="preserve">
+    <value>Ежемесячно</value>
+  </data>
+  <data name="Enum_RecurrenceFrequency_Yearly" xml:space="preserve">
+    <value>Ежегодно</value>
+  </data>
+  <!-- MonthlyRecurrenceMode -->
+  <data name="Enum_MonthlyRecurrenceMode_DayOfMonth" xml:space="preserve">
+    <value>День месяца</value>
+  </data>
+  <data name="Enum_MonthlyRecurrenceMode_LastDayOfMonth" xml:space="preserve">
+    <value>Последний день месяца</value>
+  </data>
+  <!-- AppLockPage -->
+  <data name="AppLock_Title" xml:space="preserve">
+    <value>Banccoon заблокирован</value>
+  </data>
+  <data name="AppLock_Subtitle" xml:space="preserve">
+    <value>Введите PIN-код, чтобы продолжить.</value>
+  </data>
+  <data name="AppLock_PinPlaceholder" xml:space="preserve">
+    <value>PIN-код</value>
+  </data>
+  <data name="AppLock_UnlockButton" xml:space="preserve">
+    <value>Разблокировать</value>
+  </data>
+  <data name="AppLock_IncorrectPin" xml:space="preserve">
+    <value>Неверный PIN-код.</value>
+  </data>
+  <!-- AppShell -->
+  <data name="AppShell_Nav_Dashboard" xml:space="preserve">
+    <value>Дашборд</value>
+  </data>
+  <data name="AppShell_Nav_Transactions" xml:space="preserve">
+    <value>Транзакции</value>
+  </data>
+  <data name="AppShell_Nav_Accounts" xml:space="preserve">
+    <value>Счета</value>
+  </data>
+  <data name="AppShell_Nav_Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="AppShell_AccountsSectionHeader" xml:space="preserve">
+    <value>СЧЕТА</value>
+  </data>
+  <data name="AppShell_NoFavoriteAccounts" xml:space="preserve">
+    <value>Отметьте счёт звездой, чтобы закрепить его здесь.</value>
+  </data>
+  <!-- RecurrenceEditorView -->
+  <data name="RecurrenceEditor_Every" xml:space="preserve">
+    <value>Каждые</value>
+  </data>
+  <data name="RecurrenceEditor_FrequencyPickerTitle" xml:space="preserve">
+    <value>Частота</value>
+  </data>
+  <data name="RecurrenceEditor_On" xml:space="preserve">
+    <value>В</value>
+  </data>
+  <data name="RecurrenceEditor_DayOfWeekPickerTitle" xml:space="preserve">
+    <value>День недели</value>
+  </data>
+  <data name="RecurrenceEditor_Monthly" xml:space="preserve">
+    <value>Ежемесячно</value>
+  </data>
+  <data name="RecurrenceEditor_MonthlyModePickerTitle" xml:space="preserve">
+    <value>Месячный режим</value>
+  </data>
+  <data name="RecurrenceEditor_DayPlaceholder" xml:space="preserve">
+    <value>День</value>
+  </data>
+  <data name="RecurrenceEditor_Starts" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="RecurrenceEditor_Ends" xml:space="preserve">
+    <value>Окончание</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxTitle" xml:space="preserve">
+    <value>Технический синтаксис повторения</value>
+  </data>
+  <data name="RecurrenceEditor_TechnicalSyntaxSubtitle" xml:space="preserve">
+    <value>Режим для опытных пользователей. Обычные элементы управления остаются по умолчанию.</value>
+  </data>
+  <data name="RecurrenceEditor_ApplySyntaxButton" xml:space="preserve">
+    <value>Применить синтаксис</value>
+  </data>
+  <data name="RecurrenceEditor_ExamplesHeader" xml:space="preserve">
+    <value>Примеры</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxNotParsed" xml:space="preserve">
+    <value>Не удалось разобрать синтаксис.</value>
+  </data>
+  <data name="RecurrenceEditor_SyntaxApplied" xml:space="preserve">
+    <value>Технический синтаксис применён.</value>
+  </data>
+  <data name="RecurrenceEditor_InvalidRecurrence" xml:space="preserve">
+    <value>Некорректное повторение</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
+    <value>Каждый день</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_Every2WeeksOnMonday" xml:space="preserve">
+    <value>Каждые 2 недели по понедельникам</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_MonthlyOnDay25" xml:space="preserve">
+    <value>Ежемесячно, 25 числа</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_LastDayOfEveryMonth" xml:space="preserve">
+    <value>В последний день каждого месяца</value>
+  </data>
+  <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
+    <value>Каждый год</value>
+  </data>
+  <!-- Common (reusable generic UI verbs/nouns across screens) -->
+  <data name="Common_Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Common_Continue" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="Common_Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Common_Type" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Common_Category" xml:space="preserve">
+    <value>Категория</value>
+  </data>
+  <data name="Common_Account" xml:space="preserve">
+    <value>Счёт</value>
+  </data>
+  <data name="Common_Done" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Common_Skip" xml:space="preserve">
+    <value>Пропустить</value>
+  </data>
+  <data name="Common_Approve" xml:space="preserve">
+    <value>Подтвердить</value>
+  </data>
+  <data name="Common_Select" xml:space="preserve">
+    <value>Выбрать</value>
+  </data>
+  <data name="Common_NewCategoryNamePlaceholder" xml:space="preserve">
+    <value>Название новой категории</value>
+  </data>
+  <!-- StatementImportPage -->
+  <data name="StatementImport_Title" xml:space="preserve">
+    <value>Импорт выписки</value>
+  </data>
+  <data name="StatementImport_Header" xml:space="preserve">
+    <value>Импорт выписки</value>
+  </data>
+  <data name="StatementImport_Step1Header" xml:space="preserve">
+    <value>1. Выберите файл выписки</value>
+  </data>
+  <data name="StatementImport_ChooseFileButton" xml:space="preserve">
+    <value>Выбрать файл</value>
+  </data>
+  <data name="StatementImport_ParserLabel" xml:space="preserve">
+    <value>Парсер</value>
+  </data>
+  <data name="StatementImport_PeriodLabel" xml:space="preserve">
+    <value>Период</value>
+  </data>
+  <data name="StatementImport_RowsFoundLabel" xml:space="preserve">
+    <value>Найдено строк</value>
+  </data>
+  <data name="StatementImport_DetectedBalanceLabel" xml:space="preserve">
+    <value>Обнаруженный баланс</value>
+  </data>
+  <data name="StatementImport_DetectedAccountLabel" xml:space="preserve">
+    <value>Обнаруженный счёт</value>
+  </data>
+  <data name="StatementImport_Step2Header" xml:space="preserve">
+    <value>2. Подтвердите счёт</value>
+  </data>
+  <data name="StatementImport_ExistingAccountButton" xml:space="preserve">
+    <value>Существующий счёт</value>
+  </data>
+  <data name="StatementImport_NewAccountButton" xml:space="preserve">
+    <value>Новый счёт</value>
+  </data>
+  <data name="StatementImport_AccountNamePlaceholder" xml:space="preserve">
+    <value>Название счёта</value>
+  </data>
+  <data name="StatementImport_StartingBalancePlaceholder" xml:space="preserve">
+    <value>Начальный баланс</value>
+  </data>
+  <data name="StatementImport_Step3Header" xml:space="preserve">
+    <value>3. Проверьте операции</value>
+  </data>
+  <data name="StatementImport_CancelImportButton" xml:space="preserve">
+    <value>Отменить импорт</value>
+  </data>
+  <data name="StatementImport_ApproveSelectedButton" xml:space="preserve">
+    <value>Подтвердить выбранные</value>
+  </data>
+  <data name="StatementImport_SkipSelectedButton" xml:space="preserve">
+    <value>Пропустить выбранные</value>
+  </data>
+  <data name="StatementImport_AllRowsReviewed" xml:space="preserve">
+    <value>Все строки проверены.</value>
+  </data>
+  <data name="StatementImport_PossibleDuplicate" xml:space="preserve">
+    <value>Возможный дубликат</value>
+  </data>
+  <data name="StatementImport_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Другой счёт</value>
+  </data>
+  <data name="StatementImport_ChooseFileToBegin" xml:space="preserve">
+    <value>Выберите файл банковской выписки, чтобы начать.</value>
+  </data>
+  <data name="StatementImport_Unknown" xml:space="preserve">
+    <value>Неизвестно</value>
+  </data>
+  <data name="StatementImport_NotDetected" xml:space="preserve">
+    <value>Не обнаружено</value>
+  </data>
+  <data name="StatementImport_CardEndingFormat" xml:space="preserve">
+    <value>Карта, оканчивающаяся на {0}</value>
+  </data>
+  <data name="StatementImport_RowCount_One" xml:space="preserve">
+    <value>{0} строка</value>
+  </data>
+  <data name="StatementImport_RowCount_Few" xml:space="preserve">
+    <value>{0} строки</value>
+  </data>
+  <data name="StatementImport_RowCount_Many" xml:space="preserve">
+    <value>{0} строк</value>
+  </data>
+  <data name="StatementImport_FilePickerTitle" xml:space="preserve">
+    <value>Выберите файл банковской выписки</value>
+  </data>
+  <data name="StatementImport_CouldNotOpenFilePicker" xml:space="preserve">
+    <value>Не удалось открыть диалог выбора файла.</value>
+  </data>
+  <data name="StatementImport_NameRequired" xml:space="preserve">
+    <value>Укажите название.</value>
+  </data>
+  <data name="StatementImport_StartingBalanceMustBeNumber" xml:space="preserve">
+    <value>Начальный баланс должен быть числом.</value>
+  </data>
+  <data name="StatementImport_ChooseAnAccount" xml:space="preserve">
+    <value>Выберите счёт.</value>
+  </data>
+  <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
+    <value>Сначала укажите название новой категории.</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <!-- AccountsPage -->
+  <data name="Accounts_AddAccountButton" xml:space="preserve">
+    <value>+ Добавить счёт</value>
+  </data>
+  <data name="Accounts_ShowActiveToggle" xml:space="preserve">
+    <value>Показать активные</value>
+  </data>
+  <data name="Accounts_ShowArchivedToggle" xml:space="preserve">
+    <value>Показать архивные</value>
+  </data>
+  <data name="Accounts_NewAccountTitle" xml:space="preserve">
+    <value>Новый счёт</value>
+  </data>
+  <data name="Accounts_EditAccountTitle" xml:space="preserve">
+    <value>Редактирование счёта</value>
+  </data>
+  <data name="Accounts_AccountNamePlaceholder" xml:space="preserve">
+    <value>Название счёта</value>
+  </data>
+  <data name="Accounts_CurrencyPlaceholder" xml:space="preserve">
+    <value>Валюта</value>
+  </data>
+  <data name="Accounts_BalancePlaceholder" xml:space="preserve">
+    <value>Баланс</value>
+  </data>
+  <data name="Accounts_GoalTargetPlaceholder" xml:space="preserve">
+    <value>Целевая сумма</value>
+  </data>
+  <data name="Accounts_MinimumPaymentPlaceholder" xml:space="preserve">
+    <value>Минимальный платёж</value>
+  </data>
+  <data name="Accounts_PlannedMonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Плановый ежемесячный платёж</value>
+  </data>
+  <data name="Accounts_AccountNumberOptionalPlaceholder" xml:space="preserve">
+    <value>Номер счёта (необязательно)</value>
+  </data>
+  <data name="Accounts_CardLastFourOptionalPlaceholder" xml:space="preserve">
+    <value>Последние 4 цифры карты (необязательно)</value>
+  </data>
+  <data name="Accounts_IncludeInDashboardTotals" xml:space="preserve">
+    <value>Учитывать в итогах на дашборде</value>
+  </data>
+  <data name="Accounts_NameRequired" xml:space="preserve">
+    <value>Укажите название.</value>
+  </data>
+  <data name="Accounts_CurrencyRequired" xml:space="preserve">
+    <value>Укажите валюту.</value>
+  </data>
+  <data name="Accounts_BalanceMustBeNumber" xml:space="preserve">
+    <value>Баланс должен быть числом.</value>
+  </data>
+  <data name="Accounts_GoalTargetMustBeNumber" xml:space="preserve">
+    <value>Целевая сумма должна быть числом.</value>
+  </data>
+  <data name="Accounts_CurrentDebtLabel" xml:space="preserve">
+    <value>Текущий долг</value>
+  </data>
+  <data name="Accounts_PayoffCalculatorHeader" xml:space="preserve">
+    <value>Калькулятор погашения</value>
+  </data>
+  <data name="Accounts_MonthlyPaymentPlaceholder" xml:space="preserve">
+    <value>Ежемесячный платёж</value>
+  </data>
+  <data name="Accounts_MonthlyFinanceChargeOptionalPlaceholder" xml:space="preserve">
+    <value>Ежемесячная комиссия (необязательно)</value>
+  </data>
+  <data name="Accounts_NotSet" xml:space="preserve">
+    <value>Не задано</value>
+  </data>
+  <data name="Accounts_PayoffChooseAmount" xml:space="preserve">
+    <value>Укажите сумму платежа, чтобы рассчитать срок погашения.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_One" xml:space="preserve">
+    <value>Не будет погашено за {0} месяц при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_Few" xml:space="preserve">
+    <value>Не будет погашено за {0} месяца при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNotWithinMonths_Many" xml:space="preserve">
+    <value>Не будет погашено за {0} месяцев при таком платеже.</value>
+  </data>
+  <data name="Accounts_PayoffNextPayment" xml:space="preserve">
+    <value>Будет погашено следующим платежом.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_One" xml:space="preserve">
+    <value>Будет погашено за {0} месяц.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_Few" xml:space="preserve">
+    <value>Будет погашено за {0} месяца.</value>
+  </data>
+  <data name="Accounts_PayoffInMonths_Many" xml:space="preserve">
+    <value>Будет погашено за {0} месяцев.</value>
+  </data>
+  <data name="Accounts_PrimaryBadge" xml:space="preserve">
+    <value>Основной</value>
+  </data>
+  <data name="Accounts_GoalProgressLabel" xml:space="preserve">
+    <value>Прогресс цели</value>
+  </data>
+  <data name="Accounts_ArchivedBadge" xml:space="preserve">
+    <value>В архиве</value>
+  </data>
+  <data name="Accounts_ViewTransactionsButton" xml:space="preserve">
+    <value>Показать транзакции</value>
+  </data>
+  <data name="Accounts_CardDetailsButton" xml:space="preserve">
+    <value>Данные карты</value>
+  </data>
+  <data name="Accounts_SetPrimaryButton" xml:space="preserve">
+    <value>Сделать основным</value>
+  </data>
+  <data name="Accounts_ArchiveButton" xml:space="preserve">
+    <value>Архивировать</value>
+  </data>
+  <data name="Accounts_UnarchiveButton" xml:space="preserve">
+    <value>Восстановить из архива</value>
+  </data>
+  <data name="Accounts_NoAccountsYet" xml:space="preserve">
+    <value>Пока нет счетов.</value>
+  </data>
+  <data name="Accounts_RevealShow" xml:space="preserve">
+    <value>Показать</value>
+  </data>
+  <data name="Accounts_RevealHide" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
+  <data name="Common_NamePlaceholder" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Common_AmountPlaceholder" xml:space="preserve">
+    <value>Сумма</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Common_NameRequired" xml:space="preserve">
+    <value>Укажите название.</value>
+  </data>
+  <data name="Common_ChooseAnAccount" xml:space="preserve">
+    <value>Выберите счёт.</value>
+  </data>
+  <data name="Common_AmountMustBePositive" xml:space="preserve">
+    <value>Сумма должна быть положительным числом.</value>
+  </data>
+  <data name="Common_NameNewCategoryFirst" xml:space="preserve">
+    <value>Сначала укажите название новой категории.</value>
+  </data>
+  <!-- TransactionsPage -->
+  <data name="Transactions_FilterButton" xml:space="preserve">
+    <value>Фильтр</value>
+  </data>
+  <data name="Transactions_CheckInButton" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Transactions_ImportButton" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="Transactions_AddButton" xml:space="preserve">
+    <value>+ Добавить</value>
+  </data>
+  <data name="Transactions_ToAccountPickerTitle" xml:space="preserve">
+    <value>На счёт</value>
+  </data>
+  <data name="Transactions_ResolveUpcomingHeader" xml:space="preserve">
+    <value>Ближайшие платежи</value>
+  </data>
+  <data name="Transactions_NewRuleButton" xml:space="preserve">
+    <value>+ Новое правило</value>
+  </data>
+  <data name="Transactions_SaveRuleButton" xml:space="preserve">
+    <value>Сохранить правило</value>
+  </data>
+  <data name="Transactions_NothingDueRightNow" xml:space="preserve">
+    <value>Сейчас ничего не требуется.</value>
+  </data>
+  <data name="Transactions_DelayButton" xml:space="preserve">
+    <value>Отложить</value>
+  </data>
+  <data name="Transactions_MarkPaidButton" xml:space="preserve">
+    <value>Отметить оплаченным</value>
+  </data>
+  <data name="Transactions_NoScheduledRulesYet" xml:space="preserve">
+    <value>Пока нет запланированных правил.</value>
+  </data>
+  <data name="Transactions_SetCategoryPickerTitle" xml:space="preserve">
+    <value>Задать категорию</value>
+  </data>
+  <data name="Transactions_ApplyCategoryButton" xml:space="preserve">
+    <value>Применить категорию</value>
+  </data>
+  <data name="Transactions_DeleteSelectedButton" xml:space="preserve">
+    <value>Удалить выбранные</value>
+  </data>
+  <data name="Transactions_NoTransactionsYet" xml:space="preserve">
+    <value>Пока нет операций.</value>
+  </data>
+  <data name="Transactions_RowCountFormat" xml:space="preserve">
+    <value>Показано {0} из {1}</value>
+  </data>
+  <data name="Transactions_AllAccountsOption" xml:space="preserve">
+    <value>Все счета</value>
+  </data>
+  <data name="Transactions_AllCategoriesOption" xml:space="preserve">
+    <value>Все категории</value>
+  </data>
+  <data name="Transactions_TransferToFormat" xml:space="preserve">
+    <value>Перевод на {0}</value>
+  </data>
+  <data name="Transactions_OtherCategoryFallback" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <!-- NewTransactionFormViewModel -->
+  <data name="NewTransaction_ExpenseTitle" xml:space="preserve">
+    <value>Новый расход</value>
+  </data>
+  <data name="NewTransaction_IncomeTitle" xml:space="preserve">
+    <value>Новый доход</value>
+  </data>
+  <data name="NewTransaction_TransferTitle" xml:space="preserve">
+    <value>Новый перевод</value>
+  </data>
+  <data name="NewTransaction_ChooseDifferentDestination" xml:space="preserve">
+    <value>Выберите другой счёт назначения.</value>
+  </data>
+  <!-- ScheduleFormViewModel -->
+  <data name="Schedule_EditRuleTitle" xml:space="preserve">
+    <value>Изменение расписания</value>
+  </data>
+  <data name="Schedule_NewRuleTitle" xml:space="preserve">
+    <value>Новое расписание</value>
+  </data>
+  <data name="Schedule_FixRecurrenceRule" xml:space="preserve">
+    <value>Исправьте правило повторения.</value>
+  </data>
+  <!-- ResolveUpcoming / ScheduledRule row view models -->
+  <data name="ResolveUpcoming_OverdueSinceFormat" xml:space="preserve">
+    <value>просрочено с {0}</value>
+  </data>
+  <data name="ResolveUpcoming_DueToday" xml:space="preserve">
+    <value>срок сегодня</value>
+  </data>
+  <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
+    <value>срок {0}</value>
+  </data>
+  <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
+    <value>нет предстоящих платежей</value>
+  </data>
+  <!-- DashboardPage -->
+  <data name="Dashboard_FreeToSpendLabel" xml:space="preserve">
+    <value>Свободно к расходованию</value>
+  </data>
+  <data name="Dashboard_CurrentBalancePrefix" xml:space="preserve">
+    <value>Текущий баланс:</value>
+  </data>
+  <data name="Dashboard_CurrentBalanceLabel" xml:space="preserve">
+    <value>Текущий баланс</value>
+  </data>
+  <data name="Dashboard_FreeToSpendPrefix" xml:space="preserve">
+    <value>Свободно к расходованию:</value>
+  </data>
+  <data name="Dashboard_HowCalculated" xml:space="preserve">
+    <value>Как это рассчитывается</value>
+  </data>
+  <data name="Dashboard_LowestForecastedBalance" xml:space="preserve">
+    <value>Наименьший прогнозируемый баланс</value>
+  </data>
+  <data name="Dashboard_ReservedForGoals" xml:space="preserve">
+    <value>Зарезервировано на цели</value>
+  </data>
+  <data name="Dashboard_SafetyBuffer" xml:space="preserve">
+    <value>Резерв безопасности</value>
+  </data>
+  <data name="Dashboard_BalanceHistoryHeader" xml:space="preserve">
+    <value>История баланса и прогноз</value>
+  </data>
+  <data name="Dashboard_ApplyButton" xml:space="preserve">
+    <value>Применить</value>
+  </data>
+  <data name="Dashboard_ResetButton" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="Dashboard_UpcomingHeader" xml:space="preserve">
+    <value>Ближайшие платежи</value>
+  </data>
+  <data name="Dashboard_UpcomingSubtitle" xml:space="preserve">
+    <value>Ближайшие счета и расходы. Чтобы отметить оплату, пропустить или отложить платёж, используйте раздел «Транзакции».</value>
+  </data>
+  <data name="Dashboard_NothingComingUp" xml:space="preserve">
+    <value>Пока ничего не предстоит.</value>
+  </data>
+  <data name="Dashboard_NetLabel" xml:space="preserve">
+    <value>Итого</value>
+  </data>
+  <data name="Dashboard_SpendingBreakdown" xml:space="preserve">
+    <value>Структура расходов</value>
+  </data>
+  <data name="Dashboard_HoverSliceDetails" xml:space="preserve">
+    <value>Наведите на сегмент, чтобы увидеть детали.</value>
+  </data>
+  <data name="Dashboard_TopMovers" xml:space="preserve">
+    <value>Наибольшие изменения</value>
+  </data>
+  <data name="Dashboard_NothingChangedMuchYet" xml:space="preserve">
+    <value>Пока существенных изменений нет.</value>
+  </data>
+  <data name="Dashboard_SpendingByCategory" xml:space="preserve">
+    <value>Расходы по категориям</value>
+  </data>
+  <data name="Dashboard_Last6MonthsSubtitle" xml:space="preserve">
+    <value>Последние 6 месяцев. Нажмите на категорию, чтобы увидеть операции.</value>
+  </data>
+  <data name="Dashboard_GoalsHeader" xml:space="preserve">
+    <value>Цели</value>
+  </data>
+  <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
+    <value>Пока нет накопительных целей.</value>
+  </data>
+  <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
+    <value>Дата окончания должна быть не раньше даты начала.</value>
+  </data>
+  <data name="Dashboard_HoverSliceShare" xml:space="preserve">
+    <value>Наведите на сегмент, чтобы увидеть долю.</value>
+  </data>
+  <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
+    <value>Всего потрачено: {0}</value>
+  </data>
+  <data name="Dashboard_NoExpensesRecordedYet" xml:space="preserve">
+    <value>Пока нет расходов.</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Common_Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
+    <value>Другой счёт</value>
+  </data>
+  <!-- SettingsPage: sidebar + General tab -->
+  <data name="Settings_SidebarGeneral" xml:space="preserve">
+    <value>Общие</value>
+  </data>
+  <data name="Settings_SidebarDataSecurity" xml:space="preserve">
+    <value>Данные и безопасность</value>
+  </data>
+  <data name="Settings_AppearanceHeader" xml:space="preserve">
+    <value>Внешний вид</value>
+  </data>
+  <data name="Settings_ThemeLabel" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Тёмная</value>
+  </data>
+  <data name="Settings_ThemeSystem" xml:space="preserve">
+    <value>Системная</value>
+  </data>
+  <data name="Settings_CategoryColorsLabel" xml:space="preserve">
+    <value>Цвета категорий</value>
+  </data>
+  <data name="Settings_CategoryColorsHint" xml:space="preserve">
+    <value>Настраиваются по категориям в Настройки -&gt; Транзакции -&gt; Управление категориями. Точные оттенки пока не определены.</value>
+  </data>
+  <data name="Settings_GeneralHeader" xml:space="preserve">
+    <value>Общие</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Settings_LanguageHint" xml:space="preserve">
+    <value>Переключает язык интерфейса приложения между английским и русским.</value>
+  </data>
+  <data name="Settings_RemindersLabel" xml:space="preserve">
+    <value>Напоминания</value>
+  </data>
+  <data name="Settings_RemindersHint" xml:space="preserve">
+    <value>Как часто напоминать о предстоящих платежах. Уведомления на рабочем столе пока не подключены - здесь сохраняется настройка на будущее.</value>
+  </data>
+  <data name="Settings_FrequencyPickerTitle" xml:space="preserve">
+    <value>Частота</value>
+  </data>
+  <data name="Settings_NewAccountDefaultsLabel" xml:space="preserve">
+    <value>Значения по умолчанию для новых счетов</value>
+  </data>
+  <data name="Settings_DefaultCurrencyLabel" xml:space="preserve">
+    <value>Валюта по умолчанию</value>
+  </data>
+  <data name="Settings_DefaultAccountTypeLabel" xml:space="preserve">
+    <value>Тип счёта по умолчанию</value>
+  </data>
+  <data name="Settings_PrivacyModeLabel" xml:space="preserve">
+    <value>Режим приватности</value>
+  </data>
+  <data name="Settings_PrivacyModeHint" xml:space="preserve">
+    <value>Скрывает все суммы за &#8226;&#8226;&#8226;&#8226; по всему приложению.</value>
+  </data>
+  <!-- SettingsPage: Dashboard tab -->
+  <data name="Settings_SectionOrderLabel" xml:space="preserve">
+    <value>Порядок разделов</value>
+  </data>
+  <data name="Settings_ForecastPeriodLabel" xml:space="preserve">
+    <value>Период прогноза</value>
+  </data>
+  <data name="Settings_ForecastPeriodHint" xml:space="preserve">
+    <value>Используется для окна прогноза на графике баланса.</value>
+  </data>
+  <data name="Settings_PeriodPickerTitle" xml:space="preserve">
+    <value>Период</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberLabel" xml:space="preserve">
+    <value>Основное число</value>
+  </data>
+  <data name="Settings_PrimaryHeroNumberHint" xml:space="preserve">
+    <value>Какое число показывать крупно на дашборде - второе всё равно отображается рядом, но меньше.</value>
+  </data>
+  <data name="Settings_WindowLabel" xml:space="preserve">
+    <value>Окно</value>
+  </data>
+  <data name="Settings_WindowRollingDays" xml:space="preserve">
+    <value>Скользящие дни</value>
+  </data>
+  <data name="Settings_WindowThisWeek" xml:space="preserve">
+    <value>Эта неделя</value>
+  </data>
+  <data name="Settings_WindowThisMonth" xml:space="preserve">
+    <value>Этот месяц</value>
+  </data>
+  <data name="Settings_WindowUntilMajorPayment" xml:space="preserve">
+    <value>До следующего крупного платежа</value>
+  </data>
+  <data name="Settings_RollingWindowDaysLabel" xml:space="preserve">
+    <value>Скользящее окно, в днях</value>
+  </data>
+  <data name="Settings_DaysPlaceholder" xml:space="preserve">
+    <value>Дней</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdLabel" xml:space="preserve">
+    <value>Порог крупного платежа</value>
+  </data>
+  <data name="Settings_SafetyBufferLabel" xml:space="preserve">
+    <value>Резерв безопасности (всегда исключён из «Свободно к расходованию»)</value>
+  </data>
+  <!-- DashboardSection (previously hand-written, not enum-driven; now uses DisplayText.Format) -->
+  <data name="Enum_DashboardSection_Upcoming" xml:space="preserve">
+    <value>Предстоящее</value>
+  </data>
+  <data name="Enum_DashboardSection_Analytics" xml:space="preserve">
+    <value>Аналитика</value>
+  </data>
+  <data name="Enum_DashboardSection_Goals" xml:space="preserve">
+    <value>Цели</value>
+  </data>
+  <!-- SettingsPage: Transactions tab -->
+  <data name="Settings_ManageCategoriesHeader" xml:space="preserve">
+    <value>Управление категориями</value>
+  </data>
+  <data name="Settings_ManageCategoriesHint" xml:space="preserve">
+    <value>Нажмите на категорию, чтобы изменить её цвет. Перетащите одну категорию на другую, чтобы объединить их.</value>
+  </data>
+  <data name="Settings_AddCategoryButton" xml:space="preserve">
+    <value>+ Добавить категорию</value>
+  </data>
+  <data name="Settings_CategoryNamePlaceholder" xml:space="preserve">
+    <value>Название категории</value>
+  </data>
+  <data name="Settings_ResolveUpcomingDaysLabel" xml:space="preserve">
+    <value>Ближайшие платежи: сколько дней показывать в свёрнутом виде</value>
+  </data>
+  <data name="Settings_LearnedRulesHeader" xml:space="preserve">
+    <value>Изученные правила категоризации</value>
+  </data>
+  <data name="Settings_LearnedRulesHint" xml:space="preserve">
+    <value>То, что приложение самостоятельно изучило по вашим исправлениям при импорте выписок. Исправьте неверно изученное правило или полностью забудьте его.</value>
+  </data>
+  <data name="Settings_SearchByRecipientPlaceholder" xml:space="preserve">
+    <value>Поиск по получателю или категории</value>
+  </data>
+  <data name="Settings_NothingLearnedYet" xml:space="preserve">
+    <value>Пока ничего не изучено.</value>
+  </data>
+  <data name="Settings_ForgetButton" xml:space="preserve">
+    <value>Забыть</value>
+  </data>
+  <data name="Settings_RecipientTextPlaceholder" xml:space="preserve">
+    <value>Текст получателя</value>
+  </data>
+  <data name="Settings_EnterCategoryName" xml:space="preserve">
+    <value>Введите название категории.</value>
+  </data>
+  <data name="Settings_UnknownCategory" xml:space="preserve">
+    <value>Неизвестная категория</value>
+  </data>
+  <data name="Common_Saved" xml:space="preserve">
+    <value>Сохранено.</value>
+  </data>
+  <!-- PinSettingsViewModel -->
+  <data name="Settings_PinMinDigits" xml:space="preserve">
+    <value>PIN-код должен содержать не менее 4 цифр.</value>
+  </data>
+  <data name="Settings_PinsDontMatch" xml:space="preserve">
+    <value>PIN-коды не совпадают.</value>
+  </data>
+  <data name="Settings_PinSetConfirmation" xml:space="preserve">
+    <value>PIN-код установлен - приложение запросит его при следующем запуске.</value>
+  </data>
+  <data name="Settings_PinRemoved" xml:space="preserve">
+    <value>PIN-код удалён.</value>
+  </data>
+  <!-- DataManagementViewModel -->
+  <data name="Settings_Never" xml:space="preserve">
+    <value>Никогда</value>
+  </data>
+  <data name="Settings_SavedToFormat" xml:space="preserve">
+    <value>Сохранено в {0}</value>
+  </data>
+  <data name="Settings_ExportFailedFormat" xml:space="preserve">
+    <value>Экспорт не удался: {0}</value>
+  </data>
+  <data name="Settings_ChooseBackupFilePickerTitle" xml:space="preserve">
+    <value>Выберите файл резервной копии Banccoon</value>
+  </data>
+  <data name="Settings_BackupFileValid" xml:space="preserve">
+    <value>Файл выглядит корректным и готов к восстановлению.</value>
+  </data>
+  <data name="Settings_CouldNotReadFileFormat" xml:space="preserve">
+    <value>Не удалось прочитать файл: {0}</value>
+  </data>
+  <data name="Settings_RestoreFailedFormat" xml:space="preserve">
+    <value>Восстановление не удалось: {0}</value>
+  </data>
+  <data name="Settings_AllDataDeleted" xml:space="preserve">
+    <value>Все локальные данные удалены.</value>
+  </data>
+  <data name="Settings_DeleteFailedFormat" xml:space="preserve">
+    <value>Удаление не удалось: {0}</value>
+  </data>
+  <data name="Settings_FrequencyMustBeAtLeast1Day" xml:space="preserve">
+    <value>Частота должна быть целым числом не менее 1 дня.</value>
+  </data>
+  <data name="Settings_RetentionMustBeAtLeast1" xml:space="preserve">
+    <value>Количество хранимых копий должно быть целым числом не менее 1.</value>
+  </data>
+  <data name="Settings_NoDiagnosticsLogYet" xml:space="preserve">
+    <value>Журнал диагностики пока пуст - ничего не записано.</value>
+  </data>
+  <!-- SettingsPage: Data & Security tab -->
+  <data name="Settings_SecurityHeader" xml:space="preserve">
+    <value>Безопасность</value>
+  </data>
+  <data name="Settings_SecurityHint" xml:space="preserve">
+    <value>PIN-код — это защита от случайного просмотра, а не шифрование: сам файл данных остаётся незашифрованным. Код запрашивается один раз, при запуске приложения.</value>
+  </data>
+  <data name="Settings_PinIsSet" xml:space="preserve">
+    <value>PIN-код установлен.</value>
+  </data>
+  <data name="Settings_NoPinSet" xml:space="preserve">
+    <value>PIN-код не установлен - приложение открывается сразу.</value>
+  </data>
+  <data name="Settings_NewPinPlaceholder" xml:space="preserve">
+    <value>Новый PIN-код</value>
+  </data>
+  <data name="Settings_ConfirmPinPlaceholder" xml:space="preserve">
+    <value>Подтвердите PIN-код</value>
+  </data>
+  <data name="Settings_SetChangePinButton" xml:space="preserve">
+    <value>Установить / изменить PIN</value>
+  </data>
+  <data name="Settings_RemovePinButton" xml:space="preserve">
+    <value>Удалить PIN</value>
+  </data>
+  <data name="Settings_DataHeader" xml:space="preserve">
+    <value>Данные</value>
+  </data>
+  <data name="Settings_BackupLabel" xml:space="preserve">
+    <value>Резервное копирование</value>
+  </data>
+  <data name="Settings_ExportBackupButton" xml:space="preserve">
+    <value>Экспортировать копию</value>
+  </data>
+  <data name="Settings_AutomaticBackupsLabel" xml:space="preserve">
+    <value>Автоматическое резервное копирование</value>
+  </data>
+  <data name="Settings_EnableAutomaticBackups" xml:space="preserve">
+    <value>Включить автоматическое резервное копирование</value>
+  </data>
+  <data name="Settings_EveryDaysLabel" xml:space="preserve">
+    <value>Каждые (дней)</value>
+  </data>
+  <data name="Settings_KeepLastNBackupsLabel" xml:space="preserve">
+    <value>Хранить последние N копий</value>
+  </data>
+  <data name="Settings_LastAutomaticBackupFormat" xml:space="preserve">
+    <value>Последняя автоматическая копия: {0}</value>
+  </data>
+  <data name="Settings_DiagnosticsLabel" xml:space="preserve">
+    <value>Диагностика</value>
+  </data>
+  <data name="Settings_OpenDiagnosticsLogButton" xml:space="preserve">
+    <value>Открыть журнал диагностики</value>
+  </data>
+  <data name="Settings_OpenDataFolderButton" xml:space="preserve">
+    <value>Открыть папку данных</value>
+  </data>
+  <data name="Settings_RestoreFromBackupLabel" xml:space="preserve">
+    <value>Восстановление из резервной копии</value>
+  </data>
+  <data name="Settings_ChooseBackupFileButton" xml:space="preserve">
+    <value>Выбрать файл копии</value>
+  </data>
+  <data name="Settings_MergeButton" xml:space="preserve">
+    <value>Объединить</value>
+  </data>
+  <data name="Settings_ReplaceEverythingButton" xml:space="preserve">
+    <value>Заменить всё</value>
+  </data>
+  <data name="Settings_DeleteAllLocalDataLabel" xml:space="preserve">
+    <value>Удалить все локальные данные</value>
+  </data>
+  <data name="Settings_DeleteAllWarning" xml:space="preserve">
+    <value>Это безвозвратно удалит все счета, транзакции, категории, запланированные правила и цели. Отменить это действие нельзя.</value>
+  </data>
+  <data name="Settings_YesDeleteEverything" xml:space="preserve">
+    <value>Да, удалить всё</value>
+  </data>
+  <data name="Settings_ColorForFormat" xml:space="preserve">
+    <value>Цвет для {0}</value>
+  </data>
+  <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
+    <value>Восстановлено: {0}, {1}, {2}, {3}, {4}.</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_One" xml:space="preserve">
+    <value>{0} счёт</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Few" xml:space="preserve">
+    <value>{0} счета</value>
+  </data>
+  <data name="Settings_RestoredAccountsCount_Many" xml:space="preserve">
+    <value>{0} счетов</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_One" xml:space="preserve">
+    <value>{0} транзакция</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Few" xml:space="preserve">
+    <value>{0} транзакции</value>
+  </data>
+  <data name="Settings_RestoredTransactionsCount_Many" xml:space="preserve">
+    <value>{0} транзакций</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_One" xml:space="preserve">
+    <value>{0} правило</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Few" xml:space="preserve">
+    <value>{0} правила</value>
+  </data>
+  <data name="Settings_RestoredScheduledRulesCount_Many" xml:space="preserve">
+    <value>{0} правил</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_One" xml:space="preserve">
+    <value>{0} цель</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Few" xml:space="preserve">
+    <value>{0} цели</value>
+  </data>
+  <data name="Settings_RestoredGoalsCount_Many" xml:space="preserve">
+    <value>{0} целей</value>
+  </data>
+  <data name="AccountNumber_Hidden" xml:space="preserve">
+    <value>скрыто</value>
+  </data>
+  <!-- Final sweep: strays found via a repo-wide grep after the per-screen commits -->
+  <data name="Settings_RollingDaysMustBeAtLeast1" xml:space="preserve">
+    <value>Скользящее окно должно быть целым числом не менее 1.</value>
+  </data>
+  <data name="Settings_SafetyBufferMustBeAtLeast0" xml:space="preserve">
+    <value>Резерв безопасности должен быть числом не менее 0.</value>
+  </data>
+  <data name="Settings_MajorPaymentThresholdMustBeAtLeast0" xml:space="preserve">
+    <value>Порог крупного платежа должен быть числом не менее 0.</value>
+  </data>
+  <data name="Settings_MustBeAtLeast0" xml:space="preserve">
+    <value>Должно быть целым числом не менее 0.</value>
+  </data>
+  <data name="Common_Next" xml:space="preserve">
+    <value>Далее</value>
+  </data>
+  <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
+    <value>Шаг {0} из {1}</value>
+  </data>
+</root>

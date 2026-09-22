@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Repositories;
@@ -133,7 +134,9 @@ public sealed class AccountsViewModel : ViewModelBase
         }
     }
 
-    public string ShowArchivedToggleText => ShowArchived ? "Show active" : "Show archived";
+    public string ShowArchivedToggleText => ShowArchived
+        ? Translator.Get("Accounts_ShowActiveToggle")
+        : Translator.Get("Accounts_ShowArchivedToggle");
 
     public ObservableCollection<AccountRowViewModel> Accounts { get; }
 

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
 
@@ -31,7 +32,7 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
         CategoryName = categoryName;
         DestinationAccountName = destinationAccountName;
         HasDestinationAccount = !string.IsNullOrWhiteSpace(destinationAccountName);
-        MatchCountText = rule.MatchCount == 1 ? "Learned from 1 correction" : $"Learned from {rule.MatchCount} corrections";
+        MatchCountText = Translator.GetPlural("CategoryLearning_MatchCount", rule.MatchCount);
         LastUpdatedText = rule.UpdatedAt.ToString("dd MMM yyyy");
 
         CategoryOptions = categoryOptions;

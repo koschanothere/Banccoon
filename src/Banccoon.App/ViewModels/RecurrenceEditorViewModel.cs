@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Recurrence;
@@ -34,7 +35,9 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         this.recurrenceSyntaxService = recurrenceSyntaxService;
         this.recurrenceValidationService = recurrenceValidationService;
 
-        SyntaxExamples = recurrenceSyntaxService.GetExamples();
+        SyntaxExamples = recurrenceSyntaxService.GetExamples()
+            .Select(example => new RecurrenceSyntaxExampleRowViewModel(example))
+            .ToList();
         ApplyTechnicalSyntaxCommand = new RelayCommand(ApplyTechnicalSyntax);
 
         var today = dateProvider.Today;
@@ -52,7 +55,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
 
     public IReadOnlyList<MonthlyRecurrenceMode> MonthlyModes { get; } = Enum.GetValues<MonthlyRecurrenceMode>();
 
-    public IReadOnlyList<RecurrenceSyntaxExample> SyntaxExamples { get; }
+    public IReadOnlyList<RecurrenceSyntaxExampleRowViewModel> SyntaxExamples { get; }
 
     public ICommand ApplyTechnicalSyntaxCommand { get; }
 
@@ -206,14 +209,14 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         if (!parseResult.IsValid || parseResult.Rule is null)
         {
             TechnicalSyntaxMessage = parseResult.Errors.Count == 0
-                ? "Syntax could not be parsed."
+                ? Translator.Get("RecurrenceEditor_SyntaxNotParsed")
                 : parseResult.Errors[0];
             OnPropertyChanged(nameof(TechnicalSyntaxMessage));
             return;
         }
 
         ApplyRule(parseResult.Rule);
-        TechnicalSyntaxMessage = "Technical syntax applied.";
+        TechnicalSyntaxMessage = Translator.Get("RecurrenceEditor_SyntaxApplied");
         OnPropertyChanged(nameof(TechnicalSyntaxMessage));
     }
 
@@ -254,7 +257,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
             : validationResult.Errors[0];
         Description = validationResult.IsValid
             ? RecurrenceDescriptionFormatter.Format(recurrenceDescriptionService.Describe(rule))
-            : "Invalid recurrence";
+            : Translator.Get("RecurrenceEditor_InvalidRecurrence");
 
         if (validationResult.IsValid && !isUpdatingTechnicalSyntax)
         {

@@ -4,17 +4,18 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:AccountsViewModel"
-    Title="Accounts"
+    Title="{loc:Translate AppShell_Nav_Accounts}"
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
     <ScrollView>
         <VerticalStackLayout Padding="32" Spacing="16">
 
             <Grid ColumnDefinitions="*,Auto">
-                <Label Grid.Column="0" Text="Accounts" Style="{StaticResource ScreenTitleLabel}" />
+                <Label Grid.Column="0" Text="{loc:Translate AppShell_Nav_Accounts}" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
                     <Button Text="{Binding ShowArchivedToggleText}" Command="{Binding ToggleShowArchivedCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="+ Add account" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource PrimaryButton}" />
+                    <Button Text="{loc:Translate Accounts_AddAccountButton}" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>
 
@@ -25,37 +26,37 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{Binding Form.Title}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="Close" Command="{Binding Form.CloseCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding Form.CloseCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
-                    <Entry Placeholder="Account name" Text="{Binding Form.Name}" />
+                    <Entry Placeholder="{loc:Translate Accounts_AccountNamePlaceholder}" Text="{Binding Form.Name}" />
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Picker Grid.Column="0" Title="Type" ItemsSource="{Binding Form.AccountTypes}" SelectedItem="{Binding Form.Type}" />
-                        <Entry Grid.Column="1" Placeholder="Currency" Text="{Binding Form.Currency}" />
+                        <Picker Grid.Column="0" Title="{loc:Translate Common_Type}" ItemsSource="{Binding Form.AccountTypes}" SelectedItem="{Binding Form.Type}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
+                        <Entry Grid.Column="1" Placeholder="{loc:Translate Accounts_CurrencyPlaceholder}" Text="{Binding Form.Currency}" />
                     </Grid>
 
-                    <Entry Placeholder="Balance" Text="{Binding Form.BalanceText}" Keyboard="Numeric" />
+                    <Entry Placeholder="{loc:Translate Accounts_BalancePlaceholder}" Text="{Binding Form.BalanceText}" Keyboard="Numeric" />
 
-                    <Entry Placeholder="Goal target amount" Text="{Binding Form.GoalTargetText}" Keyboard="Numeric" IsVisible="{Binding Form.IsGoalType}" />
+                    <Entry Placeholder="{loc:Translate Accounts_GoalTargetPlaceholder}" Text="{Binding Form.GoalTargetText}" Keyboard="Numeric" IsVisible="{Binding Form.IsGoalType}" />
 
                     <VerticalStackLayout Spacing="8" IsVisible="{Binding Form.IsCreditCardType}">
-                        <Entry Placeholder="Minimum payment" Text="{Binding Form.MinimumPaymentText}" Keyboard="Numeric" />
-                        <Entry Placeholder="Planned monthly payment" Text="{Binding Form.PlannedPaymentText}" Keyboard="Numeric" />
+                        <Entry Placeholder="{loc:Translate Accounts_MinimumPaymentPlaceholder}" Text="{Binding Form.MinimumPaymentText}" Keyboard="Numeric" />
+                        <Entry Placeholder="{loc:Translate Accounts_PlannedMonthlyPaymentPlaceholder}" Text="{Binding Form.PlannedPaymentText}" Keyboard="Numeric" />
                     </VerticalStackLayout>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Entry Grid.Column="0" Placeholder="Account number (optional)" Text="{Binding Form.AccountNumberText}" />
-                        <Entry Grid.Column="1" Placeholder="Card last 4 digits (optional)" Text="{Binding Form.CardLastFourDigitsText}" Keyboard="Numeric" />
+                        <Entry Grid.Column="0" Placeholder="{loc:Translate Accounts_AccountNumberOptionalPlaceholder}" Text="{Binding Form.AccountNumberText}" />
+                        <Entry Grid.Column="1" Placeholder="{loc:Translate Accounts_CardLastFourOptionalPlaceholder}" Text="{Binding Form.CardLastFourDigitsText}" Keyboard="Numeric" />
                     </Grid>
 
                     <HorizontalStackLayout Spacing="8">
                         <CheckBox IsChecked="{Binding Form.IncludeInDashboardTotals}" />
-                        <Label Text="Include in dashboard totals" VerticalOptions="Center" />
+                        <Label Text="{loc:Translate Accounts_IncludeInDashboardTotals}" VerticalOptions="Center" />
                     </HorizontalStackLayout>
 
                     <Label Text="{Binding Form.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
-                    <Button Text="Save" Command="{Binding Form.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                    <Button Text="{loc:Translate Common_Save}" Command="{Binding Form.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
 
@@ -64,21 +65,21 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{Binding CardDetails.AccountName}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="Close" Command="{Binding CardDetails.CloseCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding CardDetails.CloseCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto" RowSpacing="4" ColumnSpacing="12">
-                        <Label Grid.Row="0" Grid.Column="0" Text="Current debt" Style="{StaticResource TertiaryLabel}" />
+                        <Label Grid.Row="0" Grid.Column="0" Text="{loc:Translate Accounts_CurrentDebtLabel}" Style="{StaticResource TertiaryLabel}" />
                         <Label Grid.Row="0" Grid.Column="1" Text="{Binding CardDetails.CurrentDebtText}" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="Minimum payment" Style="{StaticResource TertiaryLabel}" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="{loc:Translate Accounts_MinimumPaymentPlaceholder}" Style="{StaticResource TertiaryLabel}" />
                         <Label Grid.Row="1" Grid.Column="1" Text="{Binding CardDetails.MinimumPaymentDisplayText}" />
                     </Grid>
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
-                    <Label Text="Payoff calculator" Style="{StaticResource SectionTitleLabel}" FontSize="13" />
-                    <Entry Placeholder="Monthly payment" Text="{Binding CardDetails.ChosenPaymentAmountText}" Keyboard="Numeric" />
-                    <Entry Placeholder="Monthly finance charge (optional)" Text="{Binding CardDetails.ManualMonthlyFinanceChargeText}" Keyboard="Numeric" />
+                    <Label Text="{loc:Translate Accounts_PayoffCalculatorHeader}" Style="{StaticResource SectionTitleLabel}" FontSize="13" />
+                    <Entry Placeholder="{loc:Translate Accounts_MonthlyPaymentPlaceholder}" Text="{Binding CardDetails.ChosenPaymentAmountText}" Keyboard="Numeric" />
+                    <Entry Placeholder="{loc:Translate Accounts_MonthlyFinanceChargeOptionalPlaceholder}" Text="{Binding CardDetails.ManualMonthlyFinanceChargeText}" Keyboard="Numeric" />
                     <DatePicker Date="{Binding CardDetails.FirstPaymentDateTime}" />
                     <Label Text="{Binding CardDetails.PayoffSummary}" Style="{StaticResource SecondaryLabel}" />
                 </VerticalStackLayout>
@@ -105,12 +106,12 @@
                         <VerticalStackLayout Grid.Column="1" Spacing="1" Margin="12,0,0,0" VerticalOptions="Center">
                             <HorizontalStackLayout Spacing="6">
                                 <Label Text="{Binding DetailAccount.Name}" Style="{StaticResource SectionTitleLabel}" />
-                                <Label Text="Primary" IsVisible="{Binding DetailAccount.IsPrimary}" Style="{StaticResource TertiaryLabel}"
+                                <Label Text="{loc:Translate Accounts_PrimaryBadge}" IsVisible="{Binding DetailAccount.IsPrimary}" Style="{StaticResource TertiaryLabel}"
                                        TextColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                             </HorizontalStackLayout>
                             <Label Text="{Binding DetailAccount.TypeText}" Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
-                        <Button Grid.Column="2" Text="Close" Command="{Binding CloseDetailCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="2" Text="{loc:Translate Common_Close}" Command="{Binding CloseDetailCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Label Text="{Binding DetailAccount.BalanceText}" Style="{StaticResource HeroAmountLabel}" />
@@ -123,23 +124,23 @@
                     </HorizontalStackLayout>
 
                     <VerticalStackLayout Spacing="4" IsVisible="{Binding DetailAccount.HasGoalTarget}">
-                        <Label Text="Goal progress" Style="{StaticResource TertiaryLabel}" />
+                        <Label Text="{loc:Translate Accounts_GoalProgressLabel}" Style="{StaticResource TertiaryLabel}" />
                         <ProgressBar Progress="{Binding DetailAccount.GoalProgress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                         <Label Text="{Binding DetailAccount.GoalTargetText}" Style="{StaticResource TertiaryLabel}" />
                     </VerticalStackLayout>
 
-                    <Label Text="Archived" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource TertiaryLabel}"
+                    <Label Text="{loc:Translate Accounts_ArchivedBadge}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource TertiaryLabel}"
                            TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
 
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                     <HorizontalStackLayout Spacing="8">
-                        <Button Text="Edit" Command="{Binding DetailEditCommand}" Style="{StaticResource PrimaryButton}" />
-                        <Button Text="View transactions" Command="{Binding DetailViewTransactionsCommand}" Style="{StaticResource QuietButton}" />
-                        <Button Text="Card details" Command="{Binding DetailOpenCardDetailsCommand}" IsVisible="{Binding DetailAccount.IsCreditCard}" Style="{StaticResource QuietButton}" />
-                        <Button Text="Set primary" Command="{Binding DetailSetPrimaryCommand}" IsVisible="{Binding DetailAccount.IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
-                        <Button Text="Archive" Command="{Binding DetailArchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
-                        <Button Text="Unarchive" Command="{Binding DetailUnarchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Common_Edit}" Command="{Binding DetailEditCommand}" Style="{StaticResource PrimaryButton}" />
+                        <Button Text="{loc:Translate Accounts_ViewTransactionsButton}" Command="{Binding DetailViewTransactionsCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Accounts_CardDetailsButton}" Command="{Binding DetailOpenCardDetailsCommand}" IsVisible="{Binding DetailAccount.IsCreditCard}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Accounts_SetPrimaryButton}" Command="{Binding DetailSetPrimaryCommand}" IsVisible="{Binding DetailAccount.IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Accounts_ArchiveButton}" Command="{Binding DetailArchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
+                        <Button Text="{loc:Translate Accounts_UnarchiveButton}" Command="{Binding DetailUnarchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource QuietButton}" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
@@ -147,7 +148,7 @@
             <Border Style="{StaticResource CardBorder}">
                 <CollectionView ItemsSource="{Binding Accounts}">
                     <CollectionView.EmptyView>
-                        <Label Text="No accounts yet." Style="{StaticResource SecondaryLabel}" />
+                        <Label Text="{loc:Translate Accounts_NoAccountsYet}" Style="{StaticResource SecondaryLabel}" />
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:AccountRowViewModel">
@@ -193,7 +194,7 @@
                                     <VerticalStackLayout Grid.Column="2" Spacing="1" Margin="8,0,0,0" VerticalOptions="Center">
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="{Binding Name}" />
-                                            <Label Text="Primary" IsVisible="{Binding IsPrimary}" Style="{StaticResource TertiaryLabel}"
+                                            <Label Text="{loc:Translate Accounts_PrimaryBadge}" IsVisible="{Binding IsPrimary}" Style="{StaticResource TertiaryLabel}"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                                         </HorizontalStackLayout>
                                         <Label Text="{Binding TypeText}" Style="{StaticResource TertiaryLabel}" />

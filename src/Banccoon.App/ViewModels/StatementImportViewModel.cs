@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 using Microsoft.Maui.Devices;
@@ -26,7 +27,7 @@ public sealed class StatementImportViewModel : ViewModelBase
     private string? filePath;
     private string fileName = string.Empty;
     private ParsedStatement? statement;
-    private string previewStatusText = "Choose a bank statement file to begin.";
+    private string previewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
 
     public StatementImportViewModel(
         IStatementImportService statementImportService,
@@ -97,21 +98,21 @@ public sealed class StatementImportViewModel : ViewModelBase
 
     public string PeriodText => statement is { PeriodStart: { } start, PeriodEnd: { } end }
         ? $"{start:dd/MM/yyyy} - {end:dd/MM/yyyy}"
-        : "Unknown";
+        : Translator.Get("StatementImport_Unknown");
 
-    public string RowCountText => statement is null ? string.Empty : $"{statement.Rows.Count} row(s)";
+    public string RowCountText => statement is null ? string.Empty : Translator.GetPlural("StatementImport_RowCount", statement.Rows.Count);
 
     public string DetectedBalanceText => statement?.ClosingBalance is { } balance
         ? MoneyFormat.Format(balance, currency)
-        : "Not detected";
+        : Translator.Get("StatementImport_NotDetected");
 
     public string DetectedAccountText => statement is null
         ? string.Empty
         : !string.IsNullOrWhiteSpace(statement.CardLastFourDigits)
-            ? $"Card ending {statement.CardLastFourDigits}"
+            ? string.Format(Translator.Get("StatementImport_CardEndingFormat"), statement.CardLastFourDigits)
             : !string.IsNullOrWhiteSpace(statement.AccountNumber)
                 ? AccountNumberFormat.Mask(statement.AccountNumber)
-                : "Not detected";
+                : Translator.Get("StatementImport_NotDetected");
 
     public bool CanContinueFromPick => statement is not null;
 
@@ -132,7 +133,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         filePath = null;
         FileName = string.Empty;
         statement = null;
-        PreviewStatusText = "Choose a bank statement file to begin.";
+        PreviewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
         OnPropertyChanged(nameof(HasStatement));
         OnPropertyChanged(nameof(CanContinueFromPick));
     }
@@ -152,7 +153,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         {
             result = await FilePicker.Default.PickAsync(new PickOptions
             {
-                PickerTitle = "Choose a bank statement file",
+                PickerTitle = Translator.Get("StatementImport_FilePickerTitle"),
                 FileTypes = extensions.Length == 0
                     ? null
                     : new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
@@ -163,7 +164,7 @@ public sealed class StatementImportViewModel : ViewModelBase
         }
         catch (Exception)
         {
-            await RunOnMainThreadAsync(() => PreviewStatusText = "Could not open the file picker.");
+            await RunOnMainThreadAsync(() => PreviewStatusText = Translator.Get("StatementImport_CouldNotOpenFilePicker"));
             return;
         }
 

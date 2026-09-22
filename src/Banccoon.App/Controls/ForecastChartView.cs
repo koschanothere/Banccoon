@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Globalization;
+using Banccoon.App.Localization;
 using Banccoon.App.ViewModels;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -228,7 +229,7 @@ internal sealed class ForecastChartDrawable : IDrawable
 
             var value = minBalance + ((maxBalance - minBalance) * (decimal)ratio);
             canvas.DrawString(
-                value.ToString("N0", CultureInfo.CurrentCulture),
+                value.ToString("N0", CultureInfo.InvariantCulture),
                 0f,
                 y - 8f,
                 plot.X - 8f,
@@ -312,7 +313,7 @@ internal sealed class ForecastChartDrawable : IDrawable
         canvas.FontColor = MutedTextColor;
         canvas.FontSize = 10f;
         canvas.DrawString(
-            "Today",
+            Translator.Get("ForecastChart_Today"),
             x - 28f,
             plot.Y,
             56f,

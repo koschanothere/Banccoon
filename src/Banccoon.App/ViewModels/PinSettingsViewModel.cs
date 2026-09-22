@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Security;
@@ -63,13 +64,13 @@ public sealed class PinSettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(NewPinText) || NewPinText.Length < 4 || !NewPinText.All(char.IsDigit))
         {
-            StatusText = "PIN must be at least 4 digits.";
+            StatusText = Translator.Get("Settings_PinMinDigits");
             return;
         }
 
         if (NewPinText != ConfirmPinText)
         {
-            StatusText = "PINs don't match.";
+            StatusText = Translator.Get("Settings_PinsDontMatch");
             return;
         }
 
@@ -86,7 +87,7 @@ public sealed class PinSettingsViewModel : ViewModelBase
             IsPinSet = true;
             NewPinText = string.Empty;
             ConfirmPinText = string.Empty;
-            StatusText = "PIN set - the app will ask for it next time it starts.";
+            StatusText = Translator.Get("Settings_PinSetConfirmation");
         });
     }
 
@@ -98,7 +99,7 @@ public sealed class PinSettingsViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             IsPinSet = false;
-            StatusText = "PIN removed.";
+            StatusText = Translator.Get("Settings_PinRemoved");
         });
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Localization;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
@@ -61,11 +62,16 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             if (SetProperty(ref activeColorPickerBox, value))
             {
                 OnPropertyChanged(nameof(IsColorPickerOpen));
+                OnPropertyChanged(nameof(ActiveColorPickerBoxColorForLabel));
             }
         }
     }
 
     public bool IsColorPickerOpen => ActiveColorPickerBox is not null;
+
+    public string ActiveColorPickerBoxColorForLabel => ActiveColorPickerBox is { } box
+        ? string.Format(Translator.Get("Settings_ColorForFormat"), box.Name)
+        : string.Empty;
 
     public bool IsSelectMode
     {
@@ -256,7 +262,7 @@ public sealed class CategoryManagementViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(NewCategoryName))
         {
-            StatusText = "Enter a category name.";
+            StatusText = Translator.Get("Settings_EnterCategoryName");
             return;
         }
 
