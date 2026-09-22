@@ -68,7 +68,7 @@ Already partially implemented in `Banccoon.Core.Forecasting.AvailableToSpendServ
 - Bulk actions: explicit **"Select" mode toggle** button switches the list into checkbox mode; then mass category assignment, mass scheduled-occurrence assignment, mass delete.
 - **Category management** icon lives in the Transactions header next to the filter control, opening a manage-categories overlay (rename/merge/delete/recolor/reorder). This is deliberately **not in Settings** — categories are living financial data you touch constantly, unlike scheduled templates.
   - Category **creation** is inline wherever you pick a category (transaction entry, statement import row, scheduled assignment) — type a new name, confirm, done.
-  - Categories are **flat**, no groups/hierarchy.
+  - Categories are **flat**, no groups/hierarchy. **Under reconsideration as of 2026-09-23** — the user now wants hierarchical (parent/child) categories for Analytics rollups; this line is no longer settled. See "Current Priorities" in `docs/development-phases.md` for status — needs a scoping pass (storage shape, migration, interaction with color/merge) before this decision is finalized either way.
 
 ## Statement Import (full-page guided flow)
 
@@ -119,8 +119,6 @@ Principles extracted from a reference app (iOS + Mac, not to be copied visually 
 
 ## Open / Deferred
 
-- Visual design system ("the look") — colors, type, spacing, exact component shapes — still to come once you share concrete look references.
-- Whether the progress-bar/pace-marker widget gets adopted, and where — revisit once mocked up.
-- Definition of "major payment" for the dynamic free-to-spend window mode — deferred to implementation design.
+- Whether the progress-bar/pace-marker widget gets adopted, and where — still not built anywhere; revisit once mocked up.
 - Exact overlay busy/error state visuals — deferred to look phase.
-- Desktop notifications/reminders (Phase 7 item) — not covered in this pass, revisit later.
+- Desktop notifications/reminders (Phase 7 item) — preference is saved (`AppSettings.ReminderFrequency`), actual delivery still not built.
