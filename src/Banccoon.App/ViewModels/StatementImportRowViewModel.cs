@@ -20,6 +20,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     private NamedOptionViewModel? otherAccount;
     private bool isSelected;
     private bool isSelectModeActive;
+    private bool isBusy;
 
     public StatementImportRowViewModel(
         StatementImportRow row,
@@ -135,6 +136,48 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     {
         get => isSelectModeActive;
         set => SetProperty(ref isSelectModeActive, value);
+    }
+
+    // True while an approve/skip for this row is queued or in flight - disables its buttons so a
+    // double-click can't start a second approve of the same row (see
+    // StatementImportReviewViewModel.TryBeginRowActionAsync). UI-thread only, like every other
+    // bound property here.
+    public bool IsBusy
+    {
+        get => isBusy;
+        private set
+        {
+            if (SetProperty(ref isBusy, value))
+            {
+                OnPropertyChanged(nameof(IsIdle));
+            }
+        }
+    }
+
+    public bool IsIdle => !IsBusy;
+
+    public bool TryBeginAction()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        IsBusy = true;
+        return true;
+    }
+
+    public void EndAction()
+    {
+        IsBusy = false;
+    }
+
+    // Used when another row just created the category this row was also about to create (same
+    // name typed into both) - points this row at the real category instead of creating a duplicate.
+    public void AdoptCategory(CategoryOptionViewModel option)
+    {
+        Category = option;
+        NewCategoryName = string.Empty;
     }
 
     public ICommand ApproveCommand { get; }

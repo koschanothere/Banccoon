@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
-using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 
@@ -15,14 +15,16 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private readonly ICategoryRepository categoryRepository;
     private readonly IAccountRepository accountRepository;
 
+    // Every approve/skip (single row or bulk) runs one at a time, in click order. Each one reads an
+    // account, applies a transaction and saves the account back - two running concurrently (easy
+    // now that rows no longer vanish-and-rebuild between clicks, so approving row after row quickly
+    // is the natural flow) could both read the same starting balance and silently lose one update.
+    private readonly SemaphoreSlim actionGate = new(1, 1);
+
     private Guid batchId;
     private Guid accountId;
     private string currency = "EUR";
-    private bool selectMode;
-    private CategoryOptionViewModel? bulkCategory;
-    private string newBulkCategoryName = string.Empty;
     private string statusText = string.Empty;
-    private string selectionSummaryText = string.Empty;
 
     public StatementImportReviewViewModel(
         IStatementImportService statementImportService,
@@ -38,12 +40,15 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         Rows = [];
         CategoryOptions = [];
         OtherAccountOptions = [];
+        Bulk = new StatementImportBulkActionsViewModel(this);
 
-        ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
-        ApproveSelectedCommand = new RelayCommand(() => _ = ApproveSelectedAsync());
-        SkipSelectedCommand = new RelayCommand(() => _ = SkipSelectedAsync());
         CancelImportCommand = new RelayCommand(() => _ = CancelImportAsync());
     }
+
+    // Raised (on the UI thread) when the last pending row has been approved or skipped - i.e. the
+    // batch is fully reviewed and its statement closing balance has just become the account's
+    // balance (see StatementImportService.CompleteBatchIfReviewedAsync).
+    public event Action? ReviewCompleted;
 
     public ObservableCollection<StatementImportRowViewModel> Rows { get; }
 
@@ -52,51 +57,17 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     // Every other tracked account, offered as the "other side" when a row is marked Transfer.
     public ObservableCollection<NamedOptionViewModel> OtherAccountOptions { get; }
 
+    public StatementImportBulkActionsViewModel Bulk { get; }
+
+    public Guid AccountId => accountId;
+
     public bool IsComplete => Rows.Count == 0;
-
-    public bool SelectMode
-    {
-        get => selectMode;
-        private set => SetProperty(ref selectMode, value);
-    }
-
-    public CategoryOptionViewModel? BulkCategory
-    {
-        get => bulkCategory;
-        set
-        {
-            if (SetProperty(ref bulkCategory, value))
-            {
-                OnPropertyChanged(nameof(IsCreatingNewBulkCategory));
-            }
-        }
-    }
-
-    public bool IsCreatingNewBulkCategory => BulkCategory?.IsCreateNew == true;
-
-    public string NewBulkCategoryName
-    {
-        get => newBulkCategoryName;
-        set => SetProperty(ref newBulkCategoryName, value);
-    }
 
     public string StatusText
     {
         get => statusText;
         private set => SetProperty(ref statusText, value);
     }
-
-    public string SelectionSummaryText
-    {
-        get => selectionSummaryText;
-        private set => SetProperty(ref selectionSummaryText, value);
-    }
-
-    public ICommand ToggleSelectModeCommand { get; }
-
-    public ICommand ApproveSelectedCommand { get; }
-
-    public ICommand SkipSelectedCommand { get; }
 
     public ICommand CancelImportCommand { get; }
 
@@ -129,10 +100,109 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             }
         });
 
-        await RefreshRowsAsync(cancellationToken);
+        await LoadRowsAsync(cancellationToken);
     }
 
-    private async Task RefreshRowsAsync(CancellationToken cancellationToken = default)
+    // Runs an approve/skip action behind the shared gate (see actionGate), clearing any old status
+    // first and turning a failure into a visible message instead of an unobserved exception from a
+    // fire-and-forget command.
+    public async Task RunExclusiveAsync(Func<Task> action)
+    {
+        await actionGate.WaitAsync();
+        try
+        {
+            await SetStatusAsync(string.Empty);
+            await action();
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"Statement import review action failed: {ex}");
+            await SetStatusAsync(Translator.Get("StatementImport_ActionFailed"));
+        }
+        finally
+        {
+            actionGate.Release();
+        }
+    }
+
+    public Task SetStatusAsync(string text)
+    {
+        return RunOnMainThreadAsync(() => StatusText = text);
+    }
+
+    // Only called from inside RunExclusiveAsync.
+    public async Task ApproveAsync(StatementImportRowViewModel row, Guid? bulkCategoryId)
+    {
+        var categoryId = bulkCategoryId ?? await ResolveCategoryAsync(row.Category, row.NewCategoryName);
+        await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
+        await RemoveReviewedRowAsync(row);
+    }
+
+    // Only called from inside RunExclusiveAsync.
+    public async Task SkipAsync(StatementImportRowViewModel row)
+    {
+        await statementImportService.SkipRowAsync(row.Id);
+        await RemoveReviewedRowAsync(row);
+    }
+
+    // Returns null when every row can be approved as-is, otherwise the (translated) reason one
+    // can't - checked before calling the service, which would otherwise throw.
+    public async Task<string?> GetApprovalProblemAsync(IReadOnlyList<StatementImportRowViewModel> rows, bool checkRowCategories = true)
+    {
+        string? problem = null;
+        await RunOnMainThreadAsync(() =>
+        {
+            if (checkRowCategories && rows.Any(row => row.IsCreatingNewCategory && string.IsNullOrWhiteSpace(row.NewCategoryName)))
+            {
+                problem = Translator.Get("StatementImport_NameNewCategoryFirst");
+            }
+            else if (rows.Any(row => row.IsTransferType && row.OtherAccount is null))
+            {
+                problem = Translator.Get("StatementImport_ChooseOtherAccountFirst");
+            }
+        });
+
+        return problem;
+    }
+
+    // Resolves a picker selection to a category id, creating the category if "create new" was
+    // picked - unless a category with that name already exists (typically: another row typed the
+    // same new name and was approved first), in which case that one is reused instead of creating
+    // a duplicate. A newly created category is offered to every row, and any other row that was
+    // also about to create the same name is pointed at it.
+    public async Task<Guid?> ResolveCategoryAsync(CategoryOptionViewModel? selected, string newCategoryName)
+    {
+        if (selected?.IsCreateNew == true && !string.IsNullOrWhiteSpace(newCategoryName))
+        {
+            CategoryOptionViewModel? existing = null;
+            await RunOnMainThreadAsync(() => existing = CategoryOptions.FirstOrDefault(option => !option.IsCreateNew && NamesMatch(option.Name, newCategoryName)));
+            if (existing is not null)
+            {
+                return existing.Id;
+            }
+        }
+
+        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(selected, newCategoryName, categoryRepository);
+        if (newOption is not null)
+        {
+            await RunOnMainThreadAsync(() =>
+            {
+                CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption);
+                foreach (var row in Rows.Where(row => row.IsCreatingNewCategory && NamesMatch(row.NewCategoryName, newOption.Name)))
+                {
+                    row.AdoptCategory(newOption);
+                }
+            });
+        }
+
+        return categoryId;
+    }
+
+    // The only full rebuild of Rows - on first load. Every later action removes just the rows it
+    // acted on (RemoveReviewedRowAsync): a rebuild recreates every row from its persisted (unedited)
+    // data, which would silently throw away the category/type/other-account picks the user has
+    // made on every row they haven't approved yet.
+    private async Task LoadRowsAsync(CancellationToken cancellationToken = default)
     {
         var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
         var pendingRows = rows
@@ -142,124 +212,94 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
         await RunOnMainThreadAsync(() =>
         {
-            Rows.Clear();
+            ClearRows();
             foreach (var row in pendingRows)
             {
-                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync)
-                {
-                    IsSelectModeActive = SelectMode
-                };
+                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync);
+                Bulk.OnRowAdded(rowViewModel);
                 Rows.Add(rowViewModel);
             }
 
-            OnPropertyChanged(nameof(IsComplete));
-            UpdateSelectionSummary();
+            OnRowsChanged();
         });
     }
 
     private async Task ApproveRowAsync(StatementImportRowViewModel row)
     {
-        if (row.IsCreatingNewCategory && string.IsNullOrWhiteSpace(row.NewCategoryName))
+        await RunRowActionAsync(row, async () =>
         {
-            await RunOnMainThreadAsync(() => StatusText = Translator.Get("StatementImport_NameNewCategoryFirst"));
+            if (await GetApprovalProblemAsync([row]) is { } problem)
+            {
+                await SetStatusAsync(problem);
+                return;
+            }
+
+            await ApproveAsync(row, bulkCategoryId: null);
+        });
+    }
+
+    private Task SkipRowAsync(StatementImportRowViewModel row)
+    {
+        return RunRowActionAsync(row, () => SkipAsync(row));
+    }
+
+    // Marks the row busy on the UI thread before anything else. Commands start on the UI thread,
+    // where RunOnMainThreadAsync runs inline - so a second click on the same row (queued behind
+    // this one on the UI thread) always finds the flag already set and is ignored, rather than
+    // starting a second approve of a row that's still Pending in the database.
+    private async Task RunRowActionAsync(StatementImportRowViewModel row, Func<Task> action)
+    {
+        var started = false;
+        await RunOnMainThreadAsync(() => started = row.TryBeginAction());
+        if (!started)
+        {
             return;
         }
 
-        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(row.Category, row.NewCategoryName, categoryRepository);
-        if (newOption is not null)
+        try
         {
-            await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));
+            await RunExclusiveAsync(action);
         }
-
-        await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
-        await RefreshRowsAsync();
+        finally
+        {
+            await RunOnMainThreadAsync(row.EndAction);
+        }
     }
 
-    private async Task SkipRowAsync(StatementImportRowViewModel row)
+    private async Task RemoveReviewedRowAsync(StatementImportRowViewModel row)
     {
-        await statementImportService.SkipRowAsync(row.Id);
-        await RefreshRowsAsync();
-    }
-
-    private void ToggleSelectMode()
-    {
-        SelectMode = !SelectMode;
-        foreach (var row in Rows)
-        {
-            row.IsSelectModeActive = SelectMode;
-            if (!SelectMode)
-            {
-                row.IsSelected = false;
-            }
-        }
-
-        UpdateSelectionSummary();
-    }
-
-    private void UpdateSelectionSummary()
-    {
-        var count = Rows.Count(row => row.IsSelected);
-        SelectionSummaryText = Translator.GetPlural("Common_SelectionCount", count);
-    }
-
-    private async Task ApproveSelectedAsync()
-    {
-        if (IsCreatingNewBulkCategory && string.IsNullOrWhiteSpace(NewBulkCategoryName))
-        {
-            await RunOnMainThreadAsync(() => StatusText = Translator.Get("StatementImport_NameNewCategoryFirst"));
-            return;
-        }
-
-        var selected = Rows.Where(row => row.IsSelected).ToList();
-
-        // A bulk category (including "create new") wins over each row's own pick, matching the
-        // original BulkCategory?.Id ?? row.Category?.Id fallback - but a bulk "create new" is
-        // resolved once, up front, so every selected row lands in the same new category rather
-        // than creating one per row.
-        var (bulkCategoryId, newBulkOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(BulkCategory, NewBulkCategoryName, categoryRepository);
-        if (newBulkOption is not null)
-        {
-            await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newBulkOption));
-        }
-
-        foreach (var row in selected)
-        {
-            Guid? categoryId = bulkCategoryId;
-            if (categoryId is null)
-            {
-                var (rowCategoryId, newRowOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(row.Category, row.NewCategoryName, categoryRepository);
-                if (newRowOption is not null)
-                {
-                    await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newRowOption));
-                }
-
-                categoryId = rowCategoryId;
-            }
-
-            await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
-        }
-
-        // Touches UI-bound state after an await that may have resumed off the UI thread (see
-        // ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() =>
         {
-            SelectMode = false;
-            BulkCategory = null;
-            NewBulkCategoryName = string.Empty;
+            Rows.Remove(row);
+            Bulk.OnRowRemoved(row);
+            OnRowsChanged();
+
+            if (Rows.Count == 0)
+            {
+                ReviewCompleted?.Invoke();
+            }
         });
-        await RefreshRowsAsync();
     }
 
-    private async Task SkipSelectedAsync()
+    private void ClearRows()
     {
-        var selected = Rows.Where(row => row.IsSelected).ToList();
-        foreach (var row in selected)
+        foreach (var row in Rows)
         {
-            await statementImportService.SkipRowAsync(row.Id);
+            Bulk.OnRowRemoved(row);
         }
 
-        await RunOnMainThreadAsync(() => SelectMode = false);
-        await RefreshRowsAsync();
+        Rows.Clear();
+    }
+
+    private void OnRowsChanged()
+    {
+        OnPropertyChanged(nameof(IsComplete));
+        Bulk.OnRowsChanged();
+    }
+
+    private static bool NamesMatch(string left, string right)
+    {
+        return string.Equals(left.Trim(), right.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task CancelImportAsync()
@@ -271,8 +311,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             StatusText = StatementImportMessageFormatter.Format(result.Message);
             if (result.Cancelled)
             {
-                Rows.Clear();
-                OnPropertyChanged(nameof(IsComplete));
+                ClearRows();
+                OnRowsChanged();
             }
         });
     }

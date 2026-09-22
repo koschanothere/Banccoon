@@ -593,6 +593,24 @@
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Сначала укажите название новой категории.</value>
   </data>
+  <data name="StatementImport_ChooseOtherAccountFirst" xml:space="preserve">
+    <value>Сначала выберите второй счёт для этого перевода.</value>
+  </data>
+  <data name="StatementImport_ActionFailed" xml:space="preserve">
+    <value>Не удалось выполнить действие. Подробности записаны в журнал диагностики.</value>
+  </data>
+  <data name="StatementImport_ApplyToSelectedButton" xml:space="preserve">
+    <value>Применить к выбранным</value>
+  </data>
+  <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
+    <value>Выбрать возможные дубликаты</value>
+  </data>
+  <data name="Common_SelectAll" xml:space="preserve">
+    <value>Выбрать все</value>
+  </data>
+  <data name="Common_ClearSelection" xml:space="preserve">
+    <value>Снять выбор</value>
+  </data>
   <data name="StatementImportMessage_NoFileChosen" xml:space="preserve">
     <value>Сначала выберите файл банковской выписки.</value>
   </data>

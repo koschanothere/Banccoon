@@ -569,6 +569,24 @@
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Name the new category first.</value>
   </data>
+  <data name="StatementImport_ChooseOtherAccountFirst" xml:space="preserve">
+    <value>Choose the other account for this transfer first.</value>
+  </data>
+  <data name="StatementImport_ActionFailed" xml:space="preserve">
+    <value>That couldn't be completed. Details were written to the diagnostics log.</value>
+  </data>
+  <data name="StatementImport_ApplyToSelectedButton" xml:space="preserve">
+    <value>Apply to selected</value>
+  </data>
+  <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
+    <value>Select possible duplicates</value>
+  </data>
+  <data name="Common_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="Common_ClearSelection" xml:space="preserve">
+    <value>Clear selection</value>
+  </data>
   <data name="StatementImportMessage_NoFileChosen" xml:space="preserve">
     <value>Choose a bank statement file first.</value>
   </data>
