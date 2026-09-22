@@ -345,6 +345,84 @@
   <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
     <value>Every year</value>
   </data>
+  <data name="RecurrenceDescription_EveryDay" xml:space="preserve">
+    <value>Every day</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_One" xml:space="preserve">
+    <value>Every {0} day</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_Other" xml:space="preserve">
+    <value>Every {0} days</value>
+  </data>
+  <data name="RecurrenceDescription_EveryWeek" xml:space="preserve">
+    <value>Every week</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_One" xml:space="preserve">
+    <value>Every {0} week</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_Other" xml:space="preserve">
+    <value>Every {0} weeks</value>
+  </data>
+  <data name="RecurrenceDescription_EveryMonth" xml:space="preserve">
+    <value>Every month</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_One" xml:space="preserve">
+    <value>Every {0} month</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_Other" xml:space="preserve">
+    <value>Every {0} months</value>
+  </data>
+  <data name="RecurrenceDescription_EveryYear" xml:space="preserve">
+    <value>Every year</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_One" xml:space="preserve">
+    <value>Every {0} year</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_Other" xml:space="preserve">
+    <value>Every {0} years</value>
+  </data>
+  <data name="RecurrenceDescription_WeeklyFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Sunday" xml:space="preserve">
+    <value>on Sunday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Monday" xml:space="preserve">
+    <value>on Monday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Tuesday" xml:space="preserve">
+    <value>on Tuesday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Wednesday" xml:space="preserve">
+    <value>on Wednesday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Thursday" xml:space="preserve">
+    <value>on Thursday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Friday" xml:space="preserve">
+    <value>on Friday</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Saturday" xml:space="preserve">
+    <value>on Saturday</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnDayFormat" xml:space="preserve">
+    <value>{0} on day {1}</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnLastDayFormat" xml:space="preserve">
+    <value>{0} on the last day</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyFormat" xml:space="preserve">
+    <value>{0} on {1}</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyDatePattern" xml:space="preserve">
+    <value>MMMM d</value>
+  </data>
+  <data name="RecurrenceDescription_UntilFormat" xml:space="preserve">
+    <value>{0} until {1}</value>
+  </data>
+  <data name="RecurrenceDescription_UntilDatePattern" xml:space="preserve">
+    <value>MMMM d, yyyy</value>
+  </data>
   <!-- Common (reusable generic UI verbs/nouns across screens) -->
   <data name="Common_Close" xml:space="preserve">
     <value>Close</value>

@@ -354,6 +354,96 @@
   <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
     <value>Каждый год</value>
   </data>
+  <data name="RecurrenceDescription_EveryDay" xml:space="preserve">
+    <value>Каждый день</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_One" xml:space="preserve">
+    <value>Каждый {0} день</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_Few" xml:space="preserve">
+    <value>Каждые {0} дня</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_Many" xml:space="preserve">
+    <value>Каждые {0} дней</value>
+  </data>
+  <data name="RecurrenceDescription_EveryWeek" xml:space="preserve">
+    <value>Каждую неделю</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_One" xml:space="preserve">
+    <value>Каждую {0} неделю</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_Few" xml:space="preserve">
+    <value>Каждые {0} недели</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_Many" xml:space="preserve">
+    <value>Каждые {0} недель</value>
+  </data>
+  <data name="RecurrenceDescription_EveryMonth" xml:space="preserve">
+    <value>Каждый месяц</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_One" xml:space="preserve">
+    <value>Каждый {0} месяц</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_Few" xml:space="preserve">
+    <value>Каждые {0} месяца</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_Many" xml:space="preserve">
+    <value>Каждые {0} месяцев</value>
+  </data>
+  <data name="RecurrenceDescription_EveryYear" xml:space="preserve">
+    <value>Каждый год</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_One" xml:space="preserve">
+    <value>Каждый {0} год</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_Few" xml:space="preserve">
+    <value>Каждые {0} года</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_Many" xml:space="preserve">
+    <value>Каждые {0} лет</value>
+  </data>
+  <data name="RecurrenceDescription_WeeklyFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Sunday" xml:space="preserve">
+    <value>по воскресеньям</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Monday" xml:space="preserve">
+    <value>по понедельникам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Tuesday" xml:space="preserve">
+    <value>по вторникам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Wednesday" xml:space="preserve">
+    <value>по средам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Thursday" xml:space="preserve">
+    <value>по четвергам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Friday" xml:space="preserve">
+    <value>по пятницам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Saturday" xml:space="preserve">
+    <value>по субботам</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnDayFormat" xml:space="preserve">
+    <value>{0}, {1} числа</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnLastDayFormat" xml:space="preserve">
+    <value>{0}, в последний день</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyDatePattern" xml:space="preserve">
+    <value>d MMMM</value>
+  </data>
+  <data name="RecurrenceDescription_UntilFormat" xml:space="preserve">
+    <value>{0}, до {1} г.</value>
+  </data>
+  <data name="RecurrenceDescription_UntilDatePattern" xml:space="preserve">
+    <value>d MMMM yyyy</value>
+  </data>
   <!-- Common (reusable generic UI verbs/nouns across screens) -->
   <data name="Common_Close" xml:space="preserve">
     <value>Закрыть</value>

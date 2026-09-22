@@ -1,11 +1,23 @@
 using System.Globalization;
+using Banccoon.App.Localization;
 using Banccoon.Core.Recurrence;
 
 namespace Banccoon.App.Formatting;
 
-// Turns Core's language-agnostic RecurrenceDescriptionData into display text. Reproduces the
-// exact English sentences RecurrenceDescriptionService used to compose directly - this is the
-// hook point for translated output once the Translator/resx foundation is wired in.
+// Turns Core's language-agnostic RecurrenceDescriptionData into a translated sentence
+// ("Every 2 weeks on Monday" / "Каждые 2 недели по понедельникам").
+//
+// Built from whole-phrase resx keys rather than slotting translated words into one shared
+// template, because Russian inflects every slot differently by position:
+// - The "every N units" phrase is pluralized per language (Translator.GetPlural), and in Russian
+//   "каждый" agrees with the numeral's noun form too: "каждый 21 день" / "каждые 2 дня" /
+//   "каждые 5 дней", and "каждую неделю" (feminine accusative) vs "каждый месяц".
+// - Weekdays are whole "on Monday" / "по понедельникам" phrases (по + dative plural for a
+//   recurring day), one key per day - a bare day name can't be declined by a template.
+// - Dates use a per-language pattern from resx ("MMMM d" / "d MMMM") formatted with the UI
+//   culture: .NET picks the genitive month form ("7 июня", not "7 июнь") whenever the pattern
+//   puts a day number next to MMMM, so the month's case comes from CLDR culture data rather than
+//   a hand-maintained list.
 public static class RecurrenceDescriptionFormatter
 {
     public static string Format(RecurrenceDescriptionData data)
@@ -20,53 +32,54 @@ public static class RecurrenceDescriptionFormatter
         };
 
         return data.EndDate.HasValue
-            ? $"{coreDescription} until {FormatDate(data.EndDate.Value)}"
+            ? string.Format(
+                Translator.Get("RecurrenceDescription_UntilFormat"),
+                coreDescription,
+                FormatDate(data.EndDate.Value, "RecurrenceDescription_UntilDatePattern"))
             : coreDescription;
     }
 
     private static string DescribeDaily(RecurrenceDescriptionData data)
     {
-        return data.Interval == 1
-            ? "Every day"
-            : $"Every {data.Interval} days";
+        return Every(data.Interval, "RecurrenceDescription_EveryDay", "RecurrenceDescription_EveryNDays");
     }
 
     private static string DescribeWeekly(RecurrenceDescriptionData data)
     {
-        var dayOfWeek = data.ResolvedDayOfWeek!.Value;
-
-        return data.Interval == 1
-            ? $"Every week on {dayOfWeek}"
-            : $"Every {data.Interval} weeks on {dayOfWeek}";
+        return string.Format(
+            Translator.Get("RecurrenceDescription_WeeklyFormat"),
+            Every(data.Interval, "RecurrenceDescription_EveryWeek", "RecurrenceDescription_EveryNWeeks"),
+            Translator.Get($"RecurrenceDescription_OnWeekday_{data.ResolvedDayOfWeek!.Value}"));
     }
 
     private static string DescribeMonthly(RecurrenceDescriptionData data)
     {
-        if (data.IsLastDayOfMonth)
-        {
-            return data.Interval == 1
-                ? "Every month on the last day"
-                : $"Every {data.Interval} months on the last day";
-        }
+        var every = Every(data.Interval, "RecurrenceDescription_EveryMonth", "RecurrenceDescription_EveryNMonths");
 
-        var dayOfMonth = data.ResolvedDayOfMonth!.Value;
-
-        return data.Interval == 1
-            ? $"Every month on day {dayOfMonth}"
-            : $"Every {data.Interval} months on day {dayOfMonth}";
+        return data.IsLastDayOfMonth
+            ? string.Format(Translator.Get("RecurrenceDescription_MonthlyOnLastDayFormat"), every)
+            : string.Format(Translator.Get("RecurrenceDescription_MonthlyOnDayFormat"), every, data.ResolvedDayOfMonth!.Value);
     }
 
     private static string DescribeYearly(RecurrenceDescriptionData data)
     {
-        var dateDescription = $"{data.StartDate.ToString("MMMM", CultureInfo.InvariantCulture)} {data.StartDate.Day}";
-
-        return data.Interval == 1
-            ? $"Every year on {dateDescription}"
-            : $"Every {data.Interval} years on {dateDescription}";
+        return string.Format(
+            Translator.Get("RecurrenceDescription_YearlyFormat"),
+            Every(data.Interval, "RecurrenceDescription_EveryYear", "RecurrenceDescription_EveryNYears"),
+            FormatDate(data.StartDate, "RecurrenceDescription_YearlyDatePattern"));
     }
 
-    private static string FormatDate(DateOnly date)
+    // Interval 1 gets its own key ("Every week" / "Каждую неделю") rather than going through the
+    // plural path, which would read "Every 1 week" / "Каждую 1 неделю".
+    private static string Every(int interval, string singleKey, string pluralKeyBase)
     {
-        return date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture);
+        return interval == 1
+            ? Translator.Get(singleKey)
+            : Translator.GetPlural(pluralKeyBase, interval);
+    }
+
+    private static string FormatDate(DateOnly date, string patternKey)
+    {
+        return date.ToString(Translator.Get(patternKey), CultureInfo.CurrentUICulture);
     }
 }
