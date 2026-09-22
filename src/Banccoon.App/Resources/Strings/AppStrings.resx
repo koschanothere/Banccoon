@@ -312,6 +312,24 @@
   <data name="RecurrenceValidation_MonthlyDayOutOfRange" xml:space="preserve">
     <value>Monthly recurrence day must be between 1 and 31.</value>
   </data>
+  <data name="RecurrenceSyntaxError_Empty" xml:space="preserve">
+    <value>Syntax is empty.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidField" xml:space="preserve">
+    <value>Invalid field '{0}'. Use KEY=VALUE.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_FieldRequired" xml:space="preserve">
+    <value>{0} is required.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_UnsupportedValue" xml:space="preserve">
+    <value>{0} has an unsupported value.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_NotWholeNumber" xml:space="preserve">
+    <value>{0} must be a whole number.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidMonthDay" xml:space="preserve">
+    <value>{0} must be a number between 1 and 31, or LAST.</value>
+  </data>
   <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
     <value>Every day</value>
   </data>

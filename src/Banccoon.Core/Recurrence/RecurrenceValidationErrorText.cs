@@ -1,11 +1,9 @@
 namespace Banccoon.Core.Recurrence;
 
-// English-only text for RecurrenceValidationErrorCode, for contexts that haven't been migrated to
-// real translation yet: RecurrenceValidationException's diagnostic Message (developer/log-facing,
-// deliberately not translated - see that class), and RecurrenceSyntaxService.TryParse's Errors
-// list (translating syntax errors needs its own pass - they interleave with untranslatable
-// technical tokens like "FREQ"/"BYMONTHDAY" - see the i18n scoping note in
-// docs/development-phases.md).
+// English-only text for RecurrenceValidationErrorCode, used only by RecurrenceValidationException's
+// diagnostic Message (developer/log-facing, deliberately not translated - see that class). Every
+// user-facing path (RecurrenceEditorViewModel, including syntax errors via RecurrenceSyntaxError)
+// goes through the App layer's Translator-backed formatters instead.
 internal static class RecurrenceValidationErrorText
 {
     public static string Describe(RecurrenceValidationErrorCode code) => code switch

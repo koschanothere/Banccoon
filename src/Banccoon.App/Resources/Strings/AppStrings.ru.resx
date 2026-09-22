@@ -321,6 +321,24 @@
   <data name="RecurrenceValidation_MonthlyDayOutOfRange" xml:space="preserve">
     <value>День месяца для ежемесячного повторения должен быть от 1 до 31.</value>
   </data>
+  <data name="RecurrenceSyntaxError_Empty" xml:space="preserve">
+    <value>Синтаксис не указан.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidField" xml:space="preserve">
+    <value>Некорректное поле «{0}». Используйте формат KEY=VALUE.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_FieldRequired" xml:space="preserve">
+    <value>Поле {0} обязательно.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_UnsupportedValue" xml:space="preserve">
+    <value>Поле {0} содержит неподдерживаемое значение.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_NotWholeNumber" xml:space="preserve">
+    <value>Поле {0} должно быть целым числом.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidMonthDay" xml:space="preserve">
+    <value>Поле {0} должно быть числом от 1 до 31 или LAST.</value>
+  </data>
   <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
     <value>Каждый день</value>
   </data>

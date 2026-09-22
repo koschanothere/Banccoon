@@ -58,7 +58,7 @@ public sealed class RecurrenceSyntaxServiceTests
         var result = service.TryParse("INTERVAL=1;START=2026-06-07");
 
         Assert.False(result.IsValid);
-        Assert.Contains("FREQ is required.", result.Errors);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.FieldRequired, "FREQ"), result.Errors);
     }
 
     [Fact]
@@ -67,7 +67,69 @@ public sealed class RecurrenceSyntaxServiceTests
         var result = service.TryParse("FREQ=DAILY;INTERVAL=0;START=2026-06-07");
 
         Assert.False(result.IsValid);
-        Assert.Contains("Recurrence interval must be at least 1.", result.Errors);
+        Assert.Contains(RecurrenceSyntaxError.FromValidation(RecurrenceValidationErrorCode.IntervalTooLow), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenSyntaxIsBlank_ReturnsEmptyError()
+    {
+        var result = service.TryParse("   ");
+
+        Assert.False(result.IsValid);
+        Assert.Equal([new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.Empty)], result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenFieldIsNotKeyValue_ReturnsInvalidFieldWithRawFragmentAsToken()
+    {
+        var result = service.TryParse("FREQ=DAILY;START=2026-06-07;garbage");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.InvalidField, "garbage"), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenFrequencyValueIsUnknown_ReturnsUnsupportedValueForThatField()
+    {
+        var result = service.TryParse("FREQ=HOURLY;START=2026-06-07");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.UnsupportedValue, "FREQ"), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenOptionalDateIsMalformed_ReturnsUnsupportedValueForThatField()
+    {
+        var result = service.TryParse("FREQ=DAILY;START=2026-06-07;UNTIL=soon");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.UnsupportedValue, "UNTIL"), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenIntervalIsNotANumber_ReturnsNotWholeNumber()
+    {
+        var result = service.TryParse("FREQ=DAILY;INTERVAL=two;START=2026-06-07");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.NotWholeNumber, "INTERVAL"), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenMonthDayIsNotNumberOrLast_ReturnsInvalidMonthDay()
+    {
+        var result = service.TryParse("FREQ=MONTHLY;START=2026-06-07;BYMONTHDAY=first");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.InvalidMonthDay, "BYMONTHDAY"), result.Errors);
+    }
+
+    [Fact]
+    public void TryParse_WhenFieldKeyIsLowercase_ReportsTokenUppercased()
+    {
+        var result = service.TryParse("freq=daily;interval=x;start=2026-06-07");
+
+        Assert.Contains(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.NotWholeNumber, "INTERVAL"), result.Errors);
     }
 
     [Fact]

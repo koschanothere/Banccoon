@@ -210,7 +210,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         {
             TechnicalSyntaxMessage = parseResult.Errors.Count == 0
                 ? Translator.Get("RecurrenceEditor_SyntaxNotParsed")
-                : parseResult.Errors[0];
+                : RecurrenceSyntaxErrorFormatter.Format(parseResult.Errors[0]);
             OnPropertyChanged(nameof(TechnicalSyntaxMessage));
             return;
         }
