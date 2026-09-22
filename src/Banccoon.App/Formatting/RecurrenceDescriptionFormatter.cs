@@ -58,7 +58,7 @@ public static class RecurrenceDescriptionFormatter
 
     private static string DescribeYearly(RecurrenceDescriptionData data)
     {
-        var dateDescription = $"{data.StartDate:MMMM} {data.StartDate.Day}";
+        var dateDescription = $"{data.StartDate.ToString("MMMM", CultureInfo.InvariantCulture)} {data.StartDate.Day}";
 
         return data.Interval == 1
             ? $"Every year on {dateDescription}"

@@ -300,6 +300,18 @@
   <data name="RecurrenceEditor_InvalidRecurrence" xml:space="preserve">
     <value>Invalid recurrence</value>
   </data>
+  <data name="RecurrenceValidation_IntervalTooLow" xml:space="preserve">
+    <value>Recurrence interval must be at least 1.</value>
+  </data>
+  <data name="RecurrenceValidation_EndDateBeforeStartDate" xml:space="preserve">
+    <value>Recurrence end date must be on or after the start date.</value>
+  </data>
+  <data name="RecurrenceValidation_DayOfMonthOutOfRange" xml:space="preserve">
+    <value>Day of month must be between 1 and 31.</value>
+  </data>
+  <data name="RecurrenceValidation_MonthlyDayOutOfRange" xml:space="preserve">
+    <value>Monthly recurrence day must be between 1 and 31.</value>
+  </data>
   <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
     <value>Every day</value>
   </data>

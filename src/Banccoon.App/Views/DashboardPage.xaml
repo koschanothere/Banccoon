@@ -77,9 +77,9 @@
                             <Label Text="{Binding GraphWindowSummaryText}" Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
                         <HorizontalStackLayout Grid.Column="1" Spacing="6">
-                            <DatePicker Date="{Binding RangeStartDate}" Format="dd MMM" WidthRequest="110" />
+                            <DatePicker Date="{Binding RangeStartDate}" Format="dd/MM" WidthRequest="110" />
                             <Label Text="&#8594;" VerticalOptions="Center" Style="{StaticResource TertiaryLabel}" />
-                            <DatePicker Date="{Binding RangeEndDate}" Format="dd MMM" WidthRequest="110" />
+                            <DatePicker Date="{Binding RangeEndDate}" Format="dd/MM" WidthRequest="110" />
                             <Button Text="{loc:Translate Dashboard_ApplyButton}" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
                             <Button Text="{loc:Translate Dashboard_ResetButton}" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
                         </HorizontalStackLayout>

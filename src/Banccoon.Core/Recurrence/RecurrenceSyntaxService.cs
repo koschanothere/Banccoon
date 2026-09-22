@@ -99,7 +99,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
                 monthlyMode);
 
             var validationResult = recurrenceValidationService.Validate(rule);
-            errors.AddRange(validationResult.Errors);
+            errors.AddRange(validationResult.Errors.Select(RecurrenceValidationErrorText.Describe));
 
             return errors.Count == 0
                 ? RecurrenceSyntaxParseResult.Success(rule)

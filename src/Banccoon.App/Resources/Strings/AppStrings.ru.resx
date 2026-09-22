@@ -309,6 +309,18 @@
   <data name="RecurrenceEditor_InvalidRecurrence" xml:space="preserve">
     <value>Некорректное повторение</value>
   </data>
+  <data name="RecurrenceValidation_IntervalTooLow" xml:space="preserve">
+    <value>Интервал повторения должен быть не менее 1.</value>
+  </data>
+  <data name="RecurrenceValidation_EndDateBeforeStartDate" xml:space="preserve">
+    <value>Дата окончания повторения должна быть не раньше даты начала.</value>
+  </data>
+  <data name="RecurrenceValidation_DayOfMonthOutOfRange" xml:space="preserve">
+    <value>День месяца должен быть от 1 до 31.</value>
+  </data>
+  <data name="RecurrenceValidation_MonthlyDayOutOfRange" xml:space="preserve">
+    <value>День месяца для ежемесячного повторения должен быть от 1 до 31.</value>
+  </data>
   <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
     <value>Каждый день</value>
   </data>

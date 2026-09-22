@@ -254,7 +254,7 @@ public sealed class RecurrenceEditorViewModel : ViewModelBase
         IsValid = validationResult.IsValid;
         ValidationMessage = validationResult.IsValid
             ? string.Empty
-            : validationResult.Errors[0];
+            : RecurrenceValidationMessageFormatter.Format(validationResult.Errors[0]);
         Description = validationResult.IsValid
             ? RecurrenceDescriptionFormatter.Format(recurrenceDescriptionService.Describe(rule))
             : Translator.Get("RecurrenceEditor_InvalidRecurrence");

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
@@ -137,7 +138,7 @@ public sealed class AnalyticsViewModel : ViewModelBase
         // thread (see ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() =>
         {
-            MonthLabel = report.CurrentPeriodStart.ToString("MMMM yyyy");
+            MonthLabel = report.CurrentPeriodStart.ToString("MMMM yyyy", CultureInfo.CurrentUICulture);
             IncomeText = MoneyFormat.Format(report.CurrentPeriodIncome, currency);
             ExpenseText = MoneyFormat.Format(-report.CurrentPeriodExpense, currency);
             NetText = MoneyFormat.Format(report.CurrentPeriodIncome - report.CurrentPeriodExpense, currency);

@@ -33,7 +33,7 @@ public sealed class RecurrenceValidationServiceTests
         var result = service.Validate(rule);
 
         Assert.False(result.IsValid);
-        Assert.Contains("Recurrence interval must be at least 1.", result.Errors);
+        Assert.Contains(RecurrenceValidationErrorCode.IntervalTooLow, result.Errors);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public sealed class RecurrenceValidationServiceTests
         var result = service.Validate(rule);
 
         Assert.False(result.IsValid);
-        Assert.Contains("Recurrence end date must be on or after the start date.", result.Errors);
+        Assert.Contains(RecurrenceValidationErrorCode.EndDateBeforeStartDate, result.Errors);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class RecurrenceValidationServiceTests
         var result = service.Validate(rule);
 
         Assert.False(result.IsValid);
-        Assert.Contains("Day of month must be between 1 and 31.", result.Errors);
+        Assert.Contains(RecurrenceValidationErrorCode.DayOfMonthOutOfRange, result.Errors);
     }
 
     [Fact]
@@ -76,6 +76,6 @@ public sealed class RecurrenceValidationServiceTests
 
         var exception = Assert.Throws<RecurrenceValidationException>(() => service.ThrowIfInvalid(rule));
 
-        Assert.Contains("Recurrence interval must be at least 1.", exception.Errors);
+        Assert.Contains(RecurrenceValidationErrorCode.IntervalTooLow, exception.Errors);
     }
 }
