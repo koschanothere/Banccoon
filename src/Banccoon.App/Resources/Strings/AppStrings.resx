@@ -581,6 +581,12 @@
   <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
     <value>Select possible duplicates</value>
   </data>
+  <data name="StatementImport_CheckInSuggestion" xml:space="preserve">
+    <value>All rows reviewed, and this account's balance now matches the statement's closing balance. Check in to attach the imported rows to the scheduled payments they covered.</value>
+  </data>
+  <data name="StatementImport_CheckInNowButton" xml:space="preserve">
+    <value>Check in now</value>
+  </data>
   <data name="Common_SelectAll" xml:space="preserve">
     <value>Select all</value>
   </data>
@@ -858,6 +864,12 @@
   </data>
   <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
     <value>due {0}</value>
+  </data>
+  <data name="ResolveUpcoming_AlreadyRecordedLabel" xml:space="preserve">
+    <value>Already recorded as:</value>
+  </data>
+  <data name="ResolveUpcoming_AttachButton" xml:space="preserve">
+    <value>Attach</value>
   </data>
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>no upcoming occurrence</value>
@@ -1374,5 +1386,98 @@
   </data>
   <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
     <value>Step {0} of {1}</value>
+  </data>
+  <data name="Reconciliation_Title" xml:space="preserve">
+    <value>Check-in</value>
+  </data>
+  <data name="Reconciliation_Header" xml:space="preserve">
+    <value>Check-in</value>
+  </data>
+  <data name="Reconciliation_StepProgressFormat" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
+  <data name="Reconciliation_BanccoonBalanceLabel" xml:space="preserve">
+    <value>Balance in Banccoon</value>
+  </data>
+  <data name="Reconciliation_Step1Header" xml:space="preserve">
+    <value>1. What does your bank say?</value>
+  </data>
+  <data name="Reconciliation_Step1Hint" xml:space="preserve">
+    <value>Pick an account and enter the balance your bank shows for it right now.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceLabel" xml:space="preserve">
+    <value>Balance at the bank</value>
+  </data>
+  <data name="Reconciliation_ActualBalancePlaceholder" xml:space="preserve">
+    <value>e.g. 12500.00</value>
+  </data>
+  <data name="Reconciliation_PrefilledFromStatement" xml:space="preserve">
+    <value>Filled in from the statement you just imported.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceMustBeNumber" xml:space="preserve">
+    <value>Enter the bank's balance as a number.</value>
+  </data>
+  <data name="Reconciliation_Matched" xml:space="preserve">
+    <value>Balances match.</value>
+  </data>
+  <data name="Reconciliation_SurplusFormat" xml:space="preserve">
+    <value>Your bank shows {0} more than Banccoon.</value>
+  </data>
+  <data name="Reconciliation_ShortageFormat" xml:space="preserve">
+    <value>Your bank shows {0} less than Banccoon.</value>
+  </data>
+  <data name="Reconciliation_Step2Header" xml:space="preserve">
+    <value>2. Expected payments</value>
+  </data>
+  <data name="Reconciliation_Step2Hint" xml:space="preserve">
+    <value>Scheduled items for this account that were due by today. Mark each one paid, attach it to a transaction that's already recorded, skip it, or delay it.</value>
+  </data>
+  <data name="Reconciliation_NothingExpected" xml:space="preserve">
+    <value>Nothing is expected for this account.</value>
+  </data>
+  <data name="Reconciliation_Step3Header" xml:space="preserve">
+    <value>3. Unrecorded spending</value>
+  </data>
+  <data name="Reconciliation_Step3Hint" xml:space="preserve">
+    <value>Spending you never entered, like cash or a run of small card purchases? Add it here as one expense per group, with a category.</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingNotePlaceholder" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingDefaultName" xml:space="preserve">
+    <value>Unrecorded spending</value>
+  </data>
+  <data name="Reconciliation_Step4Header" xml:space="preserve">
+    <value>4. Adjust the balance</value>
+  </data>
+  <data name="Reconciliation_Step4Hint" xml:space="preserve">
+    <value>Whatever difference is left can be recorded as an adjustment transaction, so the correction stays visible in Transactions.</value>
+  </data>
+  <data name="Reconciliation_AdjustmentPreviewFormat" xml:space="preserve">
+    <value>Adjustment to record: {0}</value>
+  </data>
+  <data name="Reconciliation_RecordAdjustmentButton" xml:space="preserve">
+    <value>Record adjustment</value>
+  </data>
+  <data name="Reconciliation_FinishWithoutAdjustingButton" xml:space="preserve">
+    <value>Finish without adjusting</value>
+  </data>
+  <data name="Reconciliation_AdjustmentName" xml:space="preserve">
+    <value>Balance adjustment</value>
+  </data>
+  <data name="Reconciliation_AdjustmentNote" xml:space="preserve">
+    <value>Recorded during a check-in.</value>
+  </data>
+  <data name="Reconciliation_DoneHeader" xml:space="preserve">
+    <value>Check-in complete</value>
+  </data>
+  <data name="Reconciliation_DoneMatched" xml:space="preserve">
+    <value>Balances match.</value>
+  </data>
+  <data name="Reconciliation_DoneAdjustedFormat" xml:space="preserve">
+    <value>Recorded an adjustment of {0}. Balances now match.</value>
+  </data>
+  <data name="Reconciliation_DoneUnexplainedFormat" xml:space="preserve">
+    <value>Finished with an unexplained difference of {0}.</value>
   </data>
 </root>

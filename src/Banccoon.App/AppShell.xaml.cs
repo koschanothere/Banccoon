@@ -23,6 +23,7 @@ public partial class AppShell : Shell
         _ = viewModel.RefreshFavoritesAsync();
 
         Routing.RegisterRoute("statementImport", typeof(StatementImportPage));
+        Routing.RegisterRoute("reconciliation", typeof(ReconciliationPage));
     }
 
     protected override void OnAppearing()

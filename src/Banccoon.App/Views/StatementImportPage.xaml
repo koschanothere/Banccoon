@@ -112,6 +112,16 @@
 
                     <Label Text="{Binding Review.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
 
+                    <!-- Shown once every row has been reviewed: the statement's closing balance is now the
+                         account's balance, so a check-in mostly means attaching the imported rows to the
+                         scheduled payments they paid. -->
+                    <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CanCheckIn}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Grid.Column="0" Text="{loc:Translate StatementImport_CheckInSuggestion}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="{loc:Translate StatementImport_CheckInNowButton}" Clicked="OnCheckInClicked" Style="{StaticResource PrimaryButton}" />
+                        </Grid>
+                    </Border>
+
                     <CollectionView ItemsSource="{Binding Review.Rows}">
                         <CollectionView.EmptyView>
                             <VerticalStackLayout Spacing="8">

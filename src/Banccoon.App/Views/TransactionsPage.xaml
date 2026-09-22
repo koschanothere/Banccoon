@@ -19,7 +19,7 @@
                 <Label Grid.Column="0" Text="{loc:Translate AppShell_Nav_Transactions}" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
                     <Button Text="{loc:Translate Transactions_FilterButton}" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_CheckInButton}" IsEnabled="False" Style="{StaticResource QuietButton}" />
+                    <Button Text="{loc:Translate Transactions_CheckInButton}" Clicked="OnCheckInClicked" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Common_Select}" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource PrimaryButton}" />
@@ -140,16 +140,25 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:ResolveUpcomingRowViewModel">
-                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
-                                    <VerticalStackLayout Grid.Column="0" Spacing="1">
-                                        <Label Text="{Binding Name}" />
-                                        <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="4" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
-                                </Grid>
+                                <VerticalStackLayout Spacing="6" Padding="0,8">
+                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                            <Label Text="{Binding Name}" />
+                                            <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                        <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="4" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
+                                    </Grid>
+                                    <!-- Only when an already-recorded transaction looks like this payment (e.g. an imported
+                                         bank row): attaching it marks the occurrence paid without a second transaction. -->
+                                    <HorizontalStackLayout Spacing="8" HorizontalOptions="End" IsVisible="{Binding HasAttachCandidates}">
+                                        <Label Text="{loc:Translate ResolveUpcoming_AlreadyRecordedLabel}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                        <Picker ItemsSource="{Binding AttachCandidates}" SelectedItem="{Binding SelectedAttachCandidate}" WidthRequest="260" />
+                                        <Button Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

@@ -5,15 +5,19 @@ using Banccoon.Core.Forecasting;
 
 namespace Banccoon.App.ViewModels;
 
-public sealed class ResolveUpcomingRowViewModel
+public sealed class ResolveUpcomingRowViewModel : ViewModelBase
 {
+    private NamedOptionViewModel? selectedAttachCandidate;
+
     public ResolveUpcomingRowViewModel(
         ForecastEvent scheduledEvent,
         DateOnly today,
         string currency,
         Func<Task> onMarkPaid,
         Func<Task> onSkip,
-        Func<Task> onDelay)
+        Func<Task> onDelay,
+        IReadOnlyList<NamedOptionViewModel>? attachCandidates = null,
+        Func<Guid, Task>? onAttach = null)
     {
         ScheduledTransactionId = scheduledEvent.SourceId;
         OccurrenceDate = scheduledEvent.Date;
@@ -26,9 +30,22 @@ public sealed class ResolveUpcomingRowViewModel
                 ? Translator.Get("ResolveUpcoming_DueToday")
                 : string.Format(Translator.Get("ResolveUpcoming_DueFormat"), scheduledEvent.Date.ToString("dd/MM/yyyy"));
 
+        // Already-recorded transactions that look like this occurrence's real payment (typically the
+        // imported bank row) - attaching one marks the occurrence paid without creating a second
+        // transaction, which is what "Mark paid" would do.
+        AttachCandidates = attachCandidates ?? [];
+        selectedAttachCandidate = AttachCandidates.FirstOrDefault();
+
         MarkPaidCommand = new RelayCommand(() => _ = onMarkPaid());
         SkipCommand = new RelayCommand(() => _ = onSkip());
         DelayCommand = new RelayCommand(() => _ = onDelay());
+        AttachCommand = new RelayCommand(() =>
+        {
+            if (onAttach is not null && SelectedAttachCandidate is { } candidate)
+            {
+                _ = onAttach(candidate.Id);
+            }
+        });
     }
 
     public Guid ScheduledTransactionId { get; }
@@ -43,9 +60,21 @@ public sealed class ResolveUpcomingRowViewModel
 
     public bool IsOverdue { get; }
 
+    public IReadOnlyList<NamedOptionViewModel> AttachCandidates { get; }
+
+    public bool HasAttachCandidates => AttachCandidates.Count > 0;
+
+    public NamedOptionViewModel? SelectedAttachCandidate
+    {
+        get => selectedAttachCandidate;
+        set => SetProperty(ref selectedAttachCandidate, value);
+    }
+
     public ICommand MarkPaidCommand { get; }
 
     public ICommand SkipCommand { get; }
 
     public ICommand DelayCommand { get; }
+
+    public ICommand AttachCommand { get; }
 }

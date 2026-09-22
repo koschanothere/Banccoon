@@ -28,6 +28,7 @@ public sealed class StatementImportViewModel : ViewModelBase
     private string fileName = string.Empty;
     private ParsedStatement? statement;
     private string previewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
+    private bool canCheckIn;
 
     public StatementImportViewModel(
         IStatementImportService statementImportService,
@@ -43,6 +44,7 @@ public sealed class StatementImportViewModel : ViewModelBase
 
         Account = new StatementAccountViewModel(accountRepository);
         Review = new StatementImportReviewViewModel(statementImportService, statementImportRepository, categoryRepository, accountRepository);
+        Review.ReviewCompleted += () => CanCheckIn = true;
 
         PickFileCommand = new RelayCommand(() => _ = PickFileAsync());
         ContinueFromPickCommand = new RelayCommand(() => _ = ContinueFromPickAsync());
@@ -116,6 +118,15 @@ public sealed class StatementImportViewModel : ViewModelBase
 
     public bool CanContinueFromPick => statement is not null;
 
+    // True once every row of the batch has been approved or skipped (not after a cancel) - the
+    // page then suggests the reconciliation check-in for that account (docs/ui-structure-decisions.md:
+    // "auto-suggested right after statement import").
+    public bool CanCheckIn
+    {
+        get => canCheckIn;
+        private set => SetProperty(ref canCheckIn, value);
+    }
+
     public ICommand PickFileCommand { get; }
 
     public ICommand ContinueFromPickCommand { get; }
@@ -127,15 +138,21 @@ public sealed class StatementImportViewModel : ViewModelBase
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var settings = await settingsRepository.GetAsync(cancellationToken);
-        currency = settings.DefaultCurrency;
 
-        CurrentStep = StatementImportStep.PickFile;
-        filePath = null;
-        FileName = string.Empty;
-        statement = null;
-        PreviewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
-        OnPropertyChanged(nameof(HasStatement));
-        OnPropertyChanged(nameof(CanContinueFromPick));
+        // Bound properties, set after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
+        {
+            currency = settings.DefaultCurrency;
+            CurrentStep = StatementImportStep.PickFile;
+            filePath = null;
+            FileName = string.Empty;
+            statement = null;
+            CanCheckIn = false;
+            PreviewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
+            OnPropertyChanged(nameof(HasStatement));
+            OnPropertyChanged(nameof(CanContinueFromPick));
+        });
     }
 
     private async Task PickFileAsync()

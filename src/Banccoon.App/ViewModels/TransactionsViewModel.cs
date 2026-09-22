@@ -5,6 +5,7 @@ using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
+using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
@@ -79,7 +80,8 @@ public sealed class TransactionsViewModel : ViewModelBase
         ITransactionBalanceHistoryService transactionBalanceHistoryService,
         IRecurrenceDescriptionService recurrenceDescriptionService,
         IRecurrenceSyntaxService recurrenceSyntaxService,
-        IRecurrenceValidationService recurrenceValidationService)
+        IRecurrenceValidationService recurrenceValidationService,
+        IExpectedTransactionMatcher expectedTransactionMatcher)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -113,6 +115,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             scheduledOccurrenceResolutionService,
             transactionApplicationService,
             recurrenceDescriptionService,
+            expectedTransactionMatcher,
             InitializeAsync,
             onEditRequested: schedule => OpenScheduleFormForEditAsync(schedule));
 

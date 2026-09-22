@@ -38,4 +38,9 @@ public partial class TransactionsPage : ContentPage, IQueryAttributable
     {
         await Shell.Current.GoToAsync("statementImport");
     }
+
+    private async void OnCheckInClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("reconciliation");
+    }
 }

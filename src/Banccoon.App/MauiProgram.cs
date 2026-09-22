@@ -69,6 +69,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
         builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
         builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
+        builder.Services.AddSingleton<IExpectedTransactionMatcher, ExpectedTransactionMatcher>();
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IAutoBackupRunner, AutoBackupRunner>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
@@ -111,6 +112,7 @@ public static class MauiProgram
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
         builder.Services.AddTransient<StatementImportViewModel>();
+        builder.Services.AddTransient<ReconciliationViewModel>();
         builder.Services.AddTransient<AppLockViewModel>();
 
         // Singleton, not transient: each of these is one FlyoutItem's ShellContent
@@ -133,7 +135,7 @@ public static class MauiProgram
         // the filter panel open and coming back will show it still open. InitializeAsync's own data
         // refresh on every OnAppearing is unaffected either way.
         //
-        // StatementImportPage/AppLockPage stay Transient deliberately - they're one-off
+        // StatementImportPage/ReconciliationPage/AppLockPage stay Transient deliberately - they're one-off
         // modal-style flows (GoToAsync/PushModalAsync, not a FlyoutItem tab), where fresh state
         // per visit is correct, not an accident to fix.
         builder.Services.AddSingleton<DashboardPage>();
@@ -141,6 +143,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AccountsPage>();
         builder.Services.AddSingleton<SettingsPage>();
         builder.Services.AddTransient<StatementImportPage>();
+        builder.Services.AddTransient<ReconciliationPage>();
         builder.Services.AddTransient<AppLockPage>();
 
 #if WINDOWS

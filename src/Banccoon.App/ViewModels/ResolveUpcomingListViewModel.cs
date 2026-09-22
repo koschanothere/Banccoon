@@ -4,6 +4,7 @@ using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
+using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
@@ -25,6 +26,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private readonly IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService;
     private readonly ITransactionApplicationService transactionApplicationService;
     private readonly IRecurrenceDescriptionService recurrenceDescriptionService;
+    private readonly IExpectedTransactionMatcher expectedTransactionMatcher;
     private readonly Func<Task> onChanged;
     private readonly Func<ScheduledTransaction, Task> onEditRequested;
 
@@ -44,6 +46,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
         IRecurrenceDescriptionService recurrenceDescriptionService,
+        IExpectedTransactionMatcher expectedTransactionMatcher,
         Func<Task> onChanged,
         Func<ScheduledTransaction, Task> onEditRequested)
     {
@@ -56,6 +59,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         this.scheduledOccurrenceResolutionService = scheduledOccurrenceResolutionService;
         this.transactionApplicationService = transactionApplicationService;
         this.recurrenceDescriptionService = recurrenceDescriptionService;
+        this.expectedTransactionMatcher = expectedTransactionMatcher;
         this.onChanged = onChanged;
         this.onEditRequested = onEditRequested;
 
@@ -85,13 +89,17 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 
     public ICommand ToggleExpandedCommand { get; }
 
-    public async Task RefreshAsync(string currency, int nearTermDays, CancellationToken cancellationToken = default)
+    // accountId narrows the list to one account's scheduled items (the reconciliation check-in
+    // works on one account at a time); null means every account, as on Transactions.
+    public async Task RefreshAsync(string currency, int nearTermDays, Guid? accountId = null, CancellationToken cancellationToken = default)
     {
         this.currency = currency;
         var today = dateProvider.Today;
         nearTermCutoff = today.AddDays(nearTermDays);
         var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
-        activeSchedules = scheduledTransactions.Where(schedule => schedule.Active).ToList();
+        activeSchedules = scheduledTransactions
+            .Where(schedule => schedule.Active && (accountId is null || schedule.AccountId == accountId))
+            .ToList();
         // Project the full expanded window up front - collapsed view then filters down to
         // near-term (below), rather than only ever having near-term events to work with, which
         // left "expand" with nothing new to reveal beyond what was already showing.
@@ -116,7 +124,12 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
                 currency,
                 onMarkPaid: () => MarkPaidAsync(scheduledEvent),
                 onSkip: () => SkipAsync(scheduledEvent),
-                onDelay: () => DelayAsync(scheduledEvent)))
+                onDelay: () => DelayAsync(scheduledEvent),
+                attachCandidates: expectedTransactionMatcher
+                    .FindCandidates(scheduledEvent, allTransactions)
+                    .Select(transaction => new NamedOptionViewModel(transaction.Id, FormatAttachCandidate(transaction)))
+                    .ToList(),
+                onAttach: transactionId => AttachAsync(scheduledEvent, transactionId)))
             .ToList();
 
         // RebuildVisibleRows mutates Rows/RuleRows (bound to live CollectionViews) - must run on
@@ -193,6 +206,27 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         }
 
         await onChanged();
+    }
+
+    // Links an already-recorded transaction (e.g. the imported bank row) to this occurrence instead
+    // of creating a new one - no balance changes, since that transaction was already applied.
+    private async Task AttachAsync(ForecastEvent scheduledEvent, Guid transactionId)
+    {
+        var transaction = await transactionRepository.GetByIdAsync(transactionId);
+        if (transaction is not null && transaction.PaidScheduledTransactionId is null)
+        {
+            await transactionRepository.SaveAsync(expectedTransactionMatcher.Attach(transaction, scheduledEvent));
+        }
+
+        await onChanged();
+    }
+
+    private string FormatAttachCandidate(Transaction transaction)
+    {
+        var name = string.IsNullOrWhiteSpace(transaction.Name)
+            ? DisplayText.Format(transaction.Type)
+            : transaction.Name;
+        return $"{transaction.Date:dd/MM} · {name} · {MoneyFormat.Format(MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type), currency)}";
     }
 
     private async Task SkipAsync(ForecastEvent scheduledEvent)

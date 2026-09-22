@@ -62,7 +62,7 @@ Already partially implemented in `Banccoon.Core.Forecasting.AvailableToSpendServ
 - **"+" add menu**: Expense / Income / Transfer. Attaching to an existing scheduled occurrence is an optional field *inside* these overlays, not a separate 4th type.
 - **Statement import** is a separate entry point/button next to "+", not inside the add menu (different shape: multi-step, file-based, batch review). Available from first-run setup and Transactions; not from Dashboard.
 - **Scheduled template management** (create/edit recurring rules) lives under **Settings** — it's infrequent, config-like.
-- **Persistent "resolve upcoming" widget** pinned at the top of Transactions: for each due/overdue scheduled item, actions are **Mark Paid / Skip / Delay**. Pre-fills from the template on Mark Paid. Persists until resolved — does not disappear on its own.
+- **Persistent "resolve upcoming" widget** pinned at the top of Transactions: for each due/overdue scheduled item, actions are **Mark Paid / Skip / Delay**, plus **Attach** when an already-recorded transaction looks like that payment (same account and type, within a week, amount within ±25%). Attach links the existing transaction to the occurrence instead of creating a second one. It's the reconciliation flow's attach action, shared here so both places speak one interaction language. Pre-fills from the template on Mark Paid. Persists until resolved — does not disappear on its own.
 - **Manual reconciliation "check-in"** action lives in the Transactions header, next to filters and category management — grouped with the other header-level actions rather than a new location.
 - Filtering (account, category, date range, type): collapsed filter bar that expands on demand.
 - Bulk actions: explicit **"Select" mode toggle** button switches the list into checkbox mode; then mass category assignment, mass scheduled-occurrence assignment, mass delete.
@@ -89,7 +89,8 @@ Not part of the active build plan; revisit later as a quality-of-life addition, 
 ## Reconciliation (full-page guided flow)
 
 - Triggers: **auto-suggested right after statement import**, plus a manual "check-in" action in the Transactions header, available anytime.
-- UI pattern: same **shrinking-list, confirm/delay/skip** interaction as the Transactions "resolve upcoming" widget, for consistency across the app rather than a second interaction language.
+- UI pattern: same **shrinking-list, confirm/delay/skip/attach** interaction as the Transactions "resolve upcoming" widget, for consistency across the app rather than a second interaction language.
+- Built as four steps for one account at a time: what the bank says → expected scheduled items (due by today) → unrecorded spending, recorded as categorized grouped expenses → an explicit adjustment transaction for whatever is left (or finish without one). A running "still unexplained" amount stays visible from step 2 on.
 - Keeps actual-balance comparison, grouped spending, and explicit balance-adjustment transactions (for auditability) as steps within the flow.
 
 ## Settings

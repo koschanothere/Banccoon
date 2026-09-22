@@ -605,6 +605,12 @@
   <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
     <value>Выбрать возможные дубликаты</value>
   </data>
+  <data name="StatementImport_CheckInSuggestion" xml:space="preserve">
+    <value>Все строки проверены, и баланс счёта теперь совпадает с конечным остатком по выписке. Проведите сверку, чтобы привязать импортированные строки к запланированным платежам, которые они покрывают.</value>
+  </data>
+  <data name="StatementImport_CheckInNowButton" xml:space="preserve">
+    <value>Провести сверку</value>
+  </data>
   <data name="Common_SelectAll" xml:space="preserve">
     <value>Выбрать все</value>
   </data>
@@ -894,6 +900,12 @@
   </data>
   <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
     <value>срок {0}</value>
+  </data>
+  <data name="ResolveUpcoming_AlreadyRecordedLabel" xml:space="preserve">
+    <value>Уже записано как:</value>
+  </data>
+  <data name="ResolveUpcoming_AttachButton" xml:space="preserve">
+    <value>Привязать</value>
   </data>
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>нет предстоящих платежей</value>
@@ -1425,5 +1437,98 @@
   </data>
   <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
     <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Reconciliation_Title" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Reconciliation_Header" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Reconciliation_StepProgressFormat" xml:space="preserve">
+    <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Reconciliation_BanccoonBalanceLabel" xml:space="preserve">
+    <value>Баланс в Banccoon</value>
+  </data>
+  <data name="Reconciliation_Step1Header" xml:space="preserve">
+    <value>1. Что показывает банк?</value>
+  </data>
+  <data name="Reconciliation_Step1Hint" xml:space="preserve">
+    <value>Выберите счёт и введите баланс, который банк показывает по нему сейчас.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceLabel" xml:space="preserve">
+    <value>Баланс в банке</value>
+  </data>
+  <data name="Reconciliation_ActualBalancePlaceholder" xml:space="preserve">
+    <value>например, 12500.00</value>
+  </data>
+  <data name="Reconciliation_PrefilledFromStatement" xml:space="preserve">
+    <value>Заполнено по только что импортированной выписке.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceMustBeNumber" xml:space="preserve">
+    <value>Введите баланс банка числом.</value>
+  </data>
+  <data name="Reconciliation_Matched" xml:space="preserve">
+    <value>Балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_SurplusFormat" xml:space="preserve">
+    <value>Банк показывает на {0} больше, чем Banccoon.</value>
+  </data>
+  <data name="Reconciliation_ShortageFormat" xml:space="preserve">
+    <value>Банк показывает на {0} меньше, чем Banccoon.</value>
+  </data>
+  <data name="Reconciliation_Step2Header" xml:space="preserve">
+    <value>2. Ожидаемые платежи</value>
+  </data>
+  <data name="Reconciliation_Step2Hint" xml:space="preserve">
+    <value>Запланированные операции по этому счёту со сроком до сегодняшнего дня. Отметьте каждую как оплаченную, привяжите к уже записанной транзакции, пропустите или отложите.</value>
+  </data>
+  <data name="Reconciliation_NothingExpected" xml:space="preserve">
+    <value>По этому счёту ничего не ожидается.</value>
+  </data>
+  <data name="Reconciliation_Step3Header" xml:space="preserve">
+    <value>3. Неучтённые расходы</value>
+  </data>
+  <data name="Reconciliation_Step3Hint" xml:space="preserve">
+    <value>Есть расходы, которые вы не записали, например наличные или серия мелких покупок по карте? Добавьте их здесь одной суммой на группу, с категорией.</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingNotePlaceholder" xml:space="preserve">
+    <value>Примечание (необязательно)</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingDefaultName" xml:space="preserve">
+    <value>Неучтённые расходы</value>
+  </data>
+  <data name="Reconciliation_Step4Header" xml:space="preserve">
+    <value>4. Корректировка баланса</value>
+  </data>
+  <data name="Reconciliation_Step4Hint" xml:space="preserve">
+    <value>Оставшуюся разницу можно записать как корректирующую транзакцию, чтобы исправление было видно в разделе «Транзакции».</value>
+  </data>
+  <data name="Reconciliation_AdjustmentPreviewFormat" xml:space="preserve">
+    <value>Сумма корректировки: {0}</value>
+  </data>
+  <data name="Reconciliation_RecordAdjustmentButton" xml:space="preserve">
+    <value>Записать корректировку</value>
+  </data>
+  <data name="Reconciliation_FinishWithoutAdjustingButton" xml:space="preserve">
+    <value>Завершить без корректировки</value>
+  </data>
+  <data name="Reconciliation_AdjustmentName" xml:space="preserve">
+    <value>Корректировка баланса</value>
+  </data>
+  <data name="Reconciliation_AdjustmentNote" xml:space="preserve">
+    <value>Записано при сверке.</value>
+  </data>
+  <data name="Reconciliation_DoneHeader" xml:space="preserve">
+    <value>Сверка завершена</value>
+  </data>
+  <data name="Reconciliation_DoneMatched" xml:space="preserve">
+    <value>Балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_DoneAdjustedFormat" xml:space="preserve">
+    <value>Записана корректировка на {0}. Теперь балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_DoneUnexplainedFormat" xml:space="preserve">
+    <value>Завершено с необъяснённой разницей {0}.</value>
   </data>
 </root>
