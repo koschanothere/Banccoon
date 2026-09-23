@@ -605,6 +605,45 @@
   <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
     <value>Выбрать возможные дубликаты</value>
   </data>
+  <data name="StatementImport_ProgressFormat" xml:space="preserve">
+    <value>Проверено {0} из {1}</value>
+  </data>
+  <data name="StatementImport_UndoButton" xml:space="preserve">
+    <value>Отменить действие</value>
+  </data>
+  <data name="StatementImport_ApproveAllCategorisedFormat" xml:space="preserve">
+    <value>Подтвердить все с категорией ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHeaderFormat" xml:space="preserve">
+    <value>Возможные дубликаты ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHint" xml:space="preserve">
+    <value>Похоже, они уже записаны, например при прошлом импорте за тот же период. Пропустите их, если только операция действительно не новая.</value>
+  </data>
+  <data name="StatementImport_SkipAllDuplicatesButton" xml:space="preserve">
+    <value>Пропустить все дубликаты</value>
+  </data>
+  <data name="StatementImport_AttentionHeaderFormat" xml:space="preserve">
+    <value>Требуется решение ({0})</value>
+  </data>
+  <data name="StatementImport_AttentionHint" xml:space="preserve">
+    <value>Для этих строк пока ничего не изучено. Выберите категорию или подтвердите как есть — строка попадёт в категорию «Other».</value>
+  </data>
+  <data name="StatementImport_ReadyHeaderFormat" xml:space="preserve">
+    <value>К подтверждению ({0})</value>
+  </data>
+  <data name="StatementImport_ReadyHint" xml:space="preserve">
+    <value>Категория (а для переводов и второй счёт) уже заполнены по изученным правилам. Проверьте их через «Показать строки» или подтвердите все сразу.</value>
+  </data>
+  <data name="StatementImport_ShowRowsButton" xml:space="preserve">
+    <value>Показать строки</value>
+  </data>
+  <data name="StatementImport_HideRowsButton" xml:space="preserve">
+    <value>Скрыть строки</value>
+  </data>
+  <data name="StatementImport_TypeTooltipFormat" xml:space="preserve">
+    <value>{0} · нажмите, чтобы изменить тип</value>
+  </data>
   <data name="StatementImport_CheckInSuggestion" xml:space="preserve">
     <value>Все строки проверены, и баланс счёта теперь совпадает с конечным остатком по выписке. Проведите сверку, чтобы привязать импортированные строки к запланированным платежам, которые они покрывают.</value>
   </data>

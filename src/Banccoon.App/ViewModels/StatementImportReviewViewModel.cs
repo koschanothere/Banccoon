@@ -25,6 +25,13 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private Guid accountId;
     private string currency = "EUR";
     private string statusText = string.Empty;
+    private int totalRowCount;
+    private bool isCancelled;
+
+    // The rows the most recent approve/skip action reviewed (one row, or every row of a bulk
+    // action), for Undo. Collected while an action runs, published when it finishes.
+    private List<StatementImportRowViewModel> currentActionRows = [];
+    private IReadOnlyList<StatementImportRowViewModel>? lastActionRows;
 
     public StatementImportReviewViewModel(
         IStatementImportService statementImportService,
@@ -41,8 +48,10 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         CategoryOptions = [];
         OtherAccountOptions = [];
         Bulk = new StatementImportBulkActionsViewModel(this);
+        Sections = new StatementImportReviewSectionsViewModel(this);
 
         CancelImportCommand = new RelayCommand(() => _ = CancelImportAsync());
+        UndoCommand = new RelayCommand(() => _ = UndoAsync());
     }
 
     // Raised (on the UI thread) when the last pending row has been approved or skipped - i.e. the
@@ -59,9 +68,23 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     public StatementImportBulkActionsViewModel Bulk { get; }
 
+    public StatementImportReviewSectionsViewModel Sections { get; }
+
     public Guid AccountId => accountId;
 
-    public bool IsComplete => Rows.Count == 0;
+    // Every row reviewed (not cancelled) - the batch is complete and its closing balance applied.
+    public bool IsComplete => Rows.Count == 0 && totalRowCount > 0 && !isCancelled;
+
+    public bool HasRows => Rows.Count > 0;
+
+    public string ProgressText => string.Format(
+        Translator.Get("StatementImport_ProgressFormat"),
+        totalRowCount - Rows.Count,
+        totalRowCount);
+
+    // Undo is only offered while the batch is still under review: the last row's approval applies
+    // the statement's closing balance, which can't be unwound (see IStatementImportService.UndoReviewAsync).
+    public bool CanUndo => lastActionRows is { Count: > 0 } && Rows.Count > 0;
 
     public string StatusText
     {
@@ -70,6 +93,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     }
 
     public ICommand CancelImportCommand { get; }
+
+    public ICommand UndoCommand { get; }
 
     public async Task LoadAsync(Guid batch, Guid batchAccountId, string currencyCode, CancellationToken cancellationToken = default)
     {
@@ -109,6 +134,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     public async Task RunExclusiveAsync(Func<Task> action)
     {
         await actionGate.WaitAsync();
+        currentActionRows = [];
         try
         {
             await SetStatusAsync(string.Empty);
@@ -121,6 +147,17 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         }
         finally
         {
+            // Even a half-finished bulk action can be undone for the rows it did get through.
+            var reviewed = currentActionRows;
+            if (reviewed.Count > 0)
+            {
+                await RunOnMainThreadAsync(() =>
+                {
+                    lastActionRows = reviewed;
+                    OnPropertyChanged(nameof(CanUndo));
+                });
+            }
+
             actionGate.Release();
         }
     }
@@ -135,6 +172,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     {
         var categoryId = bulkCategoryId ?? await ResolveCategoryAsync(row.Category, row.NewCategoryName);
         await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
+        currentActionRows.Add(row);
         await RemoveReviewedRowAsync(row);
     }
 
@@ -142,6 +180,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     public async Task SkipAsync(StatementImportRowViewModel row)
     {
         await statementImportService.SkipRowAsync(row.Id);
+        currentActionRows.Add(row);
         await RemoveReviewedRowAsync(row);
     }
 
@@ -213,11 +252,15 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             ClearRows();
+            totalRowCount = rows.Count;
+            isCancelled = false;
+            lastActionRows = null;
             foreach (var row in pendingRows)
             {
                 var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync);
-                Bulk.OnRowAdded(rowViewModel);
                 Rows.Add(rowViewModel);
+                Bulk.OnRowAdded(rowViewModel);
+                Sections.OnRowAdded(rowViewModel);
             }
 
             OnRowsChanged();
@@ -272,6 +315,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         {
             Rows.Remove(row);
             Bulk.OnRowRemoved(row);
+            Sections.OnRowRemoved(row);
             OnRowsChanged();
 
             if (Rows.Count == 0)
@@ -279,6 +323,60 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
                 ReviewCompleted?.Invoke();
             }
         });
+    }
+
+    // Puts every row the last action reviewed back into the list, in reverse order, via the
+    // service (which deletes an approved row's transaction and reverses its balance effect). The
+    // same row view models go back in, so their picks are exactly as the user left them.
+    private async Task UndoAsync()
+    {
+        await actionGate.WaitAsync();
+        try
+        {
+            var rowsToRestore = lastActionRows;
+            if (rowsToRestore is not { Count: > 0 } || Rows.Count == 0)
+            {
+                return;
+            }
+
+            await RunOnMainThreadAsync(() =>
+            {
+                StatusText = string.Empty;
+                lastActionRows = null;
+                OnPropertyChanged(nameof(CanUndo));
+            });
+
+            foreach (var row in rowsToRestore.Reverse())
+            {
+                await statementImportService.UndoReviewAsync(row.Id);
+                await RunOnMainThreadAsync(() => InsertRow(row));
+            }
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"Statement import review undo failed: {ex}");
+            await SetStatusAsync(Translator.Get("StatementImport_ActionFailed"));
+        }
+        finally
+        {
+            actionGate.Release();
+        }
+    }
+
+    // UI-thread only. Rows stays in date order, same as the initial load.
+    private void InsertRow(StatementImportRowViewModel row)
+    {
+        row.PrepareForReinsert();
+        var index = 0;
+        while (index < Rows.Count && Rows[index].Date <= row.Date)
+        {
+            index++;
+        }
+
+        Rows.Insert(index, row);
+        Bulk.OnRowAdded(row);
+        Sections.OnRowAdded(row);
+        OnRowsChanged();
     }
 
     private void ClearRows()
@@ -289,11 +387,15 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         }
 
         Rows.Clear();
+        Sections.Clear();
     }
 
     private void OnRowsChanged()
     {
         OnPropertyChanged(nameof(IsComplete));
+        OnPropertyChanged(nameof(HasRows));
+        OnPropertyChanged(nameof(ProgressText));
+        OnPropertyChanged(nameof(CanUndo));
         Bulk.OnRowsChanged();
     }
 
@@ -311,6 +413,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             StatusText = StatementImportMessageFormatter.Format(result.Message);
             if (result.Cancelled)
             {
+                isCancelled = true;
+                lastActionRows = null;
                 ClearRows();
                 OnRowsChanged();
             }

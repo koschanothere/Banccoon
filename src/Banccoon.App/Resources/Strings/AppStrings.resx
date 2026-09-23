@@ -581,6 +581,45 @@
   <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
     <value>Select possible duplicates</value>
   </data>
+  <data name="StatementImport_ProgressFormat" xml:space="preserve">
+    <value>{0} of {1} reviewed</value>
+  </data>
+  <data name="StatementImport_UndoButton" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="StatementImport_ApproveAllCategorisedFormat" xml:space="preserve">
+    <value>Approve all categorised ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHeaderFormat" xml:space="preserve">
+    <value>Possible duplicates ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHint" xml:space="preserve">
+    <value>These look already recorded, for example from an earlier import of the same period. Skip them unless one really is new.</value>
+  </data>
+  <data name="StatementImport_SkipAllDuplicatesButton" xml:space="preserve">
+    <value>Skip all duplicates</value>
+  </data>
+  <data name="StatementImport_AttentionHeaderFormat" xml:space="preserve">
+    <value>Needs a decision ({0})</value>
+  </data>
+  <data name="StatementImport_AttentionHint" xml:space="preserve">
+    <value>Nothing learned for these yet. Pick a category, or approve as-is to file it under Other.</value>
+  </data>
+  <data name="StatementImport_ReadyHeaderFormat" xml:space="preserve">
+    <value>Ready to approve ({0})</value>
+  </data>
+  <data name="StatementImport_ReadyHint" xml:space="preserve">
+    <value>Category (and, for transfers, the other account) already filled in from what Banccoon learned. Check them with Show rows, or approve them all at once.</value>
+  </data>
+  <data name="StatementImport_ShowRowsButton" xml:space="preserve">
+    <value>Show rows</value>
+  </data>
+  <data name="StatementImport_HideRowsButton" xml:space="preserve">
+    <value>Hide rows</value>
+  </data>
+  <data name="StatementImport_TypeTooltipFormat" xml:space="preserve">
+    <value>{0} · click to change the type</value>
+  </data>
   <data name="StatementImport_CheckInSuggestion" xml:space="preserve">
     <value>All rows reviewed, and this account's balance now matches the statement's closing balance. Check in to attach the imported rows to the scheduled payments they covered.</value>
   </data>

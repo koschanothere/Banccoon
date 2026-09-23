@@ -286,6 +286,55 @@ public sealed class StatementImportService : IStatementImportService
         return skippedRow;
     }
 
+    public async Task<StatementImportRow> UndoReviewAsync(
+        Guid rowId,
+        CancellationToken cancellationToken = default)
+    {
+        var row = await statementImportRepository.GetRowByIdAsync(rowId, cancellationToken)
+            ?? throw new InvalidOperationException("The statement row could not be found.");
+
+        if (row.Status == StatementImportRowStatus.Pending)
+        {
+            return row;
+        }
+
+        var batch = await statementImportRepository.GetBatchByIdAsync(row.BatchId, cancellationToken)
+            ?? throw new InvalidOperationException("The statement import batch could not be found.");
+        if (batch.Status == StatementImportBatchStatus.Completed)
+        {
+            throw new InvalidOperationException("A completed statement import can't be undone row by row.");
+        }
+
+        if (row.Status == StatementImportRowStatus.Approved && row.CreatedTransactionId is { } transactionId)
+        {
+            var transaction = await transactionRepository.GetByIdAsync(transactionId, cancellationToken);
+            if (transaction is not null)
+            {
+                var accounts = await accountRepository.GetAllAsync(cancellationToken);
+                var restoredAccounts = transactionApplicationService.ReverseTransaction(
+                    transaction,
+                    accounts.ToDictionary(account => account.Id));
+                foreach (var restoredAccount in restoredAccounts)
+                {
+                    await accountRepository.SaveAsync(restoredAccount, cancellationToken);
+                }
+
+                await transactionRepository.DeleteAsync(transaction.Id, cancellationToken);
+            }
+        }
+
+        // The row keeps the type/category/other account it was approved with, so re-approving is
+        // one click. Category learning from the undone approval isn't reversed - it's one
+        // reinforcement among many, and the next approval teaches whatever is right.
+        var pendingRow = row with
+        {
+            Status = StatementImportRowStatus.Pending,
+            CreatedTransactionId = null
+        };
+        await statementImportRepository.SaveRowAsync(pendingRow, cancellationToken);
+        return pendingRow;
+    }
+
     public async Task<StatementImportCancelResult> CancelImportAsync(
         Guid batchId,
         CancellationToken cancellationToken = default)

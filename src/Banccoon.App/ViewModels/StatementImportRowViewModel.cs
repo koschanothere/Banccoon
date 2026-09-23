@@ -1,12 +1,27 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
 using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
+
+// Which block of the review list a row is shown in - decided once, when the row is loaded, so rows
+// never jump between blocks while the user is editing them.
+public enum StatementImportRowSection
+{
+    // Possibly already recorded (StatementImportRow.IsDuplicate): usually just skipped.
+    Duplicate,
+
+    // No learned category, or a transfer with no learned other account: needs a decision.
+    Attention,
+
+    // Category (and, for a transfer, the other account) already came from what Banccoon learned.
+    Ready
+}
 
 public sealed class StatementImportRowViewModel : ViewModelBase
 {
@@ -21,6 +36,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     private bool isSelected;
     private bool isSelectModeActive;
     private bool isBusy;
+    private bool isTypeEditorOpen;
 
     public StatementImportRowViewModel(
         StatementImportRow row,
@@ -31,6 +47,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         Func<StatementImportRowViewModel, Task> onSkip)
     {
         Id = row.Id;
+        Date = row.Date;
         amount = row.Amount;
         this.currency = currency;
         isIncoming = row.IsIncoming;
@@ -41,22 +58,37 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         OtherAccountOptions = otherAccountOptions;
         type = row.Type;
 
+        // No silent defaults: a row with nothing learned starts with no category (approving it
+        // as-is files it under "Other", per the Phase 3 spec) and a transfer with no learned other
+        // account starts with none picked - rather than quietly preselecting whichever category or
+        // account happens to sort first, which looked like a real suggestion but wasn't.
         var selectedCategoryId = row.CategoryId ?? row.SuggestedCategoryId;
         category = selectedCategoryId is { } categoryId
             ? categoryOptions.FirstOrDefault(option => option.Id == categoryId && !option.IsCreateNew)
-            : categoryOptions.FirstOrDefault(option => !option.IsCreateNew);
+            : null;
 
         otherAccount = row.DestinationAccountId is { } otherAccountId
             ? otherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
-            : otherAccountOptions.FirstOrDefault();
+            : null;
+
+        Section = row.IsDuplicate
+            ? StatementImportRowSection.Duplicate
+            : category is not null && (type != TransactionType.Transfer || otherAccount is not null)
+                ? StatementImportRowSection.Ready
+                : StatementImportRowSection.Attention;
 
         ApproveCommand = new RelayCommand(() => _ = onApprove(this));
         SkipCommand = new RelayCommand(() => _ = onSkip(this));
+        ToggleTypeEditorCommand = new RelayCommand(() => IsTypeEditorOpen = !IsTypeEditorOpen);
     }
 
     public IReadOnlyList<TransactionType> TypeOptions { get; } = Enum.GetValues<TransactionType>();
 
     public Guid Id { get; }
+
+    public DateOnly Date { get; }
+
+    public StatementImportRowSection Section { get; }
 
     public string DateText { get; }
 
@@ -84,6 +116,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsCreatingNewCategory));
                 OnPropertyChanged(nameof(CategoryBorderColor));
+                OnPropertyChanged(nameof(IsReadyToApprove));
             }
         }
     }
@@ -97,7 +130,13 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public string NewCategoryName
     {
         get => newCategoryName;
-        set => SetProperty(ref newCategoryName, value);
+        set
+        {
+            if (SetProperty(ref newCategoryName, value))
+            {
+                OnPropertyChanged(nameof(IsReadyToApprove));
+            }
+        }
     }
 
     // The other account on a transfer - not always the semantic "destination" (see
@@ -108,7 +147,13 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public NamedOptionViewModel? OtherAccount
     {
         get => otherAccount;
-        set => SetProperty(ref otherAccount, value);
+        set
+        {
+            if (SetProperty(ref otherAccount, value))
+            {
+                OnPropertyChanged(nameof(IsReadyToApprove));
+            }
+        }
     }
 
     public TransactionType Type
@@ -120,11 +165,34 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsTransferType));
                 OnPropertyChanged(nameof(AmountText));
+                OnPropertyChanged(nameof(TypeToolTipText));
+                OnPropertyChanged(nameof(IsReadyToApprove));
+                IsTypeEditorOpen = false;
             }
         }
     }
 
     public bool IsTransferType => Type == TransactionType.Transfer;
+
+    // "Calmer rows": the type picker stays hidden and the amount's colour shows the detected type
+    // (TransactionTypeColorConverter: income green, transfer purple, expense plain). Clicking the
+    // amount opens the picker; choosing a type closes it again.
+    public bool IsTypeEditorOpen
+    {
+        get => isTypeEditorOpen;
+        set => SetProperty(ref isTypeEditorOpen, value);
+    }
+
+    public string TypeToolTipText => string.Format(Translator.Get("StatementImport_TypeTooltipFormat"), DisplayText.Format(Type));
+
+    // Can be approved as it stands, with no decision left to make: has a category (a "create new"
+    // one counts once it's named), and a transfer has its other account. Duplicates never count -
+    // they're for skipping unless the user approves one explicitly.
+    public bool IsReadyToApprove =>
+        !IsDuplicate
+        && Category is not null
+        && (!Category.IsCreateNew || !string.IsNullOrWhiteSpace(NewCategoryName))
+        && (!IsTransferType || OtherAccount is not null);
 
     public bool IsSelected
     {
@@ -172,6 +240,14 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         IsBusy = false;
     }
 
+    // Before an undone row goes back into the list: keep its picks, drop transient UI state.
+    public void PrepareForReinsert()
+    {
+        IsSelected = false;
+        IsTypeEditorOpen = false;
+        IsBusy = false;
+    }
+
     // Used when another row just created the category this row was also about to create (same
     // name typed into both) - points this row at the real category instead of creating a duplicate.
     public void AdoptCategory(CategoryOptionViewModel option)
@@ -181,6 +257,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     }
 
     public ICommand ApproveCommand { get; }
+
+    public ICommand ToggleTypeEditorCommand { get; }
 
     public ICommand SkipCommand { get; }
 }

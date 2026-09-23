@@ -197,6 +197,89 @@ public sealed class StatementImportServiceTests
     }
 
     [Fact]
+    public async Task UndoReviewAsync_AfterApprove_DeletesTheTransactionAndRestoresTheBalance()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        var category = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(category);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 11), 5m, TransactionType.Expense, "Coffee")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        var lunch = pending.Rows.Single(row => row.Description == "Lunch");
+        await service.ApproveRowAsync(lunch.Id, category.Id, type: null, destinationAccountId: null);
+
+        var undone = await service.UndoReviewAsync(lunch.Id);
+
+        Assert.Equal(StatementImportRowStatus.Pending, undone.Status);
+        Assert.Null(undone.CreatedTransactionId);
+        Assert.Equal(category.Id, undone.CategoryId);
+        Assert.Empty(await store.Transactions.GetByAccountIdAsync(account.Id));
+        Assert.Equal(100m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
+        Assert.Equal(StatementImportRowStatus.Pending, (await store.StatementImports.GetRowByIdAsync(lunch.Id))?.Status);
+    }
+
+    [Fact]
+    public async Task UndoReviewAsync_AfterTransferApprove_RestoresBothAccounts()
+    {
+        await using var store = new SqliteTestStore();
+        var source = CreateAccount();
+        var destination = CreateAccount() with { Id = Guid.NewGuid(), Name = "Savings", CurrentBalance = 10m };
+        await store.Accounts.SaveAsync(source);
+        await store.Accounts.SaveAsync(destination);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 30m, TransactionType.Expense, "To savings"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 11), 5m, TransactionType.Expense, "Coffee")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(source.Id, "statement.fake");
+        var transferRow = pending.Rows.Single(row => row.Description == "To savings");
+        await service.ApproveRowAsync(transferRow.Id, null, TransactionType.Transfer, destination.Id);
+
+        await service.UndoReviewAsync(transferRow.Id);
+
+        Assert.Equal(100m, (await store.Accounts.GetByIdAsync(source.Id))?.CurrentBalance);
+        Assert.Equal(10m, (await store.Accounts.GetByIdAsync(destination.Id))?.CurrentBalance);
+    }
+
+    [Fact]
+    public async Task UndoReviewAsync_AfterSkip_MakesTheRowPendingAgain()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 11), 5m, TransactionType.Expense, "Coffee")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        await service.SkipRowAsync(pending.Rows[0].Id);
+
+        var undone = await service.UndoReviewAsync(pending.Rows[0].Id);
+
+        Assert.Equal(StatementImportRowStatus.Pending, undone.Status);
+        Assert.Equal(100m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
+    }
+
+    [Fact]
+    public async Task UndoReviewAsync_OnceTheBatchIsComplete_IsRefused()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch")
+        ], closingBalance: 75m)]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        await service.ApproveRowAsync(pending.Rows[0].Id, null, type: null, destinationAccountId: null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UndoReviewAsync(pending.Rows[0].Id));
+        Assert.Single(await store.Transactions.GetByAccountIdAsync(account.Id));
+    }
+
+    [Fact]
     public async Task CreatePendingImportAsync_FlagsLikelyDuplicates()
     {
         await using var store = new SqliteTestStore();
