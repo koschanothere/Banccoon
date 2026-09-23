@@ -71,6 +71,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
         builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
         builder.Services.AddSingleton<IExpectedTransactionMatcher, ExpectedTransactionMatcher>();
+        builder.Services.AddSingleton<ITransactionDeletionService, TransactionDeletionService>();
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IAutoBackupRunner, AutoBackupRunner>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();

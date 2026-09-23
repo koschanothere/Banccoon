@@ -22,6 +22,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private readonly ITransactionRepository transactionRepository;
     private readonly ISettingsRepository settingsRepository;
     private readonly ITransactionBalanceHistoryService transactionBalanceHistoryService;
+    private readonly ITransactionDeletionService transactionDeletionService;
 
     private IReadOnlyList<Account> accounts = [];
     private IReadOnlyList<Category> categories = [];
@@ -81,13 +82,15 @@ public sealed class TransactionsViewModel : ViewModelBase
         IRecurrenceDescriptionService recurrenceDescriptionService,
         IRecurrenceSyntaxService recurrenceSyntaxService,
         IRecurrenceValidationService recurrenceValidationService,
-        IExpectedTransactionMatcher expectedTransactionMatcher)
+        IExpectedTransactionMatcher expectedTransactionMatcher,
+        ITransactionDeletionService transactionDeletionService)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.settingsRepository = settingsRepository;
         this.transactionBalanceHistoryService = transactionBalanceHistoryService;
+        this.transactionDeletionService = transactionDeletionService;
 
         AddForm = new NewTransactionFormViewModel(
             accountRepository,
@@ -576,11 +579,10 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private async Task DeleteSelectedAsync()
     {
+        // Deleting reverses each transaction's effect on its account balance(s) - previously the
+        // balance kept counting a deleted expense.
         var selectedIds = Rows.Where(row => row.IsSelected).Select(row => row.Id).ToList();
-        foreach (var id in selectedIds)
-        {
-            await transactionRepository.DeleteAsync(id);
-        }
+        await transactionDeletionService.DeleteAsync(selectedIds);
 
         // Touches UI-bound state after an await that may have resumed off the UI thread (see
         // ViewModelBase.RunOnMainThreadAsync).
