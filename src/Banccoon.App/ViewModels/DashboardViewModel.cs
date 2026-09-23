@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.App.Services;
@@ -27,6 +28,7 @@ public sealed class DashboardViewModel : ViewModelBase
     private readonly IFreeToSpendWindowService freeToSpendWindowService;
     private readonly IHistoricalBalanceService historicalBalanceService;
     private readonly IAutoBackupRunner autoBackupRunner;
+    private readonly ILegacySavingsGoalConversionService legacySavingsGoalConversionService;
 
     // Cached from the most recent InitializeAsync so the graph can be redrawn for a custom range
     // without re-fetching everything from the repositories again.
@@ -68,7 +70,8 @@ public sealed class DashboardViewModel : ViewModelBase
         IHistoricalBalanceService historicalBalanceService,
         ICategoryRepository categoryRepository,
         IAnalyticsService analyticsService,
-        IAutoBackupRunner autoBackupRunner)
+        IAutoBackupRunner autoBackupRunner,
+        ILegacySavingsGoalConversionService legacySavingsGoalConversionService)
     {
         this.dateProvider = dateProvider;
         this.accountRepository = accountRepository;
@@ -80,6 +83,7 @@ public sealed class DashboardViewModel : ViewModelBase
         this.freeToSpendWindowService = freeToSpendWindowService;
         this.historicalBalanceService = historicalBalanceService;
         this.autoBackupRunner = autoBackupRunner;
+        this.legacySavingsGoalConversionService = legacySavingsGoalConversionService;
 
         ChartPoints = [];
         UpcomingObligations = [];
@@ -223,6 +227,7 @@ public sealed class DashboardViewModel : ViewModelBase
         IsLoading = true;
         try
         {
+            await ConvertLegacySavingsGoalsAsync(cancellationToken);
             settings = await settingsRepository.GetAsync(cancellationToken);
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
@@ -265,6 +270,26 @@ public sealed class DashboardViewModel : ViewModelBase
             // Touches UI-bound state after an await that may have resumed off the UI thread (see
             // ViewModelBase.RunOnMainThreadAsync).
             await RunOnMainThreadAsync(() => IsLoading = false);
+        }
+    }
+
+    // One-time: turns the old standalone SavingsGoal rows into Goal accounts (a no-op on every run
+    // after the first - see LegacySavingsGoalConversionService). Runs here, before accounts are
+    // read, so the Goals card shows converted goals on the very first load. Fails open like
+    // AutoBackupRunner: a problem is logged and the Dashboard loads anyway.
+    private async Task ConvertLegacySavingsGoalsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var converted = await legacySavingsGoalConversionService.ConvertOnceAsync(cancellationToken);
+            if (converted > 0)
+            {
+                DiagnosticLog.Write($"Converted {converted} legacy savings goal(s) into Goal accounts.");
+            }
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"Legacy savings goal conversion failed, Dashboard loading anyway: {ex}");
         }
     }
 

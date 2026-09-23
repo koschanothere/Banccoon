@@ -70,7 +70,6 @@ public sealed class DashboardAndGoalsTests
         await AddAccountAsync(store, "Vacation", AccountType.Goal, 300m, target: 1000m);
         await AddAccountAsync(store, "Rainy day", AccountType.Goal, 50m, includeInTotals: false);
         await AddAccountAsync(store, "Old goal", AccountType.Goal, 10m, archived: true);
-        await store.SavingsGoals.SaveAsync(new SavingsGoal(Guid.NewGuid(), "Legacy model goal", 999m, 999m, null));
         var vm = CreateDashboard(store);
 
         await vm.InitializeAsync();
@@ -85,7 +84,30 @@ public sealed class DashboardAndGoalsTests
     }
 
     [Fact]
-    public async Task FreeToSpend_ReservesMoneyInGoalAccountsCountedInTotals_NotTheLegacyModel()
+    public async Task LegacySavingsGoals_AreConvertedOnFirstLoad_AndShowOnTheGoalsCard()
+    {
+        await using var store = await CreateStoreAsync();
+        await AddAccountAsync(store, "Card", AccountType.DebitCard, 1000m);
+        var legacy = new SavingsGoal(Guid.NewGuid(), "Old vacation goal", 800m, 200m, null);
+        await store.SavingsGoals.SaveAsync(legacy);
+        var vm = CreateDashboard(store);
+
+        await vm.InitializeAsync();
+
+        var row = Assert.Single(vm.Goals);
+        Assert.Equal("Old vacation goal", row.Name);
+        Assert.Equal(0.25d, row.Progress, 3);
+        // Converted goals stay out of totals (their money already sits in real accounts).
+        Assert.Equal("RUB 1,000.00", vm.CurrentBalanceText);
+        Assert.Equal("RUB 0.00", vm.ReservedForGoalsText);
+
+        await store.Accounts.DeleteAsync(legacy.Id);
+        await vm.InitializeAsync();
+        Assert.Empty(vm.Goals);
+    }
+
+    [Fact]
+    public async Task FreeToSpend_ReservesMoneyInGoalAccountsCountedInTotals_AndNotConvertedLegacyGoals()
     {
         await using var store = await CreateStoreAsync();
         await AddAccountAsync(store, "Card", AccountType.DebitCard, 1000m);
@@ -178,7 +200,8 @@ public sealed class DashboardAndGoalsTests
             new HistoricalBalanceService(),
             store.Categories,
             new AnalyticsService(),
-            new NoBackups());
+            new NoBackups(),
+            new LegacySavingsGoalConversionService(store.SavingsGoals, store.Accounts, store.Settings));
     }
 
     private sealed class FixedDate(DateOnly today) : IDateProvider

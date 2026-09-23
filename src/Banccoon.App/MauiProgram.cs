@@ -51,6 +51,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
         builder.Services.AddSingleton<ISavingsGoalAllocationService, SavingsGoalAllocationService>();
+        builder.Services.AddSingleton<ILegacySavingsGoalConversionService, LegacySavingsGoalConversionService>();
         builder.Services.AddSingleton<IAvailableToSpendService, AvailableToSpendService>();
         builder.Services.AddSingleton<IFreeToSpendWindowService, FreeToSpendWindowService>();
         builder.Services.AddSingleton<IHistoricalBalanceService, HistoricalBalanceService>();

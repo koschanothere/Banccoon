@@ -29,7 +29,10 @@ public sealed record AppSettings(
     int AutoBackupFrequencyDays = 30,
     int AutoBackupRetentionCount = 5,
     DateTimeOffset? LastAutoBackupAt = null,
-    DashboardPrimaryMetric DashboardPrimaryMetric = DashboardPrimaryMetric.FreeToSpend)
+    DashboardPrimaryMetric DashboardPrimaryMetric = DashboardPrimaryMetric.FreeToSpend,
+    // Set once LegacySavingsGoalConversionService has turned the old standalone SavingsGoal rows
+    // into Goal accounts, so that conversion only ever runs once.
+    bool LegacySavingsGoalsConverted = false)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,
