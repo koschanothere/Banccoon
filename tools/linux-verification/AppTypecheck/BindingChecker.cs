@@ -4,7 +4,8 @@ using System.Xml.Linq;
 
 // Checks every {Binding Path} in the App's XAML against the real compiled view-model types, scoped
 // by x:DataType the way MAUI's compiled bindings (XamlC) resolve them. Also checks Command="{Binding X}"
-// targets exist and that {loc:Translate Key} keys exist in the neutral resx.
+// targets exist, that {loc:Translate Key} keys exist in the neutral resx, and that every
+// {StaticResource Key} names a declared x:Key.
 public static class BindingChecker
 {
     private static readonly XNamespace X = "http://schemas.microsoft.com/winfx/2009/xaml";
@@ -12,6 +13,7 @@ public static class BindingChecker
     private static int checkedCount;
     private static int unscoped;
     private static HashSet<string> resxKeys = new();
+    private static HashSet<string> resourceKeys = new();
 
     public static int Main(string[] args)
     {
@@ -19,6 +21,14 @@ public static class BindingChecker
         resxKeys = XDocument.Load($"{appSrc}/Resources/Strings/AppStrings.resx").Root!
             .Elements("data").Select(d => (string)d.Attribute("name")!).ToHashSet();
         var files = args.Length > 0 ? args : Directory.GetFiles(appSrc, "*.xaml", SearchOption.AllDirectories);
+
+        // Every x:Key declared in any App XAML file (App.xaml's global dictionary plus any
+        // page-level resources) - a {StaticResource} naming anything else fails at runtime.
+        resourceKeys = Directory.GetFiles(appSrc, "*.xaml", SearchOption.AllDirectories)
+            .SelectMany(file => XDocument.Load(file).Descendants().Select(e => (string?)e.Attribute(X + "Key")))
+            .Where(key => key is not null)
+            .Select(key => key!)
+            .ToHashSet();
         foreach (var file in files)
         {
             CheckFile(file);
@@ -76,6 +86,15 @@ public static class BindingChecker
             if (!resxKeys.Contains(translate.Groups[1].Value))
             {
                 Report(file, element, $"resx key '{translate.Groups[1].Value}' missing");
+            }
+        }
+
+        foreach (Match resource in Regex.Matches(value, @"\{StaticResource\s+([A-Za-z0-9_]+)\s*\}"))
+        {
+            checkedCount++;
+            if (!resourceKeys.Contains(resource.Groups[1].Value))
+            {
+                Report(file, element, $"StaticResource '{resource.Groups[1].Value}' is not declared anywhere");
             }
         }
 

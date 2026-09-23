@@ -77,7 +77,7 @@
                                             <Label Text="{Binding Name}" />
                                             <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
                                         </VerticalStackLayout>
-                                        <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
                                         <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
                                         <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
                                         <Button Grid.Column="4" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />

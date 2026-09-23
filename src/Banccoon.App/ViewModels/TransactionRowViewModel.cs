@@ -31,7 +31,6 @@ public sealed class TransactionRowViewModel : ViewModelBase
                 ? Math.Abs(transaction.Amount)
                 : -Math.Abs(transaction.Amount);
         AmountText = MoneyFormat.Format(signedAmount, currency);
-        IsPositive = signedAmount > 0;
         BalanceAfterText = MoneyFormat.Format(balanceAfter, currency);
 
         BadgeColor = CategoryId is { } categoryId
@@ -59,8 +58,6 @@ public sealed class TransactionRowViewModel : ViewModelBase
     public bool IsScheduled { get; }
 
     public string AmountText { get; }
-
-    public bool IsPositive { get; }
 
     public string BalanceAfterText { get; }
 

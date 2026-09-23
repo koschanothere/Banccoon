@@ -2,6 +2,7 @@ using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Forecasting;
+using Banccoon.Core.Models;
 
 namespace Banccoon.App.ViewModels;
 
@@ -22,6 +23,7 @@ public sealed class ResolveUpcomingRowViewModel : ViewModelBase
         ScheduledTransactionId = scheduledEvent.SourceId;
         OccurrenceDate = scheduledEvent.Date;
         Name = scheduledEvent.Name;
+        Type = scheduledEvent.Type;
         AmountText = MoneyFormat.Format(scheduledEvent.SignedAmount, currency);
         IsOverdue = scheduledEvent.Date < today;
         DueText = IsOverdue
@@ -53,6 +55,8 @@ public sealed class ResolveUpcomingRowViewModel : ViewModelBase
     public DateOnly OccurrenceDate { get; }
 
     public string Name { get; }
+
+    public TransactionType Type { get; }
 
     public string AmountText { get; }
 

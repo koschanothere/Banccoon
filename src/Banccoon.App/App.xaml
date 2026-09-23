@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
             <converters:FavoriteStarConverter x:Key="FavoriteStarConverter" />
-            <converters:PositiveAmountColorConverter x:Key="PositiveAmountColorConverter" />
+            <converters:TransactionTypeColorConverter x:Key="TransactionTypeColorConverter" />
             <converters:IncreaseAmountColorConverter x:Key="IncreaseAmountColorConverter" />
             <converters:CurrentBarColorConverter x:Key="CurrentBarColorConverter" />
             <converters:SelectedNavBackgroundConverter x:Key="SelectedNavBackgroundConverter" />
@@ -31,6 +31,8 @@
             <Color x:Key="LightStatusOrangeSoft">#1FD97706</Color>
             <Color x:Key="LightStatusRed">#DC2626</Color>
             <Color x:Key="LightStatusRedSoft">#1FDC2626</Color>
+            <Color x:Key="LightTransfer">#9333EA</Color>
+            <Color x:Key="LightTransferSoft">#1F9333EA</Color>
 
             <!-- Dark tokens -->
             <Color x:Key="DarkPageBackground">#131417</Color>
@@ -48,6 +50,8 @@
             <Color x:Key="DarkStatusOrangeSoft">#29F59E0B</Color>
             <Color x:Key="DarkStatusRed">#F87171</Color>
             <Color x:Key="DarkStatusRedSoft">#29F87171</Color>
+            <Color x:Key="DarkTransfer">#C084FC</Color>
+            <Color x:Key="DarkTransferSoft">#29C084FC</Color>
 
             <!-- Sidebar tokens -->
             <Color x:Key="LightSidebarBackground">#FAF9F7</Color>
@@ -144,8 +148,9 @@
 
             <!-- Semantic action colors: same meaning everywhere, so the color becomes a habit
                  rather than something the user has to read - red always destroys, red-leaning
-                 always means expense/money-out, green always means income/money-in. Mirrors the
-                 fixed status-color rule already used for amounts and "resolve upcoming". -->
+                 always means expense/money-out, green always means income/money-in, purple always
+                 means transfer/money moving between your own accounts. Mirrors the fixed
+                 amount-color rule (TransactionTypeColorConverter). -->
             <Style x:Key="DestructiveButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightStatusRedSoft}, Dark={StaticResource DarkStatusRedSoft}}" />
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
@@ -162,6 +167,12 @@
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreenSoft}, Dark={StaticResource DarkStatusGreenSoft}}" />
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreen}, Dark={StaticResource DarkStatusGreen}}" />
                 <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightStatusGreenSoft}, Dark={StaticResource DarkStatusGreenSoft}}" />
+            </Style>
+
+            <Style x:Key="TransferButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightTransferSoft}, Dark={StaticResource DarkTransferSoft}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTransfer}, Dark={StaticResource DarkTransfer}}" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightTransferSoft}, Dark={StaticResource DarkTransferSoft}}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>
