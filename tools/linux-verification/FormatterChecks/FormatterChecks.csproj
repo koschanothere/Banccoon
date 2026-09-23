@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compiles the MAUI-free parts of Banccoon.App (Translator + every Formatting/*.cs except the
+       MAUI-coloured CategoryColorPalette) against the REAL resx files, and asserts formatter output
+       in English and Russian. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Banccoon.Infrastructure/Banccoon.Infrastructure.csproj" />
+    <Compile Include="$(AppSrc)/Localization/Translator.cs" Link="App/Translator.cs" />
+    <Compile Include="$(AppSrc)/Formatting/*.cs" Exclude="$(AppSrc)/Formatting/CategoryColorPalette.cs" Link="App/Formatting/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(AppSrc)/Resources/Strings/*.resx" Link="Resources/Strings/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

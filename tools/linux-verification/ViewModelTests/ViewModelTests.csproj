@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Runs the REAL Banccoon.App view models (compiled against the MAUI stubs, where MainThread runs
+       inline) over real Core services and a temp SQLite database. Exercises view-model logic only:
+       no XAML, no real UI thread, no WinUI, no Shell navigation. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="xunit" Version="2.8.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.1" />
+    <PackageReference Include="Microsoft.Maui.Graphics" Version="10.0.*" />
+    <ProjectReference Include="$(RepoRoot)src/Banccoon.Infrastructure/Banccoon.Infrastructure.csproj" />
+    <Compile Include="../Stubs/MauiStubs.cs" Link="Stubs/MauiStubs.cs" />
+    <Compile Include="$(AppSrc)/ViewModels/*.cs" Link="App/ViewModels/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Formatting/*.cs" Link="App/Formatting/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Localization/Translator.cs" Link="App/Localization/Translator.cs" />
+    <Compile Include="$(AppSrc)/Services/*.cs" Link="App/Services/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Diagnostics/*.cs" Link="App/Diagnostics/%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)tests/Banccoon.Tests/Infrastructure/SqliteTestStore.cs" Link="Tests/SqliteTestStore.cs" />
+    <EmbeddedResource Include="$(AppSrc)/Resources/Strings/*.resx" Link="Resources/Strings/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Microsoft.Maui" />
+    <Using Include="Microsoft.Maui.Controls" />
+    <Using Include="Microsoft.Maui.ApplicationModel" />
+    <Using Include="Microsoft.Maui.Graphics" />
+    <Using Include="Microsoft.Maui.Storage" />
+    <Using Include="Microsoft.Maui.Devices" />
+  </ItemGroup>
+</Project>

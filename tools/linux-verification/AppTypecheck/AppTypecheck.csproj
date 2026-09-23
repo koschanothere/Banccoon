@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compiles the real Banccoon.App view models, formatters, services and selected page
+       code-behind against Microsoft.Maui.Graphics (cross-platform) plus thin stubs of the other MAUI
+       APIs they touch, then (when run) checks every compiled {Binding} path and {loc:Translate} key
+       in the App's XAML against those real types and the neutral resx. Proves the C# compiles and
+       the bindings resolve; proves nothing about runtime, XamlC or WinUI behavior. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Graphics" Version="10.0.*" />
+    <ProjectReference Include="$(RepoRoot)src/Banccoon.Infrastructure/Banccoon.Infrastructure.csproj" />
+    <Compile Include="../Stubs/*.cs" Link="Stubs/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/ViewModels/*.cs" Link="App/ViewModels/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Formatting/*.cs" Link="App/Formatting/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Localization/Translator.cs" Link="App/Localization/Translator.cs" />
+    <Compile Include="$(AppSrc)/Services/*.cs" Link="App/Services/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSrc)/Diagnostics/*.cs" Link="App/Diagnostics/%(Filename)%(Extension)" />
+    <!-- Page code-behind whose XAML-generated half is stubbed in Stubs/PageStubs.cs. -->
+    <Compile Include="$(AppSrc)/Views/ReconciliationPage.xaml.cs;$(AppSrc)/Views/StatementImportPage.xaml.cs;$(AppSrc)/Views/TransactionsPage.xaml.cs;$(AppSrc)/Views/DashboardPage.xaml.cs;$(AppSrc)/Views/AccountsPage.xaml.cs" Link="App/Views/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Microsoft.Maui" />
+    <Using Include="Microsoft.Maui.Controls" />
+    <Using Include="Microsoft.Maui.ApplicationModel" />
+    <Using Include="Microsoft.Maui.Graphics" />
+    <Using Include="Microsoft.Maui.Storage" />
+    <Using Include="Microsoft.Maui.Devices" />
+  </ItemGroup>
+</Project>
