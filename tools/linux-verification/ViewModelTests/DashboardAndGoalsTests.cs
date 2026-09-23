@@ -101,6 +101,23 @@ public sealed class DashboardAndGoalsTests
     }
 
     [Fact]
+    public async Task Totals_LeaveOutArchivedAccountsEvenWhenFlaggedIncluded()
+    {
+        await using var store = await CreateStoreAsync();
+        var card = await AddAccountAsync(store, "Card", AccountType.DebitCard, 1000m);
+        await AddAccountAsync(store, "Closed card", AccountType.DebitCard, 400m, archived: true);
+        await store.Transactions.SaveAsync(new Transaction(Guid.NewGuid(), Today.AddDays(-1), 10m, card.Id, null, null, TransactionType.Expense, Name: "Lunch"));
+        var vm = CreateDashboard(store);
+
+        await vm.InitializeAsync();
+
+        Assert.Equal("RUB 1,000.00", vm.CurrentBalanceText);
+        Assert.Equal("RUB 1,000.00", vm.FreeToSpendText);
+        Assert.Equal(1000m, vm.ChartPoints.First(p => p.Date == Today).Balance);
+        Assert.Equal(1010m, vm.ChartPoints.Single(p => p.Date == Today.AddDays(-2)).Balance);
+    }
+
+    [Fact]
     public async Task AddGoal_RaisesTheNavigationRequest()
     {
         await using var store = await CreateStoreAsync();

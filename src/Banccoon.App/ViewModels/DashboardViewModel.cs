@@ -226,7 +226,9 @@ public sealed class DashboardViewModel : ViewModelBase
             settings = await settingsRepository.GetAsync(cancellationToken);
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
-            dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals).ToList();
+            // Archived accounts are history, not money you have: they stay out of the totals, the
+            // forecast and free-to-spend even if their "include in totals" flag is still set.
+            dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals && !account.IsArchived).ToList();
             dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
             scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
             allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
