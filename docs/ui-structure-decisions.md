@@ -31,7 +31,7 @@ Decisions made in the UI planning walkthrough, before any visual/look design. Th
   - Top movers / biggest changes auto-surfaced (e.g. "Dining out up 40%")
   - Drill-down: clicking a category filters straight into Transactions for that category/period
   - Income vs. expense breakdown, not just expense categories
-  - Donut chart of the viewed month's category spend, hover-highlighted per slice
+  - Donut chart of the viewed month's category spend, hover-highlighted per slice. Slices are per **parent** category (a parent's own spending plus its children's); clicking a parent's slice opens a second donut to its right breaking it down by child (2026-09-25).
 
 ## Money Model: Free to Spend
 
@@ -68,7 +68,7 @@ Already partially implemented in `Banccoon.Core.Forecasting.AvailableToSpendServ
 - Bulk actions: explicit **"Select" mode toggle** button switches the list into checkbox mode; then mass category assignment, mass scheduled-occurrence assignment, mass delete.
 - **Category management** icon lives in the Transactions header next to the filter control, opening a manage-categories overlay (rename/merge/delete/recolor/reorder). This is deliberately **not in Settings** — categories are living financial data you touch constantly, unlike scheduled templates.
   - Category **creation** is inline wherever you pick a category (transaction entry, statement import row, scheduled assignment) — type a new name, confirm, done.
-  - Categories are **flat**, no groups/hierarchy. **Under reconsideration as of 2026-09-23** — the user now wants hierarchical (parent/child) categories for Analytics rollups; this line is no longer settled. See "Current Priorities" in `docs/development-phases.md` for status — needs a scoping pass (storage shape, migration, interaction with color/merge) before this decision is finalized either way.
+  - Categories are **two levels deep** (decided and built 2026-09-25, replacing "flat"): a category with no parent is a parent, a child can't have children, and parents are real categories a transaction can be filed under directly. A child's color is always its parent's. **No picker ever shows one combined list**: every picker lists parents only, and a small second picker appears only once a parent with children is chosen, offering just its children ("No subcategory" keeps the parent). Inline creation always makes a parent; children are made or moved in Manage categories (a "Parent category" picker in "+ Add category" and in each category's popup). Filtering by a parent covers its children. See the Phase 7 "Hierarchical categories" entry in `docs/development-phases.md` for merge behavior and the rest.
 
 ## Statement Import (full-page guided flow)
 
