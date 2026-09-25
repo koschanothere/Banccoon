@@ -87,7 +87,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<SqliteAccountRepository>();
         builder.Services.AddSingleton<IAccountRepository>(sp => new CachedAccountRepository(sp.GetRequiredService<SqliteAccountRepository>()));
         builder.Services.AddSingleton<SqliteCategoryRepository>();
-        builder.Services.AddSingleton<ICategoryRepository>(sp => new CachedCategoryRepository(sp.GetRequiredService<SqliteCategoryRepository>()));
+        // HierarchicalCategoryRepository keeps the two-level/colour-follows-parent rules on every save.
+        builder.Services.AddSingleton<ICategoryRepository>(sp => new HierarchicalCategoryRepository(
+            new CachedCategoryRepository(sp.GetRequiredService<SqliteCategoryRepository>())));
         builder.Services.AddSingleton<SqliteTransactionRepository>();
         builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>(), sp.GetRequiredService<IDateProvider>()));
         builder.Services.AddSingleton<SqliteScheduledTransactionRepository>();

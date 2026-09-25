@@ -1,3 +1,4 @@
+using Banccoon.Core.Categories;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Repositories;
 
@@ -85,9 +86,13 @@ public sealed class RepositoryImportService : IImportService
             await accountRepository.SaveAsync(account, cancellationToken);
         }
 
-        foreach (var category in data.Categories)
+        // Parents before their children. A parent that isn't there or would break the two-level
+        // rule (a hand-edited backup, or a merge restore over categories reorganised since) makes
+        // that category top-level rather than failing the restore.
+        foreach (var category in CategoryHierarchyRules.ParentsFirst(data.Categories))
         {
-            await categoryRepository.SaveAsync(category, cancellationToken);
+            var existing = await categoryRepository.GetAllAsync(cancellationToken);
+            await categoryRepository.SaveAsync(CategoryHierarchyRules.NormalizeOrPromote(category, existing), cancellationToken);
         }
 
         foreach (var scheduledTransaction in data.ScheduledTransactions)

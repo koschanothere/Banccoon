@@ -78,7 +78,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 Id TEXT PRIMARY KEY,
                 Name TEXT NOT NULL,
                 Type TEXT NULL,
-                Color TEXT NULL
+                Color TEXT NULL,
+                ParentCategoryId TEXT NULL REFERENCES Categories(Id) ON DELETE SET NULL
             );
 
             CREATE TABLE IF NOT EXISTS Transactions (
@@ -259,6 +260,14 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "Categories",
             "Color",
             "TEXT NULL",
+            cancellationToken);
+        // Two-level categories: NULL (every existing category) means top-level. SQLite allows a
+        // REFERENCES clause on an added column as long as its default is NULL.
+        await AddMissingColumnAsync(
+            connection,
+            "Categories",
+            "ParentCategoryId",
+            "TEXT NULL REFERENCES Categories(Id) ON DELETE SET NULL",
             cancellationToken);
         await AddMissingColumnAsync(
             connection,
