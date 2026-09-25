@@ -275,6 +275,14 @@
                                             Padding="12,8"
                                             Margin="4"
                                             MinimumWidthRequest="110">
+                                            <!-- A child category: sits right after its parent (ordering is the view
+                                                 model's), slightly smaller, with a "↳" marker. -->
+                                            <Border.Triggers>
+                                                <DataTrigger TargetType="Border" Binding="{Binding IsChild}" Value="True">
+                                                    <Setter Property="Padding" Value="8,5" />
+                                                    <Setter Property="MinimumWidthRequest" Value="80" />
+                                                </DataTrigger>
+                                            </Border.Triggers>
                                             <!-- Drag/drop lives on the outer Border only; tapping lives on the inner Grid
                                                  below. Stacking Tap + Drag on the identical element is a known MAUI/WinUI
                                                  conflict where the drag recognizer can swallow the tap entirely - keeping
@@ -284,12 +292,13 @@
                                                 <DropGestureRecognizer AllowDrop="True" DropCommand="{Binding DropCommand}" />
                                             </Border.GestureRecognizers>
 
-                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
                                                 <Grid.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding TapCommand}" />
                                                 </Grid.GestureRecognizers>
                                                 <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" IsEnabled="False" Scale="0.8" />
-                                                <Label Grid.Column="1" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                                                <Label Grid.Column="1" Text="↳" TextColor="White" VerticalOptions="Center" IsVisible="{Binding IsChild}" />
+                                                <Label Grid.Column="2" Text="{Binding Name}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -303,10 +312,12 @@
                                 Style="{StaticResource QuietButton}"
                                 HorizontalOptions="Start" />
 
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding CategoryManagement.IsAddingCategory}">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding CategoryManagement.IsAddingCategory}">
                                 <Entry Grid.Column="0" Text="{Binding CategoryManagement.NewCategoryName}" Placeholder="{loc:Translate Settings_CategoryNamePlaceholder}" />
-                                <Button Grid.Column="1" Text="{loc:Translate Common_Add}" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Grid.Column="2" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
+                                <!-- Optional: leave on "None (top level)" for a new parent category. -->
+                                <Picker Grid.Column="1" Title="{loc:Translate Settings_ParentCategoryPickerTitle}" ItemsSource="{Binding CategoryManagement.NewCategoryParentOptions}" SelectedItem="{Binding CategoryManagement.NewCategoryParent}" WidthRequest="180" />
+                                <Button Grid.Column="2" Text="{loc:Translate Common_Add}" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
+                                <Button Grid.Column="3" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
                             </Grid>
                             <Label Text="{Binding CategoryManagement.StatusText}" IsVisible="{Binding CategoryManagement.IsAddingCategory}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
@@ -559,7 +570,9 @@
         </Border.Shadow>
         <VerticalStackLayout Spacing="14">
             <Label Text="{Binding CategoryManagement.ActiveColorPickerBoxColorForLabel}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" />
-            <FlexLayout Wrap="Wrap" HorizontalOptions="Center" BindableLayout.ItemsSource="{Binding CategoryManagement.ActiveColorPickerBox.ColorSwatches}">
+            <!-- A child's color is its parent's: no swatches, just whose color it follows. -->
+            <Label Text="{Binding CategoryManagement.ActiveBoxColorFollowsText}" IsVisible="{Binding CategoryManagement.CanChooseActiveColor, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource TertiaryLabel}" HorizontalTextAlignment="Center" />
+            <FlexLayout Wrap="Wrap" HorizontalOptions="Center" IsVisible="{Binding CategoryManagement.CanChooseActiveColor}" BindableLayout.ItemsSource="{Binding CategoryManagement.ActiveColorPickerBox.ColorSwatches}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:CategoryColorSwatchViewModel">
                         <Border
@@ -577,6 +590,12 @@
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </FlexLayout>
+            <!-- Where the category sits: under a parent, or top level. Saves at once. -->
+            <VerticalStackLayout Spacing="4" IsVisible="{Binding CategoryManagement.CanChangeActiveParent}">
+                <Label Text="{loc:Translate Settings_ParentCategoryPickerTitle}" Style="{StaticResource TertiaryLabel}" />
+                <Picker Title="{loc:Translate Settings_ParentCategoryPickerTitle}" ItemsSource="{Binding CategoryManagement.ActiveBoxParentOptions}" SelectedItem="{Binding CategoryManagement.ActiveBoxParent}" />
+            </VerticalStackLayout>
+            <Label Text="{loc:Translate Settings_CategoryHasSubcategoriesHint}" IsVisible="{Binding CategoryManagement.CanChangeActiveParent, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource TertiaryLabel}" HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
     </Border>
     </Grid>

@@ -11,6 +11,8 @@ public sealed class CategoryBoxViewModel : ViewModelBase
     private readonly Func<Guid, CategoryColor, Task> onSetColor;
     private bool isSelected;
     private bool isSelectModeActive;
+    private Guid? parentCategoryId;
+    private bool hasChildren;
     private Color color = Colors.Transparent;
     private IReadOnlyList<CategoryColorSwatchViewModel> colorSwatches = Array.Empty<CategoryColorSwatchViewModel>();
 
@@ -24,7 +26,8 @@ public sealed class CategoryBoxViewModel : ViewModelBase
         Id = category.Id;
         Name = category.Name;
         this.onSetColor = onSetColor;
-        ApplyColor(category.Color);
+        parentCategoryId = category.ParentCategoryId;
+        ApplyColor(category);
 
         TapCommand = new RelayCommand(() => onTap(this));
         StartDragCommand = new RelayCommand(() => onStartDrag(this));
@@ -34,6 +37,29 @@ public sealed class CategoryBoxViewModel : ViewModelBase
     public Guid Id { get; }
 
     public string Name { get; }
+
+    // A child category (see Category.ParentCategoryId): drawn smaller, with a "↳" marker, right
+    // after its parent. Its color is always its parent's, so its popup has no swatches.
+    public Guid? ParentCategoryId
+    {
+        get => parentCategoryId;
+        private set
+        {
+            if (SetProperty(ref parentCategoryId, value))
+            {
+                OnPropertyChanged(nameof(IsChild));
+            }
+        }
+    }
+
+    public bool IsChild => ParentCategoryId is not null;
+
+    // A parent that has children can't itself be put under another parent (two levels only).
+    public bool HasChildren
+    {
+        get => hasChildren;
+        set => SetProperty(ref hasChildren, value);
+    }
 
     public Color Color
     {
@@ -75,14 +101,18 @@ public sealed class CategoryBoxViewModel : ViewModelBase
     // Settings visit meant rebuilding every category's native view from scratch even when nothing
     // about it had changed. SetProperty's equality check means this is a no-op when the color is
     // actually unchanged.
-    public void UpdateColor(CategoryColor? explicitColor)
+    //
+    // Also refreshes the parent: merging or deleting a parent can move or promote its children.
+    public void UpdateFrom(Category category)
     {
-        ApplyColor(explicitColor);
+        ParentCategoryId = category.ParentCategoryId;
+        ApplyColor(category);
     }
 
-    private void ApplyColor(CategoryColor? explicitColor)
+    private void ApplyColor(Category category)
     {
-        Color = CategoryColorPalette.GetColorForCategory(Id, explicitColor);
+        var explicitColor = category.Color;
+        Color = CategoryColorPalette.GetColorForCategory(category.ColorSourceId, explicitColor);
         ColorSwatches = CategoryColorPalette.AllColors
             .Select(swatchColor => new CategoryColorSwatchViewModel(swatchColor, explicitColor == swatchColor, selectedColor => _ = onSetColor(Id, selectedColor)))
             .ToList();

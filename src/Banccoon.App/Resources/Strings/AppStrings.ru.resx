@@ -1234,7 +1234,7 @@
     <value>Управление категориями</value>
   </data>
   <data name="Settings_ManageCategoriesHint" xml:space="preserve">
-    <value>Нажмите на категорию, чтобы изменить её цвет. Перетащите одну категорию на другую, чтобы объединить их.</value>
+    <value>Нажмите на категорию, чтобы изменить её цвет или вложить её в другую категорию. Перетащите одну категорию на другую, чтобы объединить их.</value>
   </data>
   <data name="Settings_AddCategoryButton" xml:space="preserve">
     <value>+ Добавить категорию</value>
@@ -1424,6 +1424,18 @@
   </data>
   <data name="Settings_ColorForFormat" xml:space="preserve">
     <value>Цвет для {0}</value>
+  </data>
+  <data name="Settings_ColorFollowsParentFormat" xml:space="preserve">
+    <value>Цвет как у категории «{0}».</value>
+  </data>
+  <data name="Settings_ParentCategoryPickerTitle" xml:space="preserve">
+    <value>Родительская категория</value>
+  </data>
+  <data name="Settings_NoParentOption" xml:space="preserve">
+    <value>Нет (верхний уровень)</value>
+  </data>
+  <data name="Settings_CategoryHasSubcategoriesHint" xml:space="preserve">
+    <value>Есть подкатегории, поэтому остаётся на верхнем уровне.</value>
   </data>
   <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
     <value>Восстановлено: {0}, {1}, {2}, {3}, {4}.</value>

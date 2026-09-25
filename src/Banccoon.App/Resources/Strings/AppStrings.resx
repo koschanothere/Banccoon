@@ -1192,7 +1192,7 @@
     <value>Manage categories</value>
   </data>
   <data name="Settings_ManageCategoriesHint" xml:space="preserve">
-    <value>Tap a category to change its color. Press and drag one onto another to merge them together.</value>
+    <value>Tap a category to change its color or put it under a parent category. Press and drag one onto another to merge them together.</value>
   </data>
   <data name="Settings_AddCategoryButton" xml:space="preserve">
     <value>+ Add category</value>
@@ -1382,6 +1382,18 @@
   </data>
   <data name="Settings_ColorForFormat" xml:space="preserve">
     <value>Color for {0}</value>
+  </data>
+  <data name="Settings_ColorFollowsParentFormat" xml:space="preserve">
+    <value>Its color follows {0}.</value>
+  </data>
+  <data name="Settings_ParentCategoryPickerTitle" xml:space="preserve">
+    <value>Parent category</value>
+  </data>
+  <data name="Settings_NoParentOption" xml:space="preserve">
+    <value>None (top level)</value>
+  </data>
+  <data name="Settings_CategoryHasSubcategoriesHint" xml:space="preserve">
+    <value>Has subcategories, so it stays at the top level.</value>
   </data>
   <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
     <value>Restored {0}, {1}, {2}, {3}, {4}.</value>
