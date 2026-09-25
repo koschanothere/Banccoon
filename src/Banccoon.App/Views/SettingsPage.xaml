@@ -372,6 +372,11 @@
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
+                            <HorizontalStackLayout Spacing="10" IsVisible="{Binding LearningRules.HasPages}">
+                                <Button Text="{loc:Translate Common_PreviousPage}" Command="{Binding LearningRules.PreviousPageCommand}" IsEnabled="{Binding LearningRules.CanGoToPreviousPage}" Style="{StaticResource QuietButton}" />
+                                <Label Text="{Binding LearningRules.PageText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                                <Button Text="{loc:Translate Common_NextPage}" Command="{Binding LearningRules.NextPageCommand}" IsEnabled="{Binding LearningRules.CanGoToNextPage}" Style="{StaticResource QuietButton}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

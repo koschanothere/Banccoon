@@ -1218,6 +1218,15 @@
   <data name="Settings_NothingLearnedYet" xml:space="preserve">
     <value>Пока ничего не изучено.</value>
   </data>
+  <data name="Settings_LearnedRulesPageFormat" xml:space="preserve">
+    <value>{0}–{1} из {2}</value>
+  </data>
+  <data name="Common_PreviousPage" xml:space="preserve">
+    <value>‹ Назад</value>
+  </data>
+  <data name="Common_NextPage" xml:space="preserve">
+    <value>Далее ›</value>
+  </data>
   <data name="Settings_ForgetButton" xml:space="preserve">
     <value>Забыть</value>
   </data>

@@ -1176,6 +1176,15 @@
   <data name="Settings_NothingLearnedYet" xml:space="preserve">
     <value>Nothing learned yet.</value>
   </data>
+  <data name="Settings_LearnedRulesPageFormat" xml:space="preserve">
+    <value>{0}–{1} of {2}</value>
+  </data>
+  <data name="Common_PreviousPage" xml:space="preserve">
+    <value>‹ Previous</value>
+  </data>
+  <data name="Common_NextPage" xml:space="preserve">
+    <value>Next ›</value>
+  </data>
   <data name="Settings_ForgetButton" xml:space="preserve">
     <value>Forget</value>
   </data>

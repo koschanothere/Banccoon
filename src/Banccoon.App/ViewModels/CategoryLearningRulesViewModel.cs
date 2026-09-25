@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
@@ -10,8 +11,14 @@ namespace Banccoon.App.ViewModels;
 // type/destination-account), with search and the ability to fix a rule that was learned wrong -
 // previously the only option was Forget (delete) and let it re-learn from scratch on a future
 // correction; now a rule can be corrected directly.
+//
+// Shown RulesPerPage at a time (2026-09-25): years of imports can teach hundreds of rules, and
+// drawing every one of them made Settings slow to open. Search covers every rule and starts again
+// at the first page; editing or forgetting a rule stays on the current page.
 public sealed class CategoryLearningRulesViewModel : ViewModelBase
 {
+    public const int RulesPerPage = 25;
+
     private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
     private readonly ICategoryRepository categoryRepository;
     private readonly IAccountRepository accountRepository;
@@ -20,6 +27,8 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
     private IReadOnlyDictionary<Guid, Category> categoriesById = new Dictionary<Guid, Category>();
     private IReadOnlyDictionary<Guid, Account> accountsById = new Dictionary<Guid, Account>();
     private string searchText = string.Empty;
+    private int pageIndex;
+    private int matchingCount;
 
     public CategoryLearningRulesViewModel(
         ICategoryLearningRuleRepository categoryLearningRuleRepository,
@@ -33,6 +42,9 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
         Rows = [];
         CategoryOptions = [];
         AccountOptions = [];
+
+        PreviousPageCommand = new RelayCommand(() => GoToPage(pageIndex - 1));
+        NextPageCommand = new RelayCommand(() => GoToPage(pageIndex + 1));
     }
 
     public ObservableCollection<CategoryLearningRuleRowViewModel> Rows { get; }
@@ -48,10 +60,30 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
         {
             if (SetProperty(ref searchText, value))
             {
+                pageIndex = 0;
                 RebuildRows();
             }
         }
     }
+
+    public bool HasPages => matchingCount > RulesPerPage;
+
+    public bool CanGoToPreviousPage => pageIndex > 0;
+
+    public bool CanGoToNextPage => (pageIndex + 1) * RulesPerPage < matchingCount;
+
+    // "26–50 of 312".
+    public string PageText => matchingCount == 0
+        ? string.Empty
+        : string.Format(
+            Translator.Get("Settings_LearnedRulesPageFormat"),
+            pageIndex * RulesPerPage + 1,
+            Math.Min((pageIndex + 1) * RulesPerPage, matchingCount),
+            matchingCount);
+
+    public ICommand PreviousPageCommand { get; }
+
+    public ICommand NextPageCommand { get; }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -81,17 +113,35 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
         });
     }
 
+    private void GoToPage(int page)
+    {
+        pageIndex = page;
+        RebuildRows();
+    }
+
+    // UI-thread only.
     private void RebuildRows()
     {
         Rows.Clear();
 
-        var matching = string.IsNullOrWhiteSpace(SearchText)
+        var matching = (string.IsNullOrWhiteSpace(SearchText)
             ? allRules
             : allRules.Where(rule =>
                 rule.MatchText.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                || (categoriesById.TryGetValue(rule.CategoryId, out var category) && category.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+                || (categoriesById.TryGetValue(rule.CategoryId, out var category) && category.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))))
+            .OrderByDescending(rule => rule.UpdatedAt)
+            .ToList();
 
-        foreach (var rule in matching.OrderByDescending(rule => rule.UpdatedAt))
+        // Forgetting the last rule on the last page steps back a page rather than showing nothing.
+        matchingCount = matching.Count;
+        var lastPage = Math.Max(0, (matchingCount - 1) / RulesPerPage);
+        pageIndex = Math.Clamp(pageIndex, 0, lastPage);
+        OnPropertyChanged(nameof(HasPages));
+        OnPropertyChanged(nameof(CanGoToPreviousPage));
+        OnPropertyChanged(nameof(CanGoToNextPage));
+        OnPropertyChanged(nameof(PageText));
+
+        foreach (var rule in matching.Skip(pageIndex * RulesPerPage).Take(RulesPerPage))
         {
             var categoryName = categoriesById.TryGetValue(rule.CategoryId, out var foundCategory) ? foundCategory.Name : Translator.Get("Settings_UnknownCategory");
             var destinationAccountName = rule.DestinationAccountId is { } destinationAccountId && accountsById.TryGetValue(destinationAccountId, out var destinationAccount)
