@@ -27,4 +27,6 @@ public sealed record StatementImportRow(
     // Whether the original statement showed this as money arriving (true) or leaving (false),
     // captured once from the parser's raw +/- sign and preserved even if Type is later
     // reclassified to Transfer - Transfer alone doesn't say which way the money moved.
-    bool IsIncoming = false);
+    bool IsIncoming = false,
+    // The bank's own category, when its statement shows one (ParsedStatementRow.BankCategory).
+    string? BankCategory = null);

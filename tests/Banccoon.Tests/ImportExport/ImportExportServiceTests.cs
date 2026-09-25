@@ -191,6 +191,33 @@ public sealed class ImportExportServiceTests
         }
     }
 
+    [Fact]
+    public async Task Restore_BringsBackBankCategoryLinks_AndUnlinksOnesWhoseCategoryIsMissing()
+    {
+        await using var sourceStore = new SqliteTestStore();
+        await using var targetStore = new SqliteTestStore();
+        var food = new Category(Guid.NewGuid(), "Food");
+        await sourceStore.Categories.SaveAsync(food);
+        var seenAt = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        await sourceStore.BankCategoryLinks.SaveAllAsync(
+        [
+            new BankCategoryLink("sber", "Супермаркеты", food.Id, seenAt),
+            new BankCategoryLink("sber", "Прочее", null, seenAt)
+        ]);
+        var export = await CreateServices(sourceStore).ExportService.CreateExportAsync();
+        var orphan = new BankCategoryLink("sber", "Такси", Guid.NewGuid(), seenAt);
+        var withOrphan = export with { Data = export.Data with { BankCategoryLinks = [.. export.Data.BankCategoryLinks, orphan] } };
+
+        var result = await CreateServices(targetStore).ImportService.ImportAsync(withOrphan, ImportMode.Replace);
+
+        Assert.True(result.Validation.IsValid);
+        var restored = await targetStore.BankCategoryLinks.GetByParserAsync("sber");
+        Assert.Equal(food.Id, restored.Single(link => link.BankCategory == "Супермаркеты").CategoryId);
+        Assert.Null(restored.Single(link => link.BankCategory == "Прочее").CategoryId);
+        Assert.Null(restored.Single(link => link.BankCategory == "Такси").CategoryId);
+        Assert.Equal(seenAt, restored.Single(link => link.BankCategory == "Супермаркеты").FirstSeenAt);
+    }
+
     private static Services CreateServices(SqliteTestStore store)
     {
         var validator = new ExportValidator();
@@ -202,7 +229,8 @@ public sealed class ImportExportServiceTests
             store.SavingsGoals,
             store.Settings,
             store.StatementImports,
-            store.CategoryLearningRules);
+            store.CategoryLearningRules,
+            store.BankCategoryLinks);
         var localDataResetService = new LocalDataResetService(
             store.Accounts,
             store.Categories,
@@ -210,7 +238,8 @@ public sealed class ImportExportServiceTests
             store.ScheduledTransactions,
             store.SavingsGoals,
             store.StatementImports,
-            store.CategoryLearningRules);
+            store.CategoryLearningRules,
+            store.BankCategoryLinks);
         var importService = new RepositoryImportService(
             store.Accounts,
             store.Categories,
@@ -221,6 +250,7 @@ public sealed class ImportExportServiceTests
             validator,
             store.StatementImports,
             store.CategoryLearningRules,
+            store.BankCategoryLinks,
             localDataResetService);
         var backupService = new JsonBackupService(exportService, importService);
 
@@ -305,7 +335,8 @@ public sealed class ImportExportServiceTests
             StatementImportRowStatus.Approved,
             IsDuplicate: false,
             null,
-            transaction.Id);
+            transaction.Id,
+            BankCategory: "Рестораны и кафе");
         var categoryLearningRule = new CategoryLearningRule(
             Guid.NewGuid(),
             "Cafe",

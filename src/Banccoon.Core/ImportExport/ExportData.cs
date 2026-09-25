@@ -19,4 +19,8 @@ public sealed record ExportData(
 
     public IReadOnlyList<CategoryLearningRule> CategoryLearningRules { get; init; } =
         Array.Empty<CategoryLearningRule>();
+
+    // Added 2026-09-25; a backup from before then has none.
+    public IReadOnlyList<BankCategoryLink> BankCategoryLinks { get; init; } =
+        Array.Empty<BankCategoryLink>();
 }

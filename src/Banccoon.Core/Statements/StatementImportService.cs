@@ -16,6 +16,7 @@ public sealed class StatementImportService : IStatementImportService
     private readonly ITransactionRepository transactionRepository;
     private readonly ITransactionApplicationService transactionApplicationService;
     private readonly ICategorySuggestionService categorySuggestionService;
+    private readonly IBankCategoryLinkRepository bankCategoryLinkRepository;
 
     public StatementImportService(
         IStatementParserRegistry parserRegistry,
@@ -25,7 +26,8 @@ public sealed class StatementImportService : IStatementImportService
         ICategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
         ITransactionApplicationService transactionApplicationService,
-        ICategorySuggestionService categorySuggestionService)
+        ICategorySuggestionService categorySuggestionService,
+        IBankCategoryLinkRepository bankCategoryLinkRepository)
     {
         this.parserRegistry = parserRegistry;
         this.statementImportRepository = statementImportRepository;
@@ -35,6 +37,7 @@ public sealed class StatementImportService : IStatementImportService
         this.transactionRepository = transactionRepository;
         this.transactionApplicationService = transactionApplicationService;
         this.categorySuggestionService = categorySuggestionService;
+        this.bankCategoryLinkRepository = bankCategoryLinkRepository;
     }
 
     public async Task<StatementPreviewResult> PreviewAsync(
@@ -139,6 +142,7 @@ public sealed class StatementImportService : IStatementImportService
             parsedStatement.ClosingBalance);
 
         var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
+        var bankLinks = await GetBankLinksAsync(parsedStatement.ParserId, cancellationToken);
         // Duplicates can only be on the statement's own dates, so only those are read - an old
         // statement's dates may be outside the months kept in memory, which is fine.
         var existingTransactions = parsedStatement.Rows.Count == 0
@@ -150,7 +154,7 @@ public sealed class StatementImportService : IStatementImportService
                 .Where(transaction => transaction.AccountId == accountId || transaction.DestinationAccountId == accountId)
                 .ToList();
         var rows = parsedStatement.Rows
-            .Select(row => CreateImportRow(batch.Id, row, accountId, rules, existingTransactions))
+            .Select(row => CreateImportRow(batch.Id, row, accountId, rules, bankLinks, existingTransactions))
             .ToArray();
 
         await statementImportRepository.SaveBatchAsync(batch, cancellationToken);
@@ -353,6 +357,7 @@ public sealed class StatementImportService : IStatementImportService
 
         var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
         var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
+        var bankLinks = await GetBankLinksAsync(batch.ParserId, cancellationToken);
         return rows
             .Where(row => row.Status == StatementImportRowStatus.Pending)
             .Select(row =>
@@ -367,8 +372,9 @@ public sealed class StatementImportService : IStatementImportService
                     row.Counterparty,
                     row.ExternalReference,
                     row.RawText,
-                    Time: row.Time);
-                var (type, categoryId, destinationAccountId) = Suggest(parsedRow, batch.AccountId, rules);
+                    Time: row.Time,
+                    BankCategory: row.BankCategory);
+                var (type, categoryId, destinationAccountId) = Suggest(parsedRow, batch.AccountId, rules, bankLinks);
                 return new StatementImportRowSuggestion(row.Id, type, categoryId, destinationAccountId);
             })
             .ToList();
@@ -401,13 +407,14 @@ public sealed class StatementImportService : IStatementImportService
         ParsedStatementRow parsedRow,
         Guid accountId,
         IReadOnlyList<CategoryLearningRule> rules,
+        IReadOnlyDictionary<string, Guid> bankLinks,
         IReadOnlyList<Transaction> existingTransactions)
     {
         var normalizedDescription = categorySuggestionService.Normalize(
             string.IsNullOrWhiteSpace(parsedRow.Counterparty)
                 ? parsedRow.Description
                 : parsedRow.Counterparty);
-        var (suggestedType, suggestedCategoryId, suggestedDestinationAccountId) = Suggest(parsedRow, accountId, rules);
+        var (suggestedType, suggestedCategoryId, suggestedDestinationAccountId) = Suggest(parsedRow, accountId, rules, bankLinks);
         var duplicateTransaction = StatementDuplicateDetector.FindDuplicate(accountId, parsedRow, normalizedDescription, existingTransactions);
         // Captured from the parser's own raw guess (never itself reclassified) so it survives even
         // if suggestedType above overrides Income/Expense to Transfer - Transfer alone doesn't say
@@ -433,13 +440,23 @@ public sealed class StatementImportService : IStatementImportService
             null,
             parsedRow.Time,
             suggestedDestinationAccountId,
-            isIncoming);
+            isIncoming,
+            CleanOptionalText(parsedRow.BankCategory));
+    }
+
+    // Linked bank categories only (skipped ones have no category), keyed ignoring case.
+    private async Task<IReadOnlyDictionary<string, Guid>> GetBankLinksAsync(string parserId, CancellationToken cancellationToken)
+    {
+        return (await bankCategoryLinkRepository.GetByParserAsync(parserId, cancellationToken))
+            .Where(link => link.CategoryId.HasValue)
+            .ToDictionary(link => link.BankCategory, link => link.CategoryId!.Value, StringComparer.OrdinalIgnoreCase);
     }
 
     private (TransactionType Type, Guid? CategoryId, Guid? DestinationAccountId) Suggest(
         ParsedStatementRow parsedRow,
         Guid accountId,
-        IReadOnlyList<CategoryLearningRule> rules)
+        IReadOnlyList<CategoryLearningRule> rules,
+        IReadOnlyDictionary<string, Guid> bankLinks)
     {
         // The parser only ever guesses Expense/Income from the +/- sign - a past correction for
         // this same recipient (e.g. "this is actually a Transfer") overrides that guess before
@@ -449,7 +466,14 @@ public sealed class StatementImportService : IStatementImportService
         var destinationAccountId = type == TransactionType.Transfer
             ? categorySuggestionService.SuggestDestinationAccount(parsedRow, accountId, rules)
             : null;
-        return (type, suggestion?.CategoryId, destinationAccountId);
+
+        // A learned rule is the user's own decision for this recipient, so it wins; otherwise the
+        // bank's category, if the user linked it to one of theirs. Links never change the type.
+        var categoryId = suggestion?.CategoryId
+            ?? (parsedRow.BankCategory?.Trim() is { Length: > 0 } bankCategory && bankLinks.TryGetValue(bankCategory, out var linked)
+                ? linked
+                : null);
+        return (type, categoryId, destinationAccountId);
     }
 
     private async Task<Guid> EnsureOtherCategoryAsync(CancellationToken cancellationToken)

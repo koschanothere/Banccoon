@@ -319,7 +319,8 @@ internal sealed class ReviewFixture : IAsyncDisposable
             store.Categories,
             store.Transactions,
             new TransactionApplicationService(new TransactionBalanceService()),
-            new CategorySuggestionService());
+            new CategorySuggestionService(),
+            store.BankCategoryLinks);
         var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
 
         var review = new StatementImportReviewViewModel(service, store.StatementImports, store.Categories, store.Accounts);

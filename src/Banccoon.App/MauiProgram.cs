@@ -65,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
         builder.Services.AddSingleton<IStatementImportService, StatementImportService>();
+        builder.Services.AddSingleton<IBankCategoryService, BankCategoryService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
         builder.Services.AddSingleton<ICheckInService, CheckInService>();
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
@@ -96,6 +97,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SqliteSettingsRepository>();
         builder.Services.AddSingleton<ISettingsRepository>(sp => new CachedSettingsRepository(sp.GetRequiredService<SqliteSettingsRepository>()));
         builder.Services.AddSingleton<IStatementImportRepository, SqliteStatementImportRepository>();
+        builder.Services.AddSingleton<IBankCategoryLinkRepository, SqliteBankCategoryLinkRepository>();
         builder.Services.AddSingleton<SqliteCategoryLearningRuleRepository>();
         builder.Services.AddSingleton<ICategoryLearningRuleRepository>(sp => new CachedCategoryLearningRuleRepository(sp.GetRequiredService<SqliteCategoryLearningRuleRepository>()));
         builder.Services.AddSingleton<SqliteScheduledOccurrenceOverrideRepository>();

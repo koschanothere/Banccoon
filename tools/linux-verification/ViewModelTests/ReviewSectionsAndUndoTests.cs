@@ -216,7 +216,8 @@ public sealed class ReviewSectionsAndUndoTests
                 store.Categories,
                 store.Transactions,
                 new TransactionApplicationService(new TransactionBalanceService()),
-                new CategorySuggestionService());
+                new CategorySuggestionService(),
+                store.BankCategoryLinks);
         }
 
         private sealed class FakeParser(IReadOnlyList<ParsedStatementRow> rows) : IStatementParser

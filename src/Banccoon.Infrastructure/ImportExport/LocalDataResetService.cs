@@ -12,6 +12,7 @@ public sealed class LocalDataResetService : ILocalDataResetService
     private readonly ISavingsGoalRepository savingsGoalRepository;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly IBankCategoryLinkRepository bankCategoryLinkRepository;
 
     public LocalDataResetService(
         IAccountRepository accountRepository,
@@ -20,7 +21,8 @@ public sealed class LocalDataResetService : ILocalDataResetService
         IScheduledTransactionRepository scheduledTransactionRepository,
         ISavingsGoalRepository savingsGoalRepository,
         IStatementImportRepository statementImportRepository,
-        ICategoryLearningRuleRepository categoryLearningRuleRepository)
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        IBankCategoryLinkRepository bankCategoryLinkRepository)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -29,6 +31,7 @@ public sealed class LocalDataResetService : ILocalDataResetService
         this.savingsGoalRepository = savingsGoalRepository;
         this.statementImportRepository = statementImportRepository;
         this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.bankCategoryLinkRepository = bankCategoryLinkRepository;
     }
 
     // Deletion order matters here (foreign-key dependents first); Settings is deliberately left
@@ -38,6 +41,7 @@ public sealed class LocalDataResetService : ILocalDataResetService
     {
         await statementImportRepository.DeleteAllAsync(cancellationToken);
         await categoryLearningRuleRepository.DeleteAllAsync(cancellationToken);
+        await bankCategoryLinkRepository.DeleteAllAsync(cancellationToken);
         await transactionRepository.DeleteAllAsync(cancellationToken);
         await scheduledTransactionRepository.DeleteAllAsync(cancellationToken);
         await savingsGoalRepository.DeleteAllAsync(cancellationToken);

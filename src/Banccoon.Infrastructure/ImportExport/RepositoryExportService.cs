@@ -14,6 +14,7 @@ public sealed class RepositoryExportService : IExportService
     private readonly ISettingsRepository settingsRepository;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly IBankCategoryLinkRepository bankCategoryLinkRepository;
 
     public RepositoryExportService(
         IAccountRepository accountRepository,
@@ -23,7 +24,8 @@ public sealed class RepositoryExportService : IExportService
         ISavingsGoalRepository savingsGoalRepository,
         ISettingsRepository settingsRepository,
         IStatementImportRepository statementImportRepository,
-        ICategoryLearningRuleRepository categoryLearningRuleRepository)
+        ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        IBankCategoryLinkRepository bankCategoryLinkRepository)
     {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
@@ -33,6 +35,7 @@ public sealed class RepositoryExportService : IExportService
         this.settingsRepository = settingsRepository;
         this.statementImportRepository = statementImportRepository;
         this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.bankCategoryLinkRepository = bankCategoryLinkRepository;
     }
 
     public async Task<ExportEnvelope> CreateExportAsync(CancellationToken cancellationToken = default)
@@ -54,7 +57,8 @@ public sealed class RepositoryExportService : IExportService
         {
             StatementImportBatches = statementImportBatches,
             StatementImportRows = statementImportRows,
-            CategoryLearningRules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken)
+            CategoryLearningRules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken),
+            BankCategoryLinks = await bankCategoryLinkRepository.GetAllAsync(cancellationToken)
         };
 
         return new ExportEnvelope(

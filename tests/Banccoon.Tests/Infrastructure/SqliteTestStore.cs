@@ -26,6 +26,7 @@ public sealed class SqliteTestStore : IAsyncDisposable
         StatementImports = new SqliteStatementImportRepository(ConnectionFactory, Initializer);
         CategoryLearningRules = new SqliteCategoryLearningRuleRepository(ConnectionFactory, Initializer);
         ScheduledOccurrenceOverrides = new SqliteScheduledOccurrenceOverrideRepository(ConnectionFactory, Initializer);
+        BankCategoryLinks = new SqliteBankCategoryLinkRepository(ConnectionFactory, Initializer);
     }
 
     public SqliteConnectionFactory ConnectionFactory { get; }
@@ -43,6 +44,8 @@ public sealed class SqliteTestStore : IAsyncDisposable
     public SqliteSavingsGoalRepository SavingsGoals { get; }
 
     public SqliteSettingsRepository Settings { get; }
+
+    public SqliteBankCategoryLinkRepository BankCategoryLinks { get; }
 
     public SqliteStatementImportRepository StatementImports { get; }
 

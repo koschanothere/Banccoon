@@ -547,7 +547,8 @@ public sealed class StatementImportServiceTests
             store.Categories,
             store.Transactions,
             new TransactionApplicationService(new TransactionBalanceService()),
-            new CategorySuggestionService());
+            new CategorySuggestionService(),
+            store.BankCategoryLinks);
     }
 
     private static Account CreateAccount()

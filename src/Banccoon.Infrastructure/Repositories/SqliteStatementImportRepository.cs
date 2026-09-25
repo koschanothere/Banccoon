@@ -27,7 +27,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 CreatedTransactionId,
                 Time,
                 DestinationAccountId,
-                IsIncoming
+                IsIncoming,
+                BankCategory
             )
             VALUES (
                 @Id,
@@ -48,7 +49,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 @CreatedTransactionId,
                 @Time,
                 @DestinationAccountId,
-                @IsIncoming
+                @IsIncoming,
+                @BankCategory
             )
             ON CONFLICT(Id) DO UPDATE SET
                 BatchId = excluded.BatchId,
@@ -68,7 +70,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 CreatedTransactionId = excluded.CreatedTransactionId,
                 Time = excluded.Time,
                 DestinationAccountId = excluded.DestinationAccountId,
-                IsIncoming = excluded.IsIncoming;
+                IsIncoming = excluded.IsIncoming,
+                BankCategory = excluded.BankCategory;
             """;
 
     public SqliteStatementImportRepository(
@@ -143,7 +146,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 CreatedTransactionId,
                 Time,
                 DestinationAccountId,
-                IsIncoming
+                IsIncoming,
+                BankCategory
             FROM StatementImportRows
             WHERE BatchId = @BatchId
             ORDER BY Date DESC, Description;
@@ -179,7 +183,8 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
                 CreatedTransactionId,
                 Time,
                 DestinationAccountId,
-                IsIncoming
+                IsIncoming,
+                BankCategory
             FROM StatementImportRows
             WHERE Id = @Id;
             """;
@@ -355,6 +360,7 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
         AddParameter(command, "@Time", SqliteData.ToDbValue(row.Time));
         AddParameter(command, "@DestinationAccountId", SqliteData.ToDbValue(row.DestinationAccountId));
         AddParameter(command, "@IsIncoming", row.IsIncoming ? 1 : 0);
+        AddParameter(command, "@BankCategory", SqliteData.ToDbValue(row.BankCategory));
     }
 
     private static StatementImportBatch ReadBatch(System.Data.Common.DbDataReader reader)
@@ -393,6 +399,7 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
             SqliteData.ReadNullableGuid(reader, "CreatedTransactionId"),
             SqliteData.ReadNullableTime(reader, "Time"),
             SqliteData.ReadNullableGuid(reader, "DestinationAccountId"),
-            SqliteData.ReadBoolean(reader, "IsIncoming"));
+            SqliteData.ReadBoolean(reader, "IsIncoming"),
+            SqliteData.ReadNullableString(reader, "BankCategory"));
     }
 }
