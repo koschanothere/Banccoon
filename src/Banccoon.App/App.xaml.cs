@@ -9,8 +9,14 @@ public partial class App : Application
     public App(ISettingsRepository settingsRepository)
     {
         InitializeComponent();
-        MainPage = new AppShell();
         _ = ApplyStartupPreferencesAsync(settingsRepository);
+    }
+
+    // MAUI's replacement for setting MainPage in the constructor (obsolete, warning CS0618). The
+    // shell is created here, never constructor-injected into App.
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        return new Window(new AppShell());
     }
 
     private async Task ApplyStartupPreferencesAsync(ISettingsRepository settingsRepository)

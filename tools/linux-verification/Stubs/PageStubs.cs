@@ -9,3 +9,10 @@ namespace Banccoon.App.Views
     public partial class DashboardPage { private void InitializeComponent() { } }
     public partial class AccountsPage { private void InitializeComponent() { } }
 }
+
+// App itself: the XAML-generated half, plus AppShell (a Shell in reality; only ever handed to Window).
+namespace Banccoon.App
+{
+    public partial class App { private void InitializeComponent() { } }
+    public class AppShell : Microsoft.Maui.Controls.Page { }
+}

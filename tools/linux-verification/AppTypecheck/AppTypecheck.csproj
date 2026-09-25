@@ -17,6 +17,7 @@
     <Compile Include="$(AppSrc)/Services/*.cs" Link="App/Services/%(Filename)%(Extension)" />
     <Compile Include="$(AppSrc)/Diagnostics/*.cs" Link="App/Diagnostics/%(Filename)%(Extension)" />
     <!-- Page code-behind whose XAML-generated half is stubbed in Stubs/PageStubs.cs. -->
+    <Compile Include="$(AppSrc)/App.xaml.cs" Link="App/App.xaml.cs" />
     <Compile Include="$(AppSrc)/Views/ReconciliationPage.xaml.cs;$(AppSrc)/Views/StatementImportPage.xaml.cs;$(AppSrc)/Views/TransactionsPage.xaml.cs;$(AppSrc)/Views/DashboardPage.xaml.cs;$(AppSrc)/Views/AccountsPage.xaml.cs" Link="App/Views/%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>

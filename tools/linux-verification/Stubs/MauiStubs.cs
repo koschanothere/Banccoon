@@ -2,6 +2,7 @@
 namespace Microsoft.Maui
 {
     public enum StubPlaceholder { }
+    public interface IActivationState { }
     public readonly struct Thickness { public Thickness(double left, double top, double right, double bottom) { } }
 }
 namespace Microsoft.Maui.ApplicationModel
@@ -33,7 +34,9 @@ namespace Microsoft.Maui.Controls
         public AppTheme UserAppTheme { get; set; }
         public AppTheme RequestedTheme { get; set; }
         public IDictionary<string, object> Resources { get; } = new Dictionary<string, object>();
+        protected virtual Window CreateWindow(Microsoft.Maui.IActivationState? activationState) => new(new Page());
     }
+    public class Window { public Window(Page page) { } }
     public class VisualElement { public object? BindingContext { get; set; } public double Width { get; } public event EventHandler? SizeChanged { add { } remove { } } }
     public class View : VisualElement { public Thickness Margin { get; set; } }
     public class Button : View { }
