@@ -13,78 +13,45 @@ public sealed class ExpectedTransactionMatcherTests
 
     private readonly ExpectedTransactionMatcher matcher = new();
 
+    // 2026-09-25: no more guessing - anything recorded and not yet linked can be attached, nearest
+    // the due date first, and the user narrows it by typing.
     [Fact]
-    public void FindCandidates_OffersTheRecordedPaymentForTheOccurrence()
+    public void FindAttachable_OffersEveryUnlinkedTransaction_WhateverItsAccountTypeOrAmount_NearestTheDueDateFirst()
     {
-        var payment = CreateTransaction(RentDay.AddDays(1), 700m);
+        var coffee = CreateTransaction(RentDay.AddDays(1), 4m) with { Name = "Coffee" };
+        var salary = CreateTransaction(RentDay.AddDays(-2), 90000m, TransactionType.Income) with { Name = "Salary" };
+        var otherAccount = CreateTransaction(RentDay.AddDays(40), 700m) with { AccountId = Guid.NewGuid(), Name = "Rent from savings" };
+        var sameDay = CreateTransaction(RentDay, 12m) with { Name = "Bus" };
+        var linked = CreateTransaction(RentDay, 700m) with { PaidScheduledTransactionId = Guid.NewGuid(), PaidScheduledOccurrenceDate = RentDay };
 
-        var candidates = matcher.FindCandidates(CreateRentEvent(), [payment]);
+        var attachable = matcher.FindAttachable(CreateRentEvent(), [coffee, salary, otherAccount, sameDay, linked], search: null, limit: 10);
 
-        Assert.Equal(payment, Assert.Single(candidates));
+        Assert.Equal([sameDay, coffee, salary, otherAccount], attachable);
+    }
+
+    [Theory]
+    [InlineData("rent", "Rent from savings")]
+    [InlineData("RENT", "Rent from savings")]
+    [InlineData("1 500", "Utilities")]
+    [InlineData("1500,5", "Utilities")]
+    [InlineData("landlord", "Transfer")]
+    public void FindAttachable_NarrowsByNameNotesOrAmount(string search, string expected)
+    {
+        var rent = CreateTransaction(RentDay.AddDays(3), 700m) with { Name = "Rent from savings" };
+        var utilities = CreateTransaction(RentDay, 1500.50m) with { Name = "Utilities" };
+        var transfer = CreateTransaction(RentDay, 50m) with { Name = "Transfer", Notes = "Paid the landlord's deposit" };
+
+        var attachable = matcher.FindAttachable(CreateRentEvent(), [rent, utilities, transfer], search, limit: 10);
+
+        Assert.Equal(expected, Assert.Single(attachable).Name);
     }
 
     [Fact]
-    public void FindCandidates_ExcludesTransactionsAlreadyLinkedToAnyOccurrence()
+    public void FindAttachable_ReturnsAtMostTheLimit()
     {
-        var alreadyLinked = CreateTransaction(RentDay, 700m) with
-        {
-            PaidScheduledTransactionId = Guid.NewGuid(),
-            PaidScheduledOccurrenceDate = RentDay
-        };
+        var many = Enumerable.Range(0, 20).Select(day => CreateTransaction(RentDay.AddDays(day), 10m)).ToArray();
 
-        Assert.Empty(matcher.FindCandidates(CreateRentEvent(), [alreadyLinked]));
-    }
-
-    [Fact]
-    public void FindCandidates_ExcludesOtherTypesAndOtherAccounts()
-    {
-        var income = CreateTransaction(RentDay, 700m, TransactionType.Income);
-        var otherAccount = CreateTransaction(RentDay, 700m) with { AccountId = Guid.NewGuid() };
-
-        Assert.Empty(matcher.FindCandidates(CreateRentEvent(), [income, otherAccount]));
-    }
-
-    [Fact]
-    public void FindCandidates_OnlyWithinAWeekOfTheScheduledDate()
-    {
-        var justInside = CreateTransaction(RentDay.AddDays(-ExpectedTransactionMatcher.MaxDayDistance), 700m);
-        var justOutside = CreateTransaction(RentDay.AddDays(ExpectedTransactionMatcher.MaxDayDistance + 1), 700m);
-
-        var candidates = matcher.FindCandidates(CreateRentEvent(), [justInside, justOutside]);
-
-        Assert.Equal(justInside, Assert.Single(candidates));
-    }
-
-    [Fact]
-    public void FindCandidates_ToleratesAVaryingBillButNotAnUnrelatedAmount()
-    {
-        var utilityVariation = CreateTransaction(RentDay, 700m * 1.25m);
-        var coffee = CreateTransaction(RentDay, 4.5m);
-        var tooHigh = CreateTransaction(RentDay, 700m * 1.26m);
-
-        var candidates = matcher.FindCandidates(CreateRentEvent(), [utilityVariation, coffee, tooHigh]);
-
-        Assert.Equal(utilityVariation, Assert.Single(candidates));
-    }
-
-    [Fact]
-    public void FindCandidates_RanksClosestAmountFirstThenClosestDate()
-    {
-        var exactButLater = CreateTransaction(RentDay.AddDays(5), 700m);
-        var exactAndSameDay = CreateTransaction(RentDay, 700m);
-        var closeAmountSameDay = CreateTransaction(RentDay, 690m);
-
-        var candidates = matcher.FindCandidates(CreateRentEvent(), [exactButLater, closeAmountSameDay, exactAndSameDay]);
-
-        Assert.Equal([exactAndSameDay, exactButLater, closeAmountSameDay], candidates);
-    }
-
-    [Fact]
-    public void FindCandidates_ReturnsAtMostTheCandidateLimit()
-    {
-        var many = Enumerable.Range(0, 10).Select(i => CreateTransaction(RentDay, 700m)).ToArray();
-
-        Assert.Equal(ExpectedTransactionMatcher.MaxCandidates, matcher.FindCandidates(CreateRentEvent(), many).Count);
+        Assert.Equal(8, matcher.FindAttachable(CreateRentEvent(), many, search: "", limit: 8).Count);
     }
 
     [Fact]

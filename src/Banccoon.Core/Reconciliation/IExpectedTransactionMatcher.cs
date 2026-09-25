@@ -5,9 +5,15 @@ namespace Banccoon.Core.Reconciliation;
 
 public interface IExpectedTransactionMatcher
 {
-    // Already-recorded transactions that plausibly ARE this expected scheduled occurrence (e.g. the
-    // imported bank row for this month's rent), best match first.
-    IReadOnlyList<Transaction> FindCandidates(ForecastEvent expectedEvent, IEnumerable<Transaction> transactions);
+    // Recorded transactions the user can attach to this scheduled occurrence: every one not yet
+    // linked to an occurrence, nearest the due date first, narrowed by what they typed (name, notes
+    // or amount), at most `limit`. It no longer guesses by account, type and amount - that
+    // suggestion was often wrong and left no way to pick anything else (user, 2026-09-25).
+    IReadOnlyList<Transaction> FindAttachable(
+        ForecastEvent expectedEvent,
+        IEnumerable<Transaction> transactions,
+        string? search,
+        int limit);
 
     // Links an existing transaction to the occurrence it paid - the same PaidScheduled* link a
     // "Mark paid" transaction carries, so forecasts and "resolve upcoming" treat the occurrence as

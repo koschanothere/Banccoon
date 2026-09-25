@@ -27,8 +27,14 @@ public sealed class ReconciliationTests
         Assert.True(vm.IsExpectedStep);
 
         var rent = Assert.Single(vm.Expected.Rows);
-        Assert.True(rent.HasAttachCandidates);
-        await f.RunAsync(rent.AttachCommand);
+        // Nothing is suggested up front (2026-09-25); "Attach…" opens the search.
+        Assert.False(rent.IsAttachOpen);
+        Assert.Empty(rent.AttachChoices);
+        rent.ToggleAttachCommand.Execute(null);
+        rent.AttachSearchText = "no such thing";
+        Assert.True(rent.HasNoAttachChoices);
+        rent.AttachSearchText = string.Empty;
+        await f.RunAsync(Assert.Single(rent.AttachChoices).AttachCommand);
 
         Assert.Empty(vm.Expected.Rows);
         var transactions = await f.Store.Transactions.GetAllAsync();
@@ -37,6 +43,33 @@ public sealed class ReconciliationTests
         Assert.Equal(RentDue, payment.PaidScheduledOccurrenceDate);
         Assert.Equal(300m, (await f.Store.Accounts.GetByIdAsync(f.AccountId))!.CurrentBalance);
         Assert.True(vm.IsMatched);
+    }
+
+    // The old suggestion only offered same-account, same-type payments within a week and 25% of the
+    // amount, and nothing else could be attached. Now any unlinked recorded transaction can be.
+    [Fact]
+    public async Task Attach_CanPickATransactionTheOldSuggestionNeverOffered()
+    {
+        await using var f = await Fixture.CreateAsync(balance: 300m, withRent: true);
+        var odd = new Transaction(Guid.NewGuid(), RentDue.AddDays(-20), 650m, f.AccountId, null, null, TransactionType.Expense, Name: "Landlord, cash");
+        var coffee = new Transaction(Guid.NewGuid(), RentDue, 4m, f.AccountId, null, null, TransactionType.Expense, Name: "Coffee");
+        await f.Store.Transactions.SaveAsync(odd);
+        await f.Store.Transactions.SaveAsync(coffee);
+        var vm = f.Vm;
+        await vm.InitializeAsync(f.AccountId);
+        await f.RunAsync(vm.ContinueCommand);
+        var rent = Assert.Single(vm.Expected.Rows);
+
+        rent.ToggleAttachCommand.Execute(null);
+        // Nearest the due date first, whatever the amount.
+        Assert.Equal(["Coffee", "Landlord, cash"], rent.AttachChoices.Select(c => c.Name));
+        rent.AttachSearchText = "650";
+        await f.RunAsync(Assert.Single(rent.AttachChoices).AttachCommand);
+
+        Assert.Empty(vm.Expected.Rows);
+        var attached = await f.Store.Transactions.GetByIdAsync(odd.Id);
+        Assert.Equal(f.RentId, attached!.PaidScheduledTransactionId);
+        Assert.Null((await f.Store.Transactions.GetByIdAsync(coffee.Id))!.PaidScheduledTransactionId);
     }
 
     [Fact]
@@ -50,7 +83,7 @@ public sealed class ReconciliationTests
 
         await f.RunAsync(vm.ContinueCommand);
         var rent = Assert.Single(vm.Expected.Rows);
-        Assert.False(rent.HasAttachCandidates);
+        Assert.Empty(rent.AttachChoices);
         await f.RunAsync(rent.MarkPaidCommand);
 
         Assert.Empty(vm.Expected.Rows);

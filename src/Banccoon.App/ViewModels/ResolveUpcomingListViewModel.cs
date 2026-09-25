@@ -17,6 +17,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private const int LookbackDays = 30;
     private const int ExpandedForwardDays = 90;
 
+    // How many recorded transactions "Attach…" lists at once; typing narrows them.
+    private const int AttachChoiceLimit = 8;
+
     private readonly IDateProvider dateProvider;
     private readonly IAccountRepository accountRepository;
     private readonly ITransactionRepository transactionRepository;
@@ -87,6 +90,11 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 
     public bool IsCollapsed => !IsExpanded;
 
+    public bool HasNoRows => Rows.Count == 0;
+
+    // The collapsed list's "nothing due right now" line.
+    public bool ShowsNothingDue => IsCollapsed && HasNoRows;
+
     public ICommand ToggleExpandedCommand { get; }
 
     // accountId narrows the list to one account's scheduled items (the reconciliation check-in
@@ -110,6 +118,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         var resolvedEvents = scheduledOccurrenceResolutionService.ApplyOverrides(projectedEvents, overrides);
 
         var allTransactions = await transactionRepository.GetInRangeAsync(RecentTransactionWindow.StartFor(today), DateOnly.MaxValue, cancellationToken);
+        var accountNames = (await accountRepository.GetAllAsync(cancellationToken)).ToDictionary(account => account.Id, account => account.Name);
         var paidOccurrences = allTransactions
             .Where(transaction => transaction.PaidScheduledTransactionId.HasValue && transaction.PaidScheduledOccurrenceDate.HasValue)
             .Select(transaction => (transaction.PaidScheduledTransactionId!.Value, transaction.PaidScheduledOccurrenceDate!.Value))
@@ -125,9 +134,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
                 onMarkPaid: () => MarkPaidAsync(scheduledEvent),
                 onSkip: () => SkipAsync(scheduledEvent),
                 onDelay: () => DelayAsync(scheduledEvent),
-                attachCandidates: expectedTransactionMatcher
-                    .FindCandidates(scheduledEvent, allTransactions)
-                    .Select(transaction => new NamedOptionViewModel(transaction.Id, FormatAttachCandidate(transaction)))
+                findAttachable: search => expectedTransactionMatcher
+                    .FindAttachable(scheduledEvent, allTransactions, search, AttachChoiceLimit)
+                    .Select(transaction => ToAttachChoice(transaction, accountNames))
                     .ToList(),
                 onAttach: transactionId => AttachAsync(scheduledEvent, transactionId)))
             .ToList();
@@ -154,6 +163,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         {
             Rows.Add(row);
         }
+
+        OnPropertyChanged(nameof(HasNoRows));
+        OnPropertyChanged(nameof(ShowsNothingDue));
 
         // Expanded: one line per rule that exists (not per occurrence), each carrying its own
         // soonest not-yet-paid occurrence (if any) for the mark-paid action, plus edit access.
@@ -221,12 +233,18 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         await onChanged();
     }
 
-    private string FormatAttachCandidate(Transaction transaction)
+    private AttachChoice ToAttachChoice(Transaction transaction, IReadOnlyDictionary<Guid, string> accountNames)
     {
         var name = string.IsNullOrWhiteSpace(transaction.Name)
             ? DisplayText.Format(transaction.Type)
             : transaction.Name;
-        return $"{transaction.Date:dd/MM} · {name} · {MoneyFormat.Format(MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type), currency)}";
+        var accountName = accountNames.TryGetValue(transaction.AccountId, out var found) ? found : string.Empty;
+        return new AttachChoice(
+            transaction.Id,
+            name,
+            string.IsNullOrEmpty(accountName) ? $"{transaction.Date:dd/MM/yyyy}" : $"{transaction.Date:dd/MM/yyyy} · {accountName}",
+            MoneyFormat.Format(MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type), currency),
+            transaction.Type);
     }
 
     private async Task SkipAsync(ForecastEvent scheduledEvent)

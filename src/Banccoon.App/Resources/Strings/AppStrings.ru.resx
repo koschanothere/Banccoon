@@ -979,11 +979,20 @@
   <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
     <value>срок {0}</value>
   </data>
-  <data name="ResolveUpcoming_AlreadyRecordedLabel" xml:space="preserve">
-    <value>Уже записано как:</value>
-  </data>
   <data name="ResolveUpcoming_AttachButton" xml:space="preserve">
     <value>Привязать</value>
+  </data>
+  <data name="ResolveUpcoming_AttachOpenButton" xml:space="preserve">
+    <value>Привязать…</value>
+  </data>
+  <data name="ResolveUpcoming_AttachHint" xml:space="preserve">
+    <value>Выберите записанную операцию, которой это оплачено. Платёж отметится как оплаченный, новая операция не создаётся.</value>
+  </data>
+  <data name="ResolveUpcoming_AttachSearchPlaceholder" xml:space="preserve">
+    <value>Поиск по названию или сумме</value>
+  </data>
+  <data name="ResolveUpcoming_NoAttachChoices" xml:space="preserve">
+    <value>Подходящих записанных операций нет.</value>
   </data>
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>нет предстоящих платежей</value>

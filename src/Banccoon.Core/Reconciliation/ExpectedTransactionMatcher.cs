@@ -1,3 +1,4 @@
+using System.Globalization;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 
@@ -5,35 +6,23 @@ namespace Banccoon.Core.Reconciliation;
 
 public sealed class ExpectedTransactionMatcher : IExpectedTransactionMatcher
 {
-    // How far a real payment's date may drift from its scheduled date and still be offered.
-    public const int MaxDayDistance = 7;
-
-    // How far its amount may differ, as a fraction of the scheduled amount - wide enough for
-    // bills that vary month to month (utilities), narrow enough that a coffee isn't offered as
-    // this month's rent.
-    public const decimal AmountTolerance = 0.25m;
-
-    public const int MaxCandidates = 5;
-
-    public IReadOnlyList<Transaction> FindCandidates(ForecastEvent expectedEvent, IEnumerable<Transaction> transactions)
+    public IReadOnlyList<Transaction> FindAttachable(
+        ForecastEvent expectedEvent,
+        IEnumerable<Transaction> transactions,
+        string? search,
+        int limit)
     {
         ArgumentNullException.ThrowIfNull(expectedEvent);
         ArgumentNullException.ThrowIfNull(transactions);
 
-        var expectedAmount = Math.Abs(expectedEvent.Amount);
-        var maxAmountDifference = expectedAmount * AmountTolerance;
-
+        var query = search?.Trim() ?? string.Empty;
         return transactions
             .Where(transaction => transaction.PaidScheduledTransactionId is null)
-            .Where(transaction => transaction.Type == expectedEvent.Type)
-            .Where(transaction => transaction.AccountId == expectedEvent.AccountId)
-            .Where(transaction => DayDistance(transaction.Date, expectedEvent.Date) <= MaxDayDistance)
-            .Where(transaction => Math.Abs(Math.Abs(transaction.Amount) - expectedAmount) <= maxAmountDifference)
-            .OrderBy(transaction => Math.Abs(Math.Abs(transaction.Amount) - expectedAmount))
-            .ThenBy(transaction => DayDistance(transaction.Date, expectedEvent.Date))
-            .ThenBy(transaction => transaction.Date)
+            .Where(transaction => query.Length == 0 || Matches(transaction, query))
+            .OrderBy(transaction => DayDistance(transaction.Date, expectedEvent.Date))
+            .ThenByDescending(transaction => transaction.Date)
             .ThenBy(transaction => transaction.Id)
-            .Take(MaxCandidates)
+            .Take(limit)
             .ToArray();
     }
 
@@ -52,6 +41,21 @@ public sealed class ExpectedTransactionMatcher : IExpectedTransactionMatcher
             PaidScheduledTransactionId = expectedEvent.SourceId,
             PaidScheduledOccurrenceDate = expectedEvent.Date
         };
+    }
+
+    // Name or notes containing the text, or - when it reads as a number, however it's written
+    // ("1 500", "1500,50") - an amount containing those digits.
+    private static bool Matches(Transaction transaction, string query)
+    {
+        if ((transaction.Name?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false)
+            || (transaction.Notes?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false))
+        {
+            return true;
+        }
+
+        var digits = string.Concat(query.Where(character => !char.IsWhiteSpace(character))).Replace(',', '.');
+        return decimal.TryParse(digits, NumberStyles.Number, CultureInfo.InvariantCulture, out _)
+            && Math.Abs(transaction.Amount).ToString("0.00", CultureInfo.InvariantCulture).Contains(digits, StringComparison.Ordinal);
     }
 
     private static int DayDistance(DateOnly left, DateOnly right)

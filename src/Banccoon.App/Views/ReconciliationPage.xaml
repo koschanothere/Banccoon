@@ -65,14 +65,13 @@
                     <Label Text="{loc:Translate Reconciliation_Step2Header}" Style="{StaticResource SectionTitleLabel}" />
                     <Label Text="{loc:Translate Reconciliation_Step2Hint}" Style="{StaticResource SecondaryLabel}" />
 
-                    <CollectionView ItemsSource="{Binding Expected.Rows}">
-                        <CollectionView.EmptyView>
-                            <Label Text="{loc:Translate Reconciliation_NothingExpected}" Style="{StaticResource TertiaryLabel}" />
-                        </CollectionView.EmptyView>
-                        <CollectionView.ItemTemplate>
+                    <!-- A plain layout, not a CollectionView: a row grows when "Attach…" opens. -->
+                    <Label Text="{loc:Translate Reconciliation_NothingExpected}" IsVisible="{Binding Expected.HasNoRows}" Style="{StaticResource TertiaryLabel}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Expected.Rows}">
+                        <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:ResolveUpcomingRowViewModel">
                                 <VerticalStackLayout Spacing="6" Padding="0,8">
-                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
                                         <VerticalStackLayout Grid.Column="0" Spacing="1">
                                             <Label Text="{Binding Name}" />
                                             <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
@@ -80,18 +79,36 @@
                                         <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
                                         <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
                                         <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="4" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
+                                        <Button Grid.Column="4" Text="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="5" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
                                     </Grid>
-                                    <HorizontalStackLayout Spacing="8" HorizontalOptions="End" IsVisible="{Binding HasAttachCandidates}">
-                                        <Label Text="{loc:Translate ResolveUpcoming_AlreadyRecordedLabel}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
-                                        <Picker ItemsSource="{Binding AttachCandidates}" SelectedItem="{Binding SelectedAttachCandidate}" WidthRequest="260" />
-                                        <Button Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
-                                    </HorizontalStackLayout>
+                                    <!-- "Attach…": pick the recorded transaction that paid this (e.g. the imported bank row) -
+                                         the occurrence is marked paid without a second transaction. Nothing is suggested
+                                         up front (2026-09-25); anything not yet linked can be found by name or amount. -->
+                                    <VerticalStackLayout Spacing="6" Padding="12,4,0,4" IsVisible="{Binding IsAttachOpen}">
+                                        <Label Text="{loc:Translate ResolveUpcoming_AttachHint}" Style="{StaticResource TertiaryLabel}" />
+                                        <Entry Placeholder="{loc:Translate ResolveUpcoming_AttachSearchPlaceholder}" Text="{Binding AttachSearchText}" WidthRequest="320" HorizontalOptions="Start" />
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding AttachChoices}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:AttachChoiceViewModel">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,4">
+                                                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                                            <Label Text="{Binding Name}" />
+                                                            <Label Text="{Binding DetailText}" Style="{StaticResource TertiaryLabel}" />
+                                                        </VerticalStackLayout>
+                                                        <Label Grid.Column="1" Text="{Binding AmountText}" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
+                                                        <Button Grid.Column="2" Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="{loc:Translate ResolveUpcoming_NoAttachChoices}" IsVisible="{Binding HasNoAttachChoices}" Style="{StaticResource TertiaryLabel}" />
+                                    </VerticalStackLayout>
                                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
                                 </VerticalStackLayout>
                             </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />

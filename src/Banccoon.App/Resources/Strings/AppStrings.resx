@@ -940,11 +940,20 @@
   <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
     <value>due {0}</value>
   </data>
-  <data name="ResolveUpcoming_AlreadyRecordedLabel" xml:space="preserve">
-    <value>Already recorded as:</value>
-  </data>
   <data name="ResolveUpcoming_AttachButton" xml:space="preserve">
     <value>Attach</value>
+  </data>
+  <data name="ResolveUpcoming_AttachOpenButton" xml:space="preserve">
+    <value>Attach…</value>
+  </data>
+  <data name="ResolveUpcoming_AttachHint" xml:space="preserve">
+    <value>Pick the recorded transaction that paid this. It's marked as paid; nothing new is recorded.</value>
+  </data>
+  <data name="ResolveUpcoming_AttachSearchPlaceholder" xml:space="preserve">
+    <value>Search by name or amount</value>
+  </data>
+  <data name="ResolveUpcoming_NoAttachChoices" xml:space="preserve">
+    <value>No recorded transactions match.</value>
   </data>
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>no upcoming occurrence</value>
