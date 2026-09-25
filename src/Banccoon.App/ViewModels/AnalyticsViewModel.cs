@@ -32,6 +32,10 @@ public sealed class AnalyticsViewModel : ViewModelBase
     private decimal donutTotal;
     private AnalyticsCategoryRowViewModel? highlightedSegment;
     private string donutCaptionText = Translator.Get("Dashboard_HoverSliceShare");
+    private AnalyticsCategoryRowViewModel? breakdownParent;
+    private AnalyticsCategoryRowViewModel? highlightedBreakdownSegment;
+    private string breakdownCaptionText = string.Empty;
+    private bool hasBreakdowns;
 
     public AnalyticsViewModel(
         IDateProvider dateProvider,
@@ -49,9 +53,11 @@ public sealed class AnalyticsViewModel : ViewModelBase
         CategoryRows = [];
         TopMovers = [];
         DonutSegments = [];
+        BreakdownSegments = [];
 
         PreviousMonthCommand = new RelayCommand(() => _ = ChangeMonthAsync(-1));
         NextMonthCommand = new RelayCommand(() => _ = ChangeMonthAsync(1));
+        SelectDonutSegmentCommand = new RelayCommand<AnalyticsCategoryRowViewModel>(SelectDonutSegment);
     }
 
     public string MonthLabel
@@ -109,6 +115,41 @@ public sealed class AnalyticsViewModel : ViewModelBase
         private set => SetProperty(ref donutCaptionText, value);
     }
 
+    // The second donut, to the right of the first: one parent category's total broken down into
+    // its own share and each child's. Opened by clicking a parent's slice (DonutChartView's
+    // SegmentClickedCommand); a parent with no children does nothing. Clicking the same slice
+    // again closes it.
+    public ObservableCollection<AnalyticsCategoryRowViewModel> BreakdownSegments { get; }
+
+    public bool IsBreakdownOpen => breakdownParent is not null;
+
+    // Some slice this month can be broken down - shows the "click a slice" hint.
+    public bool HasBreakdowns
+    {
+        get => hasBreakdowns;
+        private set => SetProperty(ref hasBreakdowns, value);
+    }
+
+    public AnalyticsCategoryRowViewModel? HighlightedBreakdownSegment
+    {
+        get => highlightedBreakdownSegment;
+        set
+        {
+            if (SetProperty(ref highlightedBreakdownSegment, value))
+            {
+                UpdateBreakdownCaption();
+            }
+        }
+    }
+
+    public string BreakdownCaptionText
+    {
+        get => breakdownCaptionText;
+        private set => SetProperty(ref breakdownCaptionText, value);
+    }
+
+    public ICommand SelectDonutSegmentCommand { get; }
+
     public ICommand PreviousMonthCommand { get; }
 
     public ICommand NextMonthCommand { get; }
@@ -151,7 +192,8 @@ public sealed class AnalyticsViewModel : ViewModelBase
             CategoryRows.Clear();
             foreach (var trend in report.CategoryTrends)
             {
-                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, ResolveColor(trend.CategoryId, categoriesById), currency, onCategorySelected));
+                var color = ResolveColor(trend.CategoryId, categoriesById);
+                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, color, currency, onCategorySelected, BuildBreakdown(trend, color)));
             }
 
             TopMovers.Clear();
@@ -170,10 +212,92 @@ public sealed class AnalyticsViewModel : ViewModelBase
             HighlightedSegment = null;
             UpdateDonutCaption();
 
+            // A new month: reopen the same parent's breakdown if it still has one, else close it.
+            var previousParentId = breakdownParent?.CategoryId;
+            HasBreakdowns = DonutSegments.Any(row => row.HasBreakdown);
+            OpenBreakdown(DonutSegments.FirstOrDefault(row => previousParentId is not null && row.CategoryId == previousParentId && row.HasBreakdown));
+
             var anchorMonth = new DateOnly(periodAnchor.Year, periodAnchor.Month, 1);
             var todayMonth = new DateOnly(today.Year, today.Month, 1);
             CanGoToNextMonth = anchorMonth < todayMonth;
         });
+    }
+
+    private void SelectDonutSegment(AnalyticsCategoryRowViewModel? segment)
+    {
+        if (segment is not { HasBreakdown: true })
+        {
+            return;
+        }
+
+        OpenBreakdown(ReferenceEquals(segment, breakdownParent) ? null : segment);
+    }
+
+    // UI-thread only.
+    private void OpenBreakdown(AnalyticsCategoryRowViewModel? parent)
+    {
+        breakdownParent = parent;
+        BreakdownSegments.Clear();
+        if (parent is not null)
+        {
+            foreach (var entry in parent.Breakdown.Where(entry => entry.Amount > 0m))
+            {
+                BreakdownSegments.Add(entry);
+            }
+        }
+
+        HighlightedBreakdownSegment = null;
+        UpdateBreakdownCaption();
+        OnPropertyChanged(nameof(IsBreakdownOpen));
+    }
+
+    private void UpdateBreakdownCaption()
+    {
+        if (breakdownParent is null)
+        {
+            BreakdownCaptionText = string.Empty;
+            return;
+        }
+
+        if (HighlightedBreakdownSegment is not { } segment)
+        {
+            BreakdownCaptionText = $"{breakdownParent.CategoryName}: {breakdownParent.CurrentTotalText}";
+            return;
+        }
+
+        var share = breakdownParent.Amount > 0m ? segment.Amount / breakdownParent.Amount : 0m;
+        BreakdownCaptionText = $"{segment.CategoryName}: {segment.CurrentTotalText} ({share:P0})";
+    }
+
+    // The second donut's slices for a parent: its own share (named "Food (no subcategory)") and
+    // each child's, in shades of the parent's color - children share it, so the slices need
+    // telling apart.
+    private IReadOnlyList<AnalyticsCategoryRowViewModel> BuildBreakdown(AnalyticsCategoryTrend trend, Color parentColor)
+    {
+        var parentName = trend.CategoryName ?? string.Empty;
+        var count = trend.Breakdown.Count;
+        return trend.Breakdown
+            .Select((entry, index) => new AnalyticsCategoryRowViewModel(
+                entry,
+                Shade(parentColor, index, count),
+                currency,
+                onCategorySelected,
+                displayName: entry.IsParentOwnShare
+                    ? string.Format(Translator.Get("Dashboard_ParentOwnShareFormat"), parentName)
+                    : null))
+            .ToList();
+    }
+
+    // From a little darker to clearly lighter than the parent's own color, evenly spread.
+    private static Color Shade(Color color, int index, int count)
+    {
+        if (count <= 1)
+        {
+            return color;
+        }
+
+        var luminosity = 0.28f + (0.42f * index / (count - 1));
+        return color.WithLuminosity(luminosity);
     }
 
     private void UpdateDonutCaption()
@@ -194,8 +318,10 @@ public sealed class AnalyticsViewModel : ViewModelBase
     {
         if (categoryId is { } id)
         {
-            var explicitColor = categoriesById.TryGetValue(id, out var category) ? category.Color : null;
-            return CategoryColorPalette.GetColorForCategory(id, explicitColor);
+            // A child's color is its parent's (and a trend here is normally a parent anyway).
+            return categoriesById.TryGetValue(id, out var category)
+                ? CategoryColorPalette.GetColorForCategory(category.ColorSourceId, category.Color)
+                : CategoryColorPalette.GetColorForCategory(id, null);
         }
 
         return CategoryColorPalette.GetTransferColor();

@@ -10,10 +10,19 @@ public sealed class AnalyticsCategoryRowViewModel
     private const double MaxBarHeight = 32;
     private const double MinBarHeight = 2;
 
-    public AnalyticsCategoryRowViewModel(AnalyticsCategoryTrend trend, Color color, string currency, Func<Guid?, Task> onSelected)
+    // breakdown: for a parent category with children, its total split into its own share and
+    // each child's (AnalyticsCategoryTrend.Breakdown) - what the second donut draws.
+    public AnalyticsCategoryRowViewModel(
+        AnalyticsCategoryTrend trend,
+        Color color,
+        string currency,
+        Func<Guid?, Task> onSelected,
+        IReadOnlyList<AnalyticsCategoryRowViewModel>? breakdown = null,
+        string? displayName = null)
     {
         CategoryId = trend.CategoryId;
-        CategoryName = trend.CategoryName ?? "Uncategorized";
+        CategoryName = displayName ?? trend.CategoryName ?? "Uncategorized";
+        Breakdown = breakdown ?? [];
         Amount = trend.CurrentPeriodTotal;
         Color = color;
         CurrentTotalText = MoneyFormat.Format(trend.CurrentPeriodTotal, currency);
@@ -37,6 +46,11 @@ public sealed class AnalyticsCategoryRowViewModel
     public string CategoryName { get; }
 
     public decimal Amount { get; }
+
+    public IReadOnlyList<AnalyticsCategoryRowViewModel> Breakdown { get; }
+
+    // Has a breakdown with something in it this month, so clicking its slice opens the second donut.
+    public bool HasBreakdown => Breakdown.Any(entry => entry.Amount > 0m);
 
     public Color Color { get; }
 

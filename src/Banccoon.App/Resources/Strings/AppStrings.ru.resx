@@ -1088,6 +1088,12 @@
   <data name="Dashboard_HoverSliceShare" xml:space="preserve">
     <value>Наведите на сегмент, чтобы увидеть долю.</value>
   </data>
+  <data name="Dashboard_ParentOwnShareFormat" xml:space="preserve">
+    <value>{0} (без подкатегории)</value>
+  </data>
+  <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
+    <value>Нажмите на сегмент с подкатегориями, чтобы разбить его на части; нажмите ещё раз, чтобы закрыть.</value>
+  </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Всего потрачено: {0}</value>
   </data>

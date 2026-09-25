@@ -1046,6 +1046,12 @@
   <data name="Dashboard_HoverSliceShare" xml:space="preserve">
     <value>Hover a slice to see its share.</value>
   </data>
+  <data name="Dashboard_ParentOwnShareFormat" xml:space="preserve">
+    <value>{0} (no subcategory)</value>
+  </data>
+  <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
+    <value>Click a slice with subcategories to break it down; click it again to close.</value>
+  </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Total spend: {0}</value>
   </data>
