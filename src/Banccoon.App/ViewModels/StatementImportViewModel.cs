@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Windows.Input;
+using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Repositories;
@@ -12,6 +14,9 @@ public enum StatementImportStep
 {
     PickFile,
     ConfirmAccount,
+
+    // Only when the statement shows bank categories its parser hasn't shown before.
+    LinkBankCategories,
     Review
 }
 
@@ -28,6 +33,10 @@ public sealed class StatementImportViewModel : ViewModelBase
     private string fileName = string.Empty;
     private ParsedStatement? statement;
     private string previewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
+    private bool canCheckIn;
+
+    // The account chosen in step 2, held while the linking step is on screen.
+    private Guid pendingAccountId;
 
     public StatementImportViewModel(
         IStatementImportService statementImportService,
@@ -35,7 +44,8 @@ public sealed class StatementImportViewModel : ViewModelBase
         IStatementImportRepository statementImportRepository,
         ICategoryRepository categoryRepository,
         IAccountRepository accountRepository,
-        ISettingsRepository settingsRepository)
+        ISettingsRepository settingsRepository,
+        IBankCategoryService bankCategoryService)
     {
         this.statementImportService = statementImportService;
         this.statementParserRegistry = statementParserRegistry;
@@ -43,16 +53,22 @@ public sealed class StatementImportViewModel : ViewModelBase
 
         Account = new StatementAccountViewModel(accountRepository);
         Review = new StatementImportReviewViewModel(statementImportService, statementImportRepository, categoryRepository, accountRepository);
+        Review.ReviewCompleted += () => CanCheckIn = true;
+        BankCategories = new StatementBankCategoriesViewModel(bankCategoryService, categoryRepository);
 
         PickFileCommand = new RelayCommand(() => _ = PickFileAsync());
         ContinueFromPickCommand = new RelayCommand(() => _ = ContinueFromPickAsync());
         ContinueFromAccountCommand = new RelayCommand(() => _ = ContinueFromAccountAsync());
         BackToPickCommand = new RelayCommand(() => CurrentStep = StatementImportStep.PickFile);
+        ContinueFromBankCategoriesCommand = new RelayCommand(() => _ = ContinueFromBankCategoriesAsync());
+        BackToAccountCommand = new RelayCommand(() => CurrentStep = StatementImportStep.ConfirmAccount);
     }
 
     public StatementAccountViewModel Account { get; }
 
     public StatementImportReviewViewModel Review { get; }
+
+    public StatementBankCategoriesViewModel BankCategories { get; }
 
     public StatementImportStep CurrentStep
     {
@@ -63,6 +79,7 @@ public sealed class StatementImportViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsPickFileStep));
                 OnPropertyChanged(nameof(IsConfirmAccountStep));
+                OnPropertyChanged(nameof(IsLinkBankCategoriesStep));
                 OnPropertyChanged(nameof(IsReviewStep));
             }
         }
@@ -71,6 +88,8 @@ public sealed class StatementImportViewModel : ViewModelBase
     public bool IsPickFileStep => CurrentStep == StatementImportStep.PickFile;
 
     public bool IsConfirmAccountStep => CurrentStep == StatementImportStep.ConfirmAccount;
+
+    public bool IsLinkBankCategoriesStep => CurrentStep == StatementImportStep.LinkBankCategories;
 
     public bool IsReviewStep => CurrentStep == StatementImportStep.Review;
 
@@ -116,6 +135,15 @@ public sealed class StatementImportViewModel : ViewModelBase
 
     public bool CanContinueFromPick => statement is not null;
 
+    // True once every row of the batch has been approved or skipped (not after a cancel) - the
+    // page then suggests the reconciliation check-in for that account (docs/ui-structure-decisions.md:
+    // "auto-suggested right after statement import").
+    public bool CanCheckIn
+    {
+        get => canCheckIn;
+        private set => SetProperty(ref canCheckIn, value);
+    }
+
     public ICommand PickFileCommand { get; }
 
     public ICommand ContinueFromPickCommand { get; }
@@ -124,18 +152,28 @@ public sealed class StatementImportViewModel : ViewModelBase
 
     public ICommand BackToPickCommand { get; }
 
+    public ICommand ContinueFromBankCategoriesCommand { get; }
+
+    public ICommand BackToAccountCommand { get; }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var settings = await settingsRepository.GetAsync(cancellationToken);
-        currency = settings.DefaultCurrency;
 
-        CurrentStep = StatementImportStep.PickFile;
-        filePath = null;
-        FileName = string.Empty;
-        statement = null;
-        PreviewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
-        OnPropertyChanged(nameof(HasStatement));
-        OnPropertyChanged(nameof(CanContinueFromPick));
+        // Bound properties, set after an await that may have resumed off the UI thread (see
+        // ViewModelBase.RunOnMainThreadAsync).
+        await RunOnMainThreadAsync(() =>
+        {
+            currency = settings.DefaultCurrency;
+            CurrentStep = StatementImportStep.PickFile;
+            filePath = null;
+            FileName = string.Empty;
+            statement = null;
+            CanCheckIn = false;
+            PreviewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
+            OnPropertyChanged(nameof(HasStatement));
+            OnPropertyChanged(nameof(CanContinueFromPick));
+        });
     }
 
     private async Task PickFileAsync()
@@ -186,11 +224,15 @@ public sealed class StatementImportViewModel : ViewModelBase
 
         try
         {
-            var preview = await statementImportService.PreviewAsync(pickedFilePath);
+            // Off the UI thread: reading a long PDF statement is real work, and the window should
+            // keep responding while it happens. Same for creating the import below.
+            var stopwatch = Stopwatch.StartNew();
+            var preview = await Task.Run(() => statementImportService.PreviewAsync(pickedFilePath));
+            DiagnosticLog.Write($"Statement import timing: read {preview.Statement?.Rows.Count ?? 0} rows in {stopwatch.ElapsedMilliseconds} ms");
             await RunOnMainThreadAsync(() =>
             {
                 statement = preview.Statement;
-                PreviewStatusText = preview.Message;
+                PreviewStatusText = StatementImportMessageFormatter.Format(preview.Message);
             });
         }
         finally
@@ -237,19 +279,66 @@ public sealed class StatementImportViewModel : ViewModelBase
         await RunOnMainThreadAsync(() => IsBusy = true);
         try
         {
-            var result = await statementImportService.CreatePendingImportAsync(accountId.Value, filePath, statement);
-            if (!result.ParserAvailable || result.Batch is null)
+            // New bank categories first, so the rows are suggested with whatever gets linked.
+            if (await BankCategories.LoadAsync(statement))
             {
-                await RunOnMainThreadAsync(() => Account.SetStatus(result.Message));
+                await RunOnMainThreadAsync(() =>
+                {
+                    pendingAccountId = accountId.Value;
+                    CurrentStep = StatementImportStep.LinkBankCategories;
+                });
                 return;
             }
 
-            await Review.LoadAsync(result.Batch.Id, result.Batch.AccountId, currency);
-            await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
+            await CreateImportAndReviewAsync(accountId.Value);
         }
         finally
         {
             await RunOnMainThreadAsync(() => IsBusy = false);
         }
+    }
+
+    private async Task ContinueFromBankCategoriesAsync()
+    {
+        if (statement is null)
+        {
+            return;
+        }
+
+        await RunOnMainThreadAsync(() => IsBusy = true);
+        try
+        {
+            await BankCategories.SaveAsync(statement.ParserId);
+            await CreateImportAndReviewAsync(pendingAccountId);
+        }
+        finally
+        {
+            await RunOnMainThreadAsync(() => IsBusy = false);
+        }
+    }
+
+    private async Task CreateImportAndReviewAsync(Guid accountId)
+    {
+        if (statement is null || filePath is null)
+        {
+            return;
+        }
+
+        var (path, parsed) = (filePath, statement);
+        var stopwatch = Stopwatch.StartNew();
+        var result = await Task.Run(() => statementImportService.CreatePendingImportAsync(accountId, path, parsed));
+        DiagnosticLog.Write($"Statement import timing: checked and saved {result.Rows.Count} rows in {stopwatch.ElapsedMilliseconds} ms");
+        if (!result.ParserAvailable || result.Batch is null)
+        {
+            await RunOnMainThreadAsync(() =>
+            {
+                Account.SetStatus(StatementImportMessageFormatter.Format(result.Message));
+                CurrentStep = StatementImportStep.ConfirmAccount;
+            });
+            return;
+        }
+
+        await Review.LoadAsync(result.Batch.Id, result.Batch.AccountId, currency);
+        await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
     }
 }

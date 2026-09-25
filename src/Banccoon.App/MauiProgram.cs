@@ -51,6 +51,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IScheduledTransactionProjectionService, ScheduledTransactionProjectionService>();
         builder.Services.AddSingleton<IAccountBalanceService, AccountBalanceService>();
         builder.Services.AddSingleton<ISavingsGoalAllocationService, SavingsGoalAllocationService>();
+        builder.Services.AddSingleton<ILegacySavingsGoalConversionService, LegacySavingsGoalConversionService>();
         builder.Services.AddSingleton<IAvailableToSpendService, AvailableToSpendService>();
         builder.Services.AddSingleton<IFreeToSpendWindowService, FreeToSpendWindowService>();
         builder.Services.AddSingleton<IHistoricalBalanceService, HistoricalBalanceService>();
@@ -64,11 +65,14 @@ public static class MauiProgram
         builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
         builder.Services.AddSingleton<IStatementImportService, StatementImportService>();
+        builder.Services.AddSingleton<IBankCategoryService, BankCategoryService>();
         builder.Services.AddSingleton<IForecastService, ForecastService>();
         builder.Services.AddSingleton<ICheckInService, CheckInService>();
         builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
         builder.Services.AddSingleton<IGroupedSpendingService, GroupedSpendingService>();
         builder.Services.AddSingleton<IBalanceAdjustmentService, BalanceAdjustmentService>();
+        builder.Services.AddSingleton<IExpectedTransactionMatcher, ExpectedTransactionMatcher>();
+        builder.Services.AddSingleton<ITransactionDeletionService, TransactionDeletionService>();
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IAutoBackupRunner, AutoBackupRunner>();
         builder.Services.AddSingleton<IDatabasePathProvider, LocalAppDataDatabasePathProvider>();
@@ -85,7 +89,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SqliteCategoryRepository>();
         builder.Services.AddSingleton<ICategoryRepository>(sp => new CachedCategoryRepository(sp.GetRequiredService<SqliteCategoryRepository>()));
         builder.Services.AddSingleton<SqliteTransactionRepository>();
-        builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>()));
+        builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>(), sp.GetRequiredService<IDateProvider>()));
         builder.Services.AddSingleton<SqliteScheduledTransactionRepository>();
         builder.Services.AddSingleton<IScheduledTransactionRepository>(sp => new CachedScheduledTransactionRepository(sp.GetRequiredService<SqliteScheduledTransactionRepository>()));
         builder.Services.AddSingleton<SqliteSavingsGoalRepository>();
@@ -93,6 +97,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SqliteSettingsRepository>();
         builder.Services.AddSingleton<ISettingsRepository>(sp => new CachedSettingsRepository(sp.GetRequiredService<SqliteSettingsRepository>()));
         builder.Services.AddSingleton<IStatementImportRepository, SqliteStatementImportRepository>();
+        builder.Services.AddSingleton<IBankCategoryLinkRepository, SqliteBankCategoryLinkRepository>();
         builder.Services.AddSingleton<SqliteCategoryLearningRuleRepository>();
         builder.Services.AddSingleton<ICategoryLearningRuleRepository>(sp => new CachedCategoryLearningRuleRepository(sp.GetRequiredService<SqliteCategoryLearningRuleRepository>()));
         builder.Services.AddSingleton<SqliteScheduledOccurrenceOverrideRepository>();
@@ -111,6 +116,7 @@ public static class MauiProgram
         builder.Services.AddTransient<RecurrenceEditorViewModel>();
         builder.Services.AddTransient<CreditCardDetailsViewModel>();
         builder.Services.AddTransient<StatementImportViewModel>();
+        builder.Services.AddTransient<ReconciliationViewModel>();
         builder.Services.AddTransient<AppLockViewModel>();
 
         // Singleton, not transient: each of these is one FlyoutItem's ShellContent
@@ -133,7 +139,7 @@ public static class MauiProgram
         // the filter panel open and coming back will show it still open. InitializeAsync's own data
         // refresh on every OnAppearing is unaffected either way.
         //
-        // StatementImportPage/AppLockPage stay Transient deliberately - they're one-off
+        // StatementImportPage/ReconciliationPage/AppLockPage stay Transient deliberately - they're one-off
         // modal-style flows (GoToAsync/PushModalAsync, not a FlyoutItem tab), where fresh state
         // per visit is correct, not an accident to fix.
         builder.Services.AddSingleton<DashboardPage>();
@@ -141,6 +147,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AccountsPage>();
         builder.Services.AddSingleton<SettingsPage>();
         builder.Services.AddTransient<StatementImportPage>();
+        builder.Services.AddTransient<ReconciliationPage>();
         builder.Services.AddTransient<AppLockPage>();
 
 #if WINDOWS

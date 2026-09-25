@@ -1,0 +1,14 @@
+<Project>
+  <!-- Shared by every project under tools/linux-verification. None of these are in Banccoon.sln, so a
+       normal Windows build never sees them. -->
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../'))</RepoRoot>
+    <AppSrc>$(RepoRoot)src/Banccoon.App</AppSrc>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Banccoon.App</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CS8618;CS0067</NoWarn>
+  </PropertyGroup>
+</Project>

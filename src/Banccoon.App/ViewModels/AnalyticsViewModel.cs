@@ -129,7 +129,12 @@ public sealed class AnalyticsViewModel : ViewModelBase
 
     private async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
-        var transactions = await transactionRepository.GetAllAsync(cancellationToken);
+        // Just the months the report covers - older ones come from the database, not memory.
+        var anchorMonth = new DateOnly(periodAnchor.Year, periodAnchor.Month, 1);
+        var transactions = await transactionRepository.GetInRangeAsync(
+            anchorMonth.AddMonths(-(TrendPeriodCount - 1)),
+            anchorMonth.AddMonths(1).AddDays(-1),
+            cancellationToken);
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
         var categoriesById = categories.ToDictionary(category => category.Id);
         var report = analyticsService.BuildReport(periodAnchor, TrendPeriodCount, transactions, categories);

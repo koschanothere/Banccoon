@@ -40,4 +40,34 @@ public sealed class TransactionApplicationService : ITransactionApplicationServi
 
         return [updatedSource, updatedDestination];
     }
+
+    public IReadOnlyList<Account> ReverseTransaction(Transaction transaction, IReadOnlyDictionary<Guid, Account> accountsById)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+        ArgumentNullException.ThrowIfNull(accountsById);
+
+        if (!accountsById.TryGetValue(transaction.AccountId, out var sourceAccount))
+        {
+            throw new ArgumentException("Transaction's account was not found.", nameof(accountsById));
+        }
+
+        var restoredSource = transactionBalanceService.Reverse(sourceAccount, transaction);
+
+        if (transaction.Type != TransactionType.Transfer || transaction.DestinationAccountId is not { } destinationAccountId)
+        {
+            return [restoredSource];
+        }
+
+        if (!accountsById.TryGetValue(destinationAccountId, out var destinationAccount))
+        {
+            throw new ArgumentException("Transfer's destination account was not found.", nameof(accountsById));
+        }
+
+        var restoredDestination = destinationAccount with
+        {
+            CurrentBalance = destinationAccount.CurrentBalance - Math.Abs(transaction.Amount)
+        };
+
+        return [restoredSource, restoredDestination];
+    }
 }

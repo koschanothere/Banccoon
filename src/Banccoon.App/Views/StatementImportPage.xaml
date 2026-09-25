@@ -9,6 +9,97 @@
     Title="{loc:Translate StatementImport_Title}"
     BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
 
+    <ContentPage.Resources>
+        <!-- One review row, shared by all three blocks of step 3. "Calmer" layout: no type picker by
+             default - the amount's colour is the detected type (income green, transfer purple,
+             expense plain; TransactionTypeColorConverter) and clicking the amount opens the picker.
+             The lists use BindableLayout, not CollectionView: they sit in the page's ScrollView (so
+             CollectionView couldn't virtualize anyway), only ~20 rows are ever drawn (see
+             StatementImportReviewSectionsViewModel), and a plain layout re-measures reliably when a
+             row or group changes height. -->
+        <DataTemplate x:Key="ReviewRowTemplate" x:DataType="viewModels:StatementImportRowViewModel">
+            <VerticalStackLayout Spacing="0">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="6" Padding="0,8">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" />
+                        <Label Grid.Column="1" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="2" Spacing="1" VerticalOptions="Center">
+                            <Label Text="{Binding Description}" />
+                            <Label Text="{Binding BankCategoryText}" IsVisible="{Binding HasBankCategory}" Style="{StaticResource TertiaryLabel}" />
+                            <Label Text="{loc:Translate StatementImport_PossibleDuplicate}" IsVisible="{Binding IsDuplicate}" Style="{StaticResource TertiaryLabel}"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="3" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center"
+                               TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}"
+                               ToolTipProperties.Text="{Binding TypeToolTipText}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleTypeEditorCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <HorizontalStackLayout Grid.Column="4" Spacing="6" VerticalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
+                                <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
+                            </Border>
+                            <!-- Enter or Add creates the category at once, so every other row can pick it too. -->
+                            <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="140" />
+                            <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
+                        </HorizontalStackLayout>
+                        <Button Grid.Column="5" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" IsEnabled="{Binding IsIdle}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="6" Text="{loc:Translate Common_Approve}" Command="{Binding ApproveCommand}" IsEnabled="{Binding IsIdle}" Style="{StaticResource PrimaryButton}" />
+                    </Grid>
+                    <HorizontalStackLayout Grid.Row="1" Spacing="8" HorizontalOptions="End">
+                        <Picker Title="{loc:Translate Common_Type}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding Type}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" IsVisible="{Binding IsTypeEditorOpen}" WidthRequest="130" />
+                        <Picker Title="{loc:Translate StatementImport_OtherAccountPickerTitle}" ItemsSource="{Binding OtherAccountOptions}" SelectedItem="{Binding OtherAccount}" IsVisible="{Binding IsTransferType}" WidthRequest="160" />
+                    </HorizontalStackLayout>
+                </Grid>
+                <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+
+        <!-- One sender's ready rows ("Group by name"). Two or more: a collapsed line with the name,
+             count, total, a category picker for the whole group and its own "Approve all"; expanding
+             shows the rows beside a rail in the category's colour. One: just the row. DisplayedRows
+             stays empty while collapsed, so a closed group costs one line to draw. -->
+        <DataTemplate x:Key="ReviewGroupTemplate" x:DataType="viewModels:StatementImportRowGroupViewModel">
+            <VerticalStackLayout Spacing="0">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="10" Padding="0,8" IsVisible="{Binding IsMultiple}">
+                    <Grid Grid.Column="0" WidthRequest="24" HeightRequest="24" VerticalOptions="Center"
+                          Rotation="{Binding IsExpanded, Converter={StaticResource ExpandedRotationConverter}}">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleExpandedCommand}" />
+                        </Grid.GestureRecognizers>
+                        <BoxView WidthRequest="9" HeightRequest="2" CornerRadius="1" Rotation="45" TranslationX="-3" TranslationY="-2"
+                                 Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                        <BoxView WidthRequest="9" HeightRequest="2" CornerRadius="1" Rotation="-45" TranslationX="3" TranslationY="-2"
+                                 Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                    </Grid>
+                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                        <VerticalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleExpandedCommand}" />
+                        </VerticalStackLayout.GestureRecognizers>
+                        <Label Text="{Binding Name}" FontAttributes="Bold" />
+                        <Label Text="{Binding CountText}" Style="{StaticResource TertiaryLabel}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="2" Text="{Binding TotalText}" FontAttributes="Bold" VerticalOptions="Center"
+                           TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
+                    <HorizontalStackLayout Grid.Column="3" Spacing="6" VerticalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
+                            <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
+                        </Border>
+                        <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="140" />
+                        <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
+                    </HorizontalStackLayout>
+                    <Button Grid.Column="4" Text="{Binding ApproveText}" Command="{Binding ApproveCommand}" Style="{StaticResource PrimaryButton}" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*">
+                    <BoxView Grid.Column="0" WidthRequest="3" CornerRadius="1.5" Margin="10,0,14,0" Color="{Binding CategoryBorderColor}" IsVisible="{Binding IsMultiple}" />
+                    <VerticalStackLayout Grid.Column="1" BindableLayout.ItemsSource="{Binding DisplayedRows}" BindableLayout.ItemTemplate="{StaticResource ReviewRowTemplate}" />
+                </Grid>
+                <BoxView HeightRequest="1" IsVisible="{Binding IsMultiple}" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </ContentPage.Resources>
+
     <ScrollView>
         <VerticalStackLayout Padding="32" Spacing="16">
 
@@ -87,66 +178,125 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Step 3: review rows -->
+            <!-- Between steps 2 and 3, only when the statement shows bank categories its parser hasn't
+                 shown before (see StatementBankCategoriesViewModel). -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsLinkBankCategoriesStep}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="{loc:Translate StatementImport_BankCategoriesHeader}" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{Binding BankCategories.HintText}" Style="{StaticResource SecondaryLabel}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding BankCategories.Rows}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:StatementBankCategoryRowViewModel">
+                                <VerticalStackLayout Spacing="0">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Padding="0,8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
+                                            <Label Text="{Binding Name}" />
+                                            <Label Text="{Binding CountText}" Style="{StaticResource TertiaryLabel}" />
+                                        </VerticalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center" IsVisible="{Binding IsLinkable}">
+                                            <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
+                                                <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="170" />
+                                            </Border>
+                                            <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="150" />
+                                        </HorizontalStackLayout>
+                                        <Label Grid.Column="1" Text="{loc:Translate StatementImport_BankCategorySkipped}" IsVisible="{Binding IsSkipped}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                                        <Button Grid.Column="2" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" IsVisible="{Binding IsLinkable}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="2" Text="{loc:Translate StatementImport_UndoSkipButton}" Command="{Binding UndoSkipCommand}" IsVisible="{Binding IsSkipped}" Style="{StaticResource QuietButton}" />
+                                    </Grid>
+                                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="{loc:Translate Common_Back}" Command="{Binding BackToAccountCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Common_Continue}" Command="{Binding ContinueFromBankCategoriesCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource PrimaryButton}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Step 3: review rows, in three blocks (see StatementImportReviewSectionsViewModel) -->
             <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsReviewStep}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto,Auto">
                         <Label Grid.Column="0" Text="{loc:Translate StatementImport_Step3Header}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="{loc:Translate Common_Select}" Command="{Binding Review.ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
-                        <Button Grid.Column="2" Text="{loc:Translate StatementImport_CancelImportButton}" Command="{Binding Review.CancelImportCommand}" Style="{StaticResource DestructiveButton}" />
+                        <Button Grid.Column="1" Text="{loc:Translate Common_Select}" Command="{Binding Review.Bulk.ToggleSelectModeCommand}" IsVisible="{Binding Review.HasRows}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="2" Text="{loc:Translate StatementImport_CancelImportButton}" Command="{Binding Review.CancelImportCommand}" IsVisible="{Binding Review.HasRows}" Style="{StaticResource DestructiveButton}" />
                     </Grid>
 
-                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding Review.SelectMode}">
-                        <Label Grid.Column="0" Text="{Binding Review.SelectionSummaryText}" VerticalOptions="Center" />
-                        <Picker Grid.Column="1" Title="{loc:Translate Common_Category}" ItemsSource="{Binding Review.CategoryOptions}" SelectedItem="{Binding Review.BulkCategory}" WidthRequest="160" />
-                        <Entry Grid.Column="2" Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding Review.NewBulkCategoryName}" IsVisible="{Binding Review.IsCreatingNewBulkCategory}" WidthRequest="140" />
-                        <Button Grid.Column="3" Text="{loc:Translate StatementImport_ApproveSelectedButton}" Command="{Binding Review.ApproveSelectedCommand}" Style="{StaticResource PrimaryButton}" />
+                    <!-- Progress, undo and the one-click path for everything already categorised -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding Review.HasRows}">
+                        <Label Grid.Column="0" Text="{Binding Review.ProgressText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="{loc:Translate StatementImport_UndoButton}" Command="{Binding Review.UndoCommand}" IsVisible="{Binding Review.CanUndo}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="2" Text="{Binding Review.Sections.ApproveAllCategorisedText}" Command="{Binding Review.Sections.ApproveAllCategorisedCommand}" IsEnabled="{Binding Review.Sections.CanApproveAllCategorised}" Style="{StaticResource PrimaryButton}" />
                     </Grid>
-                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding Review.SelectMode}">
-                        <Button Text="{loc:Translate StatementImport_SkipSelectedButton}" Command="{Binding Review.SkipSelectedCommand}" Style="{StaticResource QuietButton}" />
+
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding Review.Bulk.SelectMode}">
+                        <Label Grid.Column="0" Text="{Binding Review.Bulk.SelectionSummaryText}" VerticalOptions="Center" />
+                        <Picker Grid.Column="1" Title="{loc:Translate Common_Category}" ItemsSource="{Binding Review.CategoryOptions}" SelectedItem="{Binding Review.Bulk.BulkCategory}" WidthRequest="160" />
+                        <Entry Grid.Column="2" Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding Review.Bulk.NewBulkCategoryName}" IsVisible="{Binding Review.Bulk.IsCreatingNewBulkCategory}" WidthRequest="140" />
+                        <Button Grid.Column="3" Text="{loc:Translate StatementImport_ApplyToSelectedButton}" Command="{Binding Review.Bulk.ApplyCategoryCommand}" Style="{StaticResource QuietButton}" />
+                        <Button Grid.Column="4" Text="{loc:Translate StatementImport_ApproveSelectedButton}" Command="{Binding Review.Bulk.ApproveSelectedCommand}" Style="{StaticResource PrimaryButton}" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding Review.Bulk.SelectMode}">
+                        <Button Text="{loc:Translate Common_SelectAll}" Command="{Binding Review.Bulk.ToggleSelectAllCommand}" IsVisible="{Binding Review.Bulk.CanSelectAll}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate Common_ClearSelection}" Command="{Binding Review.Bulk.ToggleSelectAllCommand}" IsVisible="{Binding Review.Bulk.AreAllRowsSelected}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate StatementImport_SelectDuplicatesButton}" Command="{Binding Review.Bulk.SelectDuplicatesCommand}" IsVisible="{Binding Review.Bulk.HasDuplicates}" Style="{StaticResource QuietButton}" />
+                        <Button Text="{loc:Translate StatementImport_SkipSelectedButton}" Command="{Binding Review.Bulk.SkipSelectedCommand}" Style="{StaticResource QuietButton}" />
                     </HorizontalStackLayout>
 
                     <Label Text="{Binding Review.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
 
-                    <CollectionView ItemsSource="{Binding Review.Rows}">
-                        <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="8">
-                                <Label Text="{loc:Translate StatementImport_AllRowsReviewed}" Style="{StaticResource SecondaryLabel}" />
-                                <Button Text="{loc:Translate Common_Done}" Clicked="OnCloseClicked" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
-                            </VerticalStackLayout>
-                        </CollectionView.EmptyView>
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="viewModels:StatementImportRowViewModel">
-                                <VerticalStackLayout Spacing="0">
-                                <Grid RowDefinitions="Auto,Auto" RowSpacing="6" Padding="0,8">
-                                <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" IsVisible="{Binding IsSelectModeActive}" />
-                                    <Label Grid.Column="1" Text="{Binding DateText}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
-                                    <VerticalStackLayout Grid.Column="2" Spacing="1" VerticalOptions="Center">
-                                        <Label Text="{Binding Description}" />
-                                        <Label Text="{loc:Translate StatementImport_PossibleDuplicate}" IsVisible="{Binding IsDuplicate}" Style="{StaticResource TertiaryLabel}"
-                                               TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="3" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Picker Grid.Column="4" Title="{loc:Translate Common_Type}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding Type}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" WidthRequest="110" VerticalOptions="Center" />
-                                    <HorizontalStackLayout Grid.Column="5" Spacing="6" VerticalOptions="Center">
-                                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
-                                            <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
-                                        </Border>
-                                        <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="140" />
-                                    </HorizontalStackLayout>
-                                    <Button Grid.Column="6" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="7" Text="{loc:Translate Common_Approve}" Command="{Binding ApproveCommand}" Style="{StaticResource PrimaryButton}" />
-                                </Grid>
-                                <HorizontalStackLayout Grid.Row="1" Spacing="8" HorizontalOptions="End" IsVisible="{Binding IsTransferType}">
-                                    <Picker Title="{loc:Translate StatementImport_OtherAccountPickerTitle}" ItemsSource="{Binding OtherAccountOptions}" SelectedItem="{Binding OtherAccount}" WidthRequest="160" />
-                                </HorizontalStackLayout>
-                                </Grid>
-                                <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                    <!-- Block 1: possible duplicates -->
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding Review.Sections.HasDuplicates}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="{Binding Review.Sections.DuplicatesHeaderText}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightStatusOrange}, Dark={StaticResource DarkStatusOrange}}" />
+                            <Button Grid.Column="1" Text="{loc:Translate StatementImport_SkipAllDuplicatesButton}" Command="{Binding Review.Sections.SkipAllDuplicatesCommand}" Style="{StaticResource QuietButton}" />
+                        </Grid>
+                        <Label Text="{loc:Translate StatementImport_DuplicatesHint}" Style="{StaticResource TertiaryLabel}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Review.Sections.DuplicateRows}" BindableLayout.ItemTemplate="{StaticResource ReviewRowTemplate}" />
+                        <Button Text="{Binding Review.Sections.ShowMoreDuplicatesText}" Command="{Binding Review.Sections.ShowMoreCommand}" IsVisible="{Binding Review.Sections.HasHiddenDuplicates}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <!-- Block 2: already categorised from what Banccoon learned - collapsed by default, right under
+                         the duplicates so the "nothing to decide" rows are dealt with before the real decisions -->
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding Review.Sections.HasReady}">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="{Binding Review.Sections.ReadyHeaderText}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                <CheckBox IsChecked="{Binding Review.Sections.IsGroupedByName}" />
+                                <Label Text="{loc:Translate StatementImport_GroupByName}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Button Grid.Column="2" Text="{loc:Translate StatementImport_ShowRowsButton}" Command="{Binding Review.Sections.ToggleReadyExpandedCommand}" IsVisible="{Binding Review.Sections.IsReadyCollapsed}" Style="{StaticResource QuietButton}" />
+                            <Button Grid.Column="2" Text="{loc:Translate StatementImport_HideRowsButton}" Command="{Binding Review.Sections.ToggleReadyExpandedCommand}" IsVisible="{Binding Review.Sections.IsReadyExpanded}" Style="{StaticResource QuietButton}" />
+                        </Grid>
+                        <Label Text="{loc:Translate StatementImport_ReadyHint}" Style="{StaticResource TertiaryLabel}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Review.Sections.ReadyGroups}" BindableLayout.ItemTemplate="{StaticResource ReviewGroupTemplate}" IsVisible="{Binding Review.Sections.IsReadyListGrouped}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Review.Sections.ReadyRows}" BindableLayout.ItemTemplate="{StaticResource ReviewRowTemplate}" IsVisible="{Binding Review.Sections.IsReadyListFlat}" />
+                        <Button Text="{Binding Review.Sections.ShowMoreReadyText}" Command="{Binding Review.Sections.ShowMoreReadyCommand}" IsVisible="{Binding Review.Sections.HasHiddenReady}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <!-- Block 3: needs a decision -->
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding Review.Sections.HasAttention}">
+                        <Label Text="{Binding Review.Sections.AttentionHeaderText}" Style="{StaticResource SectionTitleLabel}" />
+                        <Label Text="{loc:Translate StatementImport_AttentionHint}" Style="{StaticResource TertiaryLabel}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Review.Sections.AttentionRows}" BindableLayout.ItemTemplate="{StaticResource ReviewRowTemplate}" />
+                        <Button Text="{Binding Review.Sections.ShowMoreAttentionText}" Command="{Binding Review.Sections.ShowMoreCommand}" IsVisible="{Binding Review.Sections.HasHiddenAttention}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <!-- Every row reviewed: the statement's closing balance is now the account's balance, so a
+                         check-in mostly means attaching the imported rows to the scheduled payments they paid. -->
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding Review.IsComplete}">
+                        <Label Text="{loc:Translate StatementImport_AllRowsReviewed}" Style="{StaticResource SecondaryLabel}" />
+                        <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CanCheckIn}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="{loc:Translate StatementImport_CheckInSuggestion}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="{loc:Translate StatementImport_CheckInNowButton}" Clicked="OnCheckInClicked" Style="{StaticResource PrimaryButton}" />
+                            </Grid>
+                        </Border>
+                        <Button Text="{loc:Translate Common_Done}" Clicked="OnCloseClicked" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </Border>
 

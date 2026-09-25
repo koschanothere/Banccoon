@@ -120,6 +120,18 @@
   <data name="ForecastChart_Today" xml:space="preserve">
     <value>Сегодня</value>
   </data>
+  <data name="ForecastChart_CurrentBalance" xml:space="preserve">
+    <value>Текущий баланс</value>
+  </data>
+  <data name="ForecastChart_NoAccountChanges" xml:space="preserve">
+    <value>Без изменений по счетам</value>
+  </data>
+  <data name="ForecastChart_NoPlannedEvents" xml:space="preserve">
+    <value>Нет запланированных операций</value>
+  </data>
+  <data name="ForecastChart_InternalTransferFormat" xml:space="preserve">
+    <value>{0}: {1} (перевод)</value>
+  </data>
   <data name="CategoryLearning_MatchCount_One" xml:space="preserve">
     <value>Изучено по {0} исправлению</value>
   </data>
@@ -321,6 +333,24 @@
   <data name="RecurrenceValidation_MonthlyDayOutOfRange" xml:space="preserve">
     <value>День месяца для ежемесячного повторения должен быть от 1 до 31.</value>
   </data>
+  <data name="RecurrenceSyntaxError_Empty" xml:space="preserve">
+    <value>Синтаксис не указан.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidField" xml:space="preserve">
+    <value>Некорректное поле «{0}». Используйте формат KEY=VALUE.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_FieldRequired" xml:space="preserve">
+    <value>Поле {0} обязательно.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_UnsupportedValue" xml:space="preserve">
+    <value>Поле {0} содержит неподдерживаемое значение.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_NotWholeNumber" xml:space="preserve">
+    <value>Поле {0} должно быть целым числом.</value>
+  </data>
+  <data name="RecurrenceSyntaxError_InvalidMonthDay" xml:space="preserve">
+    <value>Поле {0} должно быть числом от 1 до 31 или LAST.</value>
+  </data>
   <data name="RecurrenceSyntax_Example_EveryDay" xml:space="preserve">
     <value>Каждый день</value>
   </data>
@@ -335,6 +365,96 @@
   </data>
   <data name="RecurrenceSyntax_Example_EveryYear" xml:space="preserve">
     <value>Каждый год</value>
+  </data>
+  <data name="RecurrenceDescription_EveryDay" xml:space="preserve">
+    <value>Каждый день</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_One" xml:space="preserve">
+    <value>Каждый {0} день</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_Few" xml:space="preserve">
+    <value>Каждые {0} дня</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNDays_Many" xml:space="preserve">
+    <value>Каждые {0} дней</value>
+  </data>
+  <data name="RecurrenceDescription_EveryWeek" xml:space="preserve">
+    <value>Каждую неделю</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_One" xml:space="preserve">
+    <value>Каждую {0} неделю</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_Few" xml:space="preserve">
+    <value>Каждые {0} недели</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNWeeks_Many" xml:space="preserve">
+    <value>Каждые {0} недель</value>
+  </data>
+  <data name="RecurrenceDescription_EveryMonth" xml:space="preserve">
+    <value>Каждый месяц</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_One" xml:space="preserve">
+    <value>Каждый {0} месяц</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_Few" xml:space="preserve">
+    <value>Каждые {0} месяца</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNMonths_Many" xml:space="preserve">
+    <value>Каждые {0} месяцев</value>
+  </data>
+  <data name="RecurrenceDescription_EveryYear" xml:space="preserve">
+    <value>Каждый год</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_One" xml:space="preserve">
+    <value>Каждый {0} год</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_Few" xml:space="preserve">
+    <value>Каждые {0} года</value>
+  </data>
+  <data name="RecurrenceDescription_EveryNYears_Many" xml:space="preserve">
+    <value>Каждые {0} лет</value>
+  </data>
+  <data name="RecurrenceDescription_WeeklyFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Sunday" xml:space="preserve">
+    <value>по воскресеньям</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Monday" xml:space="preserve">
+    <value>по понедельникам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Tuesday" xml:space="preserve">
+    <value>по вторникам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Wednesday" xml:space="preserve">
+    <value>по средам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Thursday" xml:space="preserve">
+    <value>по четвергам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Friday" xml:space="preserve">
+    <value>по пятницам</value>
+  </data>
+  <data name="RecurrenceDescription_OnWeekday_Saturday" xml:space="preserve">
+    <value>по субботам</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnDayFormat" xml:space="preserve">
+    <value>{0}, {1} числа</value>
+  </data>
+  <data name="RecurrenceDescription_MonthlyOnLastDayFormat" xml:space="preserve">
+    <value>{0}, в последний день</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="RecurrenceDescription_YearlyDatePattern" xml:space="preserve">
+    <value>d MMMM</value>
+  </data>
+  <data name="RecurrenceDescription_UntilFormat" xml:space="preserve">
+    <value>{0}, до {1} г.</value>
+  </data>
+  <data name="RecurrenceDescription_UntilDatePattern" xml:space="preserve">
+    <value>d MMMM yyyy</value>
   </data>
   <!-- Common (reusable generic UI verbs/nouns across screens) -->
   <data name="Common_Close" xml:space="preserve">
@@ -472,6 +592,135 @@
   </data>
   <data name="StatementImport_NameNewCategoryFirst" xml:space="preserve">
     <value>Сначала укажите название новой категории.</value>
+  </data>
+  <data name="StatementImport_ChooseOtherAccountFirst" xml:space="preserve">
+    <value>Сначала выберите второй счёт для этого перевода.</value>
+  </data>
+  <data name="StatementImport_ActionFailed" xml:space="preserve">
+    <value>Не удалось выполнить действие. Подробности записаны в журнал диагностики.</value>
+  </data>
+  <data name="StatementImport_ApplyToSelectedButton" xml:space="preserve">
+    <value>Применить к выбранным</value>
+  </data>
+  <data name="StatementImport_SelectDuplicatesButton" xml:space="preserve">
+    <value>Выбрать возможные дубликаты</value>
+  </data>
+  <data name="StatementImport_ProgressFormat" xml:space="preserve">
+    <value>Проверено {0} из {1}</value>
+  </data>
+  <data name="StatementImport_UndoButton" xml:space="preserve">
+    <value>Отменить действие</value>
+  </data>
+  <data name="StatementImport_ApproveAllCategorisedFormat" xml:space="preserve">
+    <value>Подтвердить все с категорией ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHeaderFormat" xml:space="preserve">
+    <value>Возможные дубликаты ({0})</value>
+  </data>
+  <data name="StatementImport_DuplicatesHint" xml:space="preserve">
+    <value>Похоже, они уже записаны, например при прошлом импорте за тот же период. Пропустите их, если только операция действительно не новая.</value>
+  </data>
+  <data name="StatementImport_SkipAllDuplicatesButton" xml:space="preserve">
+    <value>Пропустить все дубликаты</value>
+  </data>
+  <data name="StatementImport_AttentionHeaderFormat" xml:space="preserve">
+    <value>Требуется решение ({0})</value>
+  </data>
+  <data name="StatementImport_AttentionHint" xml:space="preserve">
+    <value>Для этих строк пока ничего не изучено. Выберите категорию или подтвердите как есть — строка попадёт в категорию «Other».</value>
+  </data>
+  <data name="StatementImport_ReadyHeaderFormat" xml:space="preserve">
+    <value>К подтверждению ({0})</value>
+  </data>
+  <data name="StatementImport_ReadyHint" xml:space="preserve">
+    <value>Категория (а для переводов и второй счёт) уже заполнены по изученным правилам. Проверьте их через «Показать строки» или подтвердите все сразу.</value>
+  </data>
+  <data name="StatementImport_GroupByName" xml:space="preserve">
+    <value>Группировать по имени</value>
+  </data>
+  <data name="StatementImport_GroupCount_One" xml:space="preserve">
+    <value>{0} операция</value>
+  </data>
+  <data name="StatementImport_GroupCount_Few" xml:space="preserve">
+    <value>{0} операции</value>
+  </data>
+  <data name="StatementImport_GroupCount_Many" xml:space="preserve">
+    <value>{0} операций</value>
+  </data>
+  <data name="StatementImport_ApproveGroupFormat" xml:space="preserve">
+    <value>Подтвердить все ({0})</value>
+  </data>
+  <data name="StatementImport_ShowMoreFormat" xml:space="preserve">
+    <value>Показать ещё (пока скрыто: {0})</value>
+  </data>
+  <data name="StatementImport_BankCategoriesHeader" xml:space="preserve">
+    <value>Новые категории банка</value>
+  </data>
+  <data name="StatementImport_BankCategoriesHintFormat" xml:space="preserve">
+    <value>{0} указывает для каждой операции свою категорию. Свяжите нужные с вашими категориями — такие строки придут уже с категорией (правило, которое Banccoon изучил для получателя, по-прежнему важнее). Пропущенные и оставленные пустыми игнорируются; любую из них можно изменить позже в Настройках → Категории банков.</value>
+  </data>
+  <data name="StatementImport_BankCategorySkipped" xml:space="preserve">
+    <value>Пропущено</value>
+  </data>
+  <data name="StatementImport_UndoSkipButton" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="StatementImport_BankCategoryFormat" xml:space="preserve">
+    <value>Категория банка: {0}</value>
+  </data>
+  <data name="StatementImport_ShowRowsButton" xml:space="preserve">
+    <value>Показать строки</value>
+  </data>
+  <data name="StatementImport_HideRowsButton" xml:space="preserve">
+    <value>Скрыть строки</value>
+  </data>
+  <data name="StatementImport_TypeTooltipFormat" xml:space="preserve">
+    <value>{0} · нажмите, чтобы изменить тип</value>
+  </data>
+  <data name="StatementImport_CheckInSuggestion" xml:space="preserve">
+    <value>Все строки проверены, и баланс счёта теперь совпадает с конечным остатком по выписке. Проведите сверку, чтобы привязать импортированные строки к запланированным платежам, которые они покрывают.</value>
+  </data>
+  <data name="StatementImport_CheckInNowButton" xml:space="preserve">
+    <value>Провести сверку</value>
+  </data>
+  <data name="Common_SelectAll" xml:space="preserve">
+    <value>Выбрать все</value>
+  </data>
+  <data name="Common_ClearSelection" xml:space="preserve">
+    <value>Снять выбор</value>
+  </data>
+  <data name="StatementImportMessage_NoFileChosen" xml:space="preserve">
+    <value>Сначала выберите файл банковской выписки.</value>
+  </data>
+  <data name="StatementImportMessage_NoParserAvailable" xml:space="preserve">
+    <value>Для этой выписки пока нет подходящего парсера.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_One" xml:space="preserve">
+    <value>Найдена {0} строка выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_Few" xml:space="preserve">
+    <value>Найдено {0} строки выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsFound_Many" xml:space="preserve">
+    <value>Найдено {0} строк выписки.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_One" xml:space="preserve">
+    <value>{0} строка выписки готова к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_Few" xml:space="preserve">
+    <value>{0} строки выписки готовы к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_RowsReadyForReview_Many" xml:space="preserve">
+    <value>{0} строк выписки готово к проверке.</value>
+  </data>
+  <data name="StatementImportMessage_ImportNotFound" xml:space="preserve">
+    <value>Импорт выписки не найден.</value>
+  </data>
+  <data name="StatementImportMessage_CannotCancelAfterApproval" xml:space="preserve">
+    <value>По этой выписке уже созданы транзакции, поэтому импорт нельзя отменить.</value>
+  </data>
+  <data name="StatementImportMessage_Cancelled" xml:space="preserve">
+    <value>Импорт выписки отменён.</value>
   </data>
   <data name="Common_Save" xml:space="preserve">
     <value>Сохранить</value>
@@ -679,6 +928,12 @@
   <data name="Transactions_RowCountFormat" xml:space="preserve">
     <value>Показано {0} из {1}</value>
   </data>
+  <data name="Transactions_LoadedSinceFormat" xml:space="preserve">
+    <value>Показаны операции с {0}.</value>
+  </data>
+  <data name="Transactions_LoadEarlierMonthButton" xml:space="preserve">
+    <value>Загрузить месяц раньше</value>
+  </data>
   <data name="Transactions_AllAccountsOption" xml:space="preserve">
     <value>Все счета</value>
   </data>
@@ -723,6 +978,21 @@
   </data>
   <data name="ResolveUpcoming_DueFormat" xml:space="preserve">
     <value>срок {0}</value>
+  </data>
+  <data name="ResolveUpcoming_AttachButton" xml:space="preserve">
+    <value>Привязать</value>
+  </data>
+  <data name="ResolveUpcoming_AttachOpenButton" xml:space="preserve">
+    <value>Привязать…</value>
+  </data>
+  <data name="ResolveUpcoming_AttachHint" xml:space="preserve">
+    <value>Выберите записанную операцию, которой это оплачено. Платёж отметится как оплаченный, новая операция не создаётся.</value>
+  </data>
+  <data name="ResolveUpcoming_AttachSearchPlaceholder" xml:space="preserve">
+    <value>Поиск по названию или сумме</value>
+  </data>
+  <data name="ResolveUpcoming_NoAttachChoices" xml:space="preserve">
+    <value>Подходящих записанных операций нет.</value>
   </data>
   <data name="ScheduledRule_NoUpcomingOccurrence" xml:space="preserve">
     <value>нет предстоящих платежей</value>
@@ -804,7 +1074,10 @@
     <value>Цели</value>
   </data>
   <data name="Dashboard_NoSavingsGoalsYet" xml:space="preserve">
-    <value>Пока нет накопительных целей.</value>
+    <value>Пока нет целей. Цель — это счёт с типом «Цель» и, при желании, целевой суммой.</value>
+  </data>
+  <data name="Dashboard_AddGoalButton" xml:space="preserve">
+    <value>+ Добавить цель</value>
   </data>
   <data name="Dashboard_EndDateMustBeAfterStart" xml:space="preserve">
     <value>Дата окончания должна быть не раньше даты начала.</value>
@@ -823,6 +1096,9 @@
   </data>
   <data name="Common_Add" xml:space="preserve">
     <value>Добавить</value>
+  </data>
+  <data name="Common_NewCategoryOption" xml:space="preserve">
+    <value>+ Новая категория</value>
   </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Другой счёт</value>
@@ -971,6 +1247,27 @@
   </data>
   <data name="Settings_NothingLearnedYet" xml:space="preserve">
     <value>Пока ничего не изучено.</value>
+  </data>
+  <data name="Settings_BankCategoriesHeader" xml:space="preserve">
+    <value>Категории банков</value>
+  </data>
+  <data name="Settings_BankCategoriesHint" xml:space="preserve">
+    <value>Собственные категории банка из его выписок и категория, которую каждая из них подставляет при импорте. Правило, изученное для получателя, по-прежнему важнее. Изменения действуют для будущих импортов.</value>
+  </data>
+  <data name="Settings_BankPickerTitle" xml:space="preserve">
+    <value>Банк</value>
+  </data>
+  <data name="Settings_NotLinkedOption" xml:space="preserve">
+    <value>Не связана</value>
+  </data>
+  <data name="Settings_LearnedRulesPageFormat" xml:space="preserve">
+    <value>{0}–{1} из {2}</value>
+  </data>
+  <data name="Common_PreviousPage" xml:space="preserve">
+    <value>‹ Назад</value>
+  </data>
+  <data name="Common_NextPage" xml:space="preserve">
+    <value>Далее ›</value>
   </data>
   <data name="Settings_ForgetButton" xml:space="preserve">
     <value>Забыть</value>
@@ -1174,10 +1471,178 @@
   <data name="Settings_MustBeAtLeast0" xml:space="preserve">
     <value>Должно быть целым числом не менее 0.</value>
   </data>
+  <data name="ImportValidation_UnsupportedFormatVersion" xml:space="preserve">
+    <value>Неподдерживаемая версия формата экспорта: {0}.</value>
+  </data>
+  <data name="ImportValidation_ApplicationVersionRequired" xml:space="preserve">
+    <value>Не указана версия приложения.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Account" xml:space="preserve">
+    <value>Счёт с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Category" xml:space="preserve">
+    <value>Категория с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Transaction" xml:space="preserve">
+    <value>Транзакция с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_ScheduledTransaction" xml:space="preserve">
+    <value>Запланированное правило с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_SavingsGoal" xml:space="preserve">
+    <value>Накопительная цель с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportBatch" xml:space="preserve">
+    <value>Импорт выписки с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_StatementImportRow" xml:space="preserve">
+    <value>Строка выписки с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_CategoryLearningRule" xml:space="preserve">
+    <value>Правило категоризации с идентификатором {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_DuplicateId_Generic" xml:space="preserve">
+    <value>Идентификатор {0} встречается более одного раза.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Account" xml:space="preserve">
+    <value>Транзакция {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Transaction_Category" xml:space="preserve">
+    <value>Транзакция {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Account" xml:space="preserve">
+    <value>Запланированное правило {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_ScheduledTransaction_Category" xml:space="preserve">
+    <value>Запланированное правило {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_SavingsGoal_Account" xml:space="preserve">
+    <value>Накопительная цель {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportBatch_Account" xml:space="preserve">
+    <value>Импорт выписки {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Batch" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующий импорт выписки {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_SuggestedCategory" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую предложенную категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_Category" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_DuplicateTransaction" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую дублирующую транзакцию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_StatementImportRow_CreatedTransaction" xml:space="preserve">
+    <value>Строка выписки {0} ссылается на отсутствующую созданную транзакцию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Category" xml:space="preserve">
+    <value>Правило категоризации {0} ссылается на отсутствующую категорию {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_CategoryLearningRule_Account" xml:space="preserve">
+    <value>Правило категоризации {0} ссылается на отсутствующий счёт {1}.</value>
+  </data>
+  <data name="ImportValidation_MissingReference_Generic" xml:space="preserve">
+    <value>Запись {0} ссылается на отсутствующую запись {1}.</value>
+  </data>
   <data name="Common_Next" xml:space="preserve">
     <value>Далее</value>
   </data>
   <data name="WorkflowOverlay_StepProgressFormat" xml:space="preserve">
     <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Reconciliation_Title" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Reconciliation_Header" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="Reconciliation_StepProgressFormat" xml:space="preserve">
+    <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Reconciliation_BanccoonBalanceLabel" xml:space="preserve">
+    <value>Баланс в Banccoon</value>
+  </data>
+  <data name="Reconciliation_Step1Header" xml:space="preserve">
+    <value>1. Что показывает банк?</value>
+  </data>
+  <data name="Reconciliation_Step1Hint" xml:space="preserve">
+    <value>Выберите счёт и введите баланс, который банк показывает по нему сейчас.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceLabel" xml:space="preserve">
+    <value>Баланс в банке</value>
+  </data>
+  <data name="Reconciliation_ActualBalancePlaceholder" xml:space="preserve">
+    <value>например, 12500.00</value>
+  </data>
+  <data name="Reconciliation_PrefilledFromStatement" xml:space="preserve">
+    <value>Заполнено по только что импортированной выписке.</value>
+  </data>
+  <data name="Reconciliation_ActualBalanceMustBeNumber" xml:space="preserve">
+    <value>Введите баланс банка числом.</value>
+  </data>
+  <data name="Reconciliation_Matched" xml:space="preserve">
+    <value>Балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_SurplusFormat" xml:space="preserve">
+    <value>Банк показывает на {0} больше, чем Banccoon.</value>
+  </data>
+  <data name="Reconciliation_ShortageFormat" xml:space="preserve">
+    <value>Банк показывает на {0} меньше, чем Banccoon.</value>
+  </data>
+  <data name="Reconciliation_Step2Header" xml:space="preserve">
+    <value>2. Ожидаемые платежи</value>
+  </data>
+  <data name="Reconciliation_Step2Hint" xml:space="preserve">
+    <value>Запланированные операции по этому счёту со сроком до сегодняшнего дня. Отметьте каждую как оплаченную, привяжите к уже записанной транзакции, пропустите или отложите.</value>
+  </data>
+  <data name="Reconciliation_NothingExpected" xml:space="preserve">
+    <value>По этому счёту ничего не ожидается.</value>
+  </data>
+  <data name="Reconciliation_Step3Header" xml:space="preserve">
+    <value>3. Неучтённые расходы</value>
+  </data>
+  <data name="Reconciliation_Step3Hint" xml:space="preserve">
+    <value>Есть расходы, которые вы не записали, например наличные или серия мелких покупок по карте? Добавьте их здесь одной суммой на группу, с категорией.</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingNotePlaceholder" xml:space="preserve">
+    <value>Примечание (необязательно)</value>
+  </data>
+  <data name="Reconciliation_GroupedSpendingDefaultName" xml:space="preserve">
+    <value>Неучтённые расходы</value>
+  </data>
+  <data name="Reconciliation_Step4Header" xml:space="preserve">
+    <value>4. Корректировка баланса</value>
+  </data>
+  <data name="Reconciliation_Step4Hint" xml:space="preserve">
+    <value>Оставшуюся разницу можно записать как корректирующую транзакцию, чтобы исправление было видно в разделе «Транзакции».</value>
+  </data>
+  <data name="Reconciliation_AdjustmentPreviewFormat" xml:space="preserve">
+    <value>Сумма корректировки: {0}</value>
+  </data>
+  <data name="Reconciliation_RecordAdjustmentButton" xml:space="preserve">
+    <value>Записать корректировку</value>
+  </data>
+  <data name="Reconciliation_FinishWithoutAdjustingButton" xml:space="preserve">
+    <value>Завершить без корректировки</value>
+  </data>
+  <data name="Reconciliation_AdjustmentName" xml:space="preserve">
+    <value>Корректировка баланса</value>
+  </data>
+  <data name="Reconciliation_AdjustmentNote" xml:space="preserve">
+    <value>Записано при сверке.</value>
+  </data>
+  <data name="Reconciliation_DoneHeader" xml:space="preserve">
+    <value>Сверка завершена</value>
+  </data>
+  <data name="Reconciliation_DoneMatched" xml:space="preserve">
+    <value>Балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_DoneAdjustedFormat" xml:space="preserve">
+    <value>Записана корректировка на {0}. Теперь балансы совпадают.</value>
+  </data>
+  <data name="Reconciliation_DoneUnexplainedFormat" xml:space="preserve">
+    <value>Завершено с необъяснённой разницей {0}.</value>
   </data>
 </root>

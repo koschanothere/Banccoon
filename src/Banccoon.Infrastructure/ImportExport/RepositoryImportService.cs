@@ -14,6 +14,7 @@ public sealed class RepositoryImportService : IImportService
     private readonly IExportValidator exportValidator;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryLearningRuleRepository categoryLearningRuleRepository;
+    private readonly IBankCategoryLinkRepository bankCategoryLinkRepository;
     private readonly ILocalDataResetService localDataResetService;
 
     public RepositoryImportService(
@@ -26,6 +27,7 @@ public sealed class RepositoryImportService : IImportService
         IExportValidator exportValidator,
         IStatementImportRepository statementImportRepository,
         ICategoryLearningRuleRepository categoryLearningRuleRepository,
+        IBankCategoryLinkRepository bankCategoryLinkRepository,
         ILocalDataResetService localDataResetService)
     {
         this.accountRepository = accountRepository;
@@ -37,6 +39,7 @@ public sealed class RepositoryImportService : IImportService
         this.exportValidator = exportValidator;
         this.statementImportRepository = statementImportRepository;
         this.categoryLearningRuleRepository = categoryLearningRuleRepository;
+        this.bankCategoryLinkRepository = bankCategoryLinkRepository;
         this.localDataResetService = localDataResetService;
     }
 
@@ -116,6 +119,15 @@ public sealed class RepositoryImportService : IImportService
         {
             await categoryLearningRuleRepository.SaveAsync(rule, cancellationToken);
         }
+
+        // A link to a category the backup doesn't have comes back unlinked rather than failing the
+        // whole restore - it's a convenience, and the user can link it again in Settings.
+        var categoryIds = data.Categories.Select(category => category.Id).ToHashSet();
+        await bankCategoryLinkRepository.SaveAllAsync(
+            data.BankCategoryLinks
+                .Select(link => link.CategoryId is { } id && !categoryIds.Contains(id) ? link with { CategoryId = null } : link)
+                .ToList(),
+            cancellationToken);
 
         await settingsRepository.SaveAsync(data.Settings, cancellationToken);
     }

@@ -2,7 +2,7 @@ namespace Banccoon.Core.Recurrence;
 
 // Structured recurrence-description data, not a composed sentence - Core must stay
 // UI-language-agnostic. Banccoon.App.Formatting.RecurrenceDescriptionFormatter turns this
-// into display text (English today, translated later).
+// into translated display text.
 public sealed record RecurrenceDescriptionData(
     RecurrenceFrequency Frequency,
     int Interval,

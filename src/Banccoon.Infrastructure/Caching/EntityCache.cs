@@ -44,6 +44,36 @@ internal sealed class EntityCache<TEntity>
         }
     }
 
+    // Unlike Load, always takes the new contents - for a cache whose scope moved (the transaction
+    // cache's window rolling into a new month).
+    public IReadOnlyList<TEntity> Replace(IEnumerable<TEntity> loaded)
+    {
+        lock (gate)
+        {
+            items = loaded.ToList();
+            return items.ToList();
+        }
+    }
+
+    public void UpdateWhere(Func<TEntity, bool> predicate, Func<TEntity, TEntity> update)
+    {
+        lock (gate)
+        {
+            if (items is null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < items.Count; index++)
+            {
+                if (predicate(items[index]))
+                {
+                    items[index] = update(items[index]);
+                }
+            }
+        }
+    }
+
     public void Upsert(TEntity entity, Func<TEntity, bool> matchesId)
     {
         lock (gate)

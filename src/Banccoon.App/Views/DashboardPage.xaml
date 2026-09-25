@@ -234,22 +234,22 @@
 
             <Border Grid.Row="{Binding GoalsSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="{loc:Translate Dashboard_GoalsHeader}" Style="{StaticResource SectionTitleLabel}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="{loc:Translate Dashboard_GoalsHeader}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="{loc:Translate Dashboard_AddGoalButton}" Command="{Binding AddGoalCommand}" Style="{StaticResource QuietButton}" />
+                    </Grid>
                     <CollectionView ItemsSource="{Binding Goals}">
                         <CollectionView.EmptyView>
                             <Label Text="{loc:Translate Dashboard_NoSavingsGoalsYet}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="viewModels:SavingsGoalRowViewModel">
+                            <DataTemplate x:DataType="viewModels:GoalAccountRowViewModel">
                                 <VerticalStackLayout Spacing="4" Padding="0,6">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <Label Grid.Column="0" Text="{Binding Name}" />
-                                        <Label Grid.Column="1" Text="{Binding TargetDateText}" IsVisible="{Binding HasTargetDate}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
-                                    </Grid>
-                                    <ProgressBar Progress="{Binding Progress}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                    <Label Text="{Binding Name}" />
+                                    <ProgressBar Progress="{Binding Progress}" IsVisible="{Binding HasTarget}" ProgressColor="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Label Grid.Column="0" Text="{Binding CurrentText}" Style="{StaticResource TertiaryLabel}" />
-                                        <Label Grid.Column="1" Text="{Binding TargetText}" Style="{StaticResource TertiaryLabel}" />
+                                        <Label Grid.Column="1" Text="{Binding TargetText}" IsVisible="{Binding HasTarget}" Style="{StaticResource TertiaryLabel}" />
                                     </Grid>
                                 </VerticalStackLayout>
                             </DataTemplate>

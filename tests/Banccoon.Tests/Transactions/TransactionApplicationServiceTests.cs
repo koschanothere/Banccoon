@@ -20,6 +20,34 @@ public sealed class TransactionApplicationServiceTests
         Assert.Equal(60m, updated[0].CurrentBalance);
     }
 
+    [Theory]
+    [InlineData(TransactionType.Expense)]
+    [InlineData(TransactionType.Income)]
+    public void ReverseTransaction_UndoesApplyNewTransaction(TransactionType type)
+    {
+        var account = CreateAccount(100m);
+        var transaction = CreateTransaction(account.Id, 40m, type);
+        var applied = service.ApplyNewTransaction(transaction, new Dictionary<Guid, Account> { [account.Id] = account });
+
+        var reversed = service.ReverseTransaction(transaction, applied.ToDictionary(a => a.Id));
+
+        Assert.Equal(account, Assert.Single(reversed));
+    }
+
+    [Fact]
+    public void ReverseTransaction_Transfer_RestoresBothAccounts()
+    {
+        var source = CreateAccount(100m);
+        var destination = CreateAccount(20m);
+        var transaction = CreateTransaction(source.Id, 30m, TransactionType.Transfer, destination.Id);
+        var applied = service.ApplyNewTransaction(transaction, new Dictionary<Guid, Account> { [source.Id] = source, [destination.Id] = destination });
+
+        var reversed = service.ReverseTransaction(transaction, applied.ToDictionary(a => a.Id));
+
+        Assert.Equal(source, reversed.Single(a => a.Id == source.Id));
+        Assert.Equal(destination, reversed.Single(a => a.Id == destination.Id));
+    }
+
     [Fact]
     public void ApplyNewTransaction_Transfer_DebitsSourceAndCreditsDestination()
     {

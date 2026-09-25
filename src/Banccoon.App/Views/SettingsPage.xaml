@@ -328,6 +328,32 @@
                         </VerticalStackLayout>
                     </Border>
 
+                    <!-- Above the learned rules (user, 2026-09-25): only banks whose statements have been imported. -->
+                    <Border Style="{StaticResource CardBorder}" IsVisible="{Binding BankCategories.HasBanks}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="{loc:Translate Settings_BankCategoriesHeader}" Style="{StaticResource SectionTitleLabel}" />
+                            <Label Text="{loc:Translate Settings_BankCategoriesHint}" Style="{StaticResource TertiaryLabel}" />
+                            <Picker Title="{loc:Translate Settings_BankPickerTitle}" ItemsSource="{Binding BankCategories.Banks}" SelectedItem="{Binding BankCategories.SelectedBank}" IsVisible="{Binding BankCategories.HasMultipleBanks}" WidthRequest="280" HorizontalOptions="Start" />
+                            <Label Text="{Binding BankCategories.SingleBankName}" IsVisible="{Binding BankCategories.HasSingleBank}" Style="{StaticResource SecondaryLabel}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding BankCategories.Rows}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:BankCategoryLinkRowViewModel">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
+                                            <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" />
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="6">
+                                                <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
+                                                    <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="180" />
+                                                </Border>
+                                                <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="150" />
+                                                <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
+                                            </HorizontalStackLayout>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="{loc:Translate Settings_LearnedRulesHeader}" Style="{StaticResource SectionTitleLabel}" />
@@ -372,6 +398,11 @@
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
+                            <HorizontalStackLayout Spacing="10" IsVisible="{Binding LearningRules.HasPages}">
+                                <Button Text="{loc:Translate Common_PreviousPage}" Command="{Binding LearningRules.PreviousPageCommand}" IsEnabled="{Binding LearningRules.CanGoToPreviousPage}" Style="{StaticResource QuietButton}" />
+                                <Label Text="{Binding LearningRules.PageText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                                <Button Text="{loc:Translate Common_NextPage}" Command="{Binding LearningRules.NextPageCommand}" IsEnabled="{Binding LearningRules.CanGoToNextPage}" Style="{StaticResource QuietButton}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

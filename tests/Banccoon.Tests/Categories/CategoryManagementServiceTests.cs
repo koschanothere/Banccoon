@@ -11,7 +11,7 @@ public sealed class CategoryManagementServiceTests
     public async Task MergeAsync_ReassignsTransactionsAndDeletesSourceCategory()
     {
         await using var store = new SqliteTestStore();
-        var service = new CategoryManagementService(store.Categories, store.Transactions);
+        var service = new CategoryManagementService(store.Categories, store.Transactions, store.BankCategoryLinks);
 
         var groceries = new Category(Guid.NewGuid(), "Groceries");
         var food = new Category(Guid.NewGuid(), "Food");
@@ -39,7 +39,7 @@ public sealed class CategoryManagementServiceTests
     public async Task MergeAsync_SameCategory_Throws()
     {
         await using var store = new SqliteTestStore();
-        var service = new CategoryManagementService(store.Categories, store.Transactions);
+        var service = new CategoryManagementService(store.Categories, store.Transactions, store.BankCategoryLinks);
         var categoryId = Guid.NewGuid();
 
         await Assert.ThrowsAsync<ArgumentException>(() => service.MergeAsync(categoryId, categoryId));

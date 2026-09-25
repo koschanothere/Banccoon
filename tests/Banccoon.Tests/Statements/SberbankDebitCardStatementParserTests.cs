@@ -48,6 +48,7 @@ public sealed class SberbankDebitCardStatementParserTests
                 Assert.Equal(TransactionType.Income, income.Type);
                 Assert.Equal(1000m, income.Amount);
                 Assert.Equal("Перевод от И. ИВАН", income.Description);
+                Assert.Equal("Перевод на карту", income.BankCategory);
                 Assert.Equal("654321", income.ExternalReference);
                 Assert.Equal(1849.50m, income.BalanceAfter);
             },
@@ -57,6 +58,7 @@ public sealed class SberbankDebitCardStatementParserTests
                 Assert.Equal(TransactionType.Expense, expense.Type);
                 Assert.Equal(150.50m, expense.Amount);
                 Assert.Equal("CAFE TEST", expense.Description);
+                Assert.Equal("Рестораны и кафе", expense.BankCategory);
                 Assert.Equal("123456", expense.ExternalReference);
                 Assert.Equal(849.50m, expense.BalanceAfter);
             });

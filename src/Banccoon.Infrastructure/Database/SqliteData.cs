@@ -43,9 +43,14 @@ internal static class SqliteData
         return value.ToString(CultureInfo.InvariantCulture);
     }
 
+    public static DateOnly TextToDate(string value)
+    {
+        return DateOnly.ParseExact(value, DateFormat, CultureInfo.InvariantCulture);
+    }
+
     public static DateOnly ReadDate(DbDataReader reader, string name)
     {
-        return DateOnly.ParseExact(ReadString(reader, name), DateFormat, CultureInfo.InvariantCulture);
+        return TextToDate(ReadString(reader, name));
     }
 
     public static DateOnly? ReadNullableDate(DbDataReader reader, string name)

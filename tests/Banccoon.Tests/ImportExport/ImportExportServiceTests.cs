@@ -60,7 +60,68 @@ public sealed class ImportExportServiceTests
         var validation = await services.ImportService.ValidateAsync(export);
 
         Assert.False(validation.IsValid);
-        Assert.Contains(validation.Errors, error => error.Contains("references missing account", StringComparison.Ordinal));
+        Assert.Contains(
+            ImportValidationError.MissingReference(ImportEntityType.Transaction, transaction.Id, ImportReferenceKind.Account, transaction.AccountId),
+            validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenFormatVersionUnsupported_ReturnsErrorCarryingTheVersion()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var export = CreateExportEnvelope(CreateAccount("Checking")) with { ExportFormatVersion = 99 };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.False(validation.IsValid);
+        Assert.Equal([ImportValidationError.UnsupportedFormatVersion(99)], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenApplicationVersionMissing_ReturnsError()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var export = CreateExportEnvelope(CreateAccount("Checking")) with { ApplicationVersion = " " };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Equal([ImportValidationError.ApplicationVersionRequired()], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenAccountIdRepeats_ReturnsDuplicateIdOnce()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var account = CreateAccount("Checking");
+        var export = CreateExportEnvelope(account);
+        export = export with { Data = export.Data with { Accounts = [account, account with { Name = "Copy" }] } };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Equal([ImportValidationError.DuplicateId(ImportEntityType.Account, account.Id)], validation.Errors);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WhenStatementRowReferencesMissingBatch_IdentifiesTheReferenceKind()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        var sample = await SeedSampleDataAsync(store);
+        var export = await services.ExportService.CreateExportAsync();
+        export = export with { Data = export.Data with { StatementImportBatches = Array.Empty<StatementImportBatch>() } };
+
+        var validation = await services.ImportService.ValidateAsync(export);
+
+        Assert.Contains(
+            ImportValidationError.MissingReference(
+                ImportEntityType.StatementImportRow,
+                sample.StatementImportRow.Id,
+                ImportReferenceKind.Batch,
+                sample.StatementImportBatch.Id),
+            validation.Errors);
     }
 
     [Fact]
@@ -130,6 +191,33 @@ public sealed class ImportExportServiceTests
         }
     }
 
+    [Fact]
+    public async Task Restore_BringsBackBankCategoryLinks_AndUnlinksOnesWhoseCategoryIsMissing()
+    {
+        await using var sourceStore = new SqliteTestStore();
+        await using var targetStore = new SqliteTestStore();
+        var food = new Category(Guid.NewGuid(), "Food");
+        await sourceStore.Categories.SaveAsync(food);
+        var seenAt = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        await sourceStore.BankCategoryLinks.SaveAllAsync(
+        [
+            new BankCategoryLink("sber", "Супермаркеты", food.Id, seenAt),
+            new BankCategoryLink("sber", "Прочее", null, seenAt)
+        ]);
+        var export = await CreateServices(sourceStore).ExportService.CreateExportAsync();
+        var orphan = new BankCategoryLink("sber", "Такси", Guid.NewGuid(), seenAt);
+        var withOrphan = export with { Data = export.Data with { BankCategoryLinks = [.. export.Data.BankCategoryLinks, orphan] } };
+
+        var result = await CreateServices(targetStore).ImportService.ImportAsync(withOrphan, ImportMode.Replace);
+
+        Assert.True(result.Validation.IsValid);
+        var restored = await targetStore.BankCategoryLinks.GetByParserAsync("sber");
+        Assert.Equal(food.Id, restored.Single(link => link.BankCategory == "Супермаркеты").CategoryId);
+        Assert.Null(restored.Single(link => link.BankCategory == "Прочее").CategoryId);
+        Assert.Null(restored.Single(link => link.BankCategory == "Такси").CategoryId);
+        Assert.Equal(seenAt, restored.Single(link => link.BankCategory == "Супермаркеты").FirstSeenAt);
+    }
+
     private static Services CreateServices(SqliteTestStore store)
     {
         var validator = new ExportValidator();
@@ -141,7 +229,8 @@ public sealed class ImportExportServiceTests
             store.SavingsGoals,
             store.Settings,
             store.StatementImports,
-            store.CategoryLearningRules);
+            store.CategoryLearningRules,
+            store.BankCategoryLinks);
         var localDataResetService = new LocalDataResetService(
             store.Accounts,
             store.Categories,
@@ -149,7 +238,8 @@ public sealed class ImportExportServiceTests
             store.ScheduledTransactions,
             store.SavingsGoals,
             store.StatementImports,
-            store.CategoryLearningRules);
+            store.CategoryLearningRules,
+            store.BankCategoryLinks);
         var importService = new RepositoryImportService(
             store.Accounts,
             store.Categories,
@@ -160,6 +250,7 @@ public sealed class ImportExportServiceTests
             validator,
             store.StatementImports,
             store.CategoryLearningRules,
+            store.BankCategoryLinks,
             localDataResetService);
         var backupService = new JsonBackupService(exportService, importService);
 
@@ -244,7 +335,8 @@ public sealed class ImportExportServiceTests
             StatementImportRowStatus.Approved,
             IsDuplicate: false,
             null,
-            transaction.Id);
+            transaction.Id,
+            BankCategory: "Рестораны и кафе");
         var categoryLearningRule = new CategoryLearningRule(
             Guid.NewGuid(),
             "Cafe",

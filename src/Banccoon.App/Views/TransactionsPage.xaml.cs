@@ -11,6 +11,7 @@ public partial class TransactionsPage : ContentPage, IQueryAttributable
         InitializeComponent();
         this.viewModel = viewModel;
         BindingContext = viewModel;
+        ImportButton.SizeChanged += OnImportButtonSizeChanged;
     }
 
     // Shell calls this before OnAppearing, when navigated here from the Dashboard's Analytics
@@ -34,8 +35,23 @@ public partial class TransactionsPage : ContentPage, IQueryAttributable
         await viewModel.InitializeAsync();
     }
 
+    // Keeps the "+ Add" menu under "+ Add" rather than under Import, whatever width the current
+    // language gives the Import button. 32 is the page padding, 6 the header's button spacing.
+    private void OnImportButtonSizeChanged(object? sender, EventArgs e)
+    {
+        if (ImportButton.Width > 0)
+        {
+            AddMenu.Margin = new Thickness(0, 78, 32 + ImportButton.Width + 6, 0);
+        }
+    }
+
     private async void OnImportClicked(object? sender, EventArgs e)
     {
         await Shell.Current.GoToAsync("statementImport");
+    }
+
+    private async void OnCheckInClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("reconciliation");
     }
 }

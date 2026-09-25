@@ -4,6 +4,7 @@ using Banccoon.App.Formatting;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
+using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
@@ -16,6 +17,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private const int LookbackDays = 30;
     private const int ExpandedForwardDays = 90;
 
+    // How many recorded transactions "Attach…" lists at once; typing narrows them.
+    private const int AttachChoiceLimit = 8;
+
     private readonly IDateProvider dateProvider;
     private readonly IAccountRepository accountRepository;
     private readonly ITransactionRepository transactionRepository;
@@ -25,6 +29,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
     private readonly IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService;
     private readonly ITransactionApplicationService transactionApplicationService;
     private readonly IRecurrenceDescriptionService recurrenceDescriptionService;
+    private readonly IExpectedTransactionMatcher expectedTransactionMatcher;
     private readonly Func<Task> onChanged;
     private readonly Func<ScheduledTransaction, Task> onEditRequested;
 
@@ -44,6 +49,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         IScheduledOccurrenceResolutionService scheduledOccurrenceResolutionService,
         ITransactionApplicationService transactionApplicationService,
         IRecurrenceDescriptionService recurrenceDescriptionService,
+        IExpectedTransactionMatcher expectedTransactionMatcher,
         Func<Task> onChanged,
         Func<ScheduledTransaction, Task> onEditRequested)
     {
@@ -56,6 +62,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         this.scheduledOccurrenceResolutionService = scheduledOccurrenceResolutionService;
         this.transactionApplicationService = transactionApplicationService;
         this.recurrenceDescriptionService = recurrenceDescriptionService;
+        this.expectedTransactionMatcher = expectedTransactionMatcher;
         this.onChanged = onChanged;
         this.onEditRequested = onEditRequested;
 
@@ -83,15 +90,24 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
 
     public bool IsCollapsed => !IsExpanded;
 
+    public bool HasNoRows => Rows.Count == 0;
+
+    // The collapsed list's "nothing due right now" line.
+    public bool ShowsNothingDue => IsCollapsed && HasNoRows;
+
     public ICommand ToggleExpandedCommand { get; }
 
-    public async Task RefreshAsync(string currency, int nearTermDays, CancellationToken cancellationToken = default)
+    // accountId narrows the list to one account's scheduled items (the reconciliation check-in
+    // works on one account at a time); null means every account, as on Transactions.
+    public async Task RefreshAsync(string currency, int nearTermDays, Guid? accountId = null, CancellationToken cancellationToken = default)
     {
         this.currency = currency;
         var today = dateProvider.Today;
         nearTermCutoff = today.AddDays(nearTermDays);
         var scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
-        activeSchedules = scheduledTransactions.Where(schedule => schedule.Active).ToList();
+        activeSchedules = scheduledTransactions
+            .Where(schedule => schedule.Active && (accountId is null || schedule.AccountId == accountId))
+            .ToList();
         // Project the full expanded window up front - collapsed view then filters down to
         // near-term (below), rather than only ever having near-term events to work with, which
         // left "expand" with nothing new to reveal beyond what was already showing.
@@ -101,7 +117,8 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         var overrides = await scheduledOccurrenceOverrideRepository.GetAllAsync(cancellationToken);
         var resolvedEvents = scheduledOccurrenceResolutionService.ApplyOverrides(projectedEvents, overrides);
 
-        var allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
+        var allTransactions = await transactionRepository.GetInRangeAsync(RecentTransactionWindow.StartFor(today), DateOnly.MaxValue, cancellationToken);
+        var accountNames = (await accountRepository.GetAllAsync(cancellationToken)).ToDictionary(account => account.Id, account => account.Name);
         var paidOccurrences = allTransactions
             .Where(transaction => transaction.PaidScheduledTransactionId.HasValue && transaction.PaidScheduledOccurrenceDate.HasValue)
             .Select(transaction => (transaction.PaidScheduledTransactionId!.Value, transaction.PaidScheduledOccurrenceDate!.Value))
@@ -116,7 +133,12 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
                 currency,
                 onMarkPaid: () => MarkPaidAsync(scheduledEvent),
                 onSkip: () => SkipAsync(scheduledEvent),
-                onDelay: () => DelayAsync(scheduledEvent)))
+                onDelay: () => DelayAsync(scheduledEvent),
+                findAttachable: search => expectedTransactionMatcher
+                    .FindAttachable(scheduledEvent, allTransactions, search, AttachChoiceLimit)
+                    .Select(transaction => ToAttachChoice(transaction, accountNames))
+                    .ToList(),
+                onAttach: transactionId => AttachAsync(scheduledEvent, transactionId)))
             .ToList();
 
         // RebuildVisibleRows mutates Rows/RuleRows (bound to live CollectionViews) - must run on
@@ -141,6 +163,9 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         {
             Rows.Add(row);
         }
+
+        OnPropertyChanged(nameof(HasNoRows));
+        OnPropertyChanged(nameof(ShowsNothingDue));
 
         // Expanded: one line per rule that exists (not per occurrence), each carrying its own
         // soonest not-yet-paid occurrence (if any) for the mark-paid action, plus edit access.
@@ -193,6 +218,33 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         }
 
         await onChanged();
+    }
+
+    // Links an already-recorded transaction (e.g. the imported bank row) to this occurrence instead
+    // of creating a new one - no balance changes, since that transaction was already applied.
+    private async Task AttachAsync(ForecastEvent scheduledEvent, Guid transactionId)
+    {
+        var transaction = await transactionRepository.GetByIdAsync(transactionId);
+        if (transaction is not null && transaction.PaidScheduledTransactionId is null)
+        {
+            await transactionRepository.SaveAsync(expectedTransactionMatcher.Attach(transaction, scheduledEvent));
+        }
+
+        await onChanged();
+    }
+
+    private AttachChoice ToAttachChoice(Transaction transaction, IReadOnlyDictionary<Guid, string> accountNames)
+    {
+        var name = string.IsNullOrWhiteSpace(transaction.Name)
+            ? DisplayText.Format(transaction.Type)
+            : transaction.Name;
+        var accountName = accountNames.TryGetValue(transaction.AccountId, out var found) ? found : string.Empty;
+        return new AttachChoice(
+            transaction.Id,
+            name,
+            string.IsNullOrEmpty(accountName) ? $"{transaction.Date:dd/MM/yyyy}" : $"{transaction.Date:dd/MM/yyyy} · {accountName}",
+            MoneyFormat.Format(MoneyFlow.GetSignedAmount(transaction.Amount, transaction.Type), currency),
+            transaction.Type);
     }
 
     private async Task SkipAsync(ForecastEvent scheduledEvent)

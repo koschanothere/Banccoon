@@ -102,6 +102,9 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FOREIGN KEY (PaidScheduledTransactionId) REFERENCES ScheduledTransactions(Id) ON DELETE SET NULL
             );
 
+            -- Pages read transactions by date range (only the last 12 months are kept in memory).
+            CREATE INDEX IF NOT EXISTS IX_Transactions_Date ON Transactions(Date);
+
             CREATE TABLE IF NOT EXISTS StatementImportBatches (
                 Id TEXT PRIMARY KEY,
                 AccountId TEXT NOT NULL,
@@ -201,7 +204,18 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FOREIGN KEY (AccountId) REFERENCES Accounts(Id) ON DELETE SET NULL
             );
 
-            CREATE TABLE IF NOT EXISTS Settings (
+            -- A bank's own operation categories as its statements show them, each linked to an app
+            -- category or (CategoryId NULL) skipped. See BankCategoryLink.
+            CREATE TABLE IF NOT EXISTS BankCategoryLinks (
+                ParserId TEXT NOT NULL,
+                BankCategory TEXT NOT NULL COLLATE NOCASE,
+                CategoryId TEXT NULL,
+                FirstSeenAt TEXT NOT NULL,
+                PRIMARY KEY (ParserId, BankCategory),
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
+            );
+
+                        CREATE TABLE IF NOT EXISTS Settings (
                 Id INTEGER PRIMARY KEY CHECK (Id = 1),
                 DefaultCurrency TEXT NOT NULL,
                 DefaultForecastPeriod TEXT NOT NULL,
@@ -228,7 +242,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 AutoBackupFrequencyDays INTEGER NOT NULL DEFAULT 30,
                 AutoBackupRetentionCount INTEGER NOT NULL DEFAULT 5,
                 LastAutoBackupAt TEXT NULL,
-                DashboardPrimaryMetric TEXT NOT NULL DEFAULT 'FreeToSpend'
+                DashboardPrimaryMetric TEXT NOT NULL DEFAULT 'FreeToSpend',
+                LegacySavingsGoalsConverted INTEGER NOT NULL DEFAULT 0
             );
             """;
 
@@ -411,6 +426,12 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
             "IsIncoming",
             "INTEGER NOT NULL DEFAULT 0",
             cancellationToken);
+        await AddMissingColumnAsync(
+            connection,
+            "StatementImportRows",
+            "BankCategory",
+            "TEXT NULL",
+            cancellationToken);
 
         await AddMissingColumnAsync(
             connection,
@@ -444,6 +465,7 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
         await AddMissingColumnAsync(connection, "Settings", "AutoBackupRetentionCount", "INTEGER NOT NULL DEFAULT 5", cancellationToken);
         await AddMissingColumnAsync(connection, "Settings", "LastAutoBackupAt", "TEXT NULL", cancellationToken);
         await AddMissingColumnAsync(connection, "Settings", "DashboardPrimaryMetric", "TEXT NOT NULL DEFAULT 'FreeToSpend'", cancellationToken);
+        await AddMissingColumnAsync(connection, "Settings", "LegacySavingsGoalsConverted", "INTEGER NOT NULL DEFAULT 0", cancellationToken);
     }
 
     private static async Task AddMissingColumnAsync(

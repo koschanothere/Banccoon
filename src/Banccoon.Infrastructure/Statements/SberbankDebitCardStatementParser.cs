@@ -259,7 +259,10 @@ public sealed class SberbankDebitCardStatementParser : IStatementParser
             ExternalReference: pending.ExternalReference,
             RawText: rawText,
             BalanceAfter: pending.BalanceAfter,
-            Time: pending.Time));
+            Time: pending.Time,
+            // Sberbank's own category for the operation ("Рестораны и кафе", "Перевод на карту"),
+            // linkable to an app category (BankCategoryLink).
+            BankCategory: pending.Category));
 
         pending = null;
     }

@@ -57,10 +57,10 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
     {
         if (string.IsNullOrWhiteSpace(syntax))
         {
-            return RecurrenceSyntaxParseResult.Failure(["Syntax is empty."]);
+            return RecurrenceSyntaxParseResult.Failure([new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.Empty)]);
         }
 
-        var errors = new List<string>();
+        var errors = new List<RecurrenceSyntaxError>();
         var fields = ParseFields(syntax, errors);
 
         var frequency = ReadRequired(fields, "FREQ", errors, ParseFrequency);
@@ -83,7 +83,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
             }
             else
             {
-                errors.Add("BYMONTHDAY must be a number between 1 and 31, or LAST.");
+                errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.InvalidMonthDay, "BYMONTHDAY"));
             }
         }
 
@@ -99,7 +99,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
                 monthlyMode);
 
             var validationResult = recurrenceValidationService.Validate(rule);
-            errors.AddRange(validationResult.Errors.Select(RecurrenceValidationErrorText.Describe));
+            errors.AddRange(validationResult.Errors.Select(RecurrenceSyntaxError.FromValidation));
 
             return errors.Count == 0
                 ? RecurrenceSyntaxParseResult.Success(rule)
@@ -121,7 +121,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
         ];
     }
 
-    private static Dictionary<string, string> ParseFields(string syntax, List<string> errors)
+    private static Dictionary<string, string> ParseFields(string syntax, List<RecurrenceSyntaxError> errors)
     {
         var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var parts = syntax.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -131,7 +131,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
             var separatorIndex = part.IndexOf('=');
             if (separatorIndex <= 0 || separatorIndex == part.Length - 1)
             {
-                errors.Add($"Invalid field '{part}'. Use KEY=VALUE.");
+                errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.InvalidField, part));
                 continue;
             }
 
@@ -146,20 +146,20 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
     private static T? ReadRequired<T>(
         IReadOnlyDictionary<string, string> fields,
         string key,
-        List<string> errors,
+        List<RecurrenceSyntaxError> errors,
         Func<string, T?> parser)
         where T : struct
     {
         if (!fields.TryGetValue(key, out var value))
         {
-            errors.Add($"{key} is required.");
+            errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.FieldRequired, key));
             return null;
         }
 
         var parsed = parser(value);
         if (!parsed.HasValue)
         {
-            errors.Add($"{key} has an unsupported value.");
+            errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.UnsupportedValue, key));
         }
 
         return parsed;
@@ -168,7 +168,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
     private static T? ReadOptional<T>(
         IReadOnlyDictionary<string, string> fields,
         string key,
-        List<string> errors,
+        List<RecurrenceSyntaxError> errors,
         Func<string, T?> parser)
         where T : struct
     {
@@ -180,7 +180,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
         var parsed = parser(value);
         if (!parsed.HasValue)
         {
-            errors.Add($"{key} has an unsupported value.");
+            errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.UnsupportedValue, key));
         }
 
         return parsed;
@@ -190,7 +190,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
         IReadOnlyDictionary<string, string> fields,
         string key,
         int defaultValue,
-        List<string> errors)
+        List<RecurrenceSyntaxError> errors)
     {
         if (!fields.TryGetValue(key, out var value))
         {
@@ -202,7 +202,7 @@ public sealed class RecurrenceSyntaxService : IRecurrenceSyntaxService
             return parsed;
         }
 
-        errors.Add($"{key} must be a whole number.");
+        errors.Add(new RecurrenceSyntaxError(RecurrenceSyntaxErrorCode.NotWholeNumber, key));
         return defaultValue;
     }
 

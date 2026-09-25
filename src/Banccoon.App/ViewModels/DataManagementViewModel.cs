@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
@@ -244,7 +245,7 @@ public sealed class DataManagementViewModel : ViewModelBase
                 PendingRestoreIsValid = validation.Validation.IsValid;
                 PendingRestoreSummaryText = validation.Validation.IsValid
                     ? Translator.Get("Settings_BackupFileValid")
-                    : string.Join(" ", validation.Validation.Errors);
+                    : string.Join(" ", validation.Validation.Errors.Select(ImportValidationErrorFormatter.Format));
                 HasPendingRestore = true;
             });
         }

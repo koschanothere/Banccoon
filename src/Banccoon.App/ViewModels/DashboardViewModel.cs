@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.App.Services;
@@ -8,6 +9,8 @@ using Banccoon.Core.Analytics;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Transactions;
+using Banccoon.Core.Savings;
 
 namespace Banccoon.App.ViewModels;
 
@@ -20,13 +23,13 @@ public sealed class DashboardViewModel : ViewModelBase
     private readonly IAccountRepository accountRepository;
     private readonly ITransactionRepository transactionRepository;
     private readonly IScheduledTransactionRepository scheduledTransactionRepository;
-    private readonly ISavingsGoalRepository savingsGoalRepository;
     private readonly ISettingsRepository settingsRepository;
     private readonly IForecastService forecastService;
     private readonly IAvailableToSpendService availableToSpendService;
     private readonly IFreeToSpendWindowService freeToSpendWindowService;
     private readonly IHistoricalBalanceService historicalBalanceService;
     private readonly IAutoBackupRunner autoBackupRunner;
+    private readonly ILegacySavingsGoalConversionService legacySavingsGoalConversionService;
 
     // Cached from the most recent InitializeAsync so the graph can be redrawn for a custom range
     // without re-fetching everything from the repositories again.
@@ -35,7 +38,10 @@ public sealed class DashboardViewModel : ViewModelBase
     private IReadOnlyList<Account> dashboardAccounts = [];
     private HashSet<Guid> dashboardAccountIds = [];
     private IReadOnlyList<ScheduledTransaction> scheduledTransactions = [];
-    private IReadOnlyList<Transaction> allTransactions = [];
+    // What the chart walks back through: the recent months kept in memory, plus any earlier ones a
+    // custom range reached back to (read for this visit only - InitializeAsync starts over).
+    private IReadOnlyList<Transaction> chartTransactions = [];
+    private DateOnly chartTransactionsFrom;
     private DateOnly defaultRangeStart;
     private DateOnly defaultRangeEnd;
 
@@ -61,7 +67,6 @@ public sealed class DashboardViewModel : ViewModelBase
         IAccountRepository accountRepository,
         ITransactionRepository transactionRepository,
         IScheduledTransactionRepository scheduledTransactionRepository,
-        ISavingsGoalRepository savingsGoalRepository,
         ISettingsRepository settingsRepository,
         IForecastService forecastService,
         IAvailableToSpendService availableToSpendService,
@@ -69,19 +74,20 @@ public sealed class DashboardViewModel : ViewModelBase
         IHistoricalBalanceService historicalBalanceService,
         ICategoryRepository categoryRepository,
         IAnalyticsService analyticsService,
-        IAutoBackupRunner autoBackupRunner)
+        IAutoBackupRunner autoBackupRunner,
+        ILegacySavingsGoalConversionService legacySavingsGoalConversionService)
     {
         this.dateProvider = dateProvider;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.scheduledTransactionRepository = scheduledTransactionRepository;
-        this.savingsGoalRepository = savingsGoalRepository;
         this.settingsRepository = settingsRepository;
         this.forecastService = forecastService;
         this.availableToSpendService = availableToSpendService;
         this.freeToSpendWindowService = freeToSpendWindowService;
         this.historicalBalanceService = historicalBalanceService;
         this.autoBackupRunner = autoBackupRunner;
+        this.legacySavingsGoalConversionService = legacySavingsGoalConversionService;
 
         ChartPoints = [];
         UpcomingObligations = [];
@@ -93,8 +99,9 @@ public sealed class DashboardViewModel : ViewModelBase
             analyticsService,
             categoryId => RaiseCategoryDrillDownRequested(categoryId));
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
-        ApplyRangeCommand = new RelayCommand(() => RedrawChart());
+        ApplyRangeCommand = new RelayCommand(() => _ = ApplyRangeAsync());
         ResetRangeCommand = new RelayCommand(() => ResetRange());
+        AddGoalCommand = new RelayCommand(() => _ = AddGoalRequested?.Invoke());
     }
 
     // The Analytics section's "drill down into this category" action needs Shell navigation,
@@ -102,6 +109,10 @@ public sealed class DashboardViewModel : ViewModelBase
     // OnCloseClicked for the established convention) - so it's surfaced as an event for
     // DashboardPage's code-behind to act on instead.
     public event Func<Guid?, Task>? CategoryDrillDownRequested;
+
+    // Goals are Goal-type accounts, created through Accounts' own add form - the page navigates
+    // there (preset to AccountType.Goal) rather than this widget growing a second goal editor.
+    public event Func<Task>? AddGoalRequested;
 
     public bool IsLoading
     {
@@ -185,7 +196,7 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ObservableCollection<UpcomingObligationRowViewModel> UpcomingObligations { get; }
 
-    public ObservableCollection<SavingsGoalRowViewModel> Goals { get; }
+    public ObservableCollection<GoalAccountRowViewModel> Goals { get; }
 
     public AnalyticsViewModel Analytics { get; }
 
@@ -213,19 +224,29 @@ public sealed class DashboardViewModel : ViewModelBase
 
     public ICommand ResetRangeCommand { get; }
 
+    public ICommand AddGoalCommand { get; }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
         try
         {
+            await ConvertLegacySavingsGoalsAsync(cancellationToken);
             settings = await settingsRepository.GetAsync(cancellationToken);
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
             var accounts = await accountRepository.GetAllAsync(cancellationToken);
-            dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals).ToList();
+            // Archived accounts are history, not money you have: they stay out of the totals, the
+            // forecast and free-to-spend even if their "include in totals" flag is still set.
+            dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals && !account.IsArchived).ToList();
             dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
             scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
-            allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
-            var savingsGoals = await savingsGoalRepository.GetAllAsync(cancellationToken);
+            chartTransactionsFrom = RecentTransactionWindow.StartFor(dateProvider.Today);
+            chartTransactions = await transactionRepository.GetInRangeAsync(chartTransactionsFrom, DateOnly.MaxValue, cancellationToken);
+            // Every non-archived goal, including ones excluded from dashboard totals - excluding
+            // one from "free to spend" doesn't stop it being a goal worth tracking here.
+            var goalAccounts = accounts
+                .Where(account => account.Type == AccountType.Goal && !account.IsArchived)
+                .ToList();
             today = dateProvider.Today;
             defaultRangeStart = today.AddDays(-DefaultHistoricalDays);
             defaultRangeEnd = today.AddDays((int)settings.DefaultForecastPeriod - 1);
@@ -243,7 +264,7 @@ public sealed class DashboardViewModel : ViewModelBase
                 GoalsSectionRow = order.IndexOf(DashboardSection.Goals);
             });
 
-            await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, savingsGoals);
+            await LoadFreeToSpendAsync(today, settings, dashboardAccounts, scheduledTransactions, goalAccounts);
             await LoadUpcomingObligationsAsync(today, settings, dashboardAccounts, scheduledTransactions);
             await RunOnMainThreadAsync(() => RedrawChart());
             await Analytics.InitializeAsync(settings.DefaultCurrency, cancellationToken);
@@ -257,6 +278,26 @@ public sealed class DashboardViewModel : ViewModelBase
         }
     }
 
+    // One-time: turns the old standalone SavingsGoal rows into Goal accounts (a no-op on every run
+    // after the first - see LegacySavingsGoalConversionService). Runs here, before accounts are
+    // read, so the Goals card shows converted goals on the very first load. Fails open like
+    // AutoBackupRunner: a problem is logged and the Dashboard loads anyway.
+    private async Task ConvertLegacySavingsGoalsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var converted = await legacySavingsGoalConversionService.ConvertOnceAsync(cancellationToken);
+            if (converted > 0)
+            {
+                DiagnosticLog.Write($"Converted {converted} legacy savings goal(s) into Goal accounts.");
+            }
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"Legacy savings goal conversion failed, Dashboard loading anyway: {ex}");
+        }
+    }
+
     private Task RaiseCategoryDrillDownRequested(Guid? categoryId)
     {
         return CategoryDrillDownRequested?.Invoke(categoryId) ?? Task.CompletedTask;
@@ -267,12 +308,16 @@ public sealed class DashboardViewModel : ViewModelBase
         AppSettings appSettings,
         IReadOnlyList<Account> accountsForTotals,
         IReadOnlyList<ScheduledTransaction> scheduled,
-        IReadOnlyList<SavingsGoal> savingsGoals)
+        IReadOnlyList<Account> goalAccounts)
     {
         var window = freeToSpendWindowService.GetWindow(asOfToday, appSettings, scheduled);
         var request = new ForecastRequest(window.StartDate, window.EndDate, accountsForTotals, scheduled);
         var forecast = forecastService.CreateForecast(request);
-        var breakdown = availableToSpendService.Calculate(forecast, savingsGoals, appSettings.SafetyBuffer);
+        // Reserve the money held in goal accounts that the forecast itself counted (see GoalAccounts).
+        var breakdown = availableToSpendService.Calculate(
+            forecast,
+            GoalAccounts.AsSavingsGoals(accountsForTotals),
+            appSettings.SafetyBuffer);
 
         // Called from InitializeAsync after several awaits that may have resumed off the UI
         // thread (see ViewModelBase.RunOnMainThreadAsync) - this is the dashboard's hero card, the
@@ -293,9 +338,9 @@ public sealed class DashboardViewModel : ViewModelBase
             FreeToSpendWindowText = Translator.GetPlural("Dashboard_FreeToSpendWindowDuration", windowDayCount);
 
             Goals.Clear();
-            foreach (var goal in savingsGoals)
+            foreach (var goalAccount in goalAccounts)
             {
-                Goals.Add(new SavingsGoalRowViewModel(goal, appSettings.DefaultCurrency, appSettings.DateDisplayFormat));
+                Goals.Add(new GoalAccountRowViewModel(goalAccount));
             }
         });
     }
@@ -321,6 +366,25 @@ public sealed class DashboardViewModel : ViewModelBase
                 UpcomingObligations.Add(new UpcomingObligationRowViewModel(obligation, asOfToday, appSettings.DefaultCurrency));
             }
         });
+    }
+
+    // A custom range can reach back past the months kept in memory; the older part is read for this
+    // visit only.
+    private async Task ApplyRangeAsync()
+    {
+        var rangeStart = DateOnly.FromDateTime(RangeStartDate);
+        if (rangeStart < chartTransactionsFrom)
+        {
+            var loadedFrom = chartTransactionsFrom;
+            var older = await transactionRepository.GetInRangeAsync(rangeStart, loadedFrom.AddDays(-1));
+            await RunOnMainThreadAsync(() =>
+            {
+                chartTransactions = chartTransactions.Concat(older).ToList();
+                chartTransactionsFrom = rangeStart;
+            });
+        }
+
+        await RunOnMainThreadAsync(RedrawChart);
     }
 
     private void ResetRange()
@@ -352,26 +416,38 @@ public sealed class DashboardViewModel : ViewModelBase
         // chosen range reaches in either direction - a forecast can only ever project forward
         // from the account's actual current balance, never from some other day.
         var historicalEnd = rangeStart > today ? rangeStart : (rangeEnd < today ? rangeEnd : today.AddDays(-1));
+
+        // Today's own recorded transactions are what move the line from yesterday's point to
+        // today's, so they're listed on today's (first forecast) point below.
+        IReadOnlyList<string> todaysRecordedSummaries = [];
         if (rangeStart <= today)
         {
+            // Always walk back from today, then drop the days past historicalEnd: the service's
+            // currentTotalBalance is the total at the END of its endDate, and the accounts' live
+            // balances are the total at the end of today. Walking back from historicalEnd instead
+            // would show today's balance as yesterday's (or, for a range entirely in the past,
+            // ignore every transaction between the range's end and today).
             var currentTotalBalance = dashboardAccounts.Sum(account => account.CurrentBalance);
             var historicalPoints = historicalBalanceService.GetHistoricalBalances(
                 rangeStart,
-                historicalEnd,
+                today,
                 currentTotalBalance,
                 dashboardAccountIds,
-                allTransactions);
+                chartTransactions);
 
             foreach (var point in historicalPoints.Where(point => point.Date <= historicalEnd))
             {
                 ChartPoints.Add(new ForecastChartPointViewModel(
                     point.Date,
                     point.Balance,
-                    Array.Empty<string>(),
+                    FormatHistoricalEvents(point.Events),
                     settings.DefaultCurrency,
                     settings.DateDisplayFormat,
                     isHistorical: true));
             }
+
+            todaysRecordedSummaries = FormatHistoricalEvents(
+                historicalPoints.FirstOrDefault(point => point.Date == today)?.Events ?? []);
         }
 
         if (rangeEnd >= today)
@@ -380,12 +456,21 @@ public sealed class DashboardViewModel : ViewModelBase
             var graphRequest = new ForecastRequest(forecastStart, rangeEnd, dashboardAccounts, scheduledTransactions);
             var graphForecast = forecastService.CreateForecast(graphRequest);
             var eventsByDate = graphForecast.Events.ToLookup(forecastEvent => forecastEvent.Date);
+            var todaysRecordedSummariesShown = false;
 
             foreach (var point in graphForecast.ProjectedBalances)
             {
                 var eventSummaries = eventsByDate[point.Date]
-                    .Select(forecastEvent => $"{forecastEvent.Name}: {MoneyFormat.Format(forecastEvent.SignedAmount, settings.DefaultCurrency)}")
+                    .Select(forecastEvent => ChartEventSummaryFormat.Format(forecastEvent, settings.DefaultCurrency))
                     .ToArray();
+
+                // Only on the first of today's points - a day with several scheduled events has
+                // several points dated today, and repeating the list on each would be noise.
+                if (point.Date == today && !todaysRecordedSummariesShown)
+                {
+                    eventSummaries = [.. todaysRecordedSummaries, .. eventSummaries];
+                    todaysRecordedSummariesShown = true;
+                }
 
                 ChartPoints.Add(new ForecastChartPointViewModel(
                     point.Date,
@@ -396,5 +481,12 @@ public sealed class DashboardViewModel : ViewModelBase
                     isCurrentDate: point.Date == today));
             }
         }
+    }
+
+    private string[] FormatHistoricalEvents(IReadOnlyList<HistoricalBalanceEvent> events)
+    {
+        return events
+            .Select(historicalEvent => ChartEventSummaryFormat.Format(historicalEvent, settings.DefaultCurrency))
+            .ToArray();
     }
 }

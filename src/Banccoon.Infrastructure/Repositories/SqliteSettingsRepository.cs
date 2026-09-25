@@ -54,7 +54,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupFrequencyDays,
                 AutoBackupRetentionCount,
                 LastAutoBackupAt,
-                DashboardPrimaryMetric
+                DashboardPrimaryMetric,
+                LegacySavingsGoalsConverted
             FROM Settings
             WHERE Id = 1;
             """;
@@ -91,7 +92,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             SqliteData.ReadInt32(reader, "AutoBackupFrequencyDays"),
             SqliteData.ReadInt32(reader, "AutoBackupRetentionCount"),
             ReadNullableDateTimeOffset(reader, "LastAutoBackupAt"),
-            Enum.Parse<DashboardPrimaryMetric>(SqliteData.ReadString(reader, "DashboardPrimaryMetric")));
+            Enum.Parse<DashboardPrimaryMetric>(SqliteData.ReadString(reader, "DashboardPrimaryMetric")),
+            SqliteData.ReadBoolean(reader, "LegacySavingsGoalsConverted"));
     }
 
     private static DateTimeOffset? ReadNullableDateTimeOffset(System.Data.Common.DbDataReader reader, string name)
@@ -134,7 +136,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupFrequencyDays,
                 AutoBackupRetentionCount,
                 LastAutoBackupAt,
-                DashboardPrimaryMetric)
+                DashboardPrimaryMetric,
+                LegacySavingsGoalsConverted)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -162,7 +165,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @AutoBackupFrequencyDays,
                 @AutoBackupRetentionCount,
                 @LastAutoBackupAt,
-                @DashboardPrimaryMetric)
+                @DashboardPrimaryMetric,
+                @LegacySavingsGoalsConverted)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -189,7 +193,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupFrequencyDays = excluded.AutoBackupFrequencyDays,
                 AutoBackupRetentionCount = excluded.AutoBackupRetentionCount,
                 LastAutoBackupAt = excluded.LastAutoBackupAt,
-                DashboardPrimaryMetric = excluded.DashboardPrimaryMetric;
+                DashboardPrimaryMetric = excluded.DashboardPrimaryMetric,
+                LegacySavingsGoalsConverted = excluded.LegacySavingsGoalsConverted;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -217,6 +222,7 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@AutoBackupRetentionCount", settings.AutoBackupRetentionCount);
         AddParameter(command, "@LastAutoBackupAt", settings.LastAutoBackupAt is { } lastAutoBackupAt ? lastAutoBackupAt.ToString("O") : (object)DBNull.Value);
         AddParameter(command, "@DashboardPrimaryMetric", settings.DashboardPrimaryMetric.ToString());
+        AddParameter(command, "@LegacySavingsGoalsConverted", settings.LegacySavingsGoalsConverted ? 1 : 0);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

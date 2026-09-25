@@ -19,10 +19,12 @@
                 <Label Grid.Column="0" Text="{loc:Translate AppShell_Nav_Transactions}" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
                     <Button Text="{loc:Translate Transactions_FilterButton}" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_CheckInButton}" IsEnabled="False" Style="{StaticResource QuietButton}" />
+                    <Button Text="{loc:Translate Transactions_CheckInButton}" Clicked="OnCheckInClicked" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Common_Select}" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource PrimaryButton}" />
+                    <!-- Importing a statement is the main way transactions get in, so Import is the
+                         primary action and adding one by hand is the quiet one. -->
+                    <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource QuietButton}" />
+                    <Button x:Name="ImportButton" Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>
 
@@ -134,25 +136,50 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <CollectionView ItemsSource="{Binding ResolveUpcoming.Rows}" IsVisible="{Binding ResolveUpcoming.IsCollapsed}">
-                        <CollectionView.EmptyView>
-                            <Label Text="{loc:Translate Transactions_NothingDueRightNow}" Style="{StaticResource TertiaryLabel}" />
-                        </CollectionView.EmptyView>
-                        <CollectionView.ItemTemplate>
+                    <!-- A plain layout, not a CollectionView: a row grows when "Attach…" opens, and this
+                         short list sits in a ScrollView anyway. -->
+                    <Label Text="{loc:Translate Transactions_NothingDueRightNow}" IsVisible="{Binding ResolveUpcoming.ShowsNothingDue}" Style="{StaticResource TertiaryLabel}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding ResolveUpcoming.Rows}" IsVisible="{Binding ResolveUpcoming.IsCollapsed}">
+                        <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:ResolveUpcomingRowViewModel">
-                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,8">
-                                    <VerticalStackLayout Grid.Column="0" Spacing="1">
-                                        <Label Text="{Binding Name}" />
-                                        <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
+                                <VerticalStackLayout Spacing="6" Padding="0,8">
+                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                            <Label Text="{Binding Name}" />
+                                            <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
+                                        <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="4" Text="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
+                                        <Button Grid.Column="5" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
+                                    </Grid>
+                                    <!-- "Attach…": pick the recorded transaction that paid this (e.g. the imported bank row) -
+                                         the occurrence is marked paid without a second transaction. Nothing is suggested
+                                         up front (2026-09-25); anything not yet linked can be found by name or amount. -->
+                                    <VerticalStackLayout Spacing="6" Padding="12,4,0,4" IsVisible="{Binding IsAttachOpen}">
+                                        <Label Text="{loc:Translate ResolveUpcoming_AttachHint}" Style="{StaticResource TertiaryLabel}" />
+                                        <Entry Placeholder="{loc:Translate ResolveUpcoming_AttachSearchPlaceholder}" Text="{Binding AttachSearchText}" WidthRequest="320" HorizontalOptions="Start" />
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding AttachChoices}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:AttachChoiceViewModel">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,4">
+                                                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                                            <Label Text="{Binding Name}" />
+                                                            <Label Text="{Binding DetailText}" Style="{StaticResource TertiaryLabel}" />
+                                                        </VerticalStackLayout>
+                                                        <Label Grid.Column="1" Text="{Binding AmountText}" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
+                                                        <Button Grid.Column="2" Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="{loc:Translate ResolveUpcoming_NoAttachChoices}" IsVisible="{Binding HasNoAttachChoices}" Style="{StaticResource TertiaryLabel}" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="4" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
-                                </Grid>
+                                </VerticalStackLayout>
                             </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
 
                     <CollectionView ItemsSource="{Binding ResolveUpcoming.RuleRows}" IsVisible="{Binding ResolveUpcoming.IsExpanded}">
                         <CollectionView.EmptyView>
@@ -199,8 +226,20 @@
             RemainingItemsThreshold="5"
             RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
             <CollectionView.EmptyView>
-                <Label Text="{loc:Translate Transactions_NoTransactionsYet}" Style="{StaticResource SecondaryLabel}" />
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{loc:Translate Transactions_NoTransactionsYet}" Style="{StaticResource SecondaryLabel}" IsVisible="{Binding CanLoadEarlierMonth, Converter={StaticResource InverseBoolConverter}}" />
+                    <Label Text="{Binding LoadedSinceText}" Style="{StaticResource TertiaryLabel}" IsVisible="{Binding CanLoadEarlierMonth}" />
+                    <Button Text="{loc:Translate Transactions_LoadEarlierMonthButton}" Command="{Binding LoadEarlierMonthCommand}" IsVisible="{Binding CanLoadEarlierMonth}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                </VerticalStackLayout>
             </CollectionView.EmptyView>
+            <!-- Only the last 12 months are loaded (RecentTransactionWindow); at the end of them,
+                 older months are fetched one at a time and dropped again when the page is reopened. -->
+            <CollectionView.Footer>
+                <VerticalStackLayout Padding="0,12" Spacing="6" IsVisible="{Binding CanLoadEarlierMonth}">
+                    <Label Text="{Binding LoadedSinceText}" Style="{StaticResource TertiaryLabel}" />
+                    <Button Text="{loc:Translate Transactions_LoadEarlierMonthButton}" Command="{Binding LoadEarlierMonthCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                </VerticalStackLayout>
+            </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:TransactionRowViewModel">
                     <VerticalStackLayout Spacing="0">
@@ -222,7 +261,7 @@
                                     Text="{Binding AmountText}"
                                     FontAttributes="Bold"
                                     HorizontalTextAlignment="End"
-                                    TextColor="{Binding IsPositive, Converter={StaticResource PositiveAmountColorConverter}}" />
+                                    TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
                                 <Label Text="{Binding BalanceAfterText}" Style="{StaticResource TertiaryLabel}" HorizontalTextAlignment="End" />
                             </VerticalStackLayout>
                         </Grid>
@@ -234,7 +273,10 @@
     </Border>
     </Grid>
 
+    <!-- Hangs under "+ Add", which sits just left of the Import button: the right margin is the
+         page padding plus Import's width (set in TransactionsPage.OnImportButtonSizeChanged). -->
     <Border
+        x:Name="AddMenu"
         Style="{StaticResource CardBorder}"
         IsVisible="{Binding AddMenuOpen}"
         HorizontalOptions="End"
@@ -248,7 +290,7 @@
         <VerticalStackLayout Spacing="6">
             <Button Text="{loc:Translate Enum_TransactionType_Expense}" Command="{Binding OpenExpenseFormCommand}" Style="{StaticResource ExpenseButton}" HorizontalOptions="Fill" />
             <Button Text="{loc:Translate Enum_TransactionType_Income}" Command="{Binding OpenIncomeFormCommand}" Style="{StaticResource IncomeButton}" HorizontalOptions="Fill" />
-            <Button Text="{loc:Translate Enum_TransactionType_Transfer}" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Fill" />
+            <Button Text="{loc:Translate Enum_TransactionType_Transfer}" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource TransferButton}" HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </Border>
     </Grid>

@@ -11,4 +11,7 @@ public sealed record ParsedStatementRow(
     string? ExternalReference = null,
     string? RawText = null,
     decimal? BalanceAfter = null,
-    TimeOnly? Time = null);
+    TimeOnly? Time = null,
+    // The bank's own category for the operation (e.g. Sberbank's "Супермаркеты"), when its
+    // statements show one - see BankCategoryLink.
+    string? BankCategory = null);

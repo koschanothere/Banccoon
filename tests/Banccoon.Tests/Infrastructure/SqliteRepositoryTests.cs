@@ -113,7 +113,7 @@ public sealed class SqliteRepositoryTests
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
         await store.Transactions.SaveAsync(transaction);
 
-        var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);
+        var transactions = ForAccount(await store.Transactions.GetAllAsync(), account.Id);
 
         Assert.Equal(transaction, Assert.Single(transactions));
     }
@@ -138,7 +138,7 @@ public sealed class SqliteRepositoryTests
         await store.Accounts.SaveAsync(destination);
         await store.Transactions.SaveAsync(transaction);
 
-        var transactions = await store.Transactions.GetByAccountIdAsync(source.Id);
+        var transactions = ForAccount(await store.Transactions.GetAllAsync(), source.Id);
 
         Assert.Equal(transaction, Assert.Single(transactions));
     }
@@ -308,6 +308,53 @@ public sealed class SqliteRepositoryTests
     }
 
     [Fact]
+    public async Task StatementImportRepository_SaveRows_SavesEveryRowOrNone()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount("Checking");
+        var batch = new StatementImportBatch(
+            Guid.NewGuid(),
+            account.Id,
+            "fake",
+            "Fake parser",
+            "statement.fake",
+            "C:\\statement.fake",
+            new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.Zero),
+            StatementImportBatchStatus.PendingReview,
+            RowCount: 3);
+        StatementImportRow CreateRow(Guid batchId, int day) => new(
+            Guid.NewGuid(),
+            batchId,
+            new DateOnly(2026, 6, day),
+            10m + day,
+            TransactionType.Expense,
+            $"Row {day}",
+            $"ROW {day}",
+            null,
+            null,
+            null,
+            null,
+            null,
+            StatementImportRowStatus.Pending,
+            IsDuplicate: false,
+            null,
+            null);
+        await store.Accounts.SaveAsync(account);
+        await store.StatementImports.SaveBatchAsync(batch);
+
+        var rows = new[] { CreateRow(batch.Id, 1), CreateRow(batch.Id, 2), CreateRow(batch.Id, 3) };
+        await store.StatementImports.SaveRowsAsync(rows);
+        Assert.Equal(rows, (await store.StatementImports.GetRowsByBatchIdAsync(batch.Id)).OrderBy(row => row.Date));
+
+        // A row pointing at a batch that doesn't exist fails the foreign key - and takes the valid
+        // row saved before it in the same call down with it.
+        var otherBatch = batch with { Id = Guid.NewGuid() };
+        await store.StatementImports.SaveBatchAsync(otherBatch);
+        await Assert.ThrowsAnyAsync<Exception>(() => store.StatementImports.SaveRowsAsync([CreateRow(otherBatch.Id, 4), CreateRow(Guid.NewGuid(), 5)]));
+        Assert.Empty(await store.StatementImports.GetRowsByBatchIdAsync(otherBatch.Id));
+    }
+
+    [Fact]
     public async Task StatementImportRepository_DeleteBatch_RemovesBatchAndRows()
     {
         await using var store = new SqliteTestStore();
@@ -420,4 +467,7 @@ public sealed class SqliteRepositoryTests
             "EUR",
             new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
     }
+
+    private static IReadOnlyList<Transaction> ForAccount(IReadOnlyList<Transaction> transactions, Guid accountId) =>
+        transactions.Where(transaction => transaction.AccountId == accountId || transaction.DestinationAccountId == accountId).ToList();
 }
