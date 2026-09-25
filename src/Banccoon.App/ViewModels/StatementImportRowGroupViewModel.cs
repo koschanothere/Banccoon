@@ -57,11 +57,18 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
 
     // The group's own category picker: choosing a category puts it on every row in the group.
     // "+ New category" only takes effect once the name is committed (Enter / Add), like on a row.
+    // A null is MAUI resetting the picker, never a choice - see StatementImportRowViewModel.Category.
     public CategoryOptionViewModel? Category
     {
         get => category;
         set
         {
+            if (value is null && category is not null)
+            {
+                _ = ReassertCategoryAsync();
+                return;
+            }
+
             if (!SetProperty(ref category, value))
             {
                 return;
@@ -178,6 +185,12 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
     private void SyncDisplayedRows()
     {
         CollectionSync.Apply(DisplayedRows, IsMultiple && !IsExpanded ? [] : rows);
+    }
+
+    private async Task ReassertCategoryAsync()
+    {
+        await Task.Yield();
+        await RunOnMainThreadAsync(() => OnPropertyChanged(nameof(Category)));
     }
 
     private void RaiseCategoryChanged()

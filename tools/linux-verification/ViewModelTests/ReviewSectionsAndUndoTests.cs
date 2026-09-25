@@ -13,18 +13,22 @@ public sealed class ReviewSectionsAndUndoTests
     {
         await using var f = await Fixture.CreateAsync();
         var sections = f.Review.Sections;
+        Assert.False(sections.IsReadyExpanded);
+        Assert.Empty(sections.ReadyRows);
+        Assert.Empty(sections.ReadyGroups);
+        sections.ShowReadyRows();
 
         Assert.Equal(["Coffee House"], sections.ReadyRows.Select(r => r.Description));
         Assert.Equal(["Unknown shop", "Mystery"], sections.AttentionRows.Select(r => r.Description));
         Assert.Equal(["Already recorded"], sections.DuplicateRows.Select(r => r.Description));
         Assert.Equal(string.Format(Translator.Get("StatementImport_ReadyHeaderFormat"), 1), sections.ReadyHeaderText);
-        Assert.False(sections.IsReadyExpanded);
     }
 
     [Fact]
     public async Task RowsWithNothingLearned_StartWithNoCategory_InsteadOfTheFirstOneAlphabetically()
     {
         await using var f = await Fixture.CreateAsync();
+        f.Review.Sections.ShowReadyRows();
 
         Assert.All(f.Review.Sections.AttentionRows, row => Assert.Null(row.Category));
         Assert.NotNull(f.Review.Sections.ReadyRows.Single().Category);
@@ -35,6 +39,7 @@ public sealed class ReviewSectionsAndUndoTests
     {
         await using var f = await Fixture.CreateAsync();
         var review = f.Review;
+        review.Sections.ShowReadyRows();
         var unknown = review.Sections.AttentionRows.Single(r => r.Description == "Unknown shop");
         unknown.Category = review.CategoryOptions.First(o => o.Name == "Fun");
         Assert.Equal(2, review.Sections.CategorisedCount);
@@ -102,6 +107,7 @@ public sealed class ReviewSectionsAndUndoTests
     {
         await using var f = await Fixture.CreateAsync();
         var review = f.Review;
+        review.Sections.ShowReadyRows();
         review.Sections.AttentionRows.Single(r => r.Description == "Unknown shop").Category = review.CategoryOptions.First(o => o.Name == "Fun");
 
         await f.RunAsync(review.Sections.ApproveAllCategorisedCommand);

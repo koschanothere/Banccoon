@@ -159,7 +159,7 @@ public sealed class StatementImportCategoriesViewModel : ViewModelBase
         // its rows - putting the rows back after the insert has run its course undoes that too.
         foreach (var (row, category) in rowSelections)
         {
-            row.Category = category;
+            row.RestoreCategory(category);
         }
 
         foreach (var (group, category) in groupSelections)

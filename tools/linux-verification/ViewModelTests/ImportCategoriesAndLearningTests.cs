@@ -120,6 +120,7 @@ public sealed class ImportCategoriesAndLearningTests
             new(new DateOnly(2026, 6, 4), 3m, TransactionType.Expense, "Ticket", "Metro")
         ]);
         var review = fixture.Review;
+        review.Sections.ShowReadyRows();
         var food = review.CategoryOptions.First(o => o.Name == "Food");
         var fun = review.CategoryOptions.First(o => o.Name == "Fun");
         var (first, second, third, metro) = (review.Rows[0], review.Rows[1], review.Rows[2], review.Rows[3]);
@@ -150,6 +151,7 @@ public sealed class ImportCategoriesAndLearningTests
             new(new DateOnly(2026, 6, 15), 50m, TransactionType.Expense, "To savings", "Own account")
         ]);
         var review = fixture.Review;
+        review.Sections.ShowReadyRows();
         var food = review.CategoryOptions.First(o => o.Name == "Food");
         var savings = Assert.Single(review.OtherAccountOptions);
         var (first, second) = (review.Rows[0], review.Rows[1]);

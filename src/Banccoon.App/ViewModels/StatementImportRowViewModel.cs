@@ -124,17 +124,23 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
+    // Bound two-way to the row's category picker. A picker never offers "no category", so a null
+    // arriving here is MAUI resetting the picker while it builds the row's view - seen 2026-09-25
+    // when opening a group: every row in it lost its category, and the group's "Approve all" then
+    // skipped them all as no longer ready. The category is kept and handed back to the picker once
+    // it's done. Code that really means "no category" uses RestoreCategory.
     public CategoryOptionViewModel? Category
     {
         get => category;
         set
         {
-            if (SetProperty(ref category, value))
+            if (value is null && category is not null)
             {
-                OnPropertyChanged(nameof(IsCreatingNewCategory));
-                OnPropertyChanged(nameof(CategoryBorderColor));
-                OnPropertyChanged(nameof(IsReadyToApprove));
+                _ = ReassertCategoryAsync();
+                return;
             }
+
+            SetCategory(value);
         }
     }
 
@@ -266,6 +272,13 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         && Type == suggestedType
         && OtherAccount?.Id == suggestedOtherAccount?.Id;
 
+    // Sets the category from code, where "none" is a real value - a newer suggestion with nothing
+    // learned, or putting a pick back after the option list changed (StatementImportCategoriesViewModel.AddOption).
+    public void RestoreCategory(CategoryOptionViewModel? value)
+    {
+        SetCategory(value);
+    }
+
     // Fills an untouched row with a newer suggestion and re-decides its block. Returns whether the
     // block changed. UI-thread only.
     public bool ApplySuggestion(TransactionType newType, CategoryOptionViewModel? newCategory, NamedOptionViewModel? newOtherAccount)
@@ -274,7 +287,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         suggestedCategory = newCategory;
         suggestedOtherAccount = newOtherAccount;
         Type = newType;
-        Category = newCategory;
+        SetCategory(newCategory);
         OtherAccount = newOtherAccount;
 
         var section = CurrentSection();
@@ -312,6 +325,23 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public ICommand ToggleTypeEditorCommand { get; }
 
     public ICommand SkipCommand { get; }
+
+    private void SetCategory(CategoryOptionViewModel? value)
+    {
+        if (SetProperty(ref category, value))
+        {
+            OnPropertyChanged(nameof(IsCreatingNewCategory));
+            OnPropertyChanged(nameof(CategoryBorderColor));
+            OnPropertyChanged(nameof(IsReadyToApprove));
+        }
+    }
+
+    // After the picker has finished whatever reset it, tell it the category again.
+    private async Task ReassertCategoryAsync()
+    {
+        await Task.Yield();
+        await RunOnMainThreadAsync(() => OnPropertyChanged(nameof(Category)));
+    }
 
     private StatementImportRowSection CurrentSection()
     {

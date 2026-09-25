@@ -30,6 +30,7 @@ public sealed class ImportDrawingAndGroupingTests
             }
         });
         var sections = fixture.Review.Sections;
+        sections.ShowReadyRows();
 
         Assert.Equal(50, fixture.Review.Rows.Count);
         Assert.Equal(5, sections.DuplicateRows.Count);
@@ -62,6 +63,7 @@ public sealed class ImportDrawingAndGroupingTests
         var rows = Enumerable.Range(1, 45).Select(day => Row(day, day <= 30 ? "Cafe" : $"New shop {day}")).ToArray();
         await using var fixture = await ReviewFixture.CreateAsync(rows, seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
         var sections = fixture.Review.Sections;
+        sections.ShowReadyRows();
         Assert.Equal(20, sections.ReadyRows.Count);
 
         sections.ApproveAllCategorisedCommand.Execute(null);
@@ -86,6 +88,8 @@ public sealed class ImportDrawingAndGroupingTests
             });
         var sections = fixture.Review.Sections;
         Assert.True(sections.IsGroupedByName);
+        Assert.Empty(sections.ReadyGroups);
+        sections.ShowReadyGroups();
 
         Assert.Equal(["Bakery", "Cafe", "Metro"], sections.ReadyGroups.Select(g => g.Name));
         var (bakery, cafe, metro) = (sections.ReadyGroups[0], sections.ReadyGroups[1], sections.ReadyGroups[2]);
@@ -100,12 +104,16 @@ public sealed class ImportDrawingAndGroupingTests
         cafe.ToggleExpandedCommand.Execute(null);
         Assert.Equal([1, 3, 5], cafe.DisplayedRows.Select(r => r.Date.Day));
 
+        // Only the view that's showing is drawn.
         sections.IsGroupedByName = false;
-        sections.ToggleReadyExpandedCommand.Execute(null);
         Assert.True(sections.IsReadyListFlat);
         Assert.False(sections.IsReadyListGrouped);
         Assert.Equal(6, sections.ReadyRows.Count);
+        Assert.Empty(sections.ReadyGroups);
+
+        sections.IsGroupedByName = true;
         Assert.Same(bakery, sections.ReadyGroups[0]);
+        Assert.Empty(sections.ReadyRows);
     }
 
     [Fact]
@@ -119,6 +127,7 @@ public sealed class ImportDrawingAndGroupingTests
                 await LearnAsync(store, account, "Bakery", "Fun");
             });
         var sections = fixture.Review.Sections;
+        sections.ShowReadyGroups();
         var bakery = sections.ReadyGroups.Single(g => g.Name == "Bakery");
         var cafe = sections.ReadyGroups.Single(g => g.Name == "Cafe");
 
@@ -142,6 +151,7 @@ public sealed class ImportDrawingAndGroupingTests
         await using var fixture = await ReviewFixture.CreateAsync([Row(1, "Shop"), Row(2, "Shop"), Row(3, "Shop"), Row(4, "Metro")]);
         var review = fixture.Review;
         var sections = review.Sections;
+        sections.ShowReadyGroups();
         Assert.Empty(sections.ReadyGroups);
         review.Rows[0].Category = review.CategoryOptions.First(o => o.Name == "Food");
 
@@ -151,6 +161,7 @@ public sealed class ImportDrawingAndGroupingTests
         var shop = Assert.Single(sections.ReadyGroups);
         Assert.Equal("Shop", shop.Name);
         Assert.Equal([2, 3], shop.Rows.Select(r => r.Date.Day));
+        sections.ShowReadyRows();
         Assert.Equal([2, 3], sections.ReadyRows.Select(r => r.Date.Day));
         Assert.Equal(4, Assert.Single(sections.AttentionRows).Date.Day);
     }
@@ -162,6 +173,7 @@ public sealed class ImportDrawingAndGroupingTests
             [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Cafe")],
             seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
         var review = fixture.Review;
+        review.Sections.ShowReadyGroups();
         var fun = review.CategoryOptions.First(o => o.Name == "Fun");
         var cafe = Assert.Single(review.Sections.ReadyGroups);
 
@@ -181,6 +193,7 @@ public sealed class ImportDrawingAndGroupingTests
             [Row(1, "Cafe"), Row(2, "Cafe")],
             seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
         var review = fixture.Review;
+        review.Sections.ShowReadyGroups();
         var cafe = Assert.Single(review.Sections.ReadyGroups);
         cafe.Category = review.CategoryOptions.Single(o => o.IsCreateNew);
         cafe.NewCategoryName = "Coffee";
@@ -205,6 +218,7 @@ public sealed class ImportDrawingAndGroupingTests
                 await LearnAsync(store, account, "Metro", "Fun");
             });
         var sections = fixture.Review.Sections;
+        sections.ShowReadyGroups();
         var cafe = sections.ReadyGroups.Single(g => g.Name == "Cafe");
         cafe.ToggleExpandedCommand.Execute(null);
         Assert.Equal(3, cafe.DisplayedRows.Count);
@@ -225,6 +239,7 @@ public sealed class ImportDrawingAndGroupingTests
             [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Shop")],
             seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
         var review = fixture.Review;
+        review.Sections.ShowReadyGroups();
         var fun = review.CategoryOptions.First(o => o.Name == "Fun");
         var cafe = Assert.Single(review.Sections.ReadyGroups);
         cafe.Category = fun;
@@ -238,6 +253,49 @@ public sealed class ImportDrawingAndGroupingTests
 
         Assert.Same(fun, cafe.Category);
         Assert.All(cafe.Rows, row => Assert.Same(fun, row.Category));
+    }
+
+    // The 2026-09-25 report: opening a group left its rows without a category, and the group's
+    // "Approve all" then did nothing. Stand-in for what MAUI did: each row's picker, as the opened
+    // group builds it, resets to "nothing" and pushes that through the two-way binding.
+    [Fact]
+    public async Task OpeningAGroup_WhosePickersResetToNothing_KeepsEveryRowsCategory_AndApproveAllWorks()
+    {
+        await using var fixture = await ReviewFixture.CreateAsync(
+            [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Cafe")],
+            seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
+        var sections = fixture.Review.Sections;
+        sections.ShowReadyGroups();
+        var cafe = Assert.Single(sections.ReadyGroups);
+        var handedBack = 0;
+        foreach (var row in cafe.Rows)
+        {
+            row.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(StatementImportRowViewModel.Category) && row.Category is not null)
+                {
+                    handedBack++;
+                }
+            };
+        }
+
+        cafe.DisplayedRows.CollectionChanged += (_, e) =>
+        {
+            foreach (var row in e.NewItems?.Cast<StatementImportRowViewModel>() ?? [])
+            {
+                row.Category = null;
+            }
+        };
+        cafe.Category = null;
+        cafe.ToggleExpandedCommand.Execute(null);
+        await fixture.WaitForAsync(() => handedBack >= 3);
+
+        Assert.Equal("Food", cafe.Category?.Name);
+        Assert.All(cafe.Rows, row => Assert.Equal("Food", row.Category?.Name));
+        cafe.ApproveCommand.Execute(null);
+        await fixture.SettleAsync();
+        Assert.Equal(3, (await fixture.Store.Transactions.GetAllAsync()).Count);
+        Assert.Empty(fixture.Review.Rows);
     }
 
     // Same stand-in as ImportCategoriesAndLearningTests' row picker, for a group's picker: MAUI 10's

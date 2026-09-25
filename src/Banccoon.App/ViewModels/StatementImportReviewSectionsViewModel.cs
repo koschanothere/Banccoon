@@ -23,9 +23,11 @@ namespace Banccoon.App.ViewModels;
 // Only a few rows are ever on screen (each is heavy: three pickers). Every row is loaded, counted
 // and approvable from the start, but the duplicates and needs-a-decision blocks share room for
 // RowsPerStep rows, duplicates first; as rows are approved or skipped the next ones slide in, and
-// "Show more" makes room for another RowsPerStep. The ready block shows RowsPerStep rows (or
-// groups) the same way. Nothing is drawn in the background - that froze the window every few
-// seconds on a big statement (2026-09-25).
+// "Show more" makes room for another RowsPerStep. The ready block draws nothing while collapsed,
+// and when open only the view that's showing - RowsPerStep rows (flat) or groups (grouped) - so a
+// row is never drawn twice (a second, hidden copy of each row's picker was what let MAUI reset the
+// categories of a group's rows when it was opened, 2026-09-25). Nothing is drawn in the background
+// - that froze the window every few seconds on a big statement.
 public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
 {
     public const int RowsPerStep = 20;
@@ -74,7 +76,7 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     // The ready block as a flat, date-ordered list ("Group by name" off)...
     public ObservableCollection<StatementImportRowViewModel> ReadyRows { get; }
 
-    // ...and as groups in name order ("Group by name" on). Both are kept up to date; only one shows.
+    // ...and as groups in name order ("Group by name" on). Only the one on screen is filled.
     public ObservableCollection<StatementImportRowGroupViewModel> ReadyGroups { get; }
 
     public bool HasDuplicates => CountIn(StatementImportRowSection.Duplicate) > 0;
@@ -109,7 +111,7 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
             if (SetProperty(ref isReadyExpanded, value))
             {
                 OnPropertyChanged(nameof(IsReadyCollapsed));
-                RaiseReadyListVisibility();
+                SyncShownRows();
             }
         }
     }
@@ -123,7 +125,7 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         {
             if (SetProperty(ref isGroupedByName, value))
             {
-                RaiseReadyListVisibility();
+                SyncShownRows();
             }
         }
     }
@@ -308,7 +310,8 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     }
 
     // Which rows each block should show right now: duplicates, then rows needing a decision, up to
-    // shownLimit between them; the first readyShownLimit ready rows (flat) and groups (grouped).
+    // shownLimit between them; and, only while the ready block is open, its first readyShownLimit
+    // rows (flat) or groups (grouped) - whichever is showing.
     private void SyncShownRows()
     {
         var ordered = review.Rows
@@ -319,12 +322,14 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
             .ToList();
         CollectionSync.Apply(DuplicateRows, ordered.Where(row => row.Section == StatementImportRowSection.Duplicate).ToList());
         CollectionSync.Apply(AttentionRows, ordered.Where(row => row.Section == StatementImportRowSection.Attention).ToList());
-        CollectionSync.Apply(ReadyRows, review.Rows
-            .Where(row => row.Section == StatementImportRowSection.Ready && trackedRows.Contains(row))
-            .OrderBy(row => row.Date)
-            .Take(readyShownLimit)
-            .ToList());
-        CollectionSync.Apply(ReadyGroups, allGroups.Take(readyShownLimit).ToList());
+        CollectionSync.Apply(ReadyRows, IsReadyListFlat
+            ? review.Rows
+                .Where(row => row.Section == StatementImportRowSection.Ready && trackedRows.Contains(row))
+                .OrderBy(row => row.Date)
+                .Take(readyShownLimit)
+                .ToList()
+            : []);
+        CollectionSync.Apply(ReadyGroups, IsReadyListGrouped ? allGroups.Take(readyShownLimit).ToList() : []);
         RaiseAll();
     }
 
