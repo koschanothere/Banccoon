@@ -1010,6 +1010,9 @@
   <data name="Common_Add" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="Common_NewCategoryOption" xml:space="preserve">
+    <value>+ New category</value>
+  </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Other account</value>
   </data>

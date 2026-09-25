@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using Banccoon.App.Localization;
+using Banccoon.Core.Statements;
 
 namespace Banccoon.App.ViewModels;
 
@@ -10,12 +11,13 @@ namespace Banccoon.App.ViewModels;
 // real decisions instead of 40 identical rows:
 // - possible duplicates, at the top, with "Skip all duplicates" (re-importing an overlapping or
 //   half-reviewed statement flags every already-recorded row here, so this also covers resuming);
-// - rows that need a decision (nothing learned yet, or a transfer with no learned other account);
-// - rows Banccoon already categorised from what it learned - collapsed by default.
+// - rows Banccoon already categorised from what it learned - collapsed by default;
+// - rows that need a decision (nothing learned yet, or a transfer with no learned other account).
 // "Approve all categorised" approves every non-duplicate row that is ready as it stands, in either
 // of the last two blocks, so categorising a few "needs attention" rows and then approving
-// everything at once works too. Each row's block is fixed when it's loaded (see
-// StatementImportRowViewModel.Section): rows never jump between blocks while being edited.
+// everything at once works too. A row's block is decided when it's loaded, and only changes when a
+// newer suggestion fills in a row the user hasn't touched (ApplySuggestions) - rows never jump
+// between blocks while being edited.
 public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
 {
     private readonly StatementImportReviewViewModel review;
@@ -81,14 +83,7 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     // UI-thread only - called by the parent from inside its own RunOnMainThreadAsync blocks.
     public void OnRowAdded(StatementImportRowViewModel row)
     {
-        var target = SectionFor(row);
-        var index = 0;
-        while (index < target.Count && target[index].Date <= row.Date)
-        {
-            index++;
-        }
-
-        target.Insert(index, row);
+        InsertByDate(SectionFor(row.Section), row);
         row.PropertyChanged += OnRowPropertyChanged;
         RaiseAll();
     }
@@ -96,7 +91,37 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     public void OnRowRemoved(StatementImportRowViewModel row)
     {
         row.PropertyChanged -= OnRowPropertyChanged;
-        SectionFor(row).Remove(row);
+        SectionFor(row.Section).Remove(row);
+        RaiseAll();
+    }
+
+    // UI-thread only. Fills every row the user hasn't touched (StatementImportRowViewModel.IsUntouched)
+    // with Banccoon's current suggestion for it, and moves the ones whose block changed - typically a
+    // row that had nothing learned and is now fully categorised, from "needs a decision" to ready.
+    // Duplicates and rows with an approve/skip in flight are left alone.
+    public void ApplySuggestions(IReadOnlyDictionary<Guid, StatementImportRowSuggestion> suggestions)
+    {
+        foreach (var row in review.Rows.ToList())
+        {
+            if (row.IsDuplicate || row.IsBusy || !row.IsUntouched || !suggestions.TryGetValue(row.Id, out var suggestion))
+            {
+                continue;
+            }
+
+            var category = suggestion.CategoryId is { } categoryId
+                ? review.CategoryOptions.FirstOrDefault(option => !option.IsCreateNew && option.Id == categoryId)
+                : null;
+            var otherAccount = suggestion.DestinationAccountId is { } otherAccountId
+                ? review.OtherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
+                : null;
+            var previousSection = row.Section;
+            if (row.ApplySuggestion(suggestion.Type, category, otherAccount))
+            {
+                SectionFor(previousSection).Remove(row);
+                InsertByDate(SectionFor(row.Section), row);
+            }
+        }
+
         RaiseAll();
     }
 
@@ -114,7 +139,18 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         RaiseAll();
     }
 
-    private ObservableCollection<StatementImportRowViewModel> SectionFor(StatementImportRowViewModel row) => row.Section switch
+    private static void InsertByDate(ObservableCollection<StatementImportRowViewModel> target, StatementImportRowViewModel row)
+    {
+        var index = 0;
+        while (index < target.Count && target[index].Date <= row.Date)
+        {
+            index++;
+        }
+
+        target.Insert(index, row);
+    }
+
+    private ObservableCollection<StatementImportRowViewModel> SectionFor(StatementImportRowSection section) => section switch
     {
         StatementImportRowSection.Duplicate => DuplicateRows,
         StatementImportRowSection.Ready => ReadyRows,

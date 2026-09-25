@@ -181,7 +181,7 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
 
         await review.RunExclusiveAsync(async () =>
         {
-            var categoryId = await review.ResolveCategoryAsync(BulkCategory, NewBulkCategoryName);
+            var categoryId = await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName);
             await RunOnMainThreadAsync(() =>
             {
                 var option = review.CategoryOptions.FirstOrDefault(candidate => !candidate.IsCreateNew && candidate.Id == categoryId);
@@ -227,7 +227,7 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
 
                 // A bulk "create new" is resolved once, up front, so every selected row lands in the
                 // same new category rather than creating one per row.
-                var bulkCategoryId = await review.ResolveCategoryAsync(BulkCategory, NewBulkCategoryName);
+                var bulkCategoryId = await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName);
                 foreach (var row in selected)
                 {
                     await review.ApproveAsync(row, bulkCategoryId);

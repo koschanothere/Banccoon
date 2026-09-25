@@ -265,7 +265,22 @@ internal sealed class ReviewFixture : IAsyncDisposable
 
     public int ReviewCompletedCount { get; private set; }
 
-    public static async Task<ReviewFixture> CreateAsync(int rowCount, int otherAccounts = 1, int? existingTransactionOnDay = null)
+    // rowCount rows named "Row 1", "Row 2", ... - which all read as the same recipient ("ROW") to
+    // the learning rules, so approving one teaches Banccoon about the rest.
+    public static Task<ReviewFixture> CreateAsync(int rowCount, int otherAccounts = 1, int? existingTransactionOnDay = null)
+    {
+        var rows = Enumerable.Range(1, rowCount)
+            .Select(i => new ParsedStatementRow(new DateOnly(2026, 6, i), 10m, TransactionType.Expense, $"Row {i}"))
+            .ToArray();
+        return CreateAsync(rows, otherAccounts, existingTransactionOnDay);
+    }
+
+    // withCategories: false starts from nothing at all, like a fresh install.
+    public static async Task<ReviewFixture> CreateAsync(
+        IReadOnlyList<ParsedStatementRow> rows,
+        int otherAccounts = 1,
+        int? existingTransactionOnDay = null,
+        bool withCategories = true)
     {
         Translator.SetLanguage("en");
         var store = new SqliteTestStore();
@@ -282,12 +297,12 @@ internal sealed class ReviewFixture : IAsyncDisposable
             await store.Transactions.SaveAsync(new Transaction(Guid.NewGuid(), new DateOnly(2026, 6, day), 10m, account.Id, null, null, TransactionType.Expense, Name: $"Row {day}"));
         }
 
-        await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense));
-        await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Fun", TransactionType.Expense));
+        if (withCategories)
+        {
+            await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense));
+            await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Fun", TransactionType.Expense));
+        }
 
-        var rows = Enumerable.Range(1, rowCount)
-            .Select(i => new ParsedStatementRow(new DateOnly(2026, 6, i), 10m, TransactionType.Expense, $"Row {i}"))
-            .ToArray();
         var service = new StatementImportService(
             new StatementParserRegistry([new FakeParser(rows)]),
             store.StatementImports,
@@ -319,6 +334,23 @@ internal sealed class ReviewFixture : IAsyncDisposable
         }
 
         throw new TimeoutException("Review actions did not settle.");
+    }
+
+    // For actions that don't mark a row busy (creating a category), so SettleAsync can't see them.
+    public async Task WaitForAsync(Func<bool> condition)
+    {
+        for (var i = 0; i < 200; i++)
+        {
+            if (condition())
+            {
+                await SettleAsync();
+                return;
+            }
+
+            await Task.Delay(10);
+        }
+
+        throw new TimeoutException("Condition was not met.");
     }
 
     public ValueTask DisposeAsync() => Store.DisposeAsync();

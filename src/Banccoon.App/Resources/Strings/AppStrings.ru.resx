@@ -1049,6 +1049,9 @@
   <data name="Common_Add" xml:space="preserve">
     <value>Добавить</value>
   </data>
+  <data name="Common_NewCategoryOption" xml:space="preserve">
+    <value>+ Новая категория</value>
+  </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Другой счёт</value>
   </data>

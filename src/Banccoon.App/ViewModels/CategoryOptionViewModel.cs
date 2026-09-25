@@ -1,4 +1,5 @@
 using Banccoon.App.Formatting;
+using Banccoon.App.Localization;
 using Banccoon.Core.Models;
 using Microsoft.Maui.Graphics;
 
@@ -23,7 +24,7 @@ public sealed class CategoryOptionViewModel
         new(category.Id, category.Name, CategoryColorPalette.GetColorForCategory(category.Id, category.Color), isCreateNew: false);
 
     public static CategoryOptionViewModel CreateNewSentinel() =>
-        new(Guid.Empty, "+ New category", color: null, isCreateNew: true);
+        new(Guid.Empty, Translator.Get("Common_NewCategoryOption"), color: null, isCreateNew: true);
 
     public Guid Id { get; }
 

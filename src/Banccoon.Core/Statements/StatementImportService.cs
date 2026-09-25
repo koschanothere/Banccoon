@@ -335,6 +335,39 @@ public sealed class StatementImportService : IStatementImportService
         return pendingRow;
     }
 
+    public async Task<IReadOnlyList<StatementImportRowSuggestion>> GetPendingSuggestionsAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default)
+    {
+        var batch = await statementImportRepository.GetBatchByIdAsync(batchId, cancellationToken);
+        if (batch is null)
+        {
+            return [];
+        }
+
+        var rows = await statementImportRepository.GetRowsByBatchIdAsync(batchId, cancellationToken);
+        var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
+        return rows
+            .Where(row => row.Status == StatementImportRowStatus.Pending)
+            .Select(row =>
+            {
+                // Rebuilt as the parser saw it: suggestion starts from the raw +/- guess, exactly as
+                // when the row was first created, so a row suggests the same thing either way.
+                var parsedRow = new ParsedStatementRow(
+                    row.Date,
+                    row.Amount,
+                    row.IsIncoming ? TransactionType.Income : TransactionType.Expense,
+                    row.Description,
+                    row.Counterparty,
+                    row.ExternalReference,
+                    row.RawText,
+                    Time: row.Time);
+                var (type, categoryId, destinationAccountId) = Suggest(parsedRow, batch.AccountId, rules);
+                return new StatementImportRowSuggestion(row.Id, type, categoryId, destinationAccountId);
+            })
+            .ToList();
+    }
+
     public async Task<StatementImportCancelResult> CancelImportAsync(
         Guid batchId,
         CancellationToken cancellationToken = default)
@@ -368,14 +401,7 @@ public sealed class StatementImportService : IStatementImportService
             string.IsNullOrWhiteSpace(parsedRow.Counterparty)
                 ? parsedRow.Description
                 : parsedRow.Counterparty);
-        // The parser only ever guesses Expense/Income from the +/- sign - a past correction for
-        // this same recipient (e.g. "this is actually a Transfer") overrides that guess before
-        // category suggestion runs, since categories are learned per-type.
-        var suggestedType = categorySuggestionService.SuggestType(parsedRow, accountId, rules) ?? parsedRow.Type;
-        var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, suggestedType, rules);
-        var suggestedDestinationAccountId = suggestedType == TransactionType.Transfer
-            ? categorySuggestionService.SuggestDestinationAccount(parsedRow, accountId, rules)
-            : null;
+        var (suggestedType, suggestedCategoryId, suggestedDestinationAccountId) = Suggest(parsedRow, accountId, rules);
         var duplicateTransaction = StatementDuplicateDetector.FindDuplicate(accountId, parsedRow, normalizedDescription, existingTransactions);
         // Captured from the parser's own raw guess (never itself reclassified) so it survives even
         // if suggestedType above overrides Income/Expense to Transfer - Transfer alone doesn't say
@@ -393,7 +419,7 @@ public sealed class StatementImportService : IStatementImportService
             CleanOptionalText(parsedRow.Counterparty),
             CleanOptionalText(parsedRow.ExternalReference),
             CleanOptionalText(parsedRow.RawText),
-            suggestion?.CategoryId,
+            suggestedCategoryId,
             null,
             StatementImportRowStatus.Pending,
             duplicateTransaction is not null,
@@ -402,6 +428,22 @@ public sealed class StatementImportService : IStatementImportService
             parsedRow.Time,
             suggestedDestinationAccountId,
             isIncoming);
+    }
+
+    private (TransactionType Type, Guid? CategoryId, Guid? DestinationAccountId) Suggest(
+        ParsedStatementRow parsedRow,
+        Guid accountId,
+        IReadOnlyList<CategoryLearningRule> rules)
+    {
+        // The parser only ever guesses Expense/Income from the +/- sign - a past correction for
+        // this same recipient (e.g. "this is actually a Transfer") overrides that guess before
+        // category suggestion runs, since categories are learned per-type.
+        var type = categorySuggestionService.SuggestType(parsedRow, accountId, rules) ?? parsedRow.Type;
+        var suggestion = categorySuggestionService.Suggest(parsedRow, accountId, type, rules);
+        var destinationAccountId = type == TransactionType.Transfer
+            ? categorySuggestionService.SuggestDestinationAccount(parsedRow, accountId, rules)
+            : null;
+        return (type, suggestion?.CategoryId, destinationAccountId);
     }
 
     private async Task<Guid> EnsureOtherCategoryAsync(CancellationToken cancellationToken)

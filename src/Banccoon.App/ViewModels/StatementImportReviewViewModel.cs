@@ -33,6 +33,9 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private List<StatementImportRowViewModel> currentActionRows = [];
     private IReadOnlyList<StatementImportRowViewModel>? lastActionRows;
 
+    // Whether the running action approved anything - approvals are what teach Banccoon new rules.
+    private bool currentActionApproved;
+
     public StatementImportReviewViewModel(
         IStatementImportService statementImportService,
         IStatementImportRepository statementImportRepository,
@@ -49,6 +52,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         OtherAccountOptions = [];
         Bulk = new StatementImportBulkActionsViewModel(this);
         Sections = new StatementImportReviewSectionsViewModel(this);
+        Categories = new StatementImportCategoriesViewModel(this, categoryRepository);
 
         CancelImportCommand = new RelayCommand(() => _ = CancelImportAsync());
         UndoCommand = new RelayCommand(() => _ = UndoAsync());
@@ -69,6 +73,12 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     public StatementImportBulkActionsViewModel Bulk { get; }
 
     public StatementImportReviewSectionsViewModel Sections { get; }
+
+    public StatementImportCategoriesViewModel Categories { get; }
+
+    // Rows reviewed by the running action and by the last finished one - both can come back
+    // through Undo. UI-thread only.
+    public IEnumerable<StatementImportRowViewModel> RecentlyReviewedRows => currentActionRows.Concat(lastActionRows ?? []);
 
     public Guid AccountId => accountId;
 
@@ -130,23 +140,18 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     // Runs an approve/skip action behind the shared gate (see actionGate), clearing any old status
     // first and turning a failure into a visible message instead of an unobserved exception from a
-    // fire-and-forget command.
+    // fire-and-forget command. After approvals, what they taught is passed on to the rows still
+    // waiting (ApplyLatestLearningAsync) before the next action can start.
     public async Task RunExclusiveAsync(Func<Task> action)
     {
         await actionGate.WaitAsync();
         currentActionRows = [];
+        currentActionApproved = false;
         try
         {
             await SetStatusAsync(string.Empty);
-            await action();
-        }
-        catch (Exception ex)
-        {
-            DiagnosticLog.Write($"Statement import review action failed: {ex}");
-            await SetStatusAsync(Translator.Get("StatementImport_ActionFailed"));
-        }
-        finally
-        {
+            await RunReportingFailureAsync(action);
+
             // Even a half-finished bulk action can be undone for the rows it did get through.
             var reviewed = currentActionRows;
             if (reviewed.Count > 0)
@@ -154,10 +159,18 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
                 await RunOnMainThreadAsync(() =>
                 {
                     lastActionRows = reviewed;
+                    currentActionRows = [];
                     OnPropertyChanged(nameof(CanUndo));
                 });
             }
 
+            if (currentActionApproved && Rows.Count > 0)
+            {
+                await RunReportingFailureAsync(ApplyLatestLearningAsync);
+            }
+        }
+        finally
+        {
             actionGate.Release();
         }
     }
@@ -170,9 +183,10 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     // Only called from inside RunExclusiveAsync.
     public async Task ApproveAsync(StatementImportRowViewModel row, Guid? bulkCategoryId)
     {
-        var categoryId = bulkCategoryId ?? await ResolveCategoryAsync(row.Category, row.NewCategoryName);
+        var categoryId = bulkCategoryId ?? await Categories.ResolveAsync(row.Category, row.NewCategoryName);
         await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
         currentActionRows.Add(row);
+        currentActionApproved = true;
         await RemoveReviewedRowAsync(row);
     }
 
@@ -204,39 +218,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         return problem;
     }
 
-    // Resolves a picker selection to a category id, creating the category if "create new" was
-    // picked - unless a category with that name already exists (typically: another row typed the
-    // same new name and was approved first), in which case that one is reused instead of creating
-    // a duplicate. A newly created category is offered to every row, and any other row that was
-    // also about to create the same name is pointed at it.
-    public async Task<Guid?> ResolveCategoryAsync(CategoryOptionViewModel? selected, string newCategoryName)
-    {
-        if (selected?.IsCreateNew == true && !string.IsNullOrWhiteSpace(newCategoryName))
-        {
-            CategoryOptionViewModel? existing = null;
-            await RunOnMainThreadAsync(() => existing = CategoryOptions.FirstOrDefault(option => !option.IsCreateNew && NamesMatch(option.Name, newCategoryName)));
-            if (existing is not null)
-            {
-                return existing.Id;
-            }
-        }
-
-        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(selected, newCategoryName, categoryRepository);
-        if (newOption is not null)
-        {
-            await RunOnMainThreadAsync(() =>
-            {
-                CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption);
-                foreach (var row in Rows.Where(row => row.IsCreatingNewCategory && NamesMatch(row.NewCategoryName, newOption.Name)))
-                {
-                    row.AdoptCategory(newOption);
-                }
-            });
-        }
-
-        return categoryId;
-    }
-
     // The only full rebuild of Rows - on first load. Every later action removes just the rows it
     // acted on (RemoveReviewedRowAsync): a rebuild recreates every row from its persisted (unedited)
     // data, which would silently throw away the category/type/other-account picks the user has
@@ -257,7 +238,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             lastActionRows = null;
             foreach (var row in pendingRows)
             {
-                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync);
+                var rowViewModel = new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync, Categories.CreateForRowAsync);
                 Rows.Add(rowViewModel);
                 Bulk.OnRowAdded(rowViewModel);
                 Sections.OnRowAdded(rowViewModel);
@@ -279,6 +260,32 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
             await ApproveAsync(row, bulkCategoryId: null);
         });
+    }
+
+    // Re-fills every row the user hasn't touched with what Banccoon would suggest now - the approval
+    // that just ran may have taught it a new rule, or changed one (see
+    // StatementImportReviewSectionsViewModel.ApplySuggestions). Also offers any category the
+    // approval created (Core's "Other" fallback).
+    private async Task ApplyLatestLearningAsync()
+    {
+        await Categories.SyncAsync();
+        var suggestions = (await statementImportService.GetPendingSuggestionsAsync(batchId))
+            .ToDictionary(suggestion => suggestion.RowId);
+
+        await RunOnMainThreadAsync(() => Sections.ApplySuggestions(suggestions));
+    }
+
+    private async Task RunReportingFailureAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"Statement import review action failed: {ex}");
+            await SetStatusAsync(Translator.Get("StatementImport_ActionFailed"));
+        }
     }
 
     private Task SkipRowAsync(StatementImportRowViewModel row)
@@ -397,11 +404,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(ProgressText));
         OnPropertyChanged(nameof(CanUndo));
         Bulk.OnRowsChanged();
-    }
-
-    private static bool NamesMatch(string left, string right)
-    {
-        return string.Equals(left.Trim(), right.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task CancelImportAsync()

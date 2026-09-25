@@ -9,7 +9,8 @@ using Microsoft.Maui.Graphics;
 
 namespace Banccoon.App.ViewModels;
 
-// Which block of the review list a row is shown in - decided once, when the row is loaded, so rows
+// Which block of the review list a row is shown in - decided when the row is loaded, and changed
+// only when a newer suggestion fills in a row the user hasn't touched (ApplySuggestion), so rows
 // never jump between blocks while the user is editing them.
 public enum StatementImportRowSection
 {
@@ -38,13 +39,20 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     private bool isBusy;
     private bool isTypeEditorOpen;
 
+    // What Banccoon last suggested for this row (on load, or after a later approval taught it more)
+    // - see IsUntouched.
+    private CategoryOptionViewModel? suggestedCategory;
+    private TransactionType suggestedType;
+    private NamedOptionViewModel? suggestedOtherAccount;
+
     public StatementImportRowViewModel(
         StatementImportRow row,
         string currency,
         ObservableCollection<CategoryOptionViewModel> categoryOptions,
         ObservableCollection<NamedOptionViewModel> otherAccountOptions,
         Func<StatementImportRowViewModel, Task> onApprove,
-        Func<StatementImportRowViewModel, Task> onSkip)
+        Func<StatementImportRowViewModel, Task> onSkip,
+        Func<StatementImportRowViewModel, Task> onCreateCategory)
     {
         Id = row.Id;
         Date = row.Date;
@@ -71,14 +79,14 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             ? otherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
             : null;
 
-        Section = row.IsDuplicate
-            ? StatementImportRowSection.Duplicate
-            : category is not null && (type != TransactionType.Transfer || otherAccount is not null)
-                ? StatementImportRowSection.Ready
-                : StatementImportRowSection.Attention;
+        suggestedCategory = category;
+        suggestedType = type;
+        suggestedOtherAccount = otherAccount;
+        Section = CurrentSection();
 
         ApproveCommand = new RelayCommand(() => _ = onApprove(this));
         SkipCommand = new RelayCommand(() => _ = onSkip(this));
+        CreateCategoryCommand = new RelayCommand(() => _ = onCreateCategory(this));
         ToggleTypeEditorCommand = new RelayCommand(() => IsTypeEditorOpen = !IsTypeEditorOpen);
     }
 
@@ -88,7 +96,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     public DateOnly Date { get; }
 
-    public StatementImportRowSection Section { get; }
+    public StatementImportRowSection Section { get; private set; }
 
     public string DateText { get; }
 
@@ -240,6 +248,36 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         IsBusy = false;
     }
 
+    // Nothing here differs from what Banccoon last suggested for the row (including "nothing yet"):
+    // the user hasn't picked a category, type or other account of their own, so a newer suggestion
+    // can safely replace it.
+    public bool IsUntouched =>
+        !IsCreatingNewCategory
+        && Category?.Id == suggestedCategory?.Id
+        && Type == suggestedType
+        && OtherAccount?.Id == suggestedOtherAccount?.Id;
+
+    // Fills an untouched row with a newer suggestion and re-decides its block. Returns whether the
+    // block changed. UI-thread only.
+    public bool ApplySuggestion(TransactionType newType, CategoryOptionViewModel? newCategory, NamedOptionViewModel? newOtherAccount)
+    {
+        suggestedType = newType;
+        suggestedCategory = newCategory;
+        suggestedOtherAccount = newOtherAccount;
+        Type = newType;
+        Category = newCategory;
+        OtherAccount = newOtherAccount;
+
+        var section = CurrentSection();
+        if (section == Section)
+        {
+            return false;
+        }
+
+        Section = section;
+        return true;
+    }
+
     // Before an undone row goes back into the list: keep its picks, drop transient UI state.
     public void PrepareForReinsert()
     {
@@ -248,8 +286,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         IsBusy = false;
     }
 
-    // Used when another row just created the category this row was also about to create (same
-    // name typed into both) - points this row at the real category instead of creating a duplicate.
+    // Points a row that was about to create a category at the real one with that name - created by
+    // this row's own Add/Enter, or by another row that typed the same name first.
     public void AdoptCategory(CategoryOptionViewModel option)
     {
         Category = option;
@@ -258,7 +296,23 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     public ICommand ApproveCommand { get; }
 
+    // Creates the category named in NewCategoryName right away (Enter in the name box, or its Add
+    // button), so every other row can pick it too - see StatementImportCategoriesViewModel.
+    public ICommand CreateCategoryCommand { get; }
+
     public ICommand ToggleTypeEditorCommand { get; }
 
     public ICommand SkipCommand { get; }
+
+    private StatementImportRowSection CurrentSection()
+    {
+        if (IsDuplicate)
+        {
+            return StatementImportRowSection.Duplicate;
+        }
+
+        return Category is not null && (!IsTransferType || OtherAccount is not null)
+            ? StatementImportRowSection.Ready
+            : StatementImportRowSection.Attention;
+    }
 }

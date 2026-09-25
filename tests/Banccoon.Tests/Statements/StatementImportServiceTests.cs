@@ -484,6 +484,57 @@ public sealed class StatementImportServiceTests
         Assert.Equal(75m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
     }
 
+    [Fact]
+    public async Task GetPendingSuggestionsAsync_ReflectsRulesLearnedAfterTheImportWasCreated()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        var food = new Category(Guid.NewGuid(), "Food", TransactionType.Expense);
+        await store.Accounts.SaveAsync(account);
+        await store.Categories.SaveAsync(food);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 5m, TransactionType.Expense, "Coffee", "Cafe"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 11), 6m, TransactionType.Expense, "Coffee", "Cafe"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 12), 3m, TransactionType.Expense, "Ticket", "Metro")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+        Assert.All(pending.Rows, row => Assert.Null(row.SuggestedCategoryId));
+
+        await service.ApproveRowAsync(pending.Rows[0].Id, food.Id, type: null, destinationAccountId: null);
+        var suggestions = await service.GetPendingSuggestionsAsync(pending.Batch!.Id);
+
+        Assert.Equal(2, suggestions.Count);
+        var secondCafe = Assert.Single(suggestions, suggestion => suggestion.RowId == pending.Rows[1].Id);
+        Assert.Equal(food.Id, secondCafe.CategoryId);
+        Assert.Equal(TransactionType.Expense, secondCafe.Type);
+        Assert.Null(Assert.Single(suggestions, suggestion => suggestion.RowId == pending.Rows[2].Id).CategoryId);
+    }
+
+    [Fact]
+    public async Task GetPendingSuggestionsAsync_SuggestsALearnedTransferWithItsOtherAccount()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        var savings = CreateAccount() with { Id = Guid.NewGuid(), Name = "Savings", Type = AccountType.Savings };
+        var moving = new Category(Guid.NewGuid(), "Moving money");
+        await store.Accounts.SaveAsync(account);
+        await store.Accounts.SaveAsync(savings);
+        await store.Categories.SaveAsync(moving);
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 50m, TransactionType.Expense, "To savings", "Own account"),
+            new ParsedStatementRow(new DateOnly(2026, 6, 20), 50m, TransactionType.Expense, "To savings", "Own account")
+        ])]);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        await service.ApproveRowAsync(pending.Rows[0].Id, moving.Id, TransactionType.Transfer, savings.Id);
+        var suggestion = Assert.Single(await service.GetPendingSuggestionsAsync(pending.Batch!.Id));
+
+        Assert.Equal(pending.Rows[1].Id, suggestion.RowId);
+        Assert.Equal(TransactionType.Transfer, suggestion.Type);
+        Assert.Equal(moving.Id, suggestion.CategoryId);
+        Assert.Equal(savings.Id, suggestion.DestinationAccountId);
+    }
+
     private static StatementImportService CreateService(
         SqliteTestStore store,
         IEnumerable<IStatementParser> parsers)

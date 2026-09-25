@@ -34,6 +34,20 @@ public static class CategoryOptionsHelper
         options.Insert(insertIndex, option);
     }
 
+    // Like InsertBeforeSentinel, but keeps the name order Repopulate gave the list.
+    public static void InsertSorted(ObservableCollection<CategoryOptionViewModel> options, CategoryOptionViewModel option)
+    {
+        var index = 0;
+        while (index < options.Count
+            && !options[index].IsCreateNew
+            && string.Compare(options[index].Name, option.Name, StringComparison.CurrentCulture) <= 0)
+        {
+            index++;
+        }
+
+        options.Insert(index, option);
+    }
+
     // Returns (null, null) when nothing usable was selected (nothing picked, or "create new"
     // picked with no name typed yet). NewOption is non-null only when a category was actually
     // just created - the caller is responsible for adding it to whichever options list(s) should

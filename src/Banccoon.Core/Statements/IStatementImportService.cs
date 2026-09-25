@@ -38,6 +38,14 @@ public interface IStatementImportService
         Guid rowId,
         CancellationToken cancellationToken = default);
 
+    // What Banccoon would suggest right now - type, category and a transfer's other account - for
+    // each still-pending row of a batch, from the current learning rules. Rules change as rows are
+    // approved, so the review asks again after each approval to fill in the rows the user hasn't
+    // touched yet. Read-only: the rows' stored suggestions are left as they were.
+    Task<IReadOnlyList<StatementImportRowSuggestion>> GetPendingSuggestionsAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default);
+
     Task<StatementImportCancelResult> CancelImportAsync(
         Guid batchId,
         CancellationToken cancellationToken = default);
