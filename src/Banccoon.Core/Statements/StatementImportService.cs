@@ -139,7 +139,16 @@ public sealed class StatementImportService : IStatementImportService
             parsedStatement.ClosingBalance);
 
         var rules = await categoryLearningRuleRepository.GetAllAsync(cancellationToken);
-        var existingTransactions = await transactionRepository.GetByAccountIdAsync(accountId, cancellationToken);
+        // Duplicates can only be on the statement's own dates, so only those are read - an old
+        // statement's dates may be outside the months kept in memory, which is fine.
+        var existingTransactions = parsedStatement.Rows.Count == 0
+            ? []
+            : (await transactionRepository.GetInRangeAsync(
+                    parsedStatement.Rows.Min(row => row.Date),
+                    parsedStatement.Rows.Max(row => row.Date),
+                    cancellationToken))
+                .Where(transaction => transaction.AccountId == accountId || transaction.DestinationAccountId == accountId)
+                .ToList();
         var rows = parsedStatement.Rows
             .Select(row => CreateImportRow(batch.Id, row, accountId, rules, existingTransactions))
             .ToArray();

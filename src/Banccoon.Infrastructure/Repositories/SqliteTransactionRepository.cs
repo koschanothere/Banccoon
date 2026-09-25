@@ -29,7 +29,7 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
         return await ReadTransactionsAsync(command, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Transaction>> GetInRangeAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken);
 
@@ -39,12 +39,24 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
             SELECT Id, Name, Date, Amount, AccountId, DestinationAccountId, DestinationGoalId, CategoryId, Notes, Type,
                    PaidScheduledTransactionId, PaidScheduledOccurrenceDate, Time
             FROM Transactions
-            WHERE AccountId = @AccountId OR DestinationAccountId = @AccountId
+            WHERE Date >= @From AND Date <= @To
             ORDER BY Date DESC;
             """;
-        AddParameter(command, "@AccountId", accountId.ToString());
+        AddParameter(command, "@From", SqliteData.DateToText(from));
+        AddParameter(command, "@To", SqliteData.DateToText(to));
 
         return await ReadTransactionsAsync(command, cancellationToken);
+    }
+
+    public async Task<DateOnly?> GetEarliestDateAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT MIN(Date) FROM Transactions;";
+
+        return await command.ExecuteScalarAsync(cancellationToken) is string text ? SqliteData.TextToDate(text) : null;
     }
 
     public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -115,6 +127,19 @@ public sealed class SqliteTransactionRepository : SqliteRepositoryBase, ITransac
                 Time = excluded.Time;
             """;
         AddTransactionParameters(command, transaction);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task ReassignCategoryAsync(Guid fromCategoryId, Guid toCategoryId, CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Transactions SET CategoryId = @To WHERE CategoryId = @From;";
+        AddParameter(command, "@From", fromCategoryId.ToString());
+        AddParameter(command, "@To", toCategoryId.ToString());
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

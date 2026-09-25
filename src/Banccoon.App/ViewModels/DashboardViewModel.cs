@@ -9,6 +9,7 @@ using Banccoon.Core.Analytics;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Transactions;
 using Banccoon.Core.Savings;
 
 namespace Banccoon.App.ViewModels;
@@ -37,7 +38,10 @@ public sealed class DashboardViewModel : ViewModelBase
     private IReadOnlyList<Account> dashboardAccounts = [];
     private HashSet<Guid> dashboardAccountIds = [];
     private IReadOnlyList<ScheduledTransaction> scheduledTransactions = [];
-    private IReadOnlyList<Transaction> allTransactions = [];
+    // What the chart walks back through: the recent months kept in memory, plus any earlier ones a
+    // custom range reached back to (read for this visit only - InitializeAsync starts over).
+    private IReadOnlyList<Transaction> chartTransactions = [];
+    private DateOnly chartTransactionsFrom;
     private DateOnly defaultRangeStart;
     private DateOnly defaultRangeEnd;
 
@@ -95,7 +99,7 @@ public sealed class DashboardViewModel : ViewModelBase
             analyticsService,
             categoryId => RaiseCategoryDrillDownRequested(categoryId));
         ToggleCalcCommand = new RelayCommand(() => IsCalcOpen = !IsCalcOpen);
-        ApplyRangeCommand = new RelayCommand(() => RedrawChart());
+        ApplyRangeCommand = new RelayCommand(() => _ = ApplyRangeAsync());
         ResetRangeCommand = new RelayCommand(() => ResetRange());
         AddGoalCommand = new RelayCommand(() => _ = AddGoalRequested?.Invoke());
     }
@@ -236,7 +240,8 @@ public sealed class DashboardViewModel : ViewModelBase
             dashboardAccounts = accounts.Where(account => account.IncludeInDashboardTotals && !account.IsArchived).ToList();
             dashboardAccountIds = dashboardAccounts.Select(account => account.Id).ToHashSet();
             scheduledTransactions = await scheduledTransactionRepository.GetAllAsync(cancellationToken);
-            allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
+            chartTransactionsFrom = RecentTransactionWindow.StartFor(dateProvider.Today);
+            chartTransactions = await transactionRepository.GetInRangeAsync(chartTransactionsFrom, DateOnly.MaxValue, cancellationToken);
             // Every non-archived goal, including ones excluded from dashboard totals - excluding
             // one from "free to spend" doesn't stop it being a goal worth tracking here.
             var goalAccounts = accounts
@@ -363,6 +368,25 @@ public sealed class DashboardViewModel : ViewModelBase
         });
     }
 
+    // A custom range can reach back past the months kept in memory; the older part is read for this
+    // visit only.
+    private async Task ApplyRangeAsync()
+    {
+        var rangeStart = DateOnly.FromDateTime(RangeStartDate);
+        if (rangeStart < chartTransactionsFrom)
+        {
+            var loadedFrom = chartTransactionsFrom;
+            var older = await transactionRepository.GetInRangeAsync(rangeStart, loadedFrom.AddDays(-1));
+            await RunOnMainThreadAsync(() =>
+            {
+                chartTransactions = chartTransactions.Concat(older).ToList();
+                chartTransactionsFrom = rangeStart;
+            });
+        }
+
+        await RunOnMainThreadAsync(RedrawChart);
+    }
+
     private void ResetRange()
     {
         RangeStartDate = defaultRangeStart.ToDateTime(TimeOnly.MinValue);
@@ -409,7 +433,7 @@ public sealed class DashboardViewModel : ViewModelBase
                 today,
                 currentTotalBalance,
                 dashboardAccountIds,
-                allTransactions);
+                chartTransactions);
 
             foreach (var point in historicalPoints.Where(point => point.Date <= historicalEnd))
             {

@@ -210,8 +210,20 @@
             RemainingItemsThreshold="5"
             RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
             <CollectionView.EmptyView>
-                <Label Text="{loc:Translate Transactions_NoTransactionsYet}" Style="{StaticResource SecondaryLabel}" />
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{loc:Translate Transactions_NoTransactionsYet}" Style="{StaticResource SecondaryLabel}" IsVisible="{Binding CanLoadEarlierMonth, Converter={StaticResource InverseBoolConverter}}" />
+                    <Label Text="{Binding LoadedSinceText}" Style="{StaticResource TertiaryLabel}" IsVisible="{Binding CanLoadEarlierMonth}" />
+                    <Button Text="{loc:Translate Transactions_LoadEarlierMonthButton}" Command="{Binding LoadEarlierMonthCommand}" IsVisible="{Binding CanLoadEarlierMonth}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                </VerticalStackLayout>
             </CollectionView.EmptyView>
+            <!-- Only the last 12 months are loaded (RecentTransactionWindow); at the end of them,
+                 older months are fetched one at a time and dropped again when the page is reopened. -->
+            <CollectionView.Footer>
+                <VerticalStackLayout Padding="0,12" Spacing="6" IsVisible="{Binding CanLoadEarlierMonth}">
+                    <Label Text="{Binding LoadedSinceText}" Style="{StaticResource TertiaryLabel}" />
+                    <Button Text="{loc:Translate Transactions_LoadEarlierMonthButton}" Command="{Binding LoadEarlierMonthCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                </VerticalStackLayout>
+            </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:TransactionRowViewModel">
                     <VerticalStackLayout Spacing="0">

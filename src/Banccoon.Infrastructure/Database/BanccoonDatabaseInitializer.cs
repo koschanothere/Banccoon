@@ -102,6 +102,9 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 FOREIGN KEY (PaidScheduledTransactionId) REFERENCES ScheduledTransactions(Id) ON DELETE SET NULL
             );
 
+            -- Pages read transactions by date range (only the last 12 months are kept in memory).
+            CREATE INDEX IF NOT EXISTS IX_Transactions_Date ON Transactions(Date);
+
             CREATE TABLE IF NOT EXISTS StatementImportBatches (
                 Id TEXT PRIMARY KEY,
                 AccountId TEXT NOT NULL,

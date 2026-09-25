@@ -23,6 +23,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private readonly ISettingsRepository settingsRepository;
     private readonly ITransactionBalanceHistoryService transactionBalanceHistoryService;
     private readonly ITransactionDeletionService transactionDeletionService;
+    private readonly IDateProvider dateProvider;
 
     private IReadOnlyList<Account> accounts = [];
     private IReadOnlyList<Category> categories = [];
@@ -34,6 +35,13 @@ public sealed class TransactionsViewModel : ViewModelBase
         new Dictionary<Guid, IReadOnlyDictionary<Guid, decimal>>();
     private int visibleCount = PageSize;
     private string currency = "EUR";
+    private DateDisplayFormat dateDisplayFormat;
+
+    // Transactions from loadedFrom onwards are loaded: the recent months kept in memory
+    // (RecentTransactionWindow), plus any earlier months "Load earlier month" fetched. Earlier ones
+    // are dropped the next time the page is opened (InitializeAsync).
+    private DateOnly loadedFrom;
+    private DateOnly? earliestTransactionDate;
     private Guid? pendingCategoryFilterId;
     private Guid? pendingAccountFilterId;
 
@@ -91,6 +99,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         this.settingsRepository = settingsRepository;
         this.transactionBalanceHistoryService = transactionBalanceHistoryService;
         this.transactionDeletionService = transactionDeletionService;
+        this.dateProvider = dateProvider;
 
         AddForm = new NewTransactionFormViewModel(
             accountRepository,
@@ -98,7 +107,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             transactionRepository,
             transactionApplicationService,
             settingsRepository,
-            () => InitializeAsync());
+            ReloadAsync);
         ScheduleForm = new ScheduleFormViewModel(
             dateProvider,
             accountRepository,
@@ -107,7 +116,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             recurrenceDescriptionService,
             recurrenceSyntaxService,
             recurrenceValidationService,
-            InitializeAsync);
+            ReloadAsync);
         ResolveUpcoming = new ResolveUpcomingListViewModel(
             dateProvider,
             accountRepository,
@@ -137,6 +146,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         DeleteSelectedCommand = new RelayCommand(() => _ = DeleteSelectedAsync());
         AssignCategoryToSelectedCommand = new RelayCommand(() => _ = AssignCategoryToSelectedAsync());
         LoadMoreCommand = new RelayCommand(LoadMore);
+        LoadEarlierMonthCommand = new RelayCommand(() => _ = LoadEarlierMonthAsync());
     }
 
     public bool IsLoading
@@ -239,6 +249,15 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     public ICommand LoadMoreCommand { get; }
 
+    public ICommand LoadEarlierMonthCommand { get; }
+
+    // At the end of what's loaded, when there's older history to fetch.
+    public bool CanLoadEarlierMonth => !HasMoreRows && earliestTransactionDate is { } earliest && earliest < loadedFrom;
+
+    public string LoadedSinceText => string.Format(
+        Translator.Get("Transactions_LoadedSinceFormat"),
+        DateDisplay.Format(loadedFrom, dateDisplayFormat));
+
     // Set when navigated here from the Dashboard's Analytics "drill down into this category"
     // action (see TransactionsPage.ApplyQueryAttributes) - applied once CategoryOptions is
     // rebuilt below, since the filter has to match an option already in that list by Id.
@@ -254,18 +273,38 @@ public sealed class TransactionsViewModel : ViewModelBase
         pendingAccountFilterId = accountId;
     }
 
-    public async Task InitializeAsync()
+    // Opening the page: back to the recent months only.
+    public Task InitializeAsync()
+    {
+        return LoadAsync(resetToRecentMonths: true);
+    }
+
+    // After an add, delete or bulk edit on this page: keeps any earlier months already loaded.
+    private Task ReloadAsync()
+    {
+        return LoadAsync(resetToRecentMonths: false);
+    }
+
+    private async Task LoadAsync(bool resetToRecentMonths)
     {
         IsLoading = true;
         try
         {
             var settings = await settingsRepository.GetAsync();
             currency = settings.DefaultCurrency;
+            dateDisplayFormat = settings.DateDisplayFormat;
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
+
+            var recentStart = RecentTransactionWindow.StartFor(dateProvider.Today);
+            if (resetToRecentMonths || loadedFrom == default || loadedFrom > recentStart)
+            {
+                loadedFrom = recentStart;
+            }
 
             accounts = await accountRepository.GetAllAsync();
             categories = await categoryRepository.GetAllAsync();
-            allTransactions = await transactionRepository.GetAllAsync();
+            allTransactions = await transactionRepository.GetInRangeAsync(loadedFrom, DateOnly.MaxValue);
+            earliestTransactionDate = await transactionRepository.GetEarliestDateAsync();
             RebuildLookups();
 
             // Both mutate collections bound to live UI (Pickers/CollectionView) - must run on the
@@ -392,7 +431,16 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private void ApplyFilters()
     {
-        var filtered = allTransactions.AsEnumerable();
+        filteredTransactions = Filter(allTransactions);
+        // Every filter change (account/category picker) starts back at page one - a "load more"
+        // scroll position from the previous filter wouldn't mean anything against a new result set.
+        visibleCount = PageSize;
+        RebuildVisibleRows();
+    }
+
+    private IReadOnlyList<Transaction> Filter(IEnumerable<Transaction> transactions)
+    {
+        var filtered = transactions;
         if (AccountFilter is not null && AccountFilter.Id != AllOptionId)
         {
             filtered = filtered.Where(transaction =>
@@ -404,11 +452,7 @@ public sealed class TransactionsViewModel : ViewModelBase
             filtered = filtered.Where(transaction => transaction.CategoryId == CategoryFilter.Id);
         }
 
-        filteredTransactions = filtered.OrderByDescending(transaction => transaction.Date).ToList();
-        // Every filter change (account/category picker) starts back at page one - a "load more"
-        // scroll position from the previous filter wouldn't mean anything against a new result set.
-        visibleCount = PageSize;
-        RebuildVisibleRows();
+        return filtered.OrderByDescending(transaction => transaction.Date).ToList();
     }
 
     private void LoadMore()
@@ -437,11 +481,76 @@ public sealed class TransactionsViewModel : ViewModelBase
 
             OnPropertyChanged(nameof(HasMoreRows));
             OnPropertyChanged(nameof(RowCountText));
+            RaiseLoadedRangeChanged();
         }
         finally
         {
             isUpdatingRows = false;
         }
+    }
+
+    // Fetches the month before what's loaded (skipping empty months, so a click always shows
+    // something) and adds it to the end of the list without starting the list over.
+    private async Task LoadEarlierMonthAsync()
+    {
+        if (earliestTransactionDate is not { } earliest || earliest >= loadedFrom)
+        {
+            return;
+        }
+
+        var from = loadedFrom;
+        var older = new List<Transaction>();
+        while (older.Count == 0 && earliest < from)
+        {
+            var monthStart = from.AddMonths(-1);
+            older.AddRange(await transactionRepository.GetInRangeAsync(monthStart, from.AddDays(-1)));
+            from = monthStart;
+        }
+
+        await RunOnMainThreadAsync(() =>
+        {
+            loadedFrom = from;
+            allTransactions = allTransactions.Concat(older).ToList();
+            RebuildLookups();
+            filteredTransactions = Filter(allTransactions);
+            AppendOlderRows();
+        });
+    }
+
+    // The older month sorts after everything already shown, so its rows go on the end - up to a page
+    // of them, counted from the rows actually on screen (fewer than a page when the recent months
+    // were short).
+    private void AppendOlderRows()
+    {
+        if (isUpdatingRows)
+        {
+            return;
+        }
+
+        isUpdatingRows = true;
+        try
+        {
+            var shown = Rows.Count;
+            visibleCount = shown + PageSize;
+            foreach (var transaction in filteredTransactions.Skip(shown).Take(PageSize))
+            {
+                Rows.Add(BuildRow(transaction));
+            }
+
+            OnPropertyChanged(nameof(HasMoreRows));
+            OnPropertyChanged(nameof(RowCountText));
+            RaiseLoadedRangeChanged();
+        }
+        finally
+        {
+            isUpdatingRows = false;
+        }
+    }
+
+    private void RaiseLoadedRangeChanged()
+    {
+        OnPropertyChanged(nameof(CanLoadEarlierMonth));
+        OnPropertyChanged(nameof(LoadedSinceText));
     }
 
     private void RebuildVisibleRows()
@@ -457,6 +566,7 @@ public sealed class TransactionsViewModel : ViewModelBase
 
             OnPropertyChanged(nameof(HasMoreRows));
             OnPropertyChanged(nameof(RowCountText));
+            RaiseLoadedRangeChanged();
             UpdateSelectionSummary();
         }
         finally
@@ -587,7 +697,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         // Touches UI-bound state after an await that may have resumed off the UI thread (see
         // ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() => SelectMode = false);
-        await InitializeAsync();
+        await ReloadAsync();
     }
 
     private async Task AssignCategoryToSelectedAsync()
@@ -606,6 +716,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         // Touches UI-bound state after an await that may have resumed off the UI thread (see
         // ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() => SelectMode = false);
-        await InitializeAsync();
+        await ReloadAsync();
     }
 }

@@ -45,6 +45,29 @@ public sealed class DashboardAndGoalsTests
     }
 
     [Fact]
+    public async Task Chart_CustomRangeBeforeTheRecentMonths_ReadsTheOlderTransactionsForThatView()
+    {
+        // Today 15 Jun 2026: the months kept in memory start 1 Jul 2025.
+        await using var store = await CreateStoreAsync();
+        var card = await AddAccountAsync(store, "Card", AccountType.DebitCard, 1000m);
+        await store.Transactions.SaveAsync(new Transaction(Guid.NewGuid(), new DateOnly(2025, 3, 10), 100m, card.Id, null, null, TransactionType.Expense, Name: "Old shoes"));
+        var vm = CreateDashboard(store);
+        await vm.InitializeAsync();
+
+        vm.RangeStartDate = new DateTime(2025, 3, 8);
+        vm.RangeEndDate = new DateTime(2025, 3, 12);
+        vm.ApplyRangeCommand.Execute(null);
+        for (var i = 0; i < 200 && !vm.ChartPoints.Any(p => p.Date == new DateOnly(2025, 3, 8)); i++)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.Equal(1100m, vm.ChartPoints.Single(p => p.Date == new DateOnly(2025, 3, 9)).Balance);
+        Assert.Equal(1000m, vm.ChartPoints.Single(p => p.Date == new DateOnly(2025, 3, 10)).Balance);
+        Assert.Equal("Old shoes: RUB -100.00", vm.ChartPoints.Single(p => p.Date == new DateOnly(2025, 3, 10)).EventsText);
+    }
+
+    [Fact]
     public async Task Chart_FullyPastCustomRange_AccountsForEverythingAfterIt()
     {
         await using var store = await CreateStoreAsync();

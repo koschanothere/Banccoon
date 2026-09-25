@@ -20,11 +20,8 @@ public sealed class CategoryManagementService : ICategoryManagementService
             throw new ArgumentException("Cannot merge a category into itself.", nameof(targetCategoryId));
         }
 
-        var transactions = await transactionRepository.GetAllAsync(cancellationToken);
-        foreach (var transaction in transactions.Where(transaction => transaction.CategoryId == sourceCategoryId))
-        {
-            await transactionRepository.SaveAsync(transaction with { CategoryId = targetCategoryId }, cancellationToken);
-        }
+        // Every transaction in the category, however old - not just the months kept in memory.
+        await transactionRepository.ReassignCategoryAsync(sourceCategoryId, targetCategoryId, cancellationToken);
 
         await categoryRepository.DeleteAsync(sourceCategoryId, cancellationToken);
     }

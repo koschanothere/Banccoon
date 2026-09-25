@@ -109,7 +109,7 @@ public sealed class ResolveUpcomingListViewModel : ViewModelBase
         var overrides = await scheduledOccurrenceOverrideRepository.GetAllAsync(cancellationToken);
         var resolvedEvents = scheduledOccurrenceResolutionService.ApplyOverrides(projectedEvents, overrides);
 
-        var allTransactions = await transactionRepository.GetAllAsync(cancellationToken);
+        var allTransactions = await transactionRepository.GetInRangeAsync(RecentTransactionWindow.StartFor(today), DateOnly.MaxValue, cancellationToken);
         var paidOccurrences = allTransactions
             .Where(transaction => transaction.PaidScheduledTransactionId.HasValue && transaction.PaidScheduledOccurrenceDate.HasValue)
             .Select(transaction => (transaction.PaidScheduledTransactionId!.Value, transaction.PaidScheduledOccurrenceDate!.Value))

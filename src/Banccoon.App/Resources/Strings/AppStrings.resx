@@ -874,6 +874,12 @@
   <data name="Transactions_RowCountFormat" xml:space="preserve">
     <value>Showing {0} of {1}</value>
   </data>
+  <data name="Transactions_LoadedSinceFormat" xml:space="preserve">
+    <value>Showing transactions from {0}.</value>
+  </data>
+  <data name="Transactions_LoadEarlierMonthButton" xml:space="preserve">
+    <value>Load earlier month</value>
+  </data>
   <data name="Transactions_AllAccountsOption" xml:space="preserve">
     <value>All accounts</value>
   </data>

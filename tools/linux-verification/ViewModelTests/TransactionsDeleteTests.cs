@@ -38,7 +38,7 @@ public sealed class TransactionsDeleteTests
         Assert.Equal(0m, (await store.Accounts.GetByIdAsync(savings.Id))!.CurrentBalance);
     }
 
-    private static async Task RecordAsync(SqliteTestStore store, Transaction transaction)
+    internal static async Task RecordAsync(SqliteTestStore store, Transaction transaction)
     {
         var accounts = (await store.Accounts.GetAllAsync()).ToDictionary(a => a.Id);
         foreach (var updated in new TransactionApplicationService(new TransactionBalanceService()).ApplyNewTransaction(transaction, accounts))
@@ -49,11 +49,11 @@ public sealed class TransactionsDeleteTests
         await store.Transactions.SaveAsync(transaction);
     }
 
-    private static TransactionsViewModel CreateViewModel(SqliteTestStore store)
+    internal static TransactionsViewModel CreateViewModel(SqliteTestStore store, DateOnly? today = null)
     {
         var applicationService = new TransactionApplicationService(new TransactionBalanceService());
         return new TransactionsViewModel(
-            new FixedDate(new DateOnly(2026, 6, 15)),
+            new FixedDate(today ?? new DateOnly(2026, 6, 15)),
             store.Accounts,
             store.Categories,
             store.Transactions,

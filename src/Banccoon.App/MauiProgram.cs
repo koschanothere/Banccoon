@@ -88,7 +88,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SqliteCategoryRepository>();
         builder.Services.AddSingleton<ICategoryRepository>(sp => new CachedCategoryRepository(sp.GetRequiredService<SqliteCategoryRepository>()));
         builder.Services.AddSingleton<SqliteTransactionRepository>();
-        builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>()));
+        builder.Services.AddSingleton<ITransactionRepository>(sp => new CachedTransactionRepository(sp.GetRequiredService<SqliteTransactionRepository>(), sp.GetRequiredService<IDateProvider>()));
         builder.Services.AddSingleton<SqliteScheduledTransactionRepository>();
         builder.Services.AddSingleton<IScheduledTransactionRepository>(sp => new CachedScheduledTransactionRepository(sp.GetRequiredService<SqliteScheduledTransactionRepository>()));
         builder.Services.AddSingleton<SqliteSavingsGoalRepository>();

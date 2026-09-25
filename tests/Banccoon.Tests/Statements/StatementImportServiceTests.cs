@@ -120,7 +120,7 @@ public sealed class StatementImportServiceTests
 
         var result = await service.ApproveRowAsync(row.Id, category.Id, type: null, destinationAccountId: null);
 
-        var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);
+        var transactions = ForAccount(await store.Transactions.GetAllAsync(), account.Id);
         var updatedAccount = await store.Accounts.GetByIdAsync(account.Id);
         Assert.NotNull(result.Transaction);
         Assert.Equal(result.Transaction, Assert.Single(transactions));
@@ -146,7 +146,7 @@ public sealed class StatementImportServiceTests
         var skipped = await service.SkipRowAsync(Assert.Single(pending.Rows).Id);
 
         Assert.Equal(StatementImportRowStatus.Skipped, skipped.Status);
-        Assert.Empty(await store.Transactions.GetByAccountIdAsync(account.Id));
+        Assert.Empty(ForAccount(await store.Transactions.GetAllAsync(), account.Id));
         Assert.Equal(100m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
     }
 
@@ -217,7 +217,7 @@ public sealed class StatementImportServiceTests
         Assert.Equal(StatementImportRowStatus.Pending, undone.Status);
         Assert.Null(undone.CreatedTransactionId);
         Assert.Equal(category.Id, undone.CategoryId);
-        Assert.Empty(await store.Transactions.GetByAccountIdAsync(account.Id));
+        Assert.Empty(ForAccount(await store.Transactions.GetAllAsync(), account.Id));
         Assert.Equal(100m, (await store.Accounts.GetByIdAsync(account.Id))?.CurrentBalance);
         Assert.Equal(StatementImportRowStatus.Pending, (await store.StatementImports.GetRowByIdAsync(lunch.Id))?.Status);
     }
@@ -276,7 +276,7 @@ public sealed class StatementImportServiceTests
         await service.ApproveRowAsync(pending.Rows[0].Id, null, type: null, destinationAccountId: null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.UndoReviewAsync(pending.Rows[0].Id));
-        Assert.Single(await store.Transactions.GetByAccountIdAsync(account.Id));
+        Assert.Single(ForAccount(await store.Transactions.GetAllAsync(), account.Id));
     }
 
     [Fact]
@@ -594,4 +594,7 @@ public sealed class StatementImportServiceTests
                 ClosingBalance: closingBalance));
         }
     }
+
+    private static IReadOnlyList<Transaction> ForAccount(IReadOnlyList<Transaction> transactions, Guid accountId) =>
+        transactions.Where(transaction => transaction.AccountId == accountId || transaction.DestinationAccountId == accountId).ToList();
 }

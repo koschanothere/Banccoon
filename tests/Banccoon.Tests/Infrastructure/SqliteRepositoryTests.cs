@@ -113,7 +113,7 @@ public sealed class SqliteRepositoryTests
         await store.ScheduledTransactions.SaveAsync(scheduledTransaction);
         await store.Transactions.SaveAsync(transaction);
 
-        var transactions = await store.Transactions.GetByAccountIdAsync(account.Id);
+        var transactions = ForAccount(await store.Transactions.GetAllAsync(), account.Id);
 
         Assert.Equal(transaction, Assert.Single(transactions));
     }
@@ -138,7 +138,7 @@ public sealed class SqliteRepositoryTests
         await store.Accounts.SaveAsync(destination);
         await store.Transactions.SaveAsync(transaction);
 
-        var transactions = await store.Transactions.GetByAccountIdAsync(source.Id);
+        var transactions = ForAccount(await store.Transactions.GetAllAsync(), source.Id);
 
         Assert.Equal(transaction, Assert.Single(transactions));
     }
@@ -467,4 +467,7 @@ public sealed class SqliteRepositoryTests
             "EUR",
             new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
     }
+
+    private static IReadOnlyList<Transaction> ForAccount(IReadOnlyList<Transaction> transactions, Guid accountId) =>
+        transactions.Where(transaction => transaction.AccountId == accountId || transaction.DestinationAccountId == accountId).ToList();
 }
