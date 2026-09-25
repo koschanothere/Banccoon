@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Transactions;
@@ -47,6 +48,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
 
         AccountOptions = [];
         CategoryOptions = [];
+        Subcategory = new SubcategoryPickerViewModel();
 
         CloseCommand = new RelayCommand(Close);
         SaveCommand = new RelayCommand(() => _ = SaveAsync());
@@ -105,6 +107,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsCreatingNewCategory));
                 OnPropertyChanged(nameof(CategoryBorderColor));
+                Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
             }
         }
     }
@@ -128,6 +131,9 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     public ICommand CloseCommand { get; }
 
@@ -163,6 +169,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
             }
 
             CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
+            Subcategory.Reset(new CategoryTree(categories));
 
             Name = string.Empty;
             Account = (settings.PrimaryAccountId is { } primaryAccountId
@@ -220,7 +227,7 @@ public sealed class NewTransactionFormViewModel : ViewModelBase
                 await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));
             }
 
-            categoryId = resolvedCategoryId;
+            categoryId = Subcategory.Resolve(resolvedCategoryId);
         }
 
         var transaction = new Transaction(

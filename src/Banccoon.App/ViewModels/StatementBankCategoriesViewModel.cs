@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 
@@ -44,10 +45,11 @@ public sealed class StatementBankCategoriesViewModel : ViewModelBase
         {
             bankName = statement.ParserName;
             CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
+            var tree = new CategoryTree(categories);
             Rows.Clear();
             foreach (var category in detected)
             {
-                Rows.Add(new StatementBankCategoryRowViewModel(category, CategoryOptions));
+                Rows.Add(new StatementBankCategoryRowViewModel(category, CategoryOptions, tree));
             }
 
             OnPropertyChanged(nameof(HintText));
@@ -60,11 +62,11 @@ public sealed class StatementBankCategoriesViewModel : ViewModelBase
     // reusing an existing category of that name), and saves the rest unlinked.
     public async Task SaveAsync(string parserId)
     {
-        List<(string Name, CategoryOptionViewModel? Category, string NewName, bool Skipped)> choices = [];
+        List<(string Name, CategoryOptionViewModel? Category, Guid? ChosenId, string NewName, bool Skipped)> choices = [];
         Dictionary<string, Guid> knownByName = new(StringComparer.OrdinalIgnoreCase);
         await RunOnMainThreadAsync(() =>
         {
-            choices = Rows.Select(row => (row.Name, row.Category, row.NewCategoryName, row.IsSkipped)).ToList();
+            choices = Rows.Select(row => (row.Name, row.Category, row.ChosenCategoryId, row.NewCategoryName, row.IsSkipped)).ToList();
             foreach (var option in CategoryOptions.Where(option => option.IsCategory))
             {
                 knownByName.TryAdd(option.Name.Trim(), option.Id);
@@ -72,12 +74,12 @@ public sealed class StatementBankCategoriesViewModel : ViewModelBase
         });
 
         var links = new Dictionary<string, Guid?>();
-        foreach (var (name, category, newName, skipped) in choices)
+        foreach (var (name, category, chosenId, newName, skipped) in choices)
         {
             Guid? categoryId = null;
-            if (!skipped && category is { IsCategory: true })
+            if (!skipped && chosenId is not null)
             {
-                categoryId = category.Id;
+                categoryId = chosenId;
             }
             else if (!skipped && category is { IsCreateNew: true } && !string.IsNullOrWhiteSpace(newName))
             {

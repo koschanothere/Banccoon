@@ -52,6 +52,8 @@
                             <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding AddForm.CategoryOptions}" SelectedItem="{Binding AddForm.Category}" />
                         </Border>
                         <Entry Grid.Column="1" Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding AddForm.NewCategoryName}" IsVisible="{Binding AddForm.IsCreatingNewCategory}" />
+                        <!-- Only when the chosen parent has children: narrows it to one of them, optionally. -->
+                        <Picker Grid.Column="1" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding AddForm.Subcategory.Options}" SelectedItem="{Binding AddForm.Subcategory.Selected}" IsVisible="{Binding AddForm.Subcategory.IsVisible}" HorizontalOptions="Start" WidthRequest="170" />
                     </Grid>
 
                     <Label Text="{Binding AddForm.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
@@ -125,6 +127,8 @@
                                     <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding ScheduleForm.CategoryOptions}" SelectedItem="{Binding ScheduleForm.Category}" />
                                 </Border>
                                 <Entry Grid.Column="1" Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding ScheduleForm.NewCategoryName}" IsVisible="{Binding ScheduleForm.IsCreatingNewCategory}" />
+                                <!-- Only when the chosen parent has children: narrows it to one of them, optionally. -->
+                                <Picker Grid.Column="1" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding ScheduleForm.Subcategory.Options}" SelectedItem="{Binding ScheduleForm.Subcategory.Selected}" IsVisible="{Binding ScheduleForm.Subcategory.IsVisible}" HorizontalOptions="Start" WidthRequest="170" />
                             </Grid>
 
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
@@ -206,13 +210,15 @@
             <HorizontalStackLayout Spacing="8" IsVisible="{Binding FilterOpen}">
                 <Picker Title="{loc:Translate Common_Account}" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding AccountFilter}" WidthRequest="180" />
                 <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding CategoryFilter}" WidthRequest="180" />
+                <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding CategoryFilterSubcategory.Options}" SelectedItem="{Binding CategoryFilterSubcategory.Selected}" IsVisible="{Binding CategoryFilterSubcategory.IsVisible}" WidthRequest="180" />
             </HorizontalStackLayout>
 
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding SelectMode}">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding SelectMode}">
                 <Label Grid.Column="0" Text="{Binding SelectionSummaryText}" VerticalOptions="Center" />
                 <Picker Grid.Column="1" Title="{loc:Translate Transactions_SetCategoryPickerTitle}" ItemsSource="{Binding BulkCategoryOptions}" SelectedItem="{Binding BulkCategory}" WidthRequest="160" />
-                <Button Grid.Column="2" Text="{loc:Translate Transactions_ApplyCategoryButton}" Command="{Binding AssignCategoryToSelectedCommand}" Style="{StaticResource QuietButton}" />
-                <Button Grid.Column="3" Text="{loc:Translate Transactions_DeleteSelectedButton}" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DestructiveButton}" />
+                <Picker Grid.Column="2" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding BulkSubcategory.Options}" SelectedItem="{Binding BulkSubcategory.Selected}" IsVisible="{Binding BulkSubcategory.IsVisible}" WidthRequest="150" />
+                <Button Grid.Column="3" Text="{loc:Translate Transactions_ApplyCategoryButton}" Command="{Binding AssignCategoryToSelectedCommand}" Style="{StaticResource QuietButton}" />
+                <Button Grid.Column="4" Text="{loc:Translate Transactions_DeleteSelectedButton}" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DestructiveButton}" />
             </Grid>
 
             <Label Text="{Binding RowCountText}" Style="{StaticResource TertiaryLabel}" />

@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
@@ -25,6 +27,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
 
     private IReadOnlyList<CategoryLearningRule> allRules = [];
     private IReadOnlyDictionary<Guid, Category> categoriesById = new Dictionary<Guid, Category>();
+    private CategoryTree categoryTree = CategoryTree.Empty;
     private IReadOnlyDictionary<Guid, Account> accountsById = new Dictionary<Guid, Account>();
     private string searchText = string.Empty;
     private int pageIndex;
@@ -97,8 +100,10 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
         // above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() =>
         {
+            // Parents only; a rule's edit mode offers the chosen parent's children next to it.
+            categoryTree = new CategoryTree(categories);
             CategoryOptions.Clear();
-            foreach (var category in categories.OrderBy(category => category.Name))
+            foreach (var category in categoryTree.TopLevel)
             {
                 CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
             }
@@ -128,7 +133,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
             ? allRules
             : allRules.Where(rule =>
                 rule.MatchText.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                || (categoriesById.TryGetValue(rule.CategoryId, out var category) && category.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))))
+                || CategoryDisplay.PathName(categoryTree, rule.CategoryId).Contains(SearchText, StringComparison.OrdinalIgnoreCase)))
             .OrderByDescending(rule => rule.UpdatedAt)
             .ToList();
 
@@ -143,7 +148,9 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
 
         foreach (var rule in matching.Skip(pageIndex * RulesPerPage).Take(RulesPerPage))
         {
-            var categoryName = categoriesById.TryGetValue(rule.CategoryId, out var foundCategory) ? foundCategory.Name : Translator.Get("Settings_UnknownCategory");
+            var categoryName = categoriesById.ContainsKey(rule.CategoryId)
+                ? CategoryDisplay.PathName(categoryTree, rule.CategoryId)
+                : Translator.Get("Settings_UnknownCategory");
             var destinationAccountName = rule.DestinationAccountId is { } destinationAccountId && accountsById.TryGetValue(destinationAccountId, out var destinationAccount)
                 ? destinationAccount.Name
                 : null;
@@ -153,6 +160,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
                 categoryName,
                 destinationAccountName,
                 CategoryOptions,
+                categoryTree,
                 AccountOptions,
                 ForgetRuleAsync,
                 SaveEditAsync));
@@ -168,7 +176,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
     private async Task SaveEditAsync(CategoryLearningRuleRowViewModel row)
     {
         var existing = allRules.FirstOrDefault(rule => rule.Id == row.Id);
-        if (existing is null || string.IsNullOrWhiteSpace(row.EditMatchText) || row.EditCategory is null)
+        if (existing is null || string.IsNullOrWhiteSpace(row.EditMatchText) || row.EditCategoryId is not { } editCategoryId)
         {
             return;
         }
@@ -184,7 +192,7 @@ public sealed class CategoryLearningRulesViewModel : ViewModelBase
             MatchText = normalizedMatchText,
             NormalizedMatchText = new CategorySuggestionService().Normalize(normalizedMatchText),
             Type = row.EditType,
-            CategoryId = row.EditCategory.Id,
+            CategoryId = editCategoryId,
             DestinationAccountId = row.EditType == TransactionType.Transfer ? row.EditDestinationAccount?.Id : null,
             UpdatedAt = DateTimeOffset.UtcNow
         };

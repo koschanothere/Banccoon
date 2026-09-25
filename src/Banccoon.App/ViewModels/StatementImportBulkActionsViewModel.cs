@@ -20,6 +20,7 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
     public StatementImportBulkActionsViewModel(StatementImportReviewViewModel review)
     {
         this.review = review;
+        Subcategory = new SubcategoryPickerViewModel();
 
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
         ToggleSelectAllCommand = new RelayCommand(ToggleSelectAll);
@@ -49,9 +50,13 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
             if (SetProperty(ref bulkCategory, value))
             {
                 OnPropertyChanged(nameof(IsCreatingNewBulkCategory));
+                Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
             }
         }
     }
+
+    // The bulk category's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     public bool IsCreatingNewBulkCategory => BulkCategory?.IsCreateNew == true;
 
@@ -181,15 +186,15 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
 
         await review.RunExclusiveAsync(async () =>
         {
-            var categoryId = await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName);
+            var categoryId = Subcategory.Resolve(await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName));
             await RunOnMainThreadAsync(() =>
             {
-                var option = review.CategoryOptions.FirstOrDefault(candidate => !candidate.IsCreateNew && candidate.Id == categoryId);
-                if (option is not null)
+                if (categoryId is not null)
                 {
                     foreach (var row in review.Rows.Where(row => row.IsSelected))
                     {
-                        row.AdoptCategory(option);
+                        row.SetCategoryById(categoryId);
+                        row.NewCategoryName = string.Empty;
                     }
                 }
 
@@ -227,7 +232,7 @@ public sealed class StatementImportBulkActionsViewModel : ViewModelBase
 
                 // A bulk "create new" is resolved once, up front, so every selected row lands in the
                 // same new category rather than creating one per row.
-                var bulkCategoryId = await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName);
+                var bulkCategoryId = Subcategory.Resolve(await review.Categories.ResolveAsync(BulkCategory, NewBulkCategoryName));
                 foreach (var row in selected)
                 {
                     await review.ApproveAsync(row, bulkCategoryId);

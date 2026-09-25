@@ -344,6 +344,7 @@
                                                 <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
                                                     <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="180" />
                                                 </Border>
+                                                <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="160" />
                                                 <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="150" />
                                                 <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
                                             </HorizontalStackLayout>
@@ -382,9 +383,10 @@
                                             <!-- Edit mode -->
                                             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditing}">
                                                 <Entry Text="{Binding EditMatchText}" Placeholder="{loc:Translate Settings_RecipientTextPlaceholder}" />
-                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
                                                     <Picker Grid.Column="0" Title="{loc:Translate Common_Type}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding EditType}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" />
                                                     <Picker Grid.Column="1" Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding EditCategory}" />
+                                                    <Picker Grid.Column="2" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="160" />
                                                 </Grid>
                                                 <Picker Title="{loc:Translate Common_OtherAccountPickerTitle}" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding EditDestinationAccount}" IsVisible="{Binding IsEditTransferType}" />
                                                 <HorizontalStackLayout Spacing="8">

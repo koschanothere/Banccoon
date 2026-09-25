@@ -940,6 +940,9 @@
   <data name="Transactions_AllCategoriesOption" xml:space="preserve">
     <value>Все категории</value>
   </data>
+  <data name="Transactions_AllOfCategoryOption" xml:space="preserve">
+    <value>Вся категория</value>
+  </data>
   <data name="Transactions_TransferToFormat" xml:space="preserve">
     <value>Перевод на {0}</value>
   </data>
@@ -1099,6 +1102,12 @@
   </data>
   <data name="Common_NewCategoryOption" xml:space="preserve">
     <value>+ Новая категория</value>
+  </data>
+  <data name="Common_NoSubcategoryOption" xml:space="preserve">
+    <value>Без подкатегории</value>
+  </data>
+  <data name="Common_SubcategoryPickerTitle" xml:space="preserve">
+    <value>Подкатегория</value>
   </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Другой счёт</value>

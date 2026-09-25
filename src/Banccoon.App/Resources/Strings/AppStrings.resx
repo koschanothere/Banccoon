@@ -901,6 +901,9 @@
   <data name="Transactions_AllCategoriesOption" xml:space="preserve">
     <value>All categories</value>
   </data>
+  <data name="Transactions_AllOfCategoryOption" xml:space="preserve">
+    <value>All of the category</value>
+  </data>
   <data name="Transactions_TransferToFormat" xml:space="preserve">
     <value>Transfer to {0}</value>
   </data>
@@ -1057,6 +1060,12 @@
   </data>
   <data name="Common_NewCategoryOption" xml:space="preserve">
     <value>+ New category</value>
+  </data>
+  <data name="Common_NoSubcategoryOption" xml:space="preserve">
+    <value>No subcategory</value>
+  </data>
+  <data name="Common_SubcategoryPickerTitle" xml:space="preserve">
+    <value>Subcategory</value>
   </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Other account</value>

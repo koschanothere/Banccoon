@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
 using Banccoon.Core.Repositories;
@@ -53,6 +54,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
 
         AccountOptions = [];
         CategoryOptions = [];
+        Subcategory = new SubcategoryPickerViewModel();
         recurrence = CreateRecurrenceEditor();
 
         SetExpenseCommand = new RelayCommand(() => Type = TransactionType.Expense);
@@ -118,6 +120,7 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsCreatingNewCategory));
                 OnPropertyChanged(nameof(CategoryBorderColor));
+                Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
             }
         }
     }
@@ -147,6 +150,9 @@ public sealed class ScheduleFormViewModel : ViewModelBase
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     public ICommand SetExpenseCommand { get; }
 
@@ -183,6 +189,8 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             }
 
             CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
+            var tree = new CategoryTree(categories);
+            Subcategory.Reset(tree);
 
             editingScheduledTransactionId = existing?.Id;
             Name = existing?.Name ?? string.Empty;
@@ -192,8 +200,13 @@ public sealed class ScheduleFormViewModel : ViewModelBase
                 : AccountOptions.FirstOrDefault(option => option.Id == existing.AccountId) ?? AccountOptions.FirstOrDefault();
             AmountText = existing is null ? string.Empty : existing.Amount.ToString(CultureInfo.InvariantCulture);
             Category = existing?.CategoryId is { } categoryId
-                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId && !option.IsCreateNew)
+                ? CategoryOptionsHelper.FindParentOption(CategoryOptions, tree, categoryId)
                 : CategoryOptions.FirstOrDefault(option => !option.IsCreateNew);
+            if (existing?.CategoryId is { } storedCategoryId && Category is not null)
+            {
+                // A rule filed under a child shows its parent here and the child next to it.
+                Subcategory.SelectCategory(storedCategoryId);
+            }
             NewCategoryName = string.Empty;
             StatusText = string.Empty;
             Recurrence = CreateRecurrenceEditor();
@@ -251,7 +264,8 @@ public sealed class ScheduleFormViewModel : ViewModelBase
             return;
         }
 
-        var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+        var (chosenCategoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+        var categoryId = Subcategory.Resolve(chosenCategoryId);
         if (newOption is not null)
         {
             await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));

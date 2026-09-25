@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Statements;
 using Microsoft.Maui.Graphics;
 
@@ -15,8 +16,13 @@ public sealed class StatementBankCategoryRowViewModel : ViewModelBase
     private string newCategoryName = string.Empty;
     private bool isSkipped;
 
-    public StatementBankCategoryRowViewModel(DetectedBankCategory detected, ObservableCollection<CategoryOptionViewModel> categoryOptions)
+    public StatementBankCategoryRowViewModel(
+        DetectedBankCategory detected,
+        ObservableCollection<CategoryOptionViewModel> categoryOptions,
+        CategoryTree categoryTree)
     {
+        Subcategory = new SubcategoryPickerViewModel();
+        Subcategory.Reset(categoryTree);
         Name = detected.Name;
         CountText = Translator.GetPlural("StatementImport_GroupCount", detected.OperationCount);
         CategoryOptions = categoryOptions;
@@ -32,6 +38,12 @@ public sealed class StatementBankCategoryRowViewModel : ViewModelBase
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
+    // The chosen parent's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
+
+    // The existing category chosen (a parent, or one of its children), or null.
+    public Guid? ChosenCategoryId => Category is { IsCategory: true } option ? Subcategory.Resolve(option.Id) : null;
+
     public CategoryOptionViewModel? Category
     {
         get => category;
@@ -41,6 +53,7 @@ public sealed class StatementBankCategoryRowViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsCreatingNewCategory));
                 OnPropertyChanged(nameof(CategoryBorderColor));
+                Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
             }
         }
     }

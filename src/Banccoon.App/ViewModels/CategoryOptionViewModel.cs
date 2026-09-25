@@ -22,7 +22,7 @@ public sealed class CategoryOptionViewModel
     }
 
     public static CategoryOptionViewModel ForCategory(Category category) =>
-        new(category.Id, category.Name, CategoryColorPalette.GetColorForCategory(category.Id, category.Color), isCreateNew: false);
+        new(category.Id, category.Name, CategoryColorPalette.GetColorForCategory(category.ColorSourceId, category.Color), isCreateNew: false);
 
     public static CategoryOptionViewModel CreateNewSentinel() =>
         new(Guid.Empty, Translator.Get("Common_NewCategoryOption"), color: null, isCreateNew: true);
@@ -31,6 +31,11 @@ public sealed class CategoryOptionViewModel
     // there, so it needs an entry of its own (IsNone), unlike an empty picker elsewhere.
     public static CategoryOptionViewModel NotLinked() =>
         new(Guid.Empty, Translator.Get("Settings_NotLinkedOption"), color: null, isCreateNew: false, isNone: true);
+
+    // "No subcategory", heading a SubcategoryPickerViewModel's list: keeps the parent itself.
+    // (A filter says "All of the category" instead - see SubcategoryPickerViewModel.)
+    public static CategoryOptionViewModel NoSubcategory(string textKey = "Common_NoSubcategoryOption") =>
+        new(Guid.Empty, Translator.Get(textKey), color: null, isCreateNew: false, isNone: true);
 
     public Guid Id { get; }
 

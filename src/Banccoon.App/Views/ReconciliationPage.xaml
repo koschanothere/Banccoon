@@ -126,6 +126,7 @@
                     <HorizontalStackLayout Spacing="8">
                         <Entry Placeholder="{loc:Translate Common_AmountPlaceholder}" Text="{Binding GroupedSpending.AmountText}" Keyboard="Numeric" WidthRequest="140" />
                         <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding GroupedSpending.CategoryOptions}" SelectedItem="{Binding GroupedSpending.Category}" WidthRequest="170" />
+                        <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding GroupedSpending.Subcategory.Options}" SelectedItem="{Binding GroupedSpending.Subcategory.Selected}" IsVisible="{Binding GroupedSpending.Subcategory.IsVisible}" WidthRequest="170" />
                         <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding GroupedSpending.NewCategoryName}" IsVisible="{Binding GroupedSpending.IsCreatingNewCategory}" WidthRequest="150" />
                         <Entry Placeholder="{loc:Translate Reconciliation_GroupedSpendingNotePlaceholder}" Text="{Binding GroupedSpending.NoteText}" WidthRequest="220" />
                         <Button Text="{loc:Translate Common_Add}" Command="{Binding GroupedSpending.AddCommand}" Style="{StaticResource ExpenseButton}" />

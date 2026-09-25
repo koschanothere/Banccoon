@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Abstractions;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Reconciliation;
@@ -31,6 +32,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private IReadOnlyList<Transaction> filteredTransactions = [];
     private IReadOnlyDictionary<Guid, Account> accountsById = new Dictionary<Guid, Account>();
     private IReadOnlyDictionary<Guid, Category> categoriesById = new Dictionary<Guid, Category>();
+    private CategoryTree categoryTree = CategoryTree.Empty;
     private IReadOnlyDictionary<Guid, IReadOnlyDictionary<Guid, decimal>> balancesByAccount =
         new Dictionary<Guid, IReadOnlyDictionary<Guid, decimal>>();
     private int visibleCount = PageSize;
@@ -135,6 +137,17 @@ public sealed class TransactionsViewModel : ViewModelBase
         AccountOptions = [];
         CategoryOptions = [];
         BulkCategoryOptions = [];
+        // A parent in the filter covers its children too; this narrows it to one of them.
+        CategoryFilterSubcategory = new SubcategoryPickerViewModel(
+            () =>
+            {
+                if (!isRebuildingOptions)
+                {
+                    ApplyFilters();
+                }
+            },
+            "Transactions_AllOfCategoryOption");
+        BulkSubcategory = new SubcategoryPickerViewModel();
 
         ToggleFilterCommand = new RelayCommand(ToggleFilterPanel);
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
@@ -190,12 +203,31 @@ public sealed class TransactionsViewModel : ViewModelBase
         get => categoryFilter;
         set
         {
-            if (SetProperty(ref categoryFilter, value) && !isRebuildingOptions)
+            if (!SetProperty(ref categoryFilter, value) || isRebuildingOptions)
             {
-                ApplyFilters();
+                return;
             }
+
+            // Rebuilding the subcategory list can report a change itself; filter once, below.
+            isRebuildingOptions = true;
+            try
+            {
+                CategoryFilterSubcategory.ShowChildrenOf(IsRealCategory(value) ? value!.Id : null);
+            }
+            finally
+            {
+                isRebuildingOptions = false;
+            }
+
+            ApplyFilters();
         }
     }
+
+    // The filter's second step: the chosen parent's children, when it has any.
+    public SubcategoryPickerViewModel CategoryFilterSubcategory { get; }
+
+    // The bulk category's children, when it has any.
+    public SubcategoryPickerViewModel BulkSubcategory { get; }
 
     public string SelectionSummaryText
     {
@@ -206,7 +238,13 @@ public sealed class TransactionsViewModel : ViewModelBase
     public NamedOptionViewModel? BulkCategory
     {
         get => bulkCategory;
-        set => SetProperty(ref bulkCategory, value);
+        set
+        {
+            if (SetProperty(ref bulkCategory, value))
+            {
+                BulkSubcategory.ShowChildrenOf(value?.Id);
+            }
+        }
     }
 
     public bool HasMoreRows => visibleCount < filteredTransactions.Count;
@@ -332,8 +370,11 @@ public sealed class TransactionsViewModel : ViewModelBase
         try
         {
             var previousAccountFilterId = AccountFilter?.Id;
-            var previousCategoryFilterId = CategoryFilter?.Id;
-            var previousBulkCategoryId = BulkCategory?.Id;
+            // What was chosen, children included, so a reload keeps it.
+            var previousCategoryFilterId = IsRealCategory(CategoryFilter)
+                ? CategoryFilterSubcategory.Resolve(CategoryFilter!.Id)
+                : CategoryFilter?.Id;
+            var previousBulkCategoryId = BulkCategory is { } previousBulk ? BulkSubcategory.Resolve(previousBulk.Id) : null;
 
             AccountOptions.Clear();
             AccountOptions.Add(new NamedOptionViewModel(AllOptionId, Translator.Get("Transactions_AllAccountsOption")));
@@ -345,7 +386,11 @@ public sealed class TransactionsViewModel : ViewModelBase
             CategoryOptions.Clear();
             CategoryOptions.Add(new NamedOptionViewModel(AllOptionId, Translator.Get("Transactions_AllCategoriesOption")));
             BulkCategoryOptions.Clear();
-            foreach (var category in categories.OrderBy(category => category.Name))
+            // Parents only; each picker's subcategory picker offers the chosen parent's children.
+            categoryTree = new CategoryTree(categories);
+            CategoryFilterSubcategory.Reset(categoryTree);
+            BulkSubcategory.Reset(categoryTree);
+            foreach (var category in categoryTree.TopLevel)
             {
                 CategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
                 BulkCategoryOptions.Add(new NamedOptionViewModel(category.Id, category.Name));
@@ -361,14 +406,22 @@ public sealed class TransactionsViewModel : ViewModelBase
             OnPropertyChanged(nameof(AccountFilter));
 
             categoryFilter = previousCategoryFilterId is { } categoryId
-                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryId)
+                ? CategoryOptions.FirstOrDefault(option => option.Id == categoryTree.RootIdOf(categoryId))
                 : CategoryOptions.FirstOrDefault();
             OnPropertyChanged(nameof(CategoryFilter));
+            if (IsRealCategory(categoryFilter) && previousCategoryFilterId is { } filterCategoryId)
+            {
+                CategoryFilterSubcategory.SelectCategory(filterCategoryId);
+            }
 
             bulkCategory = previousBulkCategoryId is { } bulkCategoryId
-                ? BulkCategoryOptions.FirstOrDefault(option => option.Id == bulkCategoryId)
+                ? BulkCategoryOptions.FirstOrDefault(option => option.Id == categoryTree.RootIdOf(bulkCategoryId))
                 : BulkCategoryOptions.FirstOrDefault();
             OnPropertyChanged(nameof(BulkCategory));
+            if (bulkCategory is not null)
+            {
+                BulkSubcategory.SelectCategory(previousBulkCategoryId ?? bulkCategory.Id);
+            }
         }
         finally
         {
@@ -383,10 +436,17 @@ public sealed class TransactionsViewModel : ViewModelBase
             return;
         }
 
-        var match = CategoryOptions.FirstOrDefault(option => option.Id == categoryId);
+        // Analytics drills down by parent (its totals include the children), but a child id
+        // shows as its parent plus that child.
+        var match = CategoryOptions.FirstOrDefault(option => option.Id == categoryTree.RootIdOf(categoryId));
         if (match is not null)
         {
             CategoryFilter = match;
+            if (categoryTree.IsChild(categoryId))
+            {
+                CategoryFilterSubcategory.SelectCategory(categoryId);
+            }
+
             FilterOpen = true;
         }
 
@@ -447,9 +507,19 @@ public sealed class TransactionsViewModel : ViewModelBase
                 transaction.AccountId == AccountFilter.Id || transaction.DestinationAccountId == AccountFilter.Id);
         }
 
-        if (CategoryFilter is not null && CategoryFilter.Id != AllOptionId)
+        if (IsRealCategory(CategoryFilter))
         {
-            filtered = filtered.Where(transaction => transaction.CategoryId == CategoryFilter.Id);
+            // A parent covers its own transactions and every child's; a chosen child just its own.
+            var parentId = CategoryFilter!.Id;
+            if (CategoryFilterSubcategory.Resolve(parentId) is { } childId && childId != parentId)
+            {
+                filtered = filtered.Where(transaction => transaction.CategoryId == childId);
+            }
+            else
+            {
+                filtered = filtered.Where(transaction =>
+                    transaction.CategoryId is { } categoryId && categoryTree.RootIdOf(categoryId) == parentId);
+            }
         }
 
         return filtered.OrderByDescending(transaction => transaction.Date).ToList();
@@ -702,7 +772,7 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private async Task AssignCategoryToSelectedAsync()
     {
-        if (BulkCategory is null)
+        if (BulkCategory is null || BulkSubcategory.Resolve(BulkCategory.Id) is not { } bulkCategoryId)
         {
             return;
         }
@@ -710,7 +780,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         var selectedIds = Rows.Where(row => row.IsSelected).Select(row => row.Id).ToHashSet();
         foreach (var transaction in allTransactions.Where(transaction => selectedIds.Contains(transaction.Id)))
         {
-            await transactionRepository.SaveAsync(transaction with { CategoryId = BulkCategory.Id });
+            await transactionRepository.SaveAsync(transaction with { CategoryId = bulkCategoryId });
         }
 
         // Touches UI-bound state after an await that may have resumed off the UI thread (see
@@ -718,4 +788,6 @@ public sealed class TransactionsViewModel : ViewModelBase
         await RunOnMainThreadAsync(() => SelectMode = false);
         await ReloadAsync();
     }
+
+    private static bool IsRealCategory(NamedOptionViewModel? option) => option is not null && option.Id != AllOptionId;
 }
