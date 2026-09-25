@@ -14,6 +14,9 @@ public enum StatementImportStep
 {
     PickFile,
     ConfirmAccount,
+
+    // Only when the statement shows bank categories its parser hasn't shown before.
+    LinkBankCategories,
     Review
 }
 
@@ -32,13 +35,17 @@ public sealed class StatementImportViewModel : ViewModelBase
     private string previewStatusText = Translator.Get("StatementImport_ChooseFileToBegin");
     private bool canCheckIn;
 
+    // The account chosen in step 2, held while the linking step is on screen.
+    private Guid pendingAccountId;
+
     public StatementImportViewModel(
         IStatementImportService statementImportService,
         IStatementParserRegistry statementParserRegistry,
         IStatementImportRepository statementImportRepository,
         ICategoryRepository categoryRepository,
         IAccountRepository accountRepository,
-        ISettingsRepository settingsRepository)
+        ISettingsRepository settingsRepository,
+        IBankCategoryService bankCategoryService)
     {
         this.statementImportService = statementImportService;
         this.statementParserRegistry = statementParserRegistry;
@@ -47,16 +54,21 @@ public sealed class StatementImportViewModel : ViewModelBase
         Account = new StatementAccountViewModel(accountRepository);
         Review = new StatementImportReviewViewModel(statementImportService, statementImportRepository, categoryRepository, accountRepository);
         Review.ReviewCompleted += () => CanCheckIn = true;
+        BankCategories = new StatementBankCategoriesViewModel(bankCategoryService, categoryRepository);
 
         PickFileCommand = new RelayCommand(() => _ = PickFileAsync());
         ContinueFromPickCommand = new RelayCommand(() => _ = ContinueFromPickAsync());
         ContinueFromAccountCommand = new RelayCommand(() => _ = ContinueFromAccountAsync());
         BackToPickCommand = new RelayCommand(() => CurrentStep = StatementImportStep.PickFile);
+        ContinueFromBankCategoriesCommand = new RelayCommand(() => _ = ContinueFromBankCategoriesAsync());
+        BackToAccountCommand = new RelayCommand(() => CurrentStep = StatementImportStep.ConfirmAccount);
     }
 
     public StatementAccountViewModel Account { get; }
 
     public StatementImportReviewViewModel Review { get; }
+
+    public StatementBankCategoriesViewModel BankCategories { get; }
 
     public StatementImportStep CurrentStep
     {
@@ -67,6 +79,7 @@ public sealed class StatementImportViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsPickFileStep));
                 OnPropertyChanged(nameof(IsConfirmAccountStep));
+                OnPropertyChanged(nameof(IsLinkBankCategoriesStep));
                 OnPropertyChanged(nameof(IsReviewStep));
             }
         }
@@ -75,6 +88,8 @@ public sealed class StatementImportViewModel : ViewModelBase
     public bool IsPickFileStep => CurrentStep == StatementImportStep.PickFile;
 
     public bool IsConfirmAccountStep => CurrentStep == StatementImportStep.ConfirmAccount;
+
+    public bool IsLinkBankCategoriesStep => CurrentStep == StatementImportStep.LinkBankCategories;
 
     public bool IsReviewStep => CurrentStep == StatementImportStep.Review;
 
@@ -136,6 +151,10 @@ public sealed class StatementImportViewModel : ViewModelBase
     public ICommand ContinueFromAccountCommand { get; }
 
     public ICommand BackToPickCommand { get; }
+
+    public ICommand ContinueFromBankCategoriesCommand { get; }
+
+    public ICommand BackToAccountCommand { get; }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -260,22 +279,66 @@ public sealed class StatementImportViewModel : ViewModelBase
         await RunOnMainThreadAsync(() => IsBusy = true);
         try
         {
-            var (targetAccountId, path, parsed) = (accountId.Value, filePath, statement);
-            var stopwatch = Stopwatch.StartNew();
-            var result = await Task.Run(() => statementImportService.CreatePendingImportAsync(targetAccountId, path, parsed));
-            DiagnosticLog.Write($"Statement import timing: checked and saved {result.Rows.Count} rows in {stopwatch.ElapsedMilliseconds} ms");
-            if (!result.ParserAvailable || result.Batch is null)
+            // New bank categories first, so the rows are suggested with whatever gets linked.
+            if (await BankCategories.LoadAsync(statement))
             {
-                await RunOnMainThreadAsync(() => Account.SetStatus(StatementImportMessageFormatter.Format(result.Message)));
+                await RunOnMainThreadAsync(() =>
+                {
+                    pendingAccountId = accountId.Value;
+                    CurrentStep = StatementImportStep.LinkBankCategories;
+                });
                 return;
             }
 
-            await Review.LoadAsync(result.Batch.Id, result.Batch.AccountId, currency);
-            await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
+            await CreateImportAndReviewAsync(accountId.Value);
         }
         finally
         {
             await RunOnMainThreadAsync(() => IsBusy = false);
         }
+    }
+
+    private async Task ContinueFromBankCategoriesAsync()
+    {
+        if (statement is null)
+        {
+            return;
+        }
+
+        await RunOnMainThreadAsync(() => IsBusy = true);
+        try
+        {
+            await BankCategories.SaveAsync(statement.ParserId);
+            await CreateImportAndReviewAsync(pendingAccountId);
+        }
+        finally
+        {
+            await RunOnMainThreadAsync(() => IsBusy = false);
+        }
+    }
+
+    private async Task CreateImportAndReviewAsync(Guid accountId)
+    {
+        if (statement is null || filePath is null)
+        {
+            return;
+        }
+
+        var (path, parsed) = (filePath, statement);
+        var stopwatch = Stopwatch.StartNew();
+        var result = await Task.Run(() => statementImportService.CreatePendingImportAsync(accountId, path, parsed));
+        DiagnosticLog.Write($"Statement import timing: checked and saved {result.Rows.Count} rows in {stopwatch.ElapsedMilliseconds} ms");
+        if (!result.ParserAvailable || result.Batch is null)
+        {
+            await RunOnMainThreadAsync(() =>
+            {
+                Account.SetStatus(StatementImportMessageFormatter.Format(result.Message));
+                CurrentStep = StatementImportStep.ConfirmAccount;
+            });
+            return;
+        }
+
+        await Review.LoadAsync(result.Batch.Id, result.Batch.AccountId, currency);
+        await RunOnMainThreadAsync(() => CurrentStep = StatementImportStep.Review);
     }
 }

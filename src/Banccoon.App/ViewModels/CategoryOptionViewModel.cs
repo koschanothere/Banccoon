@@ -12,12 +12,13 @@ namespace Banccoon.App.ViewModels;
 // category id here", not as an identity to compare against.
 public sealed class CategoryOptionViewModel
 {
-    private CategoryOptionViewModel(Guid id, string name, Color? color, bool isCreateNew)
+    private CategoryOptionViewModel(Guid id, string name, Color? color, bool isCreateNew, bool isNone = false)
     {
         Id = id;
         Name = name;
         Color = color;
         IsCreateNew = isCreateNew;
+        IsNone = isNone;
     }
 
     public static CategoryOptionViewModel ForCategory(Category category) =>
@@ -26,6 +27,11 @@ public sealed class CategoryOptionViewModel
     public static CategoryOptionViewModel CreateNewSentinel() =>
         new(Guid.Empty, Translator.Get("Common_NewCategoryOption"), color: null, isCreateNew: true);
 
+    // "Not linked", in the Settings bank-category pickers: choosing no category is a real choice
+    // there, so it needs an entry of its own (IsNone), unlike an empty picker elsewhere.
+    public static CategoryOptionViewModel NotLinked() =>
+        new(Guid.Empty, Translator.Get("Settings_NotLinkedOption"), color: null, isCreateNew: false, isNone: true);
+
     public Guid Id { get; }
 
     public string Name { get; }
@@ -33,6 +39,11 @@ public sealed class CategoryOptionViewModel
     public Color? Color { get; }
 
     public bool IsCreateNew { get; }
+
+    public bool IsNone { get; }
+
+    // A real category (not "+ New category", not "Not linked").
+    public bool IsCategory => !IsCreateNew && !IsNone;
 
     public override string ToString() => Name;
 }

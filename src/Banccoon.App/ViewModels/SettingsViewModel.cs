@@ -9,6 +9,7 @@ using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Statements;
 using Banccoon.Infrastructure.Database;
 using Microsoft.Maui.Graphics;
 
@@ -39,14 +40,25 @@ public sealed class SettingsViewModel : ViewModelBase
         ICategoryLearningRuleRepository categoryLearningRuleRepository,
         ICategoryRepository categoryRepository,
         ICategoryManagementService categoryManagementService,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        IBankCategoryService bankCategoryService,
+        IStatementParserRegistry statementParserRegistry)
     {
         this.settingsRepository = settingsRepository;
         Data = new DataManagementViewModel(backupService, localDataResetService, settingsRepository, databasePathProvider);
         General = new GeneralPreferencesViewModel(settingsRepository);
         Pin = new PinSettingsViewModel(settingsRepository);
         LearningRules = new CategoryLearningRulesViewModel(categoryLearningRuleRepository, categoryRepository, accountRepository);
-        CategoryManagement = new CategoryManagementViewModel(categoryRepository, categoryManagementService, () => LearningRules.InitializeAsync());
+        BankCategories = new BankCategoryLinksViewModel(bankCategoryService, categoryRepository, statementParserRegistry);
+        CategoryManagement = new CategoryManagementViewModel(
+            categoryRepository,
+            categoryManagementService,
+            async () =>
+            {
+                // A merge or delete can change what rules and bank categories point at.
+                await LearningRules.InitializeAsync();
+                await BankCategories.InitializeAsync();
+            });
         DashboardSectionRows = [];
         Categories = [];
         RebuildCategoryRows();
@@ -81,6 +93,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public PinSettingsViewModel Pin { get; }
 
     public CategoryLearningRulesViewModel LearningRules { get; }
+
+    public BankCategoryLinksViewModel BankCategories { get; }
 
     public CategoryManagementViewModel CategoryManagement { get; }
 
@@ -291,6 +305,7 @@ public sealed class SettingsViewModel : ViewModelBase
         await General.InitializeAsync(settings);
         await Pin.InitializeAsync(settings);
         await Data.InitializeAsync(settings);
+        await BankCategories.InitializeAsync(cancellationToken);
         await LearningRules.InitializeAsync(cancellationToken);
         await CategoryManagement.InitializeAsync(cancellationToken);
     }

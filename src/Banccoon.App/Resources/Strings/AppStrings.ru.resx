@@ -653,6 +653,21 @@
   <data name="StatementImport_ShowMoreFormat" xml:space="preserve">
     <value>Показать ещё (пока скрыто: {0})</value>
   </data>
+  <data name="StatementImport_BankCategoriesHeader" xml:space="preserve">
+    <value>Новые категории банка</value>
+  </data>
+  <data name="StatementImport_BankCategoriesHintFormat" xml:space="preserve">
+    <value>{0} указывает для каждой операции свою категорию. Свяжите нужные с вашими категориями — такие строки придут уже с категорией (правило, которое Banccoon изучил для получателя, по-прежнему важнее). Пропущенные и оставленные пустыми игнорируются; любую из них можно изменить позже в Настройках → Категории банков.</value>
+  </data>
+  <data name="StatementImport_BankCategorySkipped" xml:space="preserve">
+    <value>Пропущено</value>
+  </data>
+  <data name="StatementImport_UndoSkipButton" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="StatementImport_BankCategoryFormat" xml:space="preserve">
+    <value>Категория банка: {0}</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Показать строки</value>
   </data>
@@ -1223,6 +1238,18 @@
   </data>
   <data name="Settings_NothingLearnedYet" xml:space="preserve">
     <value>Пока ничего не изучено.</value>
+  </data>
+  <data name="Settings_BankCategoriesHeader" xml:space="preserve">
+    <value>Категории банков</value>
+  </data>
+  <data name="Settings_BankCategoriesHint" xml:space="preserve">
+    <value>Собственные категории банка из его выписок и категория, которую каждая из них подставляет при импорте. Правило, изученное для получателя, по-прежнему важнее. Изменения действуют для будущих импортов.</value>
+  </data>
+  <data name="Settings_BankPickerTitle" xml:space="preserve">
+    <value>Банк</value>
+  </data>
+  <data name="Settings_NotLinkedOption" xml:space="preserve">
+    <value>Не связана</value>
   </data>
   <data name="Settings_LearnedRulesPageFormat" xml:space="preserve">
     <value>{0}–{1} из {2}</value>

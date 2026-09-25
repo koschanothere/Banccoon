@@ -62,6 +62,9 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         DateText = row.Date.ToString("dd/MM/yyyy");
         Description = string.IsNullOrWhiteSpace(row.Counterparty) ? row.Description : row.Counterparty;
         IsDuplicate = row.IsDuplicate;
+        BankCategoryText = string.IsNullOrWhiteSpace(row.BankCategory)
+            ? string.Empty
+            : string.Format(Translator.Get("StatementImport_BankCategoryFormat"), row.BankCategory);
         CategoryOptions = categoryOptions;
         OtherAccountOptions = otherAccountOptions;
         type = row.Type;
@@ -112,6 +115,12 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public string AmountText => MoneyFormat.Format(SignedAmount, currency);
 
     public bool IsDuplicate { get; }
+
+    // The bank's own category for the operation, shown small under the description - a hint when
+    // deciding a row's category (see BankCategoryLink).
+    public string BankCategoryText { get; }
+
+    public bool HasBankCategory => BankCategoryText.Length > 0;
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 

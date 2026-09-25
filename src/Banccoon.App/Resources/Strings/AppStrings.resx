@@ -626,6 +626,21 @@
   <data name="StatementImport_ShowMoreFormat" xml:space="preserve">
     <value>Show more ({0} not shown yet)</value>
   </data>
+  <data name="StatementImport_BankCategoriesHeader" xml:space="preserve">
+    <value>New bank categories</value>
+  </data>
+  <data name="StatementImport_BankCategoriesHintFormat" xml:space="preserve">
+    <value>{0} gives every operation its own category. Link the ones you want to your categories and those rows arrive already categorised (a rule Banccoon learned for a recipient still comes first). Skipped or empty ones are ignored; you can change any of them later in Settings → Bank categories.</value>
+  </data>
+  <data name="StatementImport_BankCategorySkipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="StatementImport_UndoSkipButton" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="StatementImport_BankCategoryFormat" xml:space="preserve">
+    <value>Bank category: {0}</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Show rows</value>
   </data>
@@ -1181,6 +1196,18 @@
   </data>
   <data name="Settings_NothingLearnedYet" xml:space="preserve">
     <value>Nothing learned yet.</value>
+  </data>
+  <data name="Settings_BankCategoriesHeader" xml:space="preserve">
+    <value>Bank categories</value>
+  </data>
+  <data name="Settings_BankCategoriesHint" xml:space="preserve">
+    <value>Your bank's own categories, as its statements show them, and the category each one fills in when you import. A rule Banccoon learned for a recipient still comes first. Changes apply to future imports.</value>
+  </data>
+  <data name="Settings_BankPickerTitle" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="Settings_NotLinkedOption" xml:space="preserve">
+    <value>Not linked</value>
   </data>
   <data name="Settings_LearnedRulesPageFormat" xml:space="preserve">
     <value>{0}–{1} of {2}</value>
