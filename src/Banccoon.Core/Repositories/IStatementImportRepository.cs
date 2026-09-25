@@ -16,6 +16,9 @@ public interface IStatementImportRepository
 
     Task SaveRowAsync(StatementImportRow row, CancellationToken cancellationToken = default);
 
+    // All-or-nothing, in one database transaction.
+    Task SaveRowsAsync(IReadOnlyList<StatementImportRow> rows, CancellationToken cancellationToken = default);
+
     Task DeleteBatchAsync(Guid batchId, CancellationToken cancellationToken = default);
 
     Task DeleteAllAsync(CancellationToken cancellationToken = default);

@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Windows.Input;
+using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
 using Banccoon.Core.Repositories;
@@ -203,7 +205,11 @@ public sealed class StatementImportViewModel : ViewModelBase
 
         try
         {
-            var preview = await statementImportService.PreviewAsync(pickedFilePath);
+            // Off the UI thread: reading a long PDF statement is real work, and the window should
+            // keep responding while it happens. Same for creating the import below.
+            var stopwatch = Stopwatch.StartNew();
+            var preview = await Task.Run(() => statementImportService.PreviewAsync(pickedFilePath));
+            DiagnosticLog.Write($"Statement import timing: read {preview.Statement?.Rows.Count ?? 0} rows in {stopwatch.ElapsedMilliseconds} ms");
             await RunOnMainThreadAsync(() =>
             {
                 statement = preview.Statement;
@@ -254,7 +260,10 @@ public sealed class StatementImportViewModel : ViewModelBase
         await RunOnMainThreadAsync(() => IsBusy = true);
         try
         {
-            var result = await statementImportService.CreatePendingImportAsync(accountId.Value, filePath, statement);
+            var (targetAccountId, path, parsed) = (accountId.Value, filePath, statement);
+            var stopwatch = Stopwatch.StartNew();
+            var result = await Task.Run(() => statementImportService.CreatePendingImportAsync(targetAccountId, path, parsed));
+            DiagnosticLog.Write($"Statement import timing: checked and saved {result.Rows.Count} rows in {stopwatch.ElapsedMilliseconds} ms");
             if (!result.ParserAvailable || result.Batch is null)
             {
                 await RunOnMainThreadAsync(() => Account.SetStatus(StatementImportMessageFormatter.Format(result.Message)));

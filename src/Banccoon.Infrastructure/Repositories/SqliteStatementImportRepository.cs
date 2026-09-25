@@ -7,6 +7,70 @@ namespace Banccoon.Infrastructure.Repositories;
 
 public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, IStatementImportRepository
 {
+    private const string UpsertRowSql = """
+            INSERT INTO StatementImportRows (
+                Id,
+                BatchId,
+                Date,
+                Amount,
+                Type,
+                Description,
+                NormalizedDescription,
+                Counterparty,
+                ExternalReference,
+                RawText,
+                SuggestedCategoryId,
+                CategoryId,
+                Status,
+                IsDuplicate,
+                DuplicateTransactionId,
+                CreatedTransactionId,
+                Time,
+                DestinationAccountId,
+                IsIncoming
+            )
+            VALUES (
+                @Id,
+                @BatchId,
+                @Date,
+                @Amount,
+                @Type,
+                @Description,
+                @NormalizedDescription,
+                @Counterparty,
+                @ExternalReference,
+                @RawText,
+                @SuggestedCategoryId,
+                @CategoryId,
+                @Status,
+                @IsDuplicate,
+                @DuplicateTransactionId,
+                @CreatedTransactionId,
+                @Time,
+                @DestinationAccountId,
+                @IsIncoming
+            )
+            ON CONFLICT(Id) DO UPDATE SET
+                BatchId = excluded.BatchId,
+                Date = excluded.Date,
+                Amount = excluded.Amount,
+                Type = excluded.Type,
+                Description = excluded.Description,
+                NormalizedDescription = excluded.NormalizedDescription,
+                Counterparty = excluded.Counterparty,
+                ExternalReference = excluded.ExternalReference,
+                RawText = excluded.RawText,
+                SuggestedCategoryId = excluded.SuggestedCategoryId,
+                CategoryId = excluded.CategoryId,
+                Status = excluded.Status,
+                IsDuplicate = excluded.IsDuplicate,
+                DuplicateTransactionId = excluded.DuplicateTransactionId,
+                CreatedTransactionId = excluded.CreatedTransactionId,
+                Time = excluded.Time,
+                DestinationAccountId = excluded.DestinationAccountId,
+                IsIncoming = excluded.IsIncoming;
+            """;
+
     public SqliteStatementImportRepository(
         ISqliteConnectionFactory connectionFactory,
         IBanccoonDatabaseInitializer databaseInitializer)
@@ -178,72 +242,36 @@ public sealed class SqliteStatementImportRepository : SqliteRepositoryBase, ISta
 
         await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = """
-            INSERT INTO StatementImportRows (
-                Id,
-                BatchId,
-                Date,
-                Amount,
-                Type,
-                Description,
-                NormalizedDescription,
-                Counterparty,
-                ExternalReference,
-                RawText,
-                SuggestedCategoryId,
-                CategoryId,
-                Status,
-                IsDuplicate,
-                DuplicateTransactionId,
-                CreatedTransactionId,
-                Time,
-                DestinationAccountId,
-                IsIncoming
-            )
-            VALUES (
-                @Id,
-                @BatchId,
-                @Date,
-                @Amount,
-                @Type,
-                @Description,
-                @NormalizedDescription,
-                @Counterparty,
-                @ExternalReference,
-                @RawText,
-                @SuggestedCategoryId,
-                @CategoryId,
-                @Status,
-                @IsDuplicate,
-                @DuplicateTransactionId,
-                @CreatedTransactionId,
-                @Time,
-                @DestinationAccountId,
-                @IsIncoming
-            )
-            ON CONFLICT(Id) DO UPDATE SET
-                BatchId = excluded.BatchId,
-                Date = excluded.Date,
-                Amount = excluded.Amount,
-                Type = excluded.Type,
-                Description = excluded.Description,
-                NormalizedDescription = excluded.NormalizedDescription,
-                Counterparty = excluded.Counterparty,
-                ExternalReference = excluded.ExternalReference,
-                RawText = excluded.RawText,
-                SuggestedCategoryId = excluded.SuggestedCategoryId,
-                CategoryId = excluded.CategoryId,
-                Status = excluded.Status,
-                IsDuplicate = excluded.IsDuplicate,
-                DuplicateTransactionId = excluded.DuplicateTransactionId,
-                CreatedTransactionId = excluded.CreatedTransactionId,
-                Time = excluded.Time,
-                DestinationAccountId = excluded.DestinationAccountId,
-                IsIncoming = excluded.IsIncoming;
-            """;
+        command.CommandText = UpsertRowSql;
         AddRowParameters(command, row);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    // One connection and one commit for the whole list - a new import saves every row of the
+    // statement at once, and a commit per row (each with its own unpooled connection open and disk
+    // flush) was most of the time a big statement took to load.
+    public async Task SaveRowsAsync(IReadOnlyList<StatementImportRow> rows, CancellationToken cancellationToken = default)
+    {
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        await EnsureInitializedAsync(cancellationToken);
+
+        await using var connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        foreach (var row in rows)
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = UpsertRowSql;
+            AddRowParameters(command, row);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task DeleteBatchAsync(Guid batchId, CancellationToken cancellationToken = default)

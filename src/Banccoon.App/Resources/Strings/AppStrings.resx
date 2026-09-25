@@ -611,6 +611,18 @@
   <data name="StatementImport_ReadyHint" xml:space="preserve">
     <value>Category (and, for transfers, the other account) already filled in from what Banccoon learned. Check them with Show rows, or approve them all at once.</value>
   </data>
+  <data name="StatementImport_GroupByName" xml:space="preserve">
+    <value>Group by name</value>
+  </data>
+  <data name="StatementImport_GroupCount_One" xml:space="preserve">
+    <value>{0} transaction</value>
+  </data>
+  <data name="StatementImport_GroupCount_Other" xml:space="preserve">
+    <value>{0} transactions</value>
+  </data>
+  <data name="StatementImport_ApproveGroupFormat" xml:space="preserve">
+    <value>Approve all ({0})</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Show rows</value>
   </data>

@@ -145,10 +145,7 @@ public sealed class StatementImportService : IStatementImportService
             .ToArray();
 
         await statementImportRepository.SaveBatchAsync(batch, cancellationToken);
-        foreach (var row in rows)
-        {
-            await statementImportRepository.SaveRowAsync(row, cancellationToken);
-        }
+        await statementImportRepository.SaveRowsAsync(rows, cancellationToken);
 
         return new StatementImportCreateResult(
             ParserAvailable: true,

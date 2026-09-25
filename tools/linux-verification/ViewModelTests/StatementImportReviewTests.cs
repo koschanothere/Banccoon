@@ -275,12 +275,15 @@ internal sealed class ReviewFixture : IAsyncDisposable
         return CreateAsync(rows, otherAccounts, existingTransactionOnDay);
     }
 
-    // withCategories: false starts from nothing at all, like a fresh install.
+    // withCategories: false starts from nothing at all, like a fresh install. seed runs just before
+    // the statement is imported (after the account and the Food/Fun categories exist) - for learning
+    // rules or already-recorded transactions.
     public static async Task<ReviewFixture> CreateAsync(
         IReadOnlyList<ParsedStatementRow> rows,
         int otherAccounts = 1,
         int? existingTransactionOnDay = null,
-        bool withCategories = true)
+        bool withCategories = true,
+        Func<SqliteTestStore, Account, Task>? seed = null)
     {
         Translator.SetLanguage("en");
         var store = new SqliteTestStore();
@@ -301,6 +304,11 @@ internal sealed class ReviewFixture : IAsyncDisposable
         {
             await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense));
             await store.Categories.SaveAsync(new Category(Guid.NewGuid(), "Fun", TransactionType.Expense));
+        }
+
+        if (seed is not null)
+        {
+            await seed(store, account);
         }
 
         var service = new StatementImportService(

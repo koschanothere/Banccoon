@@ -105,11 +105,11 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     // Expense/Income get their sign from Type directly (that's what those words mean). A Transfer
     // doesn't inherently say which way money moved, so it falls back to the original statement's
     // own +/- sign, captured once and preserved regardless of how Type gets reclassified.
-    public string AmountText => MoneyFormat.Format(
-        Type == TransactionType.Transfer
-            ? (isIncoming ? amount : -amount)
-            : MoneyFlow.GetSignedAmount(amount, Type),
-        currency);
+    public decimal SignedAmount => Type == TransactionType.Transfer
+        ? (isIncoming ? amount : -amount)
+        : MoneyFlow.GetSignedAmount(amount, Type);
+
+    public string AmountText => MoneyFormat.Format(SignedAmount, currency);
 
     public bool IsDuplicate { get; }
 

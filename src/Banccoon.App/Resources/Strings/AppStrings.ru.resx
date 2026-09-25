@@ -635,6 +635,21 @@
   <data name="StatementImport_ReadyHint" xml:space="preserve">
     <value>Категория (а для переводов и второй счёт) уже заполнены по изученным правилам. Проверьте их через «Показать строки» или подтвердите все сразу.</value>
   </data>
+  <data name="StatementImport_GroupByName" xml:space="preserve">
+    <value>Группировать по имени</value>
+  </data>
+  <data name="StatementImport_GroupCount_One" xml:space="preserve">
+    <value>{0} операция</value>
+  </data>
+  <data name="StatementImport_GroupCount_Few" xml:space="preserve">
+    <value>{0} операции</value>
+  </data>
+  <data name="StatementImport_GroupCount_Many" xml:space="preserve">
+    <value>{0} операций</value>
+  </data>
+  <data name="StatementImport_ApproveGroupFormat" xml:space="preserve">
+    <value>Подтвердить все ({0})</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Показать строки</value>
   </data>

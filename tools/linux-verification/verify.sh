@@ -21,8 +21,9 @@ for f in glob.glob(f'{root}/src/Banccoon.App/**/*.xaml', recursive=True) + glob.
 print('  OK' if not bad else f'  {bad} malformed'); sys.exit(1 if bad else 0)
 PY
 
-echo "== 3. resx EN/RU parity (same keys modulo plural suffixes, same {n} placeholders)"
+echo "== 3. resx EN/RU parity (same keys modulo plural suffixes, same {n} placeholders) + keys used from C#"
 python3 "$HERE/scripts/resx_parity.py" | tee /dev/stderr | grep -q "^EN-only: \[\]" || fail=1
+python3 "$HERE/scripts/cs_keys.py" || fail=1
 
 echo "== 4. App type-check (MAUI stubs) + compiled-binding and translate-key check"
 (cd "$HERE/AppTypecheck" && dotnet build 2>&1 | grep -E " error |Build succeeded" | sort -u && dotnet run --no-build 2>&1 | tail -15 | tee /dev/stderr | grep -q " 0 errors") || fail=1
