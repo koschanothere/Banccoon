@@ -650,6 +650,9 @@
   <data name="StatementImport_ApproveGroupFormat" xml:space="preserve">
     <value>Подтвердить все ({0})</value>
   </data>
+  <data name="StatementImport_ShowMoreFormat" xml:space="preserve">
+    <value>Показать ещё (пока скрыто: {0})</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Показать строки</value>
   </data>

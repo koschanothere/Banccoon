@@ -20,17 +20,26 @@ namespace Banccoon.App.ViewModels;
 // newer suggestion fills in a row the user hasn't touched (ApplySuggestions) - rows never jump
 // between blocks while being edited.
 //
-// Big statements are drawn a step at a time (QueueRows / DrawNext): every row is loaded, counted and
-// approvable from the start, but only DrawNext puts rows into the lists on screen - duplicates first,
-// then ready rows, then the ones needing a decision - so the page appears at once and keeps
-// responding while the rest are drawn.
+// Only a few rows are ever on screen (each is heavy: three pickers). Every row is loaded, counted
+// and approvable from the start, but the duplicates and needs-a-decision blocks share room for
+// RowsPerStep rows, duplicates first; as rows are approved or skipped the next ones slide in, and
+// "Show more" makes room for another RowsPerStep. The ready block shows RowsPerStep rows (or
+// groups) the same way. Nothing is drawn in the background - that froze the window every few
+// seconds on a big statement (2026-09-25).
 public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
 {
+    public const int RowsPerStep = 20;
+
     private readonly StatementImportReviewViewModel review;
 
-    // Loaded but not drawn yet, in drawing order. UI-thread only.
-    private readonly List<StatementImportRowViewModel> undrawnRows = [];
+    // Every loaded row this listens to, drawn or not. UI-thread only.
+    private readonly HashSet<StatementImportRowViewModel> trackedRows = [];
 
+    // Every ready group in name order; ReadyGroups shows the first readyShownLimit of them.
+    private readonly List<StatementImportRowGroupViewModel> allGroups = [];
+
+    private int shownLimit = RowsPerStep;
+    private int readyShownLimit = RowsPerStep;
     private bool isReadyExpanded;
     private bool isGroupedByName = true;
 
@@ -46,6 +55,16 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         ToggleReadyExpandedCommand = new RelayCommand(() => IsReadyExpanded = !IsReadyExpanded);
         ApproveAllCategorisedCommand = new RelayCommand(() => _ = ApproveReadyRowsAsync(review.Rows.ToList()));
         SkipAllDuplicatesCommand = new RelayCommand(() => _ = SkipAllDuplicatesAsync());
+        ShowMoreCommand = new RelayCommand(() =>
+        {
+            shownLimit += RowsPerStep;
+            SyncShownRows();
+        });
+        ShowMoreReadyCommand = new RelayCommand(() =>
+        {
+            readyShownLimit += RowsPerStep;
+            SyncShownRows();
+        });
     }
 
     public ObservableCollection<StatementImportRowViewModel> DuplicateRows { get; }
@@ -69,6 +88,18 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     public string AttentionHeaderText => string.Format(Translator.Get("StatementImport_AttentionHeaderFormat"), CountIn(StatementImportRowSection.Attention));
 
     public string ReadyHeaderText => string.Format(Translator.Get("StatementImport_ReadyHeaderFormat"), CountIn(StatementImportRowSection.Ready));
+
+    public bool HasHiddenDuplicates => HiddenDuplicates > 0;
+
+    public string ShowMoreDuplicatesText => ShowMoreText(HiddenDuplicates);
+
+    public bool HasHiddenAttention => HiddenAttention > 0;
+
+    public string ShowMoreAttentionText => ShowMoreText(HiddenAttention);
+
+    public bool HasHiddenReady => IsReadyExpanded && HiddenReady > 0;
+
+    public string ShowMoreReadyText => ShowMoreText(HiddenReady);
 
     public bool IsReadyExpanded
     {
@@ -113,65 +144,70 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
 
     public ICommand SkipAllDuplicatesCommand { get; }
 
+    public ICommand ShowMoreCommand { get; }
+
+    public ICommand ShowMoreReadyCommand { get; }
+
+    private int HiddenDuplicates => CountIn(StatementImportRowSection.Duplicate) - DuplicateRows.Count;
+
+    private int HiddenAttention => CountIn(StatementImportRowSection.Attention) - AttentionRows.Count;
+
+    private int HiddenReady => IsGroupedByName
+        ? allGroups.Count - ReadyGroups.Count
+        : CountIn(StatementImportRowSection.Ready) - ReadyRows.Count;
+
     // Every method below is UI-thread only - called by the parent from inside its own
     // RunOnMainThreadAsync blocks.
 
-    // A freshly loaded statement's rows, to be drawn by DrawNext.
-    public void QueueRows(IEnumerable<StatementImportRowViewModel> rows)
+    // A freshly loaded statement: puts the first rows on screen.
+    public void OnRowsLoaded(IEnumerable<StatementImportRowViewModel> rows)
     {
+        shownLimit = RowsPerStep;
+        readyShownLimit = RowsPerStep;
         foreach (var row in rows)
         {
-            row.PropertyChanged += OnRowPropertyChanged;
-            undrawnRows.Add(row);
+            Track(row);
         }
 
-        var ordered = undrawnRows.OrderBy(row => DrawingPriority(row.Section)).ThenBy(row => row.Date).ToList();
-        undrawnRows.Clear();
-        undrawnRows.AddRange(ordered);
-        RaiseAll();
+        SyncShownRows();
     }
 
-    // Draws up to `count` more queued rows, each into its current block. Returns whether any are
-    // still waiting.
-    public bool DrawNext(int count)
-    {
-        var batch = undrawnRows.Take(count).ToList();
-        undrawnRows.RemoveRange(0, batch.Count);
-        foreach (var row in batch)
-        {
-            Draw(row);
-        }
-
-        return undrawnRows.Count > 0;
-    }
-
-    // A row added on its own (Undo putting one back) is drawn straight away.
+    // A row put back by Undo. Room is made for it, so nothing the user was looking at disappears.
     public void OnRowAdded(StatementImportRowViewModel row)
     {
-        row.PropertyChanged += OnRowPropertyChanged;
-        Draw(row);
-        RaiseAll();
-    }
-
-    public void OnRowRemoved(StatementImportRowViewModel row)
-    {
-        row.PropertyChanged -= OnRowPropertyChanged;
-        if (!undrawnRows.Remove(row))
+        if (row.Section != StatementImportRowSection.Ready)
         {
-            Undraw(row, row.Section);
+            shownLimit++;
         }
 
-        RaiseAll();
+        Track(row);
+        SyncShownRows();
+    }
+
+    // An approved or skipped row: the next hidden row (if any) takes its place.
+    public void OnRowRemoved(StatementImportRowViewModel row)
+    {
+        if (trackedRows.Remove(row))
+        {
+            row.PropertyChanged -= OnRowPropertyChanged;
+            if (row.Section == StatementImportRowSection.Ready)
+            {
+                RemoveFromGroup(row);
+            }
+        }
+
+        SyncShownRows();
     }
 
     public void Clear()
     {
-        foreach (var row in DuplicateRows.Concat(AttentionRows).Concat(ReadyRows).Concat(undrawnRows))
+        foreach (var row in trackedRows)
         {
             row.PropertyChanged -= OnRowPropertyChanged;
         }
 
-        undrawnRows.Clear();
+        trackedRows.Clear();
+        allGroups.Clear();
         DuplicateRows.Clear();
         AttentionRows.Clear();
         ReadyRows.Clear();
@@ -199,24 +235,27 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
             var otherAccount = suggestion.DestinationAccountId is { } otherAccountId
                 ? review.OtherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
                 : null;
-            var previousSection = row.Section;
+            var wasReady = row.Section == StatementImportRowSection.Ready;
             var previousGroup = StatementImportRowGroupKey.For(row);
-            var sectionChanged = row.ApplySuggestion(suggestion.Type, category, otherAccount);
-            var regroup = row.Section == StatementImportRowSection.Ready && StatementImportRowGroupKey.For(row) != previousGroup;
+            row.ApplySuggestion(suggestion.Type, category, otherAccount);
+            var isReady = row.Section == StatementImportRowSection.Ready;
 
-            // Not-yet-drawn rows need nothing more: DrawNext uses the block a row is in by then.
-            if ((sectionChanged || regroup) && !undrawnRows.Contains(row))
+            if (wasReady && (!isReady || StatementImportRowGroupKey.For(row) != previousGroup))
             {
-                Undraw(row, previousSection);
-                Draw(row);
+                RemoveFromGroup(row);
+            }
+
+            if (isReady && (!wasReady || StatementImportRowGroupKey.For(row) != previousGroup))
+            {
+                AddToGroup(row);
             }
         }
 
-        RaiseAll();
+        SyncShownRows();
     }
 
     // Approves every row in `candidates` that's ready as it stands - "Approve all categorised"
-    // (every row) and a group's own "Approve all" (that group's rows).
+    // (every row) and a group's "Approve all" (that group's rows).
     public async Task ApproveReadyRowsAsync(IReadOnlyList<StatementImportRowViewModel> candidates)
     {
         IReadOnlyList<StatementImportRowViewModel> targets = [];
@@ -242,54 +281,90 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         }
     }
 
-    private static int DrawingPriority(StatementImportRowSection section) => section switch
+    private async Task ApproveGroupAsync(StatementImportRowGroupViewModel group)
     {
-        StatementImportRowSection.Duplicate => 0,
-        StatementImportRowSection.Ready => 1,
-        _ => 2
-    };
+        var creatingCategory = false;
+        var hasName = false;
+        await RunOnMainThreadAsync(() =>
+        {
+            creatingCategory = group.IsCreatingNewCategory;
+            hasName = !string.IsNullOrWhiteSpace(group.NewCategoryName);
+        });
 
-    private void Draw(StatementImportRowViewModel row)
+        if (creatingCategory && !hasName)
+        {
+            await review.SetStatusAsync(Translator.Get("StatementImport_NameNewCategoryFirst"));
+            return;
+        }
+
+        if (creatingCategory)
+        {
+            await review.Categories.CreateForGroupAsync(group);
+        }
+
+        IReadOnlyList<StatementImportRowViewModel> rows = [];
+        await RunOnMainThreadAsync(() => rows = group.Rows.ToList());
+        await ApproveReadyRowsAsync(rows);
+    }
+
+    // Which rows each block should show right now: duplicates, then rows needing a decision, up to
+    // shownLimit between them; the first readyShownLimit ready rows (flat) and groups (grouped).
+    private void SyncShownRows()
     {
-        InsertByDate(SectionFor(row.Section), row);
+        var ordered = review.Rows
+            .Where(row => row.Section != StatementImportRowSection.Ready && trackedRows.Contains(row))
+            .OrderBy(row => row.Section == StatementImportRowSection.Duplicate ? 0 : 1)
+            .ThenBy(row => row.Date)
+            .Take(shownLimit)
+            .ToList();
+        CollectionSync.Apply(DuplicateRows, ordered.Where(row => row.Section == StatementImportRowSection.Duplicate).ToList());
+        CollectionSync.Apply(AttentionRows, ordered.Where(row => row.Section == StatementImportRowSection.Attention).ToList());
+        CollectionSync.Apply(ReadyRows, review.Rows
+            .Where(row => row.Section == StatementImportRowSection.Ready && trackedRows.Contains(row))
+            .OrderBy(row => row.Date)
+            .Take(readyShownLimit)
+            .ToList());
+        CollectionSync.Apply(ReadyGroups, allGroups.Take(readyShownLimit).ToList());
+        RaiseAll();
+    }
+
+    private void Track(StatementImportRowViewModel row)
+    {
+        if (!trackedRows.Add(row))
+        {
+            return;
+        }
+
+        row.PropertyChanged += OnRowPropertyChanged;
         if (row.Section == StatementImportRowSection.Ready)
         {
             AddToGroup(row);
         }
     }
 
-    private void Undraw(StatementImportRowViewModel row, StatementImportRowSection section)
-    {
-        SectionFor(section).Remove(row);
-        if (section == StatementImportRowSection.Ready)
-        {
-            RemoveFromGroup(row);
-        }
-    }
-
     private void AddToGroup(StatementImportRowViewModel row)
     {
         var key = StatementImportRowGroupKey.For(row);
-        var group = ReadyGroups.FirstOrDefault(candidate => candidate.Key == key);
+        var group = allGroups.FirstOrDefault(candidate => candidate.Key == key);
         if (group is not null)
         {
             group.Add(row);
             return;
         }
 
-        group = new StatementImportRowGroupViewModel(key, row, review.Currency, ApproveReadyRowsAsync);
+        group = new StatementImportRowGroupViewModel(key, row, review.Currency, review.CategoryOptions, ApproveGroupAsync, review.Categories.CreateForGroupAsync);
         var index = 0;
-        while (index < ReadyGroups.Count && string.Compare(ReadyGroups[index].Name, group.Name, StringComparison.CurrentCultureIgnoreCase) <= 0)
+        while (index < allGroups.Count && string.Compare(allGroups[index].Name, group.Name, StringComparison.CurrentCultureIgnoreCase) <= 0)
         {
             index++;
         }
 
-        ReadyGroups.Insert(index, group);
+        allGroups.Insert(index, group);
     }
 
     private void RemoveFromGroup(StatementImportRowViewModel row)
     {
-        var group = ReadyGroups.FirstOrDefault(candidate => candidate.Rows.Contains(row));
+        var group = allGroups.FirstOrDefault(candidate => candidate.Rows.Contains(row));
         if (group is null)
         {
             return;
@@ -298,29 +373,13 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         group.Remove(row);
         if (group.Count == 0)
         {
-            ReadyGroups.Remove(group);
+            allGroups.Remove(group);
         }
     }
-
-    private static void InsertByDate(ObservableCollection<StatementImportRowViewModel> target, StatementImportRowViewModel row)
-    {
-        var index = 0;
-        while (index < target.Count && target[index].Date <= row.Date)
-        {
-            index++;
-        }
-
-        target.Insert(index, row);
-    }
-
-    private ObservableCollection<StatementImportRowViewModel> SectionFor(StatementImportRowSection section) => section switch
-    {
-        StatementImportRowSection.Duplicate => DuplicateRows,
-        StatementImportRowSection.Ready => ReadyRows,
-        _ => AttentionRows
-    };
 
     private int CountIn(StatementImportRowSection section) => review.Rows.Count(row => row.Section == section);
+
+    private static string ShowMoreText(int hidden) => string.Format(Translator.Get("StatementImport_ShowMoreFormat"), hidden);
 
     private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -370,6 +429,8 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsReadyListFlat));
         OnPropertyChanged(nameof(IsReadyListGrouped));
+        OnPropertyChanged(nameof(HasHiddenReady));
+        OnPropertyChanged(nameof(ShowMoreReadyText));
     }
 
     private void RaiseAll()
@@ -380,6 +441,11 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
         OnPropertyChanged(nameof(DuplicatesHeaderText));
         OnPropertyChanged(nameof(AttentionHeaderText));
         OnPropertyChanged(nameof(ReadyHeaderText));
+        OnPropertyChanged(nameof(HasHiddenDuplicates));
+        OnPropertyChanged(nameof(ShowMoreDuplicatesText));
+        OnPropertyChanged(nameof(HasHiddenAttention));
+        OnPropertyChanged(nameof(ShowMoreAttentionText));
+        RaiseReadyListVisibility();
         RaiseCategorisedCount();
     }
 

@@ -11,11 +11,6 @@ namespace Banccoon.App.ViewModels;
 
 public sealed class StatementImportReviewViewModel : ViewModelBase
 {
-    // A big statement is drawn this many rows at a time, with a short pause between steps so the
-    // window keeps up with clicks and scrolling (see StatementImportReviewSectionsViewModel.DrawNext).
-    private const int RowsPerDrawStep = 20;
-    private static readonly TimeSpan DrawPause = TimeSpan.FromMilliseconds(40);
-
     private readonly IStatementImportService statementImportService;
     private readonly IStatementImportRepository statementImportRepository;
     private readonly ICategoryRepository categoryRepository;
@@ -33,7 +28,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     private string statusText = string.Empty;
     private int totalRowCount;
     private bool isCancelled;
-    private CancellationTokenSource? drawing;
 
     // The rows the most recent approve/skip action reviewed (one row, or every row of a bulk
     // action), for Undo. Collected while an action runs, published when it finishes.
@@ -240,8 +234,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             .OrderBy(row => row.Date)
             .ToList();
 
-        var moreToDraw = false;
-        CancellationTokenSource? newDrawing = null;
         await RunOnMainThreadAsync(() =>
         {
             ClearRows();
@@ -257,47 +249,11 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
                 Bulk.OnRowAdded(rowViewModel);
             }
 
-            Sections.QueueRows(rowViewModels);
-            moreToDraw = Sections.DrawNext(RowsPerDrawStep);
+            Sections.OnRowsLoaded(rowViewModels);
             OnRowsChanged();
-            if (moreToDraw)
-            {
-                newDrawing = new CancellationTokenSource();
-                drawing = newDrawing;
-            }
         });
 
-        DiagnosticLog.Write($"Statement import timing: first {Math.Min(pendingRows.Count, RowsPerDrawStep)} of {pendingRows.Count} rows on screen after {stopwatch.ElapsedMilliseconds} ms");
-        if (newDrawing is not null)
-        {
-            _ = DrawRemainingRowsAsync(pendingRows.Count, stopwatch, newDrawing.Token);
-        }
-    }
-
-    // Fire-and-forget from LoadRowsAsync; stopped by ClearRows (a new load, or Cancel import).
-    private async Task DrawRemainingRowsAsync(int rowCount, Stopwatch stopwatch, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var moreToDraw = true;
-            while (moreToDraw)
-            {
-                await Task.Delay(DrawPause, cancellationToken);
-                await RunOnMainThreadAsync(() => moreToDraw = !cancellationToken.IsCancellationRequested && Sections.DrawNext(RowsPerDrawStep));
-            }
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                DiagnosticLog.Write($"Statement import timing: all {rowCount} rows on screen after {stopwatch.ElapsedMilliseconds} ms");
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            DiagnosticLog.Write($"Statement import review: drawing rows failed: {ex}");
-        }
+        DiagnosticLog.Write($"Statement import timing: first rows of {pendingRows.Count} on screen after {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private async Task ApproveRowAsync(StatementImportRowViewModel row)
@@ -442,8 +398,6 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     private void ClearRows()
     {
-        drawing?.Cancel();
-        drawing = null;
         foreach (var row in Rows)
         {
             Bulk.OnRowRemoved(row);

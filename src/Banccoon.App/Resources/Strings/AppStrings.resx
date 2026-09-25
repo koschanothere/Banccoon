@@ -623,6 +623,9 @@
   <data name="StatementImport_ApproveGroupFormat" xml:space="preserve">
     <value>Approve all ({0})</value>
   </data>
+  <data name="StatementImport_ShowMoreFormat" xml:space="preserve">
+    <value>Show more ({0} not shown yet)</value>
+  </data>
   <data name="StatementImport_ShowRowsButton" xml:space="preserve">
     <value>Show rows</value>
   </data>

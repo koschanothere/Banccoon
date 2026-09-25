@@ -1,18 +1,20 @@
+using Banccoon.App.Localization;
 using Banccoon.App.ViewModels;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
 using Banccoon.Tests.Infrastructure;
 using Xunit;
 
-// 2026-09-25: big statements are drawn 20 rows at a time (duplicates and categorised rows first),
-// and the ready block groups rows by sender name.
+// 2026-09-25: only 20 duplicate / needs-a-decision rows are on screen at once (duplicates first),
+// refilled as rows are dismissed - nothing is drawn in the background - and the ready block groups
+// rows by sender name, with a category picker and "Approve all" per group.
 public sealed class ImportDrawingAndGroupingTests
 {
     [Fact]
-    public async Task BigStatement_DrawsTwentyRowsAtOnce_DuplicatesAndReadyFirst_ThenTheRest()
+    public async Task BigStatement_ShowsTwentyRowsDuplicatesFirst_AndOnlyMoreAsRowsAreDismissed()
     {
         // 35 new (days 1-35), 10 from a learned café (days 36-45), 5 already recorded (days 46-50) -
-        // so drawing by date alone would show only new rows first.
+        // so showing by date alone would show only new rows.
         var rows = Enumerable.Range(1, 50).Select(day => day switch
         {
             <= 35 => Row(day, $"New shop {day}"),
@@ -31,15 +33,27 @@ public sealed class ImportDrawingAndGroupingTests
 
         Assert.Equal(50, fixture.Review.Rows.Count);
         Assert.Equal(5, sections.DuplicateRows.Count);
+        Assert.Equal(Enumerable.Range(1, 15).Select(DateOf), sections.AttentionRows.Select(r => r.Date));
         Assert.Equal(10, sections.ReadyRows.Count);
-        Assert.Equal(5, sections.AttentionRows.Count);
-        Assert.Equal(Enumerable.Range(1, 5).Select(DateOf), sections.AttentionRows.Select(r => r.Date));
-        // Headers and "approve all" count every row from the start, drawn or not.
-        Assert.Equal(string.Format(Banccoon.App.Localization.Translator.Get("StatementImport_AttentionHeaderFormat"), 35), sections.AttentionHeaderText);
+        // Headers and "approve all" count every row from the start, shown or not.
+        Assert.Equal(string.Format(Translator.Get("StatementImport_AttentionHeaderFormat"), 35), sections.AttentionHeaderText);
         Assert.Equal(10, sections.CategorisedCount);
+        Assert.True(sections.HasHiddenAttention);
+        Assert.Equal(string.Format(Translator.Get("StatementImport_ShowMoreFormat"), 20), sections.ShowMoreAttentionText);
 
-        await fixture.WaitForAsync(() => sections.AttentionRows.Count == 35);
+        // Nothing more appears on its own...
+        await Task.Delay(300);
+        Assert.Equal(15, sections.AttentionRows.Count);
+
+        // ...only as rows are dismissed: the next undecided row takes the skipped duplicate's place.
+        sections.DuplicateRows[0].SkipCommand.Execute(null);
+        await fixture.SettleAsync();
+        Assert.Equal(4, sections.DuplicateRows.Count);
+        Assert.Equal(Enumerable.Range(1, 16).Select(DateOf), sections.AttentionRows.Select(r => r.Date));
+
+        sections.ShowMoreCommand.Execute(null);
         Assert.Equal(Enumerable.Range(1, 35).Select(DateOf), sections.AttentionRows.Select(r => r.Date));
+        Assert.False(sections.HasHiddenAttention);
     }
 
     [Fact]
@@ -80,7 +94,7 @@ public sealed class ImportDrawingAndGroupingTests
         Assert.Empty(cafe.DisplayedRows);
         Assert.False(metro.IsMultiple);
         Assert.Single(metro.DisplayedRows);
-        Assert.Equal("Food", cafe.CategoryName);
+        Assert.Equal("Food", cafe.Category?.Name);
         Assert.Equal(Banccoon.App.Formatting.MoneyFormat.Format(-(11m + 13m + 15m), "RUB"), cafe.TotalText);
 
         cafe.ToggleExpandedCommand.Execute(null);
@@ -139,6 +153,118 @@ public sealed class ImportDrawingAndGroupingTests
         Assert.Equal([2, 3], shop.Rows.Select(r => r.Date.Day));
         Assert.Equal([2, 3], sections.ReadyRows.Select(r => r.Date.Day));
         Assert.Equal(4, Assert.Single(sections.AttentionRows).Date.Day);
+    }
+
+    [Fact]
+    public async Task GroupCategoryPicker_PutsTheCategoryOnEveryRow_AndApproveAllUsesIt()
+    {
+        await using var fixture = await ReviewFixture.CreateAsync(
+            [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Cafe")],
+            seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
+        var review = fixture.Review;
+        var fun = review.CategoryOptions.First(o => o.Name == "Fun");
+        var cafe = Assert.Single(review.Sections.ReadyGroups);
+
+        cafe.Category = fun;
+
+        Assert.All(cafe.Rows, row => Assert.Same(fun, row.Category));
+        cafe.ApproveCommand.Execute(null);
+        await fixture.SettleAsync();
+        Assert.All(await fixture.Store.Transactions.GetAllAsync(), t => Assert.Equal(fun.Id, t.CategoryId));
+        Assert.Equal(3, (await fixture.Store.Transactions.GetAllAsync()).Count);
+    }
+
+    [Fact]
+    public async Task GroupNewCategory_IsCreatedOnce_AndGoesOnTheWholeGroup()
+    {
+        await using var fixture = await ReviewFixture.CreateAsync(
+            [Row(1, "Cafe"), Row(2, "Cafe")],
+            seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
+        var review = fixture.Review;
+        var cafe = Assert.Single(review.Sections.ReadyGroups);
+        cafe.Category = review.CategoryOptions.Single(o => o.IsCreateNew);
+        cafe.NewCategoryName = "Coffee";
+        Assert.All(cafe.Rows, row => Assert.Equal("Food", row.Category?.Name));
+
+        cafe.CreateCategoryCommand.Execute(null);
+        await fixture.WaitForAsync(() => cafe.Category?.Name == "Coffee");
+
+        Assert.False(cafe.IsCreatingNewCategory);
+        Assert.All(cafe.Rows, row => Assert.Equal("Coffee", row.Category?.Name));
+        Assert.Single(await fixture.Store.Categories.GetAllAsync(), c => c.Name == "Coffee");
+    }
+
+    [Fact]
+    public async Task ExpandedGroup_ApproveAll_ApprovesEveryRowAndTheGroupGoes()
+    {
+        await using var fixture = await ReviewFixture.CreateAsync(
+            [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Cafe"), Row(4, "Metro")],
+            seed: async (store, account) =>
+            {
+                await LearnAsync(store, account, "Cafe", "Food");
+                await LearnAsync(store, account, "Metro", "Fun");
+            });
+        var sections = fixture.Review.Sections;
+        var cafe = sections.ReadyGroups.Single(g => g.Name == "Cafe");
+        cafe.ToggleExpandedCommand.Execute(null);
+        Assert.Equal(3, cafe.DisplayedRows.Count);
+
+        cafe.ApproveCommand.Execute(null);
+        await fixture.SettleAsync();
+
+        Assert.Equal(3, (await fixture.Store.Transactions.GetAllAsync()).Count);
+        Assert.Empty(cafe.DisplayedRows);
+        Assert.Equal(["Metro"], sections.ReadyGroups.Select(g => g.Name));
+        Assert.Equal(4, Assert.Single(fixture.Review.Rows).Date.Day);
+    }
+
+    [Fact]
+    public async Task CreatingACategory_ThatSortsBeforeAGroupsPick_LeavesTheGroupAndItsRowsAlone()
+    {
+        await using var fixture = await ReviewFixture.CreateAsync(
+            [Row(1, "Cafe"), Row(2, "Cafe"), Row(3, "Shop")],
+            seed: (store, account) => LearnAsync(store, account, "Cafe", "Food"));
+        var review = fixture.Review;
+        var fun = review.CategoryOptions.First(o => o.Name == "Fun");
+        var cafe = Assert.Single(review.Sections.ReadyGroups);
+        cafe.Category = fun;
+        _ = new GroupPickerSimulator(review.CategoryOptions, cafe);
+        var shop = review.Sections.AttentionRows.Single();
+        shop.Category = review.CategoryOptions.Single(o => o.IsCreateNew);
+        shop.NewCategoryName = "Drinks";
+
+        shop.CreateCategoryCommand.Execute(null);
+        await fixture.WaitForAsync(() => shop.Category?.Name == "Drinks");
+
+        Assert.Same(fun, cafe.Category);
+        Assert.All(cafe.Rows, row => Assert.Same(fun, row.Category));
+    }
+
+    // Same stand-in as ImportCategoriesAndLearningTests' row picker, for a group's picker: MAUI 10's
+    // Picker, on an insert at or before its selected index, re-reads the item at the OLD index and
+    // writes it back through the two-way SelectedItem binding.
+    private sealed class GroupPickerSimulator
+    {
+        private int selectedIndex;
+
+        public GroupPickerSimulator(System.Collections.ObjectModel.ObservableCollection<CategoryOptionViewModel> options, StatementImportRowGroupViewModel group)
+        {
+            selectedIndex = group.Category is null ? -1 : options.IndexOf(group.Category);
+            group.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(StatementImportRowGroupViewModel.Category))
+                {
+                    selectedIndex = group.Category is null ? -1 : options.IndexOf(group.Category);
+                }
+            };
+            options.CollectionChanged += (_, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewStartingIndex <= selectedIndex)
+                {
+                    group.Category = options[selectedIndex];
+                }
+            };
+        }
     }
 
     // Day 1 is 1 June; days past 30 run on into July.

@@ -86,6 +86,42 @@ public sealed class StatementImportCategoriesViewModel : ViewModelBase
         });
     }
 
+    // A group's Add button, or Enter in its new-category name box: the new category goes on every
+    // row of the group.
+    public Task CreateForGroupAsync(StatementImportRowGroupViewModel group)
+    {
+        return review.RunExclusiveAsync(async () =>
+        {
+            CategoryOptionViewModel? selected = null;
+            var name = string.Empty;
+            await RunOnMainThreadAsync(() =>
+            {
+                selected = group.Category;
+                name = group.NewCategoryName;
+            });
+
+            if (selected?.IsCreateNew != true)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                await review.SetStatusAsync(Translator.Get("StatementImport_NameNewCategoryFirst"));
+                return;
+            }
+
+            var categoryId = await ResolveAsync(selected, name);
+            await RunOnMainThreadAsync(() =>
+            {
+                if (review.CategoryOptions.FirstOrDefault(option => !option.IsCreateNew && option.Id == categoryId) is { } option)
+                {
+                    group.AdoptCategory(option);
+                }
+            });
+        });
+    }
+
     // Offers every category that exists but isn't in the list yet.
     public async Task SyncAsync()
     {
@@ -99,8 +135,8 @@ public sealed class StatementImportCategoriesViewModel : ViewModelBase
         });
     }
 
-    // UI-thread only. Inserts in name order, then puts every row's (and the bulk bar's) selection
-    // back. MAUI's Picker handles an insert at or before its selected item by re-reading the item
+    // UI-thread only. Inserts in name order, then puts every row's (and the bulk bar's and each
+    // ready group's) selection back. MAUI's Picker handles an insert at or before its selected item by re-reading the item
     // at its OLD index (Picker.AddItems calls UpdateSelectedItem(SelectedIndex)) and writes that back
     // through the two-way SelectedItem binding - so without this, a row showing "+ New category"
     // silently became the category just created and lost its name box, and any row whose category
@@ -113,12 +149,22 @@ public sealed class StatementImportCategoriesViewModel : ViewModelBase
             .Select(row => (Row: row, Category: row.Category))
             .ToList();
         var bulkSelection = review.Bulk.BulkCategory;
+        var groupSelections = review.Sections.ReadyGroups
+            .Select(group => (Group: group, Category: group.Category))
+            .ToList();
 
         CategoryOptionsHelper.InsertSorted(review.CategoryOptions, option);
 
+        // A group picker knocked off its category by the insert also pushed that wrong category onto
+        // its rows - putting the rows back after the insert has run its course undoes that too.
         foreach (var (row, category) in rowSelections)
         {
             row.Category = category;
+        }
+
+        foreach (var (group, category) in groupSelections)
+        {
+            group.RestoreCategory(category);
         }
 
         review.Bulk.BulkCategory = bulkSelection;
