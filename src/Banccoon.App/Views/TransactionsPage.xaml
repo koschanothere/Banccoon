@@ -21,8 +21,10 @@
                     <Button Text="{loc:Translate Transactions_FilterButton}" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Transactions_CheckInButton}" Clicked="OnCheckInClicked" Style="{StaticResource QuietButton}" />
                     <Button Text="{loc:Translate Common_Select}" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource PrimaryButton}" />
+                    <!-- Importing a statement is the main way transactions get in, so Import is the
+                         primary action and adding one by hand is the quiet one. -->
+                    <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource QuietButton}" />
+                    <Button x:Name="ImportButton" Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>
 
@@ -243,7 +245,10 @@
     </Border>
     </Grid>
 
+    <!-- Hangs under "+ Add", which sits just left of the Import button: the right margin is the
+         page padding plus Import's width (set in TransactionsPage.OnImportButtonSizeChanged). -->
     <Border
+        x:Name="AddMenu"
         Style="{StaticResource CardBorder}"
         IsVisible="{Binding AddMenuOpen}"
         HorizontalOptions="End"

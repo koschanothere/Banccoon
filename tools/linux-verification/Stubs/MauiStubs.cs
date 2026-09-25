@@ -1,5 +1,9 @@
 // Minimal signatures only - enough for the real view-model code to type-check.
-namespace Microsoft.Maui { public enum StubPlaceholder { } }
+namespace Microsoft.Maui
+{
+    public enum StubPlaceholder { }
+    public readonly struct Thickness { public Thickness(double left, double top, double right, double bottom) { } }
+}
 namespace Microsoft.Maui.ApplicationModel
 {
     public static class MainThread
@@ -30,7 +34,10 @@ namespace Microsoft.Maui.Controls
         public AppTheme RequestedTheme { get; set; }
         public IDictionary<string, object> Resources { get; } = new Dictionary<string, object>();
     }
-    public class VisualElement { public object? BindingContext { get; set; } }
+    public class VisualElement { public object? BindingContext { get; set; } public double Width { get; } public event EventHandler? SizeChanged { add { } remove { } } }
+    public class View : VisualElement { public Thickness Margin { get; set; } }
+    public class Button : View { }
+    public class Border : View { }
     public class Page : VisualElement { protected virtual void OnAppearing() { } protected virtual void OnDisappearing() { } }
     public class ContentPage : Page { }
     public interface IQueryAttributable { void ApplyQueryAttributes(IDictionary<string, object> query); }
