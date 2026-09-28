@@ -41,7 +41,14 @@ namespace Microsoft.Maui.Controls
     public class View : VisualElement { public Thickness Margin { get; set; } }
     public class Button : View { }
     public class Border : View { }
-    public class Page : VisualElement { protected virtual void OnAppearing() { } protected virtual void OnDisappearing() { } }
+    public class Page : VisualElement { protected virtual void OnAppearing() { } protected virtual void OnDisappearing() { } public INavigation Navigation { get; } = null!; }
+
+    // Real MAUI: Microsoft.Maui.Controls.INavigation (NavigableElement.Navigation) - only the modal members the App uses.
+    public interface INavigation
+    {
+        Task PushModalAsync(Page page, bool animated);
+        Task<Page> PopModalAsync(bool animated);
+    }
     public class ContentPage : Page { }
     public interface IQueryAttributable { void ApplyQueryAttributes(IDictionary<string, object> query); }
     public class ShellNavigationState { public ShellNavigationState(string s) { } public static implicit operator ShellNavigationState(string s) => new(s); }

@@ -3,6 +3,7 @@ using Banccoon.App.Formatting;
 using Banccoon.App.ViewModels;
 using Banccoon.App.Views;
 using Banccoon.Core.Repositories;
+using Banccoon.Core.Setup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Banccoon.App;
@@ -54,6 +55,33 @@ public partial class AppShell : Shell
             // The app lock is a privacy speedbump, never a reason the app fails to open at all -
             // if anything here goes wrong, open unlocked rather than leaving the user stranded.
             DiagnosticLog.Write($"CheckAppLockOnStartupAsync failed, opening unlocked: {ex}");
+        }
+
+        await CheckFirstRunSetupAsync();
+    }
+
+    // A brand-new install (FirstRunSetupService.IsSetupNeededAsync) gets the setup screen over the
+    // shell. Fails open like the app lock: a problem here is logged, never keeps the app from opening.
+    private async Task CheckFirstRunSetupAsync()
+    {
+        try
+        {
+            var setupService = IPlatformApplication.Current!.Services.GetRequiredService<IFirstRunSetupService>();
+            if (!await setupService.IsSetupNeededAsync())
+            {
+                return;
+            }
+
+            // The await above can resume off the UI thread (see ViewModelBase.RunOnMainThreadAsync).
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                var setupPage = IPlatformApplication.Current!.Services.GetRequiredService<FirstRunSetupPage>();
+                await Navigation.PushModalAsync(setupPage, animated: false);
+            });
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write($"CheckFirstRunSetupAsync failed, opening without setup: {ex}");
         }
     }
 

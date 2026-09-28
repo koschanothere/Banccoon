@@ -5,6 +5,7 @@ using Banccoon.App.Views;
 using Banccoon.Core.Abstractions;
 using Banccoon.Core.Analytics;
 using Banccoon.Core.Categories;
+using Banccoon.Core.Setup;
 using Banccoon.Core.CreditCards;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
@@ -61,6 +62,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ITransactionBalanceHistoryService, TransactionBalanceHistoryService>();
         builder.Services.AddSingleton<IScheduledOccurrenceResolutionService, ScheduledOccurrenceResolutionService>();
         builder.Services.AddSingleton<ICategoryManagementService, CategoryManagementService>();
+        builder.Services.AddSingleton<IFirstRunSetupService, FirstRunSetupService>();
         builder.Services.AddSingleton<ICategorySuggestionService, CategorySuggestionService>();
         builder.Services.AddSingleton<IStatementParser, SberbankDebitCardStatementParser>();
         builder.Services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
@@ -120,6 +122,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StatementImportViewModel>();
         builder.Services.AddTransient<ReconciliationViewModel>();
         builder.Services.AddTransient<AppLockViewModel>();
+        builder.Services.AddTransient<FirstRunSetupViewModel>();
 
         // Singleton, not transient: each of these is one FlyoutItem's ShellContent
         // (ContentTemplate="{DataTemplate views:XPage}"), and Shell re-invokes that DataTemplate -
@@ -151,6 +154,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StatementImportPage>();
         builder.Services.AddTransient<ReconciliationPage>();
         builder.Services.AddTransient<AppLockPage>();
+        builder.Services.AddTransient<FirstRunSetupPage>();
 
 #if WINDOWS
         ConfigureWindowsInputBorders();

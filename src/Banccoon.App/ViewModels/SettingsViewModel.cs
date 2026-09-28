@@ -88,6 +88,14 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public DataManagementViewModel Data { get; }
 
+    // DEV ONLY: shows the "Open first-run setup (dev)" button. Debug builds only, so a Release
+    // build never shows it; remove it (and the button) before the real release.
+#if DEBUG
+    public bool IsDevToolsVisible => true;
+#else
+    public bool IsDevToolsVisible => false;
+#endif
+
     public GeneralPreferencesViewModel General { get; }
 
     public PinSettingsViewModel Pin { get; }
