@@ -29,19 +29,32 @@ public sealed class StatementParserRegistryTests
         Assert.Equal("Fake parser", Assert.Single(registry.AvailableParsers).Name);
     }
 
+    [Fact]
+    public void FindParser_WithPreferredParsers_TriesThemFirst_ThenDetectsAcrossTheRest()
+    {
+        var first = new FakeStatementParser(".pdf", "first");
+        var second = new FakeStatementParser(".pdf", "second");
+        var csvOnly = new FakeStatementParser(".csv", "csv");
+        var registry = new StatementParserRegistry([first, second, csvOnly]);
+
+        Assert.Same(first, registry.FindParser(new StatementParseRequest("s.pdf", Guid.NewGuid()), []));
+        Assert.Same(second, registry.FindParser(new StatementParseRequest("s.pdf", Guid.NewGuid()), ["second"]));
+        // A preferred parser that can't read the file doesn't stop detection.
+        Assert.Same(first, registry.FindParser(new StatementParseRequest("s.pdf", Guid.NewGuid()), ["csv", "unknown"]));
+        Assert.Same(csvOnly, registry.FindParser(new StatementParseRequest("s.csv", Guid.NewGuid()), ["second"]));
+    }
+
     private sealed class FakeStatementParser : IStatementParser
     {
         private readonly string extension;
 
-        public FakeStatementParser(string extension)
+        public FakeStatementParser(string extension, string id = "fake")
         {
             this.extension = extension;
+            Descriptor = new StatementParserDescriptor(id, "Fake parser", [".fake"]);
         }
 
-        public StatementParserDescriptor Descriptor { get; } = new(
-            "fake",
-            "Fake parser",
-            [".fake"]);
+        public StatementParserDescriptor Descriptor { get; }
 
         public bool CanParse(StatementParseRequest request)
         {

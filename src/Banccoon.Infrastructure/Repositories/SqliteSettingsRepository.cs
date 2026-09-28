@@ -55,7 +55,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupRetentionCount,
                 LastAutoBackupAt,
                 DashboardPrimaryMetric,
-                LegacySavingsGoalsConverted
+                LegacySavingsGoalsConverted,
+                FirstRunCompleted,
+                PreferredParserIds,
+                FallbackCategoryId
             FROM Settings
             WHERE Id = 1;
             """;
@@ -93,7 +96,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             SqliteData.ReadInt32(reader, "AutoBackupRetentionCount"),
             ReadNullableDateTimeOffset(reader, "LastAutoBackupAt"),
             Enum.Parse<DashboardPrimaryMetric>(SqliteData.ReadString(reader, "DashboardPrimaryMetric")),
-            SqliteData.ReadBoolean(reader, "LegacySavingsGoalsConverted"));
+            SqliteData.ReadBoolean(reader, "LegacySavingsGoalsConverted"),
+            SqliteData.ReadBoolean(reader, "FirstRunCompleted"),
+            SqliteData.ReadString(reader, "PreferredParserIds"),
+            SqliteData.ReadNullableGuid(reader, "FallbackCategoryId"));
     }
 
     private static DateTimeOffset? ReadNullableDateTimeOffset(System.Data.Common.DbDataReader reader, string name)
@@ -137,7 +143,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupRetentionCount,
                 LastAutoBackupAt,
                 DashboardPrimaryMetric,
-                LegacySavingsGoalsConverted)
+                LegacySavingsGoalsConverted,
+                FirstRunCompleted,
+                PreferredParserIds,
+                FallbackCategoryId)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -166,7 +175,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @AutoBackupRetentionCount,
                 @LastAutoBackupAt,
                 @DashboardPrimaryMetric,
-                @LegacySavingsGoalsConverted)
+                @LegacySavingsGoalsConverted,
+                @FirstRunCompleted,
+                @PreferredParserIds,
+                @FallbackCategoryId)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -194,7 +206,10 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 AutoBackupRetentionCount = excluded.AutoBackupRetentionCount,
                 LastAutoBackupAt = excluded.LastAutoBackupAt,
                 DashboardPrimaryMetric = excluded.DashboardPrimaryMetric,
-                LegacySavingsGoalsConverted = excluded.LegacySavingsGoalsConverted;
+                LegacySavingsGoalsConverted = excluded.LegacySavingsGoalsConverted,
+                FirstRunCompleted = excluded.FirstRunCompleted,
+                PreferredParserIds = excluded.PreferredParserIds,
+                FallbackCategoryId = excluded.FallbackCategoryId;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -223,6 +238,9 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@LastAutoBackupAt", settings.LastAutoBackupAt is { } lastAutoBackupAt ? lastAutoBackupAt.ToString("O") : (object)DBNull.Value);
         AddParameter(command, "@DashboardPrimaryMetric", settings.DashboardPrimaryMetric.ToString());
         AddParameter(command, "@LegacySavingsGoalsConverted", settings.LegacySavingsGoalsConverted ? 1 : 0);
+        AddParameter(command, "@FirstRunCompleted", settings.FirstRunCompleted ? 1 : 0);
+        AddParameter(command, "@PreferredParserIds", settings.PreferredParserIds);
+        AddParameter(command, "@FallbackCategoryId", SqliteData.ToDbValue(settings.FallbackCategoryId));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
