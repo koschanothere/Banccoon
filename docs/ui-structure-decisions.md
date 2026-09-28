@@ -102,7 +102,7 @@ Not part of the active build plan; revisit later as a quality-of-life addition, 
 
 ## First-Run / Blank-State Setup
 
-- Full-screen guided overlay, not skippable, offering exactly 3 paths: **Import a bank statement / Manual setup / Restore a backup**. Each routes into its respective existing workflow.
+- Full-screen guided overlay, not skippable, shown only on a brand-new (empty) install. **Five steps (decided 2026-09-28)**: (1) language, English/Русский, with a "restore a backup instead" link; (2) basic settings: currency, theme (default System), automatic backups, "free to spend" window, with dates always day/month/year; (3) the default categories as a two-level ticklist, all ticked, where a subcategory ticked without its main category must be put under another main category, a new one, or kept as a main category; (4) banks, every available parser listed automatically, multiple choice, or skip to auto-detect; (5) the original three ways to start: **Import a bank statement / Add an account manually / Start empty**. Nothing is saved before step 5. A Debug-only button in Settings reopens it during development.
 
 ## Design Language (from reference walkthrough)
 
