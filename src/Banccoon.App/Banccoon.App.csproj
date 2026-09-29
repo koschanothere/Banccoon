@@ -32,5 +32,7 @@
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\raccoon_main_icon.png" />
     <MauiImage Include="Resources\Images\*.png" />
+    <!-- Heroicons-Outline.ttf: built by tools/icon-font/build_heroicons_font.py, see Controls/IconButton.cs. -->
+    <MauiFont Include="Resources\Fonts\*" />
   </ItemGroup>
 </Project>

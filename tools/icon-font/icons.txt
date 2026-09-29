@@ -1,0 +1,55 @@
+# Heroicons (outline, 24px) bundled into Resources/Fonts/Heroicons-Outline.ttf.
+# One name per line, as in heroicons/24/outline/<name>.svg. Codepoints are assigned in this
+# file's order from U+E000, so APPEND new icons at the end - reordering would move every glyph
+# already referenced from XAML via Controls/Heroicons.cs (regenerated, but review the diff).
+plus
+minus
+x-mark
+check
+check-circle
+funnel
+clipboard-document-check
+arrow-down-tray
+arrow-up-tray
+pencil-square
+trash
+archive-box
+arrow-uturn-left
+arrow-uturn-right
+star
+credit-card
+list-bullet
+eye
+eye-slash
+arrow-up
+arrow-down
+arrow-left
+arrow-right
+chevron-left
+chevron-right
+chevron-up
+chevron-down
+clock
+forward
+link
+arrow-path
+arrow-path-rounded-square
+lock-closed
+lock-open
+document-text
+folder-open
+tag
+document-duplicate
+arrow-up-right
+arrow-down-left
+arrows-right-left
+scale
+banknotes
+calendar-days
+squares-2x2
+no-symbol
+arrow-top-right-on-square
+plus-circle
+minus-circle
+magnifying-glass
+check-badge

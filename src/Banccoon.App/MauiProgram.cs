@@ -42,7 +42,8 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
 
         builder
-            .UseMauiApp<App>();
+            .UseMauiApp<App>()
+            .ConfigureFonts(fonts => fonts.AddFont("Heroicons-Outline.ttf", Controls.Heroicons.FontFamily));
 
         builder.Services.AddSingleton<IDateProvider, SystemDateProvider>();
         builder.Services.AddSingleton<IRecurrenceValidationService, RecurrenceValidationService>();
