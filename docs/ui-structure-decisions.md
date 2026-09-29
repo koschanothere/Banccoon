@@ -1,6 +1,6 @@
 # UI Structure Decisions
 
-Decisions made in the UI planning walkthrough, before any visual/look design. This is the source of truth for information architecture and interaction patterns; it supersedes the structural parts of `.codex/development-phases.md` where they conflict. Implementation phasing still lives in that file.
+Decisions made in the UI planning walkthrough, before any visual/look design. This is the source of truth for information architecture and interaction patterns; it supersedes the structural parts of `docs/development-phases.md` where they conflict. Implementation phasing still lives in that file. Where the user later overrode a decision here during implementation, the entry below is marked **superseded** and points to where the newer decision is recorded.
 
 ## Top-Level Navigation
 
@@ -47,26 +47,26 @@ Already partially implemented in `Banccoon.Core.Forecasting.AvailableToSpendServ
 
 ## Accounts
 
-- **Flat list**, no type grouping, manually/drag orderable.
-- Clicking an account does **not** open a separate account-detail screen — it filters the Transactions screen to that account.
+- **Flat list**, no type grouping, manually orderable (built as Move up / Move down buttons on each row, not drag).
+- ~~Clicking an account filters the Transactions screen to that account.~~ **Superseded** (Phase 7 log in `docs/development-phases.md`): clicking a row opens a detail card with every field plus Edit, Archive/Unarchive, Set primary, Card details and "View transactions" (which opens Transactions filtered to that account).
 - Archiving: explicit "archive" action; archived accounts hidden from the main list by default, kept for history.
 - Styling: **one consistent style across account types**, small type indicator (icon/tag) only — no per-type card shapes.
 - Goal-type account row shows: name, current amount, progress bar, goal target amount.
 - Credit-card account: same base row style; utilization/min payment/payoff estimate live in a separate **card details overlay** opened from the account, not inline.
-- **Primary account**: one account can be flagged primary. New concept, not yet built (needs an `AppSettings.PrimaryAccountId` or an `Account.IsPrimary` flag). Used as the default account pre-selected in Expense/Income/Transfer overlays and as the quick-entry account fallback if/when that feature returns.
-- **Excluded from totals**: already built — `Account.IncludeInDashboardTotals` exists in Core (`src/Banccoon.Core/Models/Account.cs`). Just needs a UI toggle in account editing; no new Core work. Use case: a savings account whose balance shouldn't count toward the dashboard's "Free to spend" total.
+- **Primary account**: one account can be flagged primary. Built as `AppSettings.PrimaryAccountId`, set from the account detail card ("Set primary"). It's the account pre-selected in the Expense/Income/Transfer overlays and the reconciliation check-in, and the quick-entry account fallback if/when that feature returns.
+- **Excluded from totals**: built. `Account.IncludeInDashboardTotals` in Core, with an "include in totals" checkbox in the account form. Use case: a savings account whose balance shouldn't count toward the dashboard's "Free to spend" total.
 
 ## Transactions
 
 - Row content: **name, category, amount**, with **balance-after shown in gray directly under the amount** (de-emphasized, not removed), and a **small scheduled-mark icon** on the row when the transaction is linked to a scheduled item. Nothing requires expanding the row or opening edit to see these — they're all visible at a glance.
 - **"+" add menu**: Expense / Income / Transfer. Attaching to an existing scheduled occurrence is an optional field *inside* these overlays, not a separate 4th type.
 - **Statement import** is a separate entry point/button next to "+", not inside the add menu (different shape: multi-step, file-based, batch review). Available from first-run setup and Transactions; not from Dashboard.
-- **Scheduled template management** (create/edit recurring rules) lives under **Settings** — it's infrequent, config-like.
+- **Scheduled template management** (create/edit recurring rules) lives on **Transactions**, inside the "resolve upcoming" widget ("+ New rule", and editing each rule in its expanded list). **Superseded**: this was originally specced for Settings, but the user asked to keep it on Transactions, and that decision stands over this doc (Phase 7 log in `docs/development-phases.md`).
 - **Persistent "resolve upcoming" widget** pinned at the top of Transactions: for each due/overdue scheduled item, actions are **Mark Paid / Skip / Delay**, plus **Attach…** on every item: it opens a search (name or amount) over the recorded transactions not yet linked to anything, nearest the due date first, and the one picked is linked to the occurrence instead of creating a second transaction. Nothing is suggested up front (decided 2026-09-25: the old automatic match, same account/type within a week and ±25%, was often wrong and left no way to pick anything else). It's the reconciliation flow's attach action, shared here so both places speak one interaction language. Pre-fills from the template on Mark Paid. Persists until resolved — does not disappear on its own.
-- **Manual reconciliation "check-in"** action lives in the Transactions header, next to filters and category management — grouped with the other header-level actions rather than a new location.
+- **Manual reconciliation "check-in"** action lives in the Transactions header, next to the filter control — grouped with the other header-level actions rather than a new location.
 - Filtering (account, category, date range, type): collapsed filter bar that expands on demand.
 - Bulk actions: explicit **"Select" mode toggle** button switches the list into checkbox mode; then mass category assignment, mass scheduled-occurrence assignment, mass delete.
-- **Category management** icon lives in the Transactions header next to the filter control, opening a manage-categories overlay (rename/merge/delete/recolor/reorder). This is deliberately **not in Settings** — categories are living financial data you touch constantly, unlike scheduled templates.
+- **Category management** lives in **Settings → Transactions → "Manage categories"**, as a "sea of boxes" (tap a box to recolor, drag one box onto another to merge, "x" to delete). **Superseded**: originally specced as a Transactions-header overlay and deliberately kept out of Settings; it was later moved into Settings (Phase 7 log in `docs/development-phases.md`).
   - Category **creation** is inline wherever you pick a category (transaction entry, statement import row, scheduled assignment) — type a new name, confirm, done.
   - Categories are **two levels deep** (decided and built 2026-09-25, replacing "flat"): a category with no parent is a parent, a child can't have children, and parents are real categories a transaction can be filed under directly. A child's color is always its parent's. **No picker ever shows one combined list**: every picker lists parents only, and a small second picker appears only once a parent with children is chosen, offering just its children ("No subcategory" keeps the parent). Inline creation always makes a parent; children are made or moved in Manage categories (a "Parent category" picker in "+ Add category" and in each category's popup). Filtering by a parent covers its children. See the Phase 7 "Hierarchical categories" entry in `docs/development-phases.md` for merge behavior and the rest.
 
@@ -96,7 +96,12 @@ Not part of the active build plan; revisit later as a quality-of-life addition, 
 
 ## Settings
 
-- One Settings section, organized into sub-areas: **Scheduled** (template management), **Preferences**, **Data**, **Appearance**. Categories are explicitly excluded (see Transactions).
+- One Settings page with a side list of four areas. The original spec (Scheduled / Preferences / Data / Appearance) was **superseded** by a larger Settings built later (Phase 7 log in `docs/development-phases.md`):
+  - **General**: appearance (theme), language, currency, default account type, privacy mode, reminders.
+  - **Dashboard**: hero metric, section order, "free to spend" settings.
+  - **Transactions**: Manage categories, the resolve-upcoming window, Bank categories, Learned categorization rules.
+  - **Data & Security**: app-lock PIN; backup/export/restore, automatic backups, delete all local data, diagnostics.
+  - Scheduled rules are **not** here; see Transactions.
 - **Data** sub-section groups backup/export/restore clearly; **delete-all-local-data** requires an extra deliberate confirmation step given it's irreversible and there's no cloud sync.
 - Dashboard section order (Upcoming/Forecast/Analytics/Goals) is customizable here.
 
