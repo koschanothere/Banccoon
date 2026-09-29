@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:AppLockViewModel"
     Shell.NavBarIsVisible="False"
@@ -26,7 +27,7 @@
                     Keyboard="Numeric"
                     HorizontalTextAlignment="Center"
                     Completed="OnPinCompleted" />
-                <Button Text="{loc:Translate AppLock_UnlockButton}" Command="{Binding UnlockCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Fill" />
+                <controls:IconButton Icon="{x:Static controls:Heroicons.LockOpen}" Label="{loc:Translate AppLock_UnlockButton}" ShowLabel="True" Command="{Binding UnlockCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Fill" />
                 <Label
                     Text="{Binding StatusText}"
                     HorizontalTextAlignment="Center"

@@ -132,10 +132,10 @@
                         Placeholder="FREQ=WEEKLY;INTERVAL=2;BYDAY=MO;START=2026-06-07"
                         Text="{Binding TechnicalSyntax}" />
                     <HorizontalStackLayout Spacing="8">
-                        <Button
+                        <controls:IconButton
                             Command="{Binding ApplyTechnicalSyntaxCommand}"
                             Style="{StaticResource PrimaryButton}"
-                            Text="{loc:Translate RecurrenceEditor_ApplySyntaxButton}" />
+                            Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate RecurrenceEditor_ApplySyntaxButton}" ShowLabel="True" />
                     </HorizontalStackLayout>
                     <Label
                         Style="{StaticResource TertiaryLabel}"
