@@ -189,19 +189,30 @@
                             <Label Text="{loc:Translate Dashboard_NothingChangedMuchYet}" Style="{StaticResource TertiaryLabel}" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
+                            <!-- Same tap rule as Spending by category below: a row with a breakdown opens it
+                                 (TapCommand), and its "View transactions" link, a sibling of the tapped grid
+                                 rather than a child so the two taps can't both fire, drills down. -->
                             <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding DrillDownCommand}" />
-                                    </Grid.GestureRecognizers>
-                                    <Label Grid.Column="0" Text="{Binding CategoryName}" VerticalOptions="Center" />
-                                    <Label
-                                        Grid.Column="1"
-                                        Text="{Binding ChangeText}"
-                                        HorizontalTextAlignment="End"
-                                        VerticalOptions="Center"
-                                        TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
-                                </Grid>
+                                <VerticalStackLayout>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding TapCommand}" />
+                                        </Grid.GestureRecognizers>
+                                        <Label Grid.Column="0" Text="{Binding CategoryName}" VerticalOptions="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            Text="{Binding ChangeText}"
+                                            HorizontalTextAlignment="End"
+                                            VerticalOptions="Center"
+                                            TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
+                                    </Grid>
+                                    <Button
+                                        Text="{loc:Translate Dashboard_ViewCategoryTransactionsLink}"
+                                        Command="{Binding DrillDownCommand}"
+                                        IsVisible="{Binding OpensBreakdown}"
+                                        Style="{StaticResource LinkButton}"
+                                        Margin="0,-2,0,4" />
+                                </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
@@ -216,35 +227,43 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:AnalyticsCategoryRowViewModel">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Padding="0,8">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding DrillDownCommand}" />
-                                    </Grid.GestureRecognizers>
-                                    <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
-                                        <Label Text="{Binding CategoryName}" />
-                                        <Label
-                                            Text="{Binding ChangeText}"
-                                            Style="{StaticResource TertiaryLabel}"
-                                            TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
-                                    </VerticalStackLayout>
-                                    <HorizontalStackLayout
-                                        Grid.Column="1"
-                                        Spacing="3"
-                                        VerticalOptions="End"
-                                        BindableLayout.ItemsSource="{Binding Bars}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="viewModels:AnalyticsBarViewModel">
-                                                <BoxView
-                                                    WidthRequest="6"
-                                                    HeightRequest="{Binding Height}"
-                                                    VerticalOptions="End"
-                                                    CornerRadius="2"
-                                                    Color="{Binding IsCurrent, Converter={StaticResource CurrentBarColorConverter}}" />
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </HorizontalStackLayout>
-                                    <Label Grid.Column="2" Text="{Binding CurrentTotalText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                </Grid>
+                                <VerticalStackLayout>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Padding="0,8">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding TapCommand}" />
+                                        </Grid.GestureRecognizers>
+                                        <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
+                                            <Label Text="{Binding CategoryName}" />
+                                            <Label
+                                                Text="{Binding ChangeText}"
+                                                Style="{StaticResource TertiaryLabel}"
+                                                TextColor="{Binding IsIncrease, Converter={StaticResource IncreaseAmountColorConverter}}" />
+                                        </VerticalStackLayout>
+                                        <HorizontalStackLayout
+                                            Grid.Column="1"
+                                            Spacing="3"
+                                            VerticalOptions="End"
+                                            BindableLayout.ItemsSource="{Binding Bars}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:AnalyticsBarViewModel">
+                                                    <BoxView
+                                                        WidthRequest="6"
+                                                        HeightRequest="{Binding Height}"
+                                                        VerticalOptions="End"
+                                                        CornerRadius="2"
+                                                        Color="{Binding IsCurrent, Converter={StaticResource CurrentBarColorConverter}}" />
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                        <Label Grid.Column="2" Text="{Binding CurrentTotalText}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    </Grid>
+                                    <Button
+                                        Text="{loc:Translate Dashboard_ViewCategoryTransactionsLink}"
+                                        Command="{Binding DrillDownCommand}"
+                                        IsVisible="{Binding OpensBreakdown}"
+                                        Style="{StaticResource LinkButton}"
+                                        Margin="0,-4,0,4" />
+                                </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

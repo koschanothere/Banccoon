@@ -193,13 +193,22 @@ public sealed class AnalyticsViewModel : ViewModelBase
             foreach (var trend in report.CategoryTrends)
             {
                 var color = ResolveColor(trend.CategoryId, categoriesById);
-                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, color, currency, onCategorySelected, BuildBreakdown(trend, color)));
+                CategoryRows.Add(new AnalyticsCategoryRowViewModel(trend, color, currency, onCategorySelected, BuildBreakdown(trend, color), onToggleBreakdown: ToggleBreakdownFromRow));
             }
 
+            // A top mover is one of the category trends, so it shares that row's breakdown and
+            // its tap follows the same rule.
             TopMovers.Clear();
             foreach (var trend in report.TopMovers)
             {
-                TopMovers.Add(new AnalyticsCategoryRowViewModel(trend, ResolveColor(trend.CategoryId, categoriesById), currency, onCategorySelected));
+                var categoryRow = CategoryRows.FirstOrDefault(row => row.CategoryId == trend.CategoryId);
+                TopMovers.Add(new AnalyticsCategoryRowViewModel(
+                    trend,
+                    ResolveColor(trend.CategoryId, categoriesById),
+                    currency,
+                    onCategorySelected,
+                    categoryRow?.Breakdown,
+                    onToggleBreakdown: ToggleBreakdownFromRow));
             }
 
             DonutSegments.Clear();
@@ -231,6 +240,23 @@ public sealed class AnalyticsViewModel : ViewModelBase
         }
 
         OpenBreakdown(ReferenceEquals(segment, breakdownParent) ? null : segment);
+    }
+
+    // A list row (Spending by category or Top movers) with a breakdown was tapped: same as
+    // clicking its slice. Resolved to the donut's own row by category so a top mover (a separate
+    // row object) toggles the same breakdown rather than opening a second copy of it. A row whose
+    // slice isn't drawn (no positive total this month) drills down instead, so the tap never
+    // silently does nothing.
+    private void ToggleBreakdownFromRow(AnalyticsCategoryRowViewModel row)
+    {
+        var segment = DonutSegments.FirstOrDefault(segment => segment.CategoryId == row.CategoryId);
+        if (segment is null)
+        {
+            row.DrillDownCommand.Execute(null);
+            return;
+        }
+
+        SelectDonutSegment(segment);
     }
 
     // UI-thread only.

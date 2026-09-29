@@ -1050,7 +1050,10 @@
     <value>{0} (no subcategory)</value>
   </data>
   <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
-    <value>Click a slice with subcategories to break it down; click it again to close.</value>
+    <value>Click a slice or category with subcategories to break it down; click it again to close.</value>
+  </data>
+  <data name="Dashboard_ViewCategoryTransactionsLink" xml:space="preserve">
+    <value>View transactions</value>
   </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Total spend: {0}</value>

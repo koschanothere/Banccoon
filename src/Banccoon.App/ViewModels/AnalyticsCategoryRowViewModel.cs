@@ -12,13 +12,16 @@ public sealed class AnalyticsCategoryRowViewModel
 
     // breakdown: for a parent category with children, its total split into its own share and
     // each child's (AnalyticsCategoryTrend.Breakdown) - what the second donut draws.
+    // onToggleBreakdown: what tapping a list row with a breakdown does instead of drilling down
+    // (opens/closes the second donut, same as clicking the parent's slice).
     public AnalyticsCategoryRowViewModel(
         AnalyticsCategoryTrend trend,
         Color color,
         string currency,
         Func<Guid?, Task> onSelected,
         IReadOnlyList<AnalyticsCategoryRowViewModel>? breakdown = null,
-        string? displayName = null)
+        string? displayName = null,
+        Action<AnalyticsCategoryRowViewModel>? onToggleBreakdown = null)
     {
         CategoryId = trend.CategoryId;
         CategoryName = displayName ?? trend.CategoryName ?? "Uncategorized";
@@ -39,6 +42,10 @@ public sealed class AnalyticsCategoryRowViewModel
             .ToList();
 
         DrillDownCommand = new RelayCommand(() => _ = onSelected(CategoryId));
+        OpensBreakdown = onToggleBreakdown is not null && HasBreakdown;
+        TapCommand = OpensBreakdown
+            ? new RelayCommand(() => onToggleBreakdown!(this))
+            : DrillDownCommand;
     }
 
     public Guid? CategoryId { get; }
@@ -64,7 +71,14 @@ public sealed class AnalyticsCategoryRowViewModel
 
     public IReadOnlyList<AnalyticsBarViewModel> Bars { get; }
 
+    // Opens Transactions filtered to this category. The whole row's tap for a row without a
+    // breakdown; for one with a breakdown, the row's small "View transactions" link instead.
     public ICommand DrillDownCommand { get; }
+
+    // Tapping a list row with a breakdown opens/closes it; otherwise it drills down.
+    public bool OpensBreakdown { get; }
+
+    public ICommand TapCommand { get; }
 
     private static string BuildChangeText(AnalyticsCategoryTrend trend, string currency)
     {

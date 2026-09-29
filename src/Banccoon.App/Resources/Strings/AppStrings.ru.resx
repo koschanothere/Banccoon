@@ -1092,7 +1092,10 @@
     <value>{0} (без подкатегории)</value>
   </data>
   <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
-    <value>Нажмите на сегмент с подкатегориями, чтобы разбить его на части; нажмите ещё раз, чтобы закрыть.</value>
+    <value>Нажмите на сегмент или категорию с подкатегориями, чтобы увидеть разбивку; нажмите ещё раз, чтобы закрыть.</value>
+  </data>
+  <data name="Dashboard_ViewCategoryTransactionsLink" xml:space="preserve">
+    <value>Показать транзакции</value>
   </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Всего потрачено: {0}</value>

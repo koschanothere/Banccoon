@@ -61,6 +61,57 @@ public sealed class AnalyticsBreakdownTests
         Assert.Empty(vm.BreakdownSegments);
     }
 
+    // Decided 2026-09-29: tapping a list row (Spending by category or Top movers) with a breakdown
+    // opens/closes it like its slice does; its separate link, and any row without one, drill down.
+    [Fact]
+    public async Task RowWithBreakdown_TapTogglesIt_RowWithout_DrillsDown()
+    {
+        Translator.SetLanguage("en");
+        await using var store = new SqliteTestStore();
+        var food = new Category(Guid.NewGuid(), "Food");
+        var groceries = new Category(Guid.NewGuid(), "Groceries", ParentCategoryId: food.Id);
+        var transport = new Category(Guid.NewGuid(), "Transport");
+        foreach (var category in new[] { food, groceries, transport })
+        {
+            await store.Categories.SaveAsync(category);
+        }
+
+        var card = new Account(Guid.NewGuid(), "Card", AccountType.DebitCard, 1000m, "RUB", DateTimeOffset.UtcNow);
+        await store.Accounts.SaveAsync(card);
+        foreach (var (amount, categoryId) in new[] { (60m, groceries.Id), (40m, transport.Id) })
+        {
+            await store.Transactions.SaveAsync(new Transaction(Guid.NewGuid(), new DateOnly(2026, 6, 5), amount, card.Id, categoryId, null, TransactionType.Expense));
+        }
+
+        var drilledInto = new List<Guid?>();
+        var vm = new AnalyticsViewModel(new FixedDate(new DateOnly(2026, 6, 15)), store.Transactions, store.Categories, new AnalyticsService(), id =>
+        {
+            drilledInto.Add(id);
+            return Task.CompletedTask;
+        });
+        await vm.InitializeAsync("RUB");
+
+        var foodRow = vm.CategoryRows.Single(row => row.CategoryName == "Food");
+        var transportRow = vm.CategoryRows.Single(row => row.CategoryName == "Transport");
+        Assert.True(foodRow.OpensBreakdown);
+        Assert.False(transportRow.OpensBreakdown);
+
+        foodRow.TapCommand.Execute(null);
+        Assert.True(vm.IsBreakdownOpen);
+        Assert.Empty(drilledInto);
+
+        // The top mover for Food is a separate row object; its tap closes the same breakdown.
+        var foodMover = vm.TopMovers.Single(row => row.CategoryName == "Food");
+        Assert.True(foodMover.OpensBreakdown);
+        foodMover.TapCommand.Execute(null);
+        Assert.False(vm.IsBreakdownOpen);
+
+        foodRow.DrillDownCommand.Execute(null);
+        transportRow.TapCommand.Execute(null);
+        Assert.Equal([food.Id, transport.Id], drilledInto);
+        Assert.False(vm.IsBreakdownOpen);
+    }
+
     private sealed class FixedDate(DateOnly today) : IDateProvider
     {
         public DateOnly Today { get; } = today;

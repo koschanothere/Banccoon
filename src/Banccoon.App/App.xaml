@@ -146,6 +146,18 @@
                 <Setter Property="Padding" Value="14,9" />
             </Style>
 
+            <!-- A small secondary action inside a row whose own tap does something else (e.g. an
+                 Analytics category row that opens its breakdown, with "View transactions" here). -->
+            <Style x:Key="LinkButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="0,2" />
+                <Setter Property="MinimumHeightRequest" Value="0" />
+                <Setter Property="HorizontalOptions" Value="Start" />
+            </Style>
+
             <!-- Semantic action colors: same meaning everywhere, so the color becomes a habit
                  rather than something the user has to read - red always destroys, red-leaning
                  always means expense/money-out, green always means income/money-in, purple always
