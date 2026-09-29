@@ -18,13 +18,13 @@
             <Grid ColumnDefinitions="*,Auto">
                 <Label Grid.Column="0" Text="{loc:Translate AppShell_Nav_Transactions}" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
-                    <Button Text="{loc:Translate Transactions_FilterButton}" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Transactions_CheckInButton}" Clicked="OnCheckInClicked" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Common_Select}" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Funnel}" Label="{loc:Translate Transactions_FilterButton}" Command="{Binding ToggleFilterCommand}" Style="{StaticResource QuietButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.ClipboardDocumentCheck}" Label="{loc:Translate Transactions_CheckInTooltip}" TextOnlyLabel="{loc:Translate Transactions_CheckInButton}" Clicked="OnCheckInClicked" Style="{StaticResource QuietButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.CheckCircle}" Label="{loc:Translate Transactions_SelectTooltip}" TextOnlyLabel="{loc:Translate Common_Select}" Command="{Binding ToggleSelectModeCommand}" Style="{StaticResource QuietButton}" />
                     <!-- Importing a statement is the main way transactions get in, so Import is the
                          primary action and adding one by hand is the quiet one. -->
-                    <Button Text="{loc:Translate Transactions_AddButton}" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource QuietButton}" />
-                    <Button x:Name="ImportButton" Text="{loc:Translate Transactions_ImportButton}" Clicked="OnImportClicked" Style="{StaticResource PrimaryButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Transactions_AddLabel}" TextOnlyLabel="{loc:Translate Transactions_AddButton}" ShowLabel="True" Command="{Binding ToggleAddMenuCommand}" Style="{StaticResource QuietButton}" />
+                    <controls:IconButton x:Name="ImportButton" Icon="{x:Static controls:Heroicons.ArrowDownTray}" Label="{loc:Translate Transactions_ImportButton}" ShowLabel="True" Clicked="OnImportClicked" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>
 
@@ -34,7 +34,7 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{Binding AddForm.Title}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding AddForm.CloseCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Command="{Binding AddForm.CloseCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Entry Placeholder="{loc:Translate Common_NamePlaceholder}" Text="{Binding AddForm.Name}" />
@@ -57,7 +57,7 @@
                     </Grid>
 
                     <Label Text="{Binding AddForm.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
-                    <Button Text="{loc:Translate Common_Save}" Command="{Binding AddForm.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding AddForm.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
 
@@ -65,9 +65,9 @@
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
                         <Label Grid.Column="0" Text="{loc:Translate Transactions_ResolveUpcomingHeader}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button
+                        <controls:IconButton
                             Grid.Column="1"
-                            Text="{loc:Translate Transactions_NewRuleButton}"
+                            Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Transactions_NewRuleLabel}" TextOnlyLabel="{loc:Translate Transactions_NewRuleButton}" ShowLabel="True"
                             Command="{Binding OpenScheduleFormCommand}"
                             IsVisible="{Binding ResolveUpcoming.IsExpanded}"
                             Style="{StaticResource QuietButton}" />
@@ -106,13 +106,13 @@
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto,Auto">
                                 <Label Grid.Column="0" Text="{Binding ScheduleForm.FormTitle}" Style="{StaticResource SectionTitleLabel}" />
-                                <Button Grid.Column="1" Text="{loc:Translate Common_Delete}" Command="{Binding ScheduleForm.DeleteCommand}" IsVisible="{Binding ScheduleForm.IsEditing}" Style="{StaticResource DestructiveButton}" />
-                                <Button Grid.Column="2" Text="{loc:Translate Common_Close}" Command="{Binding ScheduleForm.CloseCommand}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Common_Delete}" ShowLabel="True" Command="{Binding ScheduleForm.DeleteCommand}" IsVisible="{Binding ScheduleForm.IsEditing}" Style="{StaticResource DestructiveButton}" />
+                                <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Command="{Binding ScheduleForm.CloseCommand}" Style="{StaticResource QuietButton}" />
                             </Grid>
 
                             <HorizontalStackLayout Spacing="8">
-                                <Button Text="{loc:Translate Enum_TransactionType_Expense}" Command="{Binding ScheduleForm.SetExpenseCommand}" Style="{StaticResource ExpenseButton}" />
-                                <Button Text="{loc:Translate Enum_TransactionType_Income}" Command="{Binding ScheduleForm.SetIncomeCommand}" Style="{StaticResource IncomeButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowUpRight}" Label="{loc:Translate Enum_TransactionType_Expense}" ShowLabel="True" Command="{Binding ScheduleForm.SetExpenseCommand}" Style="{StaticResource ExpenseButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowDownLeft}" Label="{loc:Translate Enum_TransactionType_Income}" ShowLabel="True" Command="{Binding ScheduleForm.SetIncomeCommand}" Style="{StaticResource IncomeButton}" />
                             </HorizontalStackLayout>
 
                             <Entry Placeholder="{loc:Translate Common_NamePlaceholder}" Text="{Binding ScheduleForm.Name}" />
@@ -136,7 +136,7 @@
                             <controls:RecurrenceEditorView BindingContext="{Binding ScheduleForm.Recurrence}" />
 
                             <Label Text="{Binding ScheduleForm.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
-                            <Button Text="{loc:Translate Transactions_SaveRuleButton}" Command="{Binding ScheduleForm.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Transactions_SaveRuleButton}" ShowLabel="True" Command="{Binding ScheduleForm.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -153,10 +153,10 @@
                                             <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
                                         </VerticalStackLayout>
                                         <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
-                                        <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="4" Text="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="5" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
+                                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Clock}" Label="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="3" Icon="{x:Static controls:Heroicons.Forward}" Label="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="4" Icon="{Binding IsAttachOpen, Converter={StaticResource AttachGlyphConverter}}" Label="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="5" Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Transactions_MarkPaidButton}" ShowLabel="True" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
                                     </Grid>
                                     <!-- "Attach…": pick the recorded transaction that paid this (e.g. the imported bank row) -
                                          the occurrence is marked paid without a second transaction. Nothing is suggested
@@ -173,7 +173,7 @@
                                                             <Label Text="{Binding DetailText}" Style="{StaticResource TertiaryLabel}" />
                                                         </VerticalStackLayout>
                                                         <Label Grid.Column="1" Text="{Binding AmountText}" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
-                                                        <Button Grid.Column="2" Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
+                                                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Link}" Label="{loc:Translate ResolveUpcoming_AttachButton}" ShowLabel="True" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
                                                     </Grid>
                                                 </DataTemplate>
                                             </BindableLayout.ItemTemplate>
@@ -198,8 +198,8 @@
                                         <Label Text="{Binding NextDueText}" Style="{StaticResource TertiaryLabel}" />
                                     </VerticalStackLayout>
                                     <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" />
-                                    <Button Grid.Column="2" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" IsVisible="{Binding HasUpcomingOccurrence}" Style="{StaticResource QuietButton}" />
-                                    <Button Grid.Column="3" Text="{loc:Translate Common_Edit}" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" />
+                                    <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Transactions_MarkPaidButton}" ShowLabel="True" Command="{Binding MarkPaidCommand}" IsVisible="{Binding HasUpcomingOccurrence}" Style="{StaticResource QuietButton}" />
+                                    <controls:IconButton Grid.Column="3" Icon="{x:Static controls:Heroicons.PencilSquare}" Label="{loc:Translate Common_Edit}" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" />
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -217,8 +217,8 @@
                 <Label Grid.Column="0" Text="{Binding SelectionSummaryText}" VerticalOptions="Center" />
                 <Picker Grid.Column="1" Title="{loc:Translate Transactions_SetCategoryPickerTitle}" ItemsSource="{Binding BulkCategoryOptions}" SelectedItem="{Binding BulkCategory}" WidthRequest="160" />
                 <Picker Grid.Column="2" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding BulkSubcategory.Options}" SelectedItem="{Binding BulkSubcategory.Selected}" IsVisible="{Binding BulkSubcategory.IsVisible}" WidthRequest="150" />
-                <Button Grid.Column="3" Text="{loc:Translate Transactions_ApplyCategoryButton}" Command="{Binding AssignCategoryToSelectedCommand}" Style="{StaticResource QuietButton}" />
-                <Button Grid.Column="4" Text="{loc:Translate Transactions_DeleteSelectedButton}" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DestructiveButton}" />
+                <controls:IconButton Grid.Column="3" Icon="{x:Static controls:Heroicons.Tag}" Label="{loc:Translate Transactions_ApplyCategoryButton}" ShowLabel="True" Command="{Binding AssignCategoryToSelectedCommand}" Style="{StaticResource QuietButton}" />
+                <controls:IconButton Grid.Column="4" Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Transactions_DeleteSelectedButton}" ShowLabel="True" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DestructiveButton}" />
             </Grid>
 
             <Label Text="{Binding RowCountText}" Style="{StaticResource TertiaryLabel}" />
@@ -294,9 +294,9 @@
             <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.18" />
         </Border.Shadow>
         <VerticalStackLayout Spacing="6">
-            <Button Text="{loc:Translate Enum_TransactionType_Expense}" Command="{Binding OpenExpenseFormCommand}" Style="{StaticResource ExpenseButton}" HorizontalOptions="Fill" />
-            <Button Text="{loc:Translate Enum_TransactionType_Income}" Command="{Binding OpenIncomeFormCommand}" Style="{StaticResource IncomeButton}" HorizontalOptions="Fill" />
-            <Button Text="{loc:Translate Enum_TransactionType_Transfer}" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource TransferButton}" HorizontalOptions="Fill" />
+            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowUpRight}" Label="{loc:Translate Enum_TransactionType_Expense}" ShowLabel="True" Command="{Binding OpenExpenseFormCommand}" Style="{StaticResource ExpenseButton}" HorizontalOptions="Fill" />
+            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowDownLeft}" Label="{loc:Translate Enum_TransactionType_Income}" ShowLabel="True" Command="{Binding OpenIncomeFormCommand}" Style="{StaticResource IncomeButton}" HorizontalOptions="Fill" />
+            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowsRightLeft}" Label="{loc:Translate Enum_TransactionType_Transfer}" ShowLabel="True" Command="{Binding OpenTransferFormCommand}" Style="{StaticResource TransferButton}" HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </Border>
     </Grid>

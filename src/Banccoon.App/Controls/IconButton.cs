@@ -10,7 +10,7 @@ namespace Banccoon.App.Controls;
 //                        Label="{loc:Translate Transactions_FilterButton}"
 //                        Command="..." Style="{StaticResource QuietButton}" />
 //
-// Set Label, never Text - the control decides what Text is:
+// Set Label (and TextOnlyLabel if needed), never Text - the control decides what Text is:
 //   - icons on, ShowLabel false (the default): icon only, Label as the hover tooltip
 //     (ToolTipProperties, as on the import review's amount) and the screen-reader name.
 //   - icons on, ShowLabel true: icon and Label side by side, no tooltip.
@@ -25,6 +25,9 @@ public class IconButton : Button
 
     public static readonly BindableProperty LabelProperty =
         BindableProperty.Create(nameof(Label), typeof(string), typeof(IconButton), null, propertyChanged: Refresh);
+
+    public static readonly BindableProperty TextOnlyLabelProperty =
+        BindableProperty.Create(nameof(TextOnlyLabel), typeof(string), typeof(IconButton), null, propertyChanged: Refresh);
 
     public static readonly BindableProperty ShowLabelProperty =
         BindableProperty.Create(nameof(ShowLabel), typeof(bool), typeof(IconButton), false, propertyChanged: Refresh);
@@ -54,6 +57,14 @@ public class IconButton : Button
     {
         get => (string?)GetValue(LabelProperty);
         set => SetValue(LabelProperty, value);
+    }
+
+    // What the button says when icons are off, if not Label: for labels whose text-only form
+    // carries its own glyph ("+ Add account", "‹ Previous") that would double up beside the icon.
+    public string? TextOnlyLabel
+    {
+        get => (string?)GetValue(TextOnlyLabelProperty);
+        set => SetValue(TextOnlyLabelProperty, value);
     }
 
     // Keep the label visible next to the icon (primary calls to action, the colored semantic
@@ -92,7 +103,7 @@ public class IconButton : Button
     private void Apply()
     {
         var iconOnly = IsShowingIcon && !ShowLabel;
-        Text = iconOnly ? string.Empty : Label;
+        Text = iconOnly ? string.Empty : IsShowingIcon ? Label : TextOnlyLabel ?? Label;
 
         if (iconOnly)
         {
@@ -103,17 +114,6 @@ public class IconButton : Button
         {
             ClearValue(ToolTipProperties.TextProperty);
             ClearValue(SemanticProperties.DescriptionProperty);
-        }
-
-        // Squarer padding for a lone glyph; with a label, back to whatever the style says (a
-        // local value would otherwise override the style's padding for good).
-        if (iconOnly)
-        {
-            Padding = new Thickness(9, 8);
-        }
-        else
-        {
-            ClearValue(PaddingProperty);
         }
 
         ApplyImage();

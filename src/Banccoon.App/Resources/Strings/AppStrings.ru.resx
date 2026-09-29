@@ -1969,4 +1969,55 @@
   <data name="Settings_DevOpenSetupButton" xml:space="preserve">
     <value>Открыть первоначальную настройку (dev)</value>
   </data>
+  <data name="Dashboard_AddGoalLabel" xml:space="preserve">
+    <value>Добавить цель</value>
+  </data>
+  <data name="Transactions_AddLabel" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="Transactions_NewRuleLabel" xml:space="preserve">
+    <value>Новое правило</value>
+  </data>
+  <data name="Accounts_AddAccountLabel" xml:space="preserve">
+    <value>Добавить счёт</value>
+  </data>
+  <data name="Settings_AddCategoryLabel" xml:space="preserve">
+    <value>Добавить категорию</value>
+  </data>
+  <data name="Dashboard_PreviousMonthTooltip" xml:space="preserve">
+    <value>Предыдущий месяц</value>
+  </data>
+  <data name="Dashboard_NextMonthTooltip" xml:space="preserve">
+    <value>Следующий месяц</value>
+  </data>
+  <data name="Dashboard_ApplyRangeTooltip" xml:space="preserve">
+    <value>Показать этот период</value>
+  </data>
+  <data name="Dashboard_ResetRangeTooltip" xml:space="preserve">
+    <value>Вернуть период по умолчанию</value>
+  </data>
+  <data name="Common_PreviousPageTooltip" xml:space="preserve">
+    <value>Предыдущая страница</value>
+  </data>
+  <data name="Common_NextPageTooltip" xml:space="preserve">
+    <value>Следующая страница</value>
+  </data>
+  <data name="Common_MoveUp" xml:space="preserve">
+    <value>Переместить выше</value>
+  </data>
+  <data name="Common_MoveDown" xml:space="preserve">
+    <value>Переместить ниже</value>
+  </data>
+  <data name="Transactions_SelectTooltip" xml:space="preserve">
+    <value>Выбрать транзакции</value>
+  </data>
+  <data name="Transactions_CheckInTooltip" xml:space="preserve">
+    <value>Сверить с балансом в банке</value>
+  </data>
+  <data name="Settings_SelectCategoriesTooltip" xml:space="preserve">
+    <value>Выбрать категории</value>
+  </data>
+  <data name="StatementImport_SelectRowsTooltip" xml:space="preserve">
+    <value>Выбрать строки</value>
+  </data>
 </root>

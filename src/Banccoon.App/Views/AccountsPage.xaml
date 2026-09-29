@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:AccountsViewModel"
     Title="{loc:Translate AppShell_Nav_Accounts}"
@@ -14,8 +15,8 @@
             <Grid ColumnDefinitions="*,Auto">
                 <Label Grid.Column="0" Text="{loc:Translate AppShell_Nav_Accounts}" Style="{StaticResource ScreenTitleLabel}" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="6">
-                    <Button Text="{Binding ShowArchivedToggleText}" Command="{Binding ToggleShowArchivedCommand}" Style="{StaticResource QuietButton}" />
-                    <Button Text="{loc:Translate Accounts_AddAccountButton}" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource PrimaryButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.ArchiveBox}" Label="{Binding ShowArchivedToggleText}" Command="{Binding ToggleShowArchivedCommand}" Style="{StaticResource QuietButton}" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Accounts_AddAccountLabel}" TextOnlyLabel="{loc:Translate Accounts_AddAccountButton}" ShowLabel="True" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource PrimaryButton}" />
                 </HorizontalStackLayout>
             </Grid>
 
@@ -26,7 +27,7 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{Binding Form.Title}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding Form.CloseCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Command="{Binding Form.CloseCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Entry Placeholder="{loc:Translate Accounts_AccountNamePlaceholder}" Text="{Binding Form.Name}" />
@@ -56,7 +57,7 @@
                     </HorizontalStackLayout>
 
                     <Label Text="{Binding Form.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
-                    <Button Text="{loc:Translate Common_Save}" Command="{Binding Form.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding Form.SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
 
@@ -65,7 +66,7 @@
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{Binding CardDetails.AccountName}" Style="{StaticResource SectionTitleLabel}" />
-                        <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding CardDetails.CloseCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Command="{Binding CardDetails.CloseCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto" RowSpacing="4" ColumnSpacing="12">
@@ -111,7 +112,7 @@
                             </HorizontalStackLayout>
                             <Label Text="{Binding DetailAccount.TypeText}" Style="{StaticResource TertiaryLabel}" />
                         </VerticalStackLayout>
-                        <Button Grid.Column="2" Text="{loc:Translate Common_Close}" Command="{Binding CloseDetailCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Command="{Binding CloseDetailCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
 
                     <Label Text="{Binding DetailAccount.BalanceText}" Style="{StaticResource HeroAmountLabel}" />
@@ -120,7 +121,7 @@
 
                     <HorizontalStackLayout Spacing="8" IsVisible="{Binding DetailAccount.HasIdentifier}">
                         <Label Text="{Binding DetailAccount.IdentifierText}" VerticalOptions="Center" />
-                        <Button Text="{Binding DetailAccount.RevealToggleText}" Command="{Binding DetailAccount.ToggleRevealCommand}" Style="{StaticResource QuietButton}" FontSize="11" Padding="8,4" />
+                        <controls:IconButton Icon="{Binding DetailAccount.IsNumberRevealed, Converter={StaticResource RevealGlyphConverter}}" Label="{Binding DetailAccount.RevealToggleText}" IconSize="14" Command="{Binding DetailAccount.ToggleRevealCommand}" Style="{StaticResource QuietButton}" FontSize="11" Padding="8,4" />
                     </HorizontalStackLayout>
 
                     <VerticalStackLayout Spacing="4" IsVisible="{Binding DetailAccount.HasGoalTarget}">
@@ -135,12 +136,12 @@
                     <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
 
                     <HorizontalStackLayout Spacing="8">
-                        <Button Text="{loc:Translate Common_Edit}" Command="{Binding DetailEditCommand}" Style="{StaticResource PrimaryButton}" />
-                        <Button Text="{loc:Translate Accounts_ViewTransactionsButton}" Command="{Binding DetailViewTransactionsCommand}" Style="{StaticResource QuietButton}" />
-                        <Button Text="{loc:Translate Accounts_CardDetailsButton}" Command="{Binding DetailOpenCardDetailsCommand}" IsVisible="{Binding DetailAccount.IsCreditCard}" Style="{StaticResource QuietButton}" />
-                        <Button Text="{loc:Translate Accounts_SetPrimaryButton}" Command="{Binding DetailSetPrimaryCommand}" IsVisible="{Binding DetailAccount.IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
-                        <Button Text="{loc:Translate Accounts_ArchiveButton}" Command="{Binding DetailArchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
-                        <Button Text="{loc:Translate Accounts_UnarchiveButton}" Command="{Binding DetailUnarchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.PencilSquare}" Label="{loc:Translate Common_Edit}" ShowLabel="True" Command="{Binding DetailEditCommand}" Style="{StaticResource PrimaryButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ListBullet}" Label="{loc:Translate Accounts_ViewTransactionsButton}" Command="{Binding DetailViewTransactionsCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.CreditCard}" Label="{loc:Translate Accounts_CardDetailsButton}" Command="{Binding DetailOpenCardDetailsCommand}" IsVisible="{Binding DetailAccount.IsCreditCard}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.CheckBadge}" Label="{loc:Translate Accounts_SetPrimaryButton}" Command="{Binding DetailSetPrimaryCommand}" IsVisible="{Binding DetailAccount.IsPrimary, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArchiveBox}" Label="{loc:Translate Accounts_ArchiveButton}" ShowLabel="True" Command="{Binding DetailArchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource DestructiveButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowUturnLeft}" Label="{loc:Translate Accounts_UnarchiveButton}" ShowLabel="True" Command="{Binding DetailUnarchiveCommand}" IsVisible="{Binding DetailAccount.IsArchived}" Style="{StaticResource QuietButton}" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
@@ -158,8 +159,8 @@
                                         <TapGestureRecognizer Command="{Binding OpenDetailCommand}" />
                                     </Grid.GestureRecognizers>
                                     <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Center">
-                                        <Button
-                                            Text="&#9650;"
+                                        <controls:IconButton
+                                            Icon="{x:Static controls:Heroicons.ChevronUp}" Label="{loc:Translate Common_MoveUp}" TextOnlyLabel="&#9650;" IconSize="12"
                                             Command="{Binding MoveUpCommand}"
                                             IsEnabled="{Binding CanMoveUp}"
                                             BackgroundColor="Transparent"
@@ -168,8 +169,8 @@
                                             Padding="0"
                                             WidthRequest="22"
                                             HeightRequest="16" />
-                                        <Button
-                                            Text="&#9660;"
+                                        <controls:IconButton
+                                            Icon="{x:Static controls:Heroicons.ChevronDown}" Label="{loc:Translate Common_MoveDown}" TextOnlyLabel="&#9660;" IconSize="12"
                                             Command="{Binding MoveDownCommand}"
                                             IsEnabled="{Binding CanMoveDown}"
                                             BackgroundColor="Transparent"

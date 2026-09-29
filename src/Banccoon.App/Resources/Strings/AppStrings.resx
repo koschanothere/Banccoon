@@ -1915,4 +1915,55 @@
   <data name="Settings_DevOpenSetupButton" xml:space="preserve">
     <value>Open first-run setup (dev)</value>
   </data>
+  <data name="Dashboard_AddGoalLabel" xml:space="preserve">
+    <value>Add goal</value>
+  </data>
+  <data name="Transactions_AddLabel" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Transactions_NewRuleLabel" xml:space="preserve">
+    <value>New rule</value>
+  </data>
+  <data name="Accounts_AddAccountLabel" xml:space="preserve">
+    <value>Add account</value>
+  </data>
+  <data name="Settings_AddCategoryLabel" xml:space="preserve">
+    <value>Add category</value>
+  </data>
+  <data name="Dashboard_PreviousMonthTooltip" xml:space="preserve">
+    <value>Previous month</value>
+  </data>
+  <data name="Dashboard_NextMonthTooltip" xml:space="preserve">
+    <value>Next month</value>
+  </data>
+  <data name="Dashboard_ApplyRangeTooltip" xml:space="preserve">
+    <value>Show this date range</value>
+  </data>
+  <data name="Dashboard_ResetRangeTooltip" xml:space="preserve">
+    <value>Back to the default range</value>
+  </data>
+  <data name="Common_PreviousPageTooltip" xml:space="preserve">
+    <value>Previous page</value>
+  </data>
+  <data name="Common_NextPageTooltip" xml:space="preserve">
+    <value>Next page</value>
+  </data>
+  <data name="Common_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Common_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Transactions_SelectTooltip" xml:space="preserve">
+    <value>Select transactions</value>
+  </data>
+  <data name="Transactions_CheckInTooltip" xml:space="preserve">
+    <value>Check in against your bank balance</value>
+  </data>
+  <data name="Settings_SelectCategoriesTooltip" xml:space="preserve">
+    <value>Select categories</value>
+  </data>
+  <data name="StatementImport_SelectRowsTooltip" xml:space="preserve">
+    <value>Select rows</value>
+  </data>
 </root>

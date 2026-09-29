@@ -3,7 +3,8 @@
     x:Class="Banccoon.App.App"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:converters="clr-namespace:Banccoon.App.Converters">
+    xmlns:converters="clr-namespace:Banccoon.App.Converters"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls">
     <Application.Resources>
         <ResourceDictionary>
             <converters:EnumDisplayConverter x:Key="EnumDisplayConverter" />
@@ -14,6 +15,9 @@
             <converters:SelectedNavBackgroundConverter x:Key="SelectedNavBackgroundConverter" />
             <converters:ExpandedRotationConverter x:Key="ExpandedRotationConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <!-- IconButton glyphs that flip with a toggle's state (see BoolToGlyphConverter). -->
+            <converters:BoolToGlyphConverter x:Key="RevealGlyphConverter" TrueGlyph="{x:Static controls:Heroicons.EyeSlash}" FalseGlyph="{x:Static controls:Heroicons.Eye}" />
+            <converters:BoolToGlyphConverter x:Key="AttachGlyphConverter" TrueGlyph="{x:Static controls:Heroicons.XMark}" FalseGlyph="{x:Static controls:Heroicons.Link}" />
 
             <!-- Light tokens -->
             <Color x:Key="LightPageBackground">#F1F0ED</Color>

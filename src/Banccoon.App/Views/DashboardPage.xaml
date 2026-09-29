@@ -83,8 +83,8 @@
                             <DatePicker Date="{Binding RangeStartDate}" Format="dd/MM" WidthRequest="110" />
                             <Label Text="&#8594;" VerticalOptions="Center" Style="{StaticResource TertiaryLabel}" />
                             <DatePicker Date="{Binding RangeEndDate}" Format="dd/MM" WidthRequest="110" />
-                            <Button Text="{loc:Translate Dashboard_ApplyButton}" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
-                            <Button Text="{loc:Translate Dashboard_ResetButton}" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Dashboard_ApplyRangeTooltip}" TextOnlyLabel="{loc:Translate Dashboard_ApplyButton}" Command="{Binding ApplyRangeCommand}" Style="{StaticResource QuietButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowPath}" Label="{loc:Translate Dashboard_ResetRangeTooltip}" TextOnlyLabel="{loc:Translate Dashboard_ResetButton}" Command="{Binding ResetRangeCommand}" Style="{StaticResource QuietButton}" />
                         </HorizontalStackLayout>
                     </Grid>
                     <Label
@@ -120,9 +120,9 @@
             <Border Grid.Row="{Binding AnalyticsSectionRow}" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*,Auto">
-                        <Button Grid.Column="0" Text="&#8592;" Command="{Binding Analytics.PreviousMonthCommand}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                        <controls:IconButton Grid.Column="0" Icon="{x:Static controls:Heroicons.ChevronLeft}" Label="{loc:Translate Dashboard_PreviousMonthTooltip}" TextOnlyLabel="&#8592;" Command="{Binding Analytics.PreviousMonthCommand}" Style="{StaticResource QuietButton}" WidthRequest="36" />
                         <Label Grid.Column="1" Text="{Binding Analytics.MonthLabel}" Style="{StaticResource SectionTitleLabel}" HorizontalTextAlignment="Center" VerticalOptions="Center" />
-                        <Button Grid.Column="2" Text="&#8594;" Command="{Binding Analytics.NextMonthCommand}" IsEnabled="{Binding Analytics.CanGoToNextMonth}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.ChevronRight}" Label="{loc:Translate Dashboard_NextMonthTooltip}" TextOnlyLabel="&#8594;" Command="{Binding Analytics.NextMonthCommand}" IsEnabled="{Binding Analytics.CanGoToNextMonth}" Style="{StaticResource QuietButton}" WidthRequest="36" />
                     </Grid>
 
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
@@ -274,7 +274,7 @@
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Grid.Column="0" Text="{loc:Translate Dashboard_GoalsHeader}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
-                        <Button Grid.Column="1" Text="{loc:Translate Dashboard_AddGoalButton}" Command="{Binding AddGoalCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Dashboard_AddGoalLabel}" TextOnlyLabel="{loc:Translate Dashboard_AddGoalButton}" ShowLabel="True" Command="{Binding AddGoalCommand}" Style="{StaticResource QuietButton}" />
                     </Grid>
                     <CollectionView ItemsSource="{Binding Goals}">
                         <CollectionView.EmptyView>
