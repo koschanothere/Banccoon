@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:SettingsViewModel"
     Title="{loc:Translate AppShell_Nav_Settings}"
@@ -131,7 +132,7 @@
                             </Grid>
 
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="{loc:Translate Common_Save}" Command="{Binding General.SaveCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding General.SaveCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding General.StatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
@@ -150,8 +151,8 @@
                                     <DataTemplate x:DataType="viewModels:DashboardSectionRowViewModel">
                                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,4">
                                             <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" />
-                                            <Button Grid.Column="1" Text="&#8593;" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanMoveUp}" Style="{StaticResource QuietButton}" WidthRequest="36" />
-                                            <Button Grid.Column="2" Text="&#8595;" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanMoveDown}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                                            <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.ArrowUp}" Label="{loc:Translate Common_MoveUp}" TextOnlyLabel="&#8593;" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanMoveUp}" Style="{StaticResource QuietButton}" WidthRequest="36" />
+                                            <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.ArrowDown}" Label="{loc:Translate Common_MoveDown}" TextOnlyLabel="&#8595;" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanMoveDown}" Style="{StaticResource QuietButton}" WidthRequest="36" />
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -163,7 +164,7 @@
                             <Label Text="{loc:Translate Settings_ForecastPeriodHint}" Style="{StaticResource TertiaryLabel}" />
                             <Picker Title="{loc:Translate Settings_PeriodPickerTitle}" ItemsSource="{Binding ForecastPeriods}" SelectedItem="{Binding SelectedForecastPeriod}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumDisplayConverter}}" WidthRequest="160" HorizontalOptions="Start" />
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding SaveForecastPeriodCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding DashboardStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
 
@@ -254,7 +255,7 @@
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding SaveFreeToSpendCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding FreeToSpendStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
@@ -267,9 +268,9 @@
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                 <Label Grid.Column="0" Text="{loc:Translate Settings_ManageCategoriesHeader}" Style="{StaticResource SectionTitleLabel}" VerticalOptions="Center" />
-                                <Button Grid.Column="1" Text="{loc:Translate Common_Select}" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
-                                <Button Grid.Column="1" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
-                                <Button Grid.Column="2" Text="{loc:Translate Transactions_DeleteSelectedButton}" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
+                                <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.CheckCircle}" Label="{loc:Translate Settings_SelectCategoriesTooltip}" TextOnlyLabel="{loc:Translate Common_Select}" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode, Converter={StaticResource InverseBoolConverter}}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Cancel}" ShowLabel="True" Command="{Binding CategoryManagement.ToggleSelectModeCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Transactions_DeleteSelectedButton}" ShowLabel="True" Command="{Binding CategoryManagement.DeleteSelectedCommand}" IsVisible="{Binding CategoryManagement.IsSelectMode}" Style="{StaticResource DestructiveButton}" />
                             </Grid>
                             <Label Text="{loc:Translate Settings_ManageCategoriesHint}" Style="{StaticResource TertiaryLabel}" />
 
@@ -313,8 +314,8 @@
                                 </BindableLayout.ItemTemplate>
                             </FlexLayout>
 
-                            <Button
-                                Text="{loc:Translate Settings_AddCategoryButton}"
+                            <controls:IconButton
+                                Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Settings_AddCategoryLabel}" TextOnlyLabel="{loc:Translate Settings_AddCategoryButton}" ShowLabel="True"
                                 Command="{Binding CategoryManagement.StartAddCategoryCommand}"
                                 IsVisible="{Binding CategoryManagement.IsAddingCategory, Converter={StaticResource InverseBoolConverter}}"
                                 Style="{StaticResource QuietButton}"
@@ -324,8 +325,8 @@
                                 <Entry Grid.Column="0" Text="{Binding CategoryManagement.NewCategoryName}" Placeholder="{loc:Translate Settings_CategoryNamePlaceholder}" />
                                 <!-- Optional: leave on "None (top level)" for a new parent category. -->
                                 <Picker Grid.Column="1" Title="{loc:Translate Settings_ParentCategoryPickerTitle}" ItemsSource="{Binding CategoryManagement.NewCategoryParentOptions}" SelectedItem="{Binding CategoryManagement.NewCategoryParent}" WidthRequest="180" />
-                                <Button Grid.Column="2" Text="{loc:Translate Common_Add}" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Grid.Column="3" Text="{loc:Translate Common_Cancel}" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Common_Add}" ShowLabel="True" Command="{Binding CategoryManagement.ConfirmAddCategoryCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Grid.Column="3" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Cancel}" ShowLabel="True" Command="{Binding CategoryManagement.CancelAddCategoryCommand}" Style="{StaticResource QuietButton}" />
                             </Grid>
                             <Label Text="{Binding CategoryManagement.StatusText}" IsVisible="{Binding CategoryManagement.IsAddingCategory}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                         </VerticalStackLayout>
@@ -341,7 +342,7 @@
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveResolveUpcomingCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding SaveResolveUpcomingCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding ResolveUpcomingStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
@@ -365,7 +366,7 @@
                                                 </Border>
                                                 <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="160" />
                                                 <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="150" />
-                                                <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
+                                                <controls:IconButton Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Common_Add}" ShowLabel="True" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
                                             </HorizontalStackLayout>
                                         </Grid>
                                     </DataTemplate>
@@ -395,8 +396,8 @@
                                                     <Label Style="{StaticResource TertiaryLabel}" Text="{Binding DestinationAccountName}" IsVisible="{Binding HasDestinationAccount}" />
                                                     <Label Style="{StaticResource TertiaryLabel}" Text="{Binding MatchCountText}" />
                                                 </VerticalStackLayout>
-                                                <Button Grid.Column="1" Text="{loc:Translate Common_Edit}" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" VerticalOptions="Center" />
-                                                <Button Grid.Column="2" Text="{loc:Translate Settings_ForgetButton}" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
+                                                <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.PencilSquare}" Label="{loc:Translate Common_Edit}" Command="{Binding EditCommand}" Style="{StaticResource QuietButton}" VerticalOptions="Center" />
+                                                <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Settings_ForgetButton}" ShowLabel="True" Command="{Binding ForgetCommand}" Style="{StaticResource DestructiveButton}" VerticalOptions="Center" />
                                             </Grid>
 
                                             <!-- Edit mode -->
@@ -409,8 +410,8 @@
                                                 </Grid>
                                                 <Picker Title="{loc:Translate Common_OtherAccountPickerTitle}" ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding EditDestinationAccount}" IsVisible="{Binding IsEditTransferType}" />
                                                 <HorizontalStackLayout Spacing="8">
-                                                    <Button Text="{loc:Translate Common_Save}" Command="{Binding SaveEditCommand}" Style="{StaticResource PrimaryButton}" />
-                                                    <Button Text="{loc:Translate Common_Cancel}" Command="{Binding CancelEditCommand}" Style="{StaticResource QuietButton}" />
+                                                    <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding SaveEditCommand}" Style="{StaticResource PrimaryButton}" />
+                                                    <controls:IconButton Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Cancel}" ShowLabel="True" Command="{Binding CancelEditCommand}" Style="{StaticResource QuietButton}" />
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
 
@@ -420,9 +421,9 @@
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
                             <HorizontalStackLayout Spacing="10" IsVisible="{Binding LearningRules.HasPages}">
-                                <Button Text="{loc:Translate Common_PreviousPage}" Command="{Binding LearningRules.PreviousPageCommand}" IsEnabled="{Binding LearningRules.CanGoToPreviousPage}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.ChevronLeft}" Label="{loc:Translate Common_PreviousPageTooltip}" TextOnlyLabel="{loc:Translate Common_PreviousPage}" Command="{Binding LearningRules.PreviousPageCommand}" IsEnabled="{Binding LearningRules.CanGoToPreviousPage}" Style="{StaticResource QuietButton}" />
                                 <Label Text="{Binding LearningRules.PageText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
-                                <Button Text="{loc:Translate Common_NextPage}" Command="{Binding LearningRules.NextPageCommand}" IsEnabled="{Binding LearningRules.CanGoToNextPage}" Style="{StaticResource QuietButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.ChevronRight}" Label="{loc:Translate Common_NextPageTooltip}" TextOnlyLabel="{loc:Translate Common_NextPage}" Command="{Binding LearningRules.NextPageCommand}" IsEnabled="{Binding LearningRules.CanGoToNextPage}" Style="{StaticResource QuietButton}" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
@@ -443,8 +444,8 @@
                                 <Entry Grid.Column="1" Text="{Binding Pin.ConfirmPinText}" Placeholder="{loc:Translate Settings_ConfirmPinPlaceholder}" IsPassword="True" Keyboard="Numeric" />
                             </Grid>
                             <HorizontalStackLayout Spacing="8">
-                                <Button Text="{loc:Translate Settings_SetChangePinButton}" Command="{Binding Pin.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
-                                <Button Text="{loc:Translate Settings_RemovePinButton}" Command="{Binding Pin.RemovePinCommand}" IsVisible="{Binding Pin.IsPinSet}" Style="{StaticResource DestructiveButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.LockClosed}" Label="{loc:Translate Settings_SetChangePinButton}" ShowLabel="True" Command="{Binding Pin.SetPinCommand}" Style="{StaticResource PrimaryButton}" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.LockOpen}" Label="{loc:Translate Settings_RemovePinButton}" ShowLabel="True" Command="{Binding Pin.RemovePinCommand}" IsVisible="{Binding Pin.IsPinSet}" Style="{StaticResource DestructiveButton}" />
                             </HorizontalStackLayout>
 
                             <Label Text="{Binding Pin.StatusText}" Style="{StaticResource SecondaryLabel}" />
@@ -457,7 +458,7 @@
 
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{loc:Translate Settings_BackupLabel}" Style="{StaticResource SecondaryLabel}" />
-                                <Button Text="{loc:Translate Settings_ExportBackupButton}" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                                <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowUpTray}" Label="{loc:Translate Settings_ExportBackupButton}" ShowLabel="True" Command="{Binding Data.ExportCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
                                 <Label Text="{Binding Data.ExportStatusText}" Style="{StaticResource TertiaryLabel}" />
                             </VerticalStackLayout>
 
@@ -481,7 +482,7 @@
                                 </Grid>
                                 <Label Text="{Binding Data.LastAutoBackupText}" Style="{StaticResource TertiaryLabel}" />
                                 <HorizontalStackLayout Spacing="10">
-                                    <Button Text="{loc:Translate Common_Save}" Command="{Binding Data.SaveAutoBackupSettingsCommand}" Style="{StaticResource PrimaryButton}" />
+                                    <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Save}" ShowLabel="True" Command="{Binding Data.SaveAutoBackupSettingsCommand}" Style="{StaticResource PrimaryButton}" />
                                     <Label Text="{Binding Data.AutoBackupStatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
@@ -492,8 +493,8 @@
                                 <Label Text="{loc:Translate Settings_DiagnosticsLabel}" Style="{StaticResource SecondaryLabel}" />
                                 <Label Text="{Binding Data.AppVersionText}" Style="{StaticResource TertiaryLabel}" />
                                 <HorizontalStackLayout Spacing="8">
-                                    <Button Text="{loc:Translate Settings_OpenDiagnosticsLogButton}" Command="{Binding Data.OpenDiagnosticsLogCommand}" Style="{StaticResource QuietButton}" />
-                                    <Button Text="{loc:Translate Settings_OpenDataFolderButton}" Command="{Binding Data.OpenDataFolderCommand}" Style="{StaticResource QuietButton}" />
+                                    <controls:IconButton Icon="{x:Static controls:Heroicons.DocumentText}" Label="{loc:Translate Settings_OpenDiagnosticsLogButton}" ShowLabel="True" Command="{Binding Data.OpenDiagnosticsLogCommand}" Style="{StaticResource QuietButton}" />
+                                    <controls:IconButton Icon="{x:Static controls:Heroicons.FolderOpen}" Label="{loc:Translate Settings_OpenDataFolderButton}" ShowLabel="True" Command="{Binding Data.OpenDataFolderCommand}" Style="{StaticResource QuietButton}" />
                                 </HorizontalStackLayout>
                                 <Label Text="{Binding Data.DiagnosticsStatusText}" Style="{StaticResource TertiaryLabel}" />
                                 <!-- DEV ONLY (Debug builds): reopen first-run setup. Remove before release. -->
@@ -504,8 +505,8 @@
 
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{loc:Translate Settings_RestoreFromBackupLabel}" Style="{StaticResource SecondaryLabel}" />
-                                <Button
-                                    Text="{loc:Translate Settings_ChooseBackupFileButton}"
+                                <controls:IconButton
+                                    Icon="{x:Static controls:Heroicons.ArrowDownTray}" Label="{loc:Translate Settings_ChooseBackupFileButton}" ShowLabel="True"
                                     Command="{Binding Data.PickRestoreFileCommand}"
                                     IsVisible="{Binding Data.HasPendingRestore, Converter={StaticResource InverseBoolConverter}}"
                                     Style="{StaticResource QuietButton}"
@@ -515,9 +516,9 @@
                                     <Label Text="{Binding Data.PendingRestoreFileName}" />
                                     <Label Text="{Binding Data.PendingRestoreSummaryText}" Style="{StaticResource TertiaryLabel}" />
                                     <HorizontalStackLayout Spacing="8">
-                                        <Button Text="{loc:Translate Settings_MergeButton}" Command="{Binding Data.ConfirmMergeCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
-                                        <Button Text="{loc:Translate Settings_ReplaceEverythingButton}" Command="{Binding Data.ConfirmReplaceCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource DestructiveButton}" />
-                                        <Button Text="{loc:Translate Common_Cancel}" Command="{Binding Data.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Icon="{x:Static controls:Heroicons.PlusCircle}" Label="{loc:Translate Settings_MergeButton}" ShowLabel="True" Command="{Binding Data.ConfirmMergeCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
+                                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowPath}" Label="{loc:Translate Settings_ReplaceEverythingButton}" ShowLabel="True" Command="{Binding Data.ConfirmReplaceCommand}" IsEnabled="{Binding Data.PendingRestoreIsValid}" Style="{StaticResource DestructiveButton}" />
+                                        <controls:IconButton Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Cancel}" ShowLabel="True" Command="{Binding Data.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
 
@@ -528,8 +529,8 @@
 
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{loc:Translate Settings_DeleteAllLocalDataLabel}" Style="{StaticResource SecondaryLabel}" />
-                                <Button
-                                    Text="{loc:Translate Settings_DeleteAllLocalDataLabel}"
+                                <controls:IconButton
+                                    Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Settings_DeleteAllLocalDataLabel}" ShowLabel="True"
                                     Command="{Binding Data.RequestDeleteAllCommand}"
                                     IsVisible="{Binding Data.IsConfirmingDeleteAll, Converter={StaticResource InverseBoolConverter}}"
                                     Style="{StaticResource DestructiveButton}"
@@ -541,8 +542,8 @@
                                         Style="{StaticResource TertiaryLabel}"
                                         TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
                                     <HorizontalStackLayout Spacing="8">
-                                        <Button Text="{loc:Translate Settings_YesDeleteEverything}" Command="{Binding Data.ConfirmDeleteAllCommand}" Style="{StaticResource DestructiveButton}" />
-                                        <Button Text="{loc:Translate Common_Cancel}" Command="{Binding Data.CancelDeleteAllCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Icon="{x:Static controls:Heroicons.Trash}" Label="{loc:Translate Settings_YesDeleteEverything}" ShowLabel="True" Command="{Binding Data.ConfirmDeleteAllCommand}" Style="{StaticResource DestructiveButton}" />
+                                        <controls:IconButton Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Cancel}" ShowLabel="True" Command="{Binding Data.CancelDeleteAllCommand}" Style="{StaticResource QuietButton}" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
 
