@@ -98,7 +98,7 @@ Not part of the active build plan; revisit later as a quality-of-life addition, 
 ## Settings
 
 - One Settings page with a side list of four areas. The original spec (Scheduled / Preferences / Data / Appearance) was **superseded** by a larger Settings built later (Phase 7 log in `docs/development-phases.md`):
-  - **General**: appearance (theme), language, currency, default account type, privacy mode, reminders.
+  - **General**: appearance (theme), language, currency, default account type, privacy mode, icons on buttons (`AppSettings.ShowIcons`, added 2026-09-29, on by default; see Iconography in `docs/visual-design-language.md`), reminders.
   - **Dashboard**: hero metric, section order, "free to spend" settings.
   - **Transactions**: Manage categories, the resolve-upcoming window, Bank categories, Learned categorization rules.
   - **Data & Security**: app-lock PIN; backup/export/restore, automatic backups, delete all local data, diagnostics.

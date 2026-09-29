@@ -92,6 +92,7 @@ Banccoon.sln
 ├─ tests/
 │  └─ Banccoon.Tests/           xUnit tests for Core and Infrastructure.
 ├─ tools/
+│  ├─ icon-font/                Builds the Heroicons button-icon font from the committed SVGs.
 │  └─ linux-verification/       App-layer checks runnable from Linux (not in the .sln).
 └─ docs/                        Product, UI and visual-design decisions; roadmap.
 ```
@@ -125,7 +126,7 @@ Banccoon.sln
 | `Formatting` | Money, dates, account numbers and other display text. |
 | `Localization` | `Translator` and the `{loc:Translate}` XAML markup extension. |
 | `Resources/Strings` | `AppStrings.resx` (English) and `AppStrings.ru.resx` (Russian). |
-| `Controls`, `Converters` | Custom controls (e.g. the forecast chart) and value converters. |
+| `Controls`, `Converters` | Custom controls (e.g. the forecast chart, `IconButton`) and value converters. |
 | `Services` | App-level services such as the automatic backup runner. |
 | `Diagnostics` | `DiagnosticLog`, the best-effort file logger. |
 
@@ -235,6 +236,12 @@ delete `banccoon.db*`. The next launch opens first-run setup.
 2. Use it from XAML with `{loc:Translate Key}`, or from C# with `Translator.Get("Key")`.
 3. From Linux, `tools/linux-verification/scripts/resx_add.py` inserts EN + RU entries together,
    and `verify.sh` checks parity and that every key used from C# exists.
+
+### Give a button an icon
+
+Use `controls:IconButton` with an `Icon` from `Controls/Heroicons.cs` and a `Label` (not `Text`); add
+`ShowLabel="True"` to keep the label visible. The glyphs come from a font built from Heroicons SVGs; to add
+one, see *Iconography* in [docs/visual-design-language.md](docs/visual-design-language.md).
 
 ### Add a statement parser for another bank
 
