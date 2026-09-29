@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:controls="clr-namespace:Banccoon.App.Controls"
     xmlns:loc="clr-namespace:Banccoon.App.Localization"
     x:DataType="viewModels:ReconciliationViewModel"
     Title="{loc:Translate Reconciliation_Title}"
@@ -17,7 +18,7 @@
                     <Label Text="{loc:Translate Reconciliation_Header}" Style="{StaticResource ScreenTitleLabel}" />
                     <Label Text="{Binding StepProgressText}" Style="{StaticResource TertiaryLabel}" />
                 </VerticalStackLayout>
-                <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Clicked="OnCloseClicked" Style="{StaticResource QuietButton}" VerticalOptions="Start" />
+                <controls:IconButton Grid.Column="1" Icon="{x:Static controls:Heroicons.XMark}" Label="{loc:Translate Common_Close}" Clicked="OnCloseClicked" Style="{StaticResource QuietButton}" VerticalOptions="Start" />
             </Grid>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
@@ -55,7 +56,7 @@
                     <Label Text="{Binding ComparisonText}" IsVisible="{Binding HasComparison}" FontAttributes="Bold" />
                     <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
 
-                    <Button Text="{loc:Translate Common_Continue}" Command="{Binding ContinueCommand}" IsEnabled="{Binding HasComparison}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowRight}" Label="{loc:Translate Common_Continue}" ShowLabel="True" ContentLayout="Right,6" Command="{Binding ContinueCommand}" IsEnabled="{Binding HasComparison}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
 
@@ -77,10 +78,10 @@
                                             <Label Text="{Binding DueText}" Style="{StaticResource TertiaryLabel}" />
                                         </VerticalStackLayout>
                                         <Label Grid.Column="1" Text="{Binding AmountText}" FontAttributes="Bold" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
-                                        <Button Grid.Column="2" Text="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="3" Text="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="4" Text="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
-                                        <Button Grid.Column="5" Text="{loc:Translate Transactions_MarkPaidButton}" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
+                                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Clock}" Label="{loc:Translate Transactions_DelayButton}" Command="{Binding DelayCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="3" Icon="{x:Static controls:Heroicons.Forward}" Label="{loc:Translate Common_Skip}" Command="{Binding SkipCommand}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="4" Icon="{Binding IsAttachOpen, Converter={StaticResource AttachGlyphConverter}}" Label="{Binding AttachToggleText}" Command="{Binding ToggleAttachCommand}" IsVisible="{Binding CanAttach}" Style="{StaticResource QuietButton}" />
+                                        <controls:IconButton Grid.Column="5" Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Transactions_MarkPaidButton}" ShowLabel="True" Command="{Binding MarkPaidCommand}" Style="{StaticResource PrimaryButton}" />
                                     </Grid>
                                     <!-- "Attach…": pick the recorded transaction that paid this (e.g. the imported bank row) -
                                          the occurrence is marked paid without a second transaction. Nothing is suggested
@@ -97,7 +98,7 @@
                                                             <Label Text="{Binding DetailText}" Style="{StaticResource TertiaryLabel}" />
                                                         </VerticalStackLayout>
                                                         <Label Grid.Column="1" Text="{Binding AmountText}" VerticalOptions="Center" TextColor="{Binding Type, Converter={StaticResource TransactionTypeColorConverter}}" />
-                                                        <Button Grid.Column="2" Text="{loc:Translate ResolveUpcoming_AttachButton}" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
+                                                        <controls:IconButton Grid.Column="2" Icon="{x:Static controls:Heroicons.Link}" Label="{loc:Translate ResolveUpcoming_AttachButton}" ShowLabel="True" Command="{Binding AttachCommand}" Style="{StaticResource QuietButton}" />
                                                     </Grid>
                                                 </DataTemplate>
                                             </BindableLayout.ItemTemplate>
@@ -111,8 +112,8 @@
                     </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="8">
-                        <Button Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
-                        <Button Text="{loc:Translate Common_Continue}" Command="{Binding ContinueCommand}" Style="{StaticResource PrimaryButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowLeft}" Label="{loc:Translate Common_Back}" ShowLabel="True" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowRight}" Label="{loc:Translate Common_Continue}" ShowLabel="True" ContentLayout="Right,6" Command="{Binding ContinueCommand}" Style="{StaticResource PrimaryButton}" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
@@ -129,7 +130,7 @@
                         <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding GroupedSpending.Subcategory.Options}" SelectedItem="{Binding GroupedSpending.Subcategory.Selected}" IsVisible="{Binding GroupedSpending.Subcategory.IsVisible}" WidthRequest="170" />
                         <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding GroupedSpending.NewCategoryName}" IsVisible="{Binding GroupedSpending.IsCreatingNewCategory}" WidthRequest="150" />
                         <Entry Placeholder="{loc:Translate Reconciliation_GroupedSpendingNotePlaceholder}" Text="{Binding GroupedSpending.NoteText}" WidthRequest="220" />
-                        <Button Text="{loc:Translate Common_Add}" Command="{Binding GroupedSpending.AddCommand}" Style="{StaticResource ExpenseButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.Plus}" Label="{loc:Translate Common_Add}" ShowLabel="True" Command="{Binding GroupedSpending.AddCommand}" Style="{StaticResource ExpenseButton}" />
                     </HorizontalStackLayout>
                     <Label Text="{Binding GroupedSpending.StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" />
 
@@ -142,8 +143,8 @@
                     </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="8">
-                        <Button Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
-                        <Button Text="{loc:Translate Common_Continue}" Command="{Binding ContinueCommand}" Style="{StaticResource PrimaryButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowLeft}" Label="{loc:Translate Common_Back}" ShowLabel="True" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
+                        <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowRight}" Label="{loc:Translate Common_Continue}" ShowLabel="True" ContentLayout="Right,6" Command="{Binding ContinueCommand}" Style="{StaticResource PrimaryButton}" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
@@ -157,17 +158,17 @@
                         <Label Text="{loc:Translate Reconciliation_Step4Hint}" Style="{StaticResource SecondaryLabel}" />
                         <Label Text="{Binding AdjustmentText}" FontAttributes="Bold" />
                         <HorizontalStackLayout Spacing="8">
-                            <Button Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowLeft}" Label="{loc:Translate Common_Back}" ShowLabel="True" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
                             <Button Text="{loc:Translate Reconciliation_FinishWithoutAdjustingButton}" Command="{Binding FinishWithoutAdjustingCommand}" Style="{StaticResource QuietButton}" />
-                            <Button Text="{loc:Translate Reconciliation_RecordAdjustmentButton}" Command="{Binding RecordAdjustmentCommand}" Style="{StaticResource PrimaryButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.Scale}" Label="{loc:Translate Reconciliation_RecordAdjustmentButton}" ShowLabel="True" Command="{Binding RecordAdjustmentCommand}" Style="{StaticResource PrimaryButton}" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Spacing="10" IsVisible="{Binding IsMatched}">
                         <Label Text="{loc:Translate Reconciliation_Matched}" />
                         <HorizontalStackLayout Spacing="8">
-                            <Button Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
-                            <Button Text="{loc:Translate Common_Done}" Command="{Binding FinishWithoutAdjustingCommand}" Style="{StaticResource PrimaryButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.ArrowLeft}" Label="{loc:Translate Common_Back}" ShowLabel="True" Command="{Binding BackCommand}" Style="{StaticResource QuietButton}" />
+                            <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Done}" ShowLabel="True" Command="{Binding FinishWithoutAdjustingCommand}" Style="{StaticResource PrimaryButton}" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
@@ -178,7 +179,7 @@
                 <VerticalStackLayout Spacing="10">
                     <Label Text="{loc:Translate Reconciliation_DoneHeader}" Style="{StaticResource SectionTitleLabel}" />
                     <Label Text="{Binding DoneSummaryText}" />
-                    <Button Text="{loc:Translate Common_Done}" Clicked="OnCloseClicked" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
+                    <controls:IconButton Icon="{x:Static controls:Heroicons.Check}" Label="{loc:Translate Common_Done}" ShowLabel="True" Clicked="OnCloseClicked" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
             </Border>
 
