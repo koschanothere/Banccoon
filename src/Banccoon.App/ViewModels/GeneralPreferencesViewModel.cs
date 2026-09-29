@@ -1,13 +1,14 @@
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.App.Services;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
 
 // Groups the settings that are each just "pick a value, hit Save" with no sub-flow of their own -
-// language, reminders, account defaults, and privacy mode. Composed into SettingsViewModel the
+// language, reminders, account defaults, privacy mode and icons on buttons. Composed into SettingsViewModel the
 // same way Data/CategoryManagement are composed into other screens.
 public sealed class GeneralPreferencesViewModel : ViewModelBase
 {
@@ -16,6 +17,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
     private string defaultCurrencyText = "EUR";
     private AccountType defaultAccountType = AccountType.DebitCard;
     private bool privacyModeEnabled;
+    private bool showIcons = true;
     private ReminderFrequency reminderFrequency = ReminderFrequency.Weekly;
     private LanguageOption selectedLanguage;
     private string statusText = string.Empty;
@@ -59,6 +61,14 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
         set => SetProperty(ref privacyModeEnabled, value);
     }
 
+    // Icons on buttons (IconButton); off = text-only buttons everywhere. Applied on Save like its
+    // neighbours, then live on every page at once through IconPreference.
+    public bool ShowIcons
+    {
+        get => showIcons;
+        set => SetProperty(ref showIcons, value);
+    }
+
     public ReminderFrequency ReminderFrequency
     {
         get => reminderFrequency;
@@ -84,6 +94,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
         DefaultCurrencyText = settings.DefaultCurrency;
         DefaultAccountType = settings.DefaultAccountType;
         PrivacyModeEnabled = settings.PrivacyModeEnabled;
+        ShowIcons = settings.ShowIcons;
         ReminderFrequency = settings.ReminderFrequency;
         SelectedLanguage = Languages.FirstOrDefault(language => language.Code == settings.DisplayLanguage) ?? Languages[0];
         StatusText = string.Empty;
@@ -106,6 +117,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
             DefaultCurrency = normalizedCurrency,
             DefaultAccountType = DefaultAccountType,
             PrivacyModeEnabled = PrivacyModeEnabled,
+            ShowIcons = ShowIcons,
             ReminderFrequency = ReminderFrequency,
             DisplayLanguage = SelectedLanguage.Code
         });
@@ -115,6 +127,7 @@ public sealed class GeneralPreferencesViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             PrivacyMode.IsEnabled = PrivacyModeEnabled;
+            IconPreference.Instance.ShowIcons = ShowIcons;
             Translator.SetLanguage(SelectedLanguage.Code);
             DefaultCurrencyText = normalizedCurrency;
             StatusText = Translator.Get("Common_Saved");

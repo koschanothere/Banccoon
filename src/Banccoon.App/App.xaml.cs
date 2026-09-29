@@ -1,4 +1,5 @@
 using Banccoon.App.Localization;
+using Banccoon.App.Services;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Repositories;
 
@@ -30,5 +31,9 @@ public partial class App : Application
         };
 
         Translator.SetLanguage(settings.DisplayLanguage);
+
+        // Every IconButton is bound to this, so it must change on the UI thread (guardrail 2) -
+        // the settings read above may have resumed on a thread-pool thread.
+        await MainThread.InvokeOnMainThreadAsync(() => IconPreference.Instance.ShowIcons = settings.ShowIcons);
     }
 }

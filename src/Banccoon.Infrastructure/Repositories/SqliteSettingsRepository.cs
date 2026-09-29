@@ -58,7 +58,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 LegacySavingsGoalsConverted,
                 FirstRunCompleted,
                 PreferredParserIds,
-                FallbackCategoryId
+                FallbackCategoryId,
+                ShowIcons
             FROM Settings
             WHERE Id = 1;
             """;
@@ -99,7 +100,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
             SqliteData.ReadBoolean(reader, "LegacySavingsGoalsConverted"),
             SqliteData.ReadBoolean(reader, "FirstRunCompleted"),
             SqliteData.ReadString(reader, "PreferredParserIds"),
-            SqliteData.ReadNullableGuid(reader, "FallbackCategoryId"));
+            SqliteData.ReadNullableGuid(reader, "FallbackCategoryId"),
+            SqliteData.ReadBoolean(reader, "ShowIcons"));
     }
 
     private static DateTimeOffset? ReadNullableDateTimeOffset(System.Data.Common.DbDataReader reader, string name)
@@ -146,7 +148,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 LegacySavingsGoalsConverted,
                 FirstRunCompleted,
                 PreferredParserIds,
-                FallbackCategoryId)
+                FallbackCategoryId,
+                ShowIcons)
             VALUES (
                 1,
                 @DefaultCurrency,
@@ -178,7 +181,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 @LegacySavingsGoalsConverted,
                 @FirstRunCompleted,
                 @PreferredParserIds,
-                @FallbackCategoryId)
+                @FallbackCategoryId,
+                @ShowIcons)
             ON CONFLICT(Id) DO UPDATE SET
                 DefaultCurrency = excluded.DefaultCurrency,
                 DefaultForecastPeriod = excluded.DefaultForecastPeriod,
@@ -209,7 +213,8 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
                 LegacySavingsGoalsConverted = excluded.LegacySavingsGoalsConverted,
                 FirstRunCompleted = excluded.FirstRunCompleted,
                 PreferredParserIds = excluded.PreferredParserIds,
-                FallbackCategoryId = excluded.FallbackCategoryId;
+                FallbackCategoryId = excluded.FallbackCategoryId,
+                ShowIcons = excluded.ShowIcons;
             """;
         AddParameter(command, "@DefaultCurrency", settings.DefaultCurrency);
         AddParameter(command, "@DefaultForecastPeriod", settings.DefaultForecastPeriod.ToString());
@@ -241,6 +246,7 @@ public sealed class SqliteSettingsRepository : SqliteRepositoryBase, ISettingsRe
         AddParameter(command, "@FirstRunCompleted", settings.FirstRunCompleted ? 1 : 0);
         AddParameter(command, "@PreferredParserIds", settings.PreferredParserIds);
         AddParameter(command, "@FallbackCategoryId", SqliteData.ToDbValue(settings.FallbackCategoryId));
+        AddParameter(command, "@ShowIcons", settings.ShowIcons ? 1 : 0);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

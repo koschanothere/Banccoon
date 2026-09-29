@@ -1182,6 +1182,12 @@
   <data name="Settings_PrivacyModeHint" xml:space="preserve">
     <value>Скрывает все суммы за &#8226;&#8226;&#8226;&#8226; по всему приложению.</value>
   </data>
+  <data name="Settings_ShowIconsLabel" xml:space="preserve">
+    <value>Значки на кнопках</value>
+  </data>
+  <data name="Settings_ShowIconsHint" xml:space="preserve">
+    <value>На кнопках значки, а название видно при наведении. Если выключить, на всех кнопках будет текст.</value>
+  </data>
   <!-- SettingsPage: Dashboard tab -->
   <data name="Settings_SectionOrderLabel" xml:space="preserve">
     <value>Порядок разделов</value>

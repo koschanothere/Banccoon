@@ -208,6 +208,20 @@ public sealed class SqliteRepositoryTests
         Assert.Equal(AccentColor.Emerald, settings.AccentColor);
         Assert.Equal(NavigationStyle.Rail, settings.NavigationStyle);
         Assert.False(settings.ShowPowerUserFeatures);
+        Assert.True(settings.ShowIcons);
+    }
+
+    [Fact]
+    public async Task SettingsRepository_SaveAndGet_RoundTripsShowIcons()
+    {
+        await using var store = new SqliteTestStore();
+        var settings = await store.Settings.GetAsync();
+
+        await store.Settings.SaveAsync(settings with { ShowIcons = false });
+        Assert.False((await store.Settings.GetAsync()).ShowIcons);
+
+        await store.Settings.SaveAsync(settings with { ShowIcons = true });
+        Assert.True((await store.Settings.GetAsync()).ShowIcons);
     }
 
     [Fact]

@@ -1140,6 +1140,12 @@
   <data name="Settings_PrivacyModeHint" xml:space="preserve">
     <value>Hides every amount behind &#8226;&#8226;&#8226;&#8226; app-wide.</value>
   </data>
+  <data name="Settings_ShowIconsLabel" xml:space="preserve">
+    <value>Icons on buttons</value>
+  </data>
+  <data name="Settings_ShowIconsHint" xml:space="preserve">
+    <value>Buttons show an icon, with their name when you hover. Turn off to show text on every button instead.</value>
+  </data>
   <!-- SettingsPage: Dashboard tab -->
   <data name="Settings_SectionOrderLabel" xml:space="preserve">
     <value>Section order</value>

@@ -247,7 +247,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
                 LegacySavingsGoalsConverted INTEGER NOT NULL DEFAULT 0,
                 FirstRunCompleted INTEGER NOT NULL DEFAULT 0,
                 PreferredParserIds TEXT NOT NULL DEFAULT '',
-                FallbackCategoryId TEXT NULL
+                FallbackCategoryId TEXT NULL,
+                ShowIcons INTEGER NOT NULL DEFAULT 1
             );
             """;
 
@@ -483,6 +484,8 @@ public sealed class BanccoonDatabaseInitializer : IBanccoonDatabaseInitializer
         await AddMissingColumnAsync(connection, "Settings", "FirstRunCompleted", "INTEGER NOT NULL DEFAULT 0", cancellationToken);
         await AddMissingColumnAsync(connection, "Settings", "PreferredParserIds", "TEXT NOT NULL DEFAULT ''", cancellationToken);
         await AddMissingColumnAsync(connection, "Settings", "FallbackCategoryId", "TEXT NULL", cancellationToken);
+        // Icons on buttons: on by default for existing installs too.
+        await AddMissingColumnAsync(connection, "Settings", "ShowIcons", "INTEGER NOT NULL DEFAULT 1", cancellationToken);
     }
 
     private static async Task AddMissingColumnAsync(

@@ -42,7 +42,10 @@ public sealed record AppSettings(
     // The catch-all category an import approval with no category is filed under ("Other" /
     // "Прочее", created by setup in the chosen language). Null falls back to a category named
     // "Other" - see StatementImportService.
-    Guid? FallbackCategoryId = null)
+    Guid? FallbackCategoryId = null,
+    // Buttons show their Heroicons glyph (most as icon + tooltip); off falls back to text-only
+    // buttons everywhere. A display preference, deliberately not asked at first-run setup.
+    bool ShowIcons = true)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

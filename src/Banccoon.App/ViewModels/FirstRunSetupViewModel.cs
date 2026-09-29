@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Diagnostics;
 using Banccoon.App.Localization;
+using Banccoon.App.Services;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
@@ -395,6 +396,7 @@ public sealed class FirstRunSetupViewModel : ViewModelBase
             {
                 Translator.SetLanguage(settings.DisplayLanguage);
                 ApplyTheme(settings.ThemeMode);
+                IconPreference.Instance.ShowIcons = settings.ShowIcons;
                 Finished?.Invoke(FirstRunSetupDestination.Dashboard);
             });
         }

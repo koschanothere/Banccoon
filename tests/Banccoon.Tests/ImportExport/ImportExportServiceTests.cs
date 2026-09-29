@@ -194,6 +194,37 @@ public sealed class ImportExportServiceTests
         }
     }
 
+    // ShowIcons (2026-09-29) round-trips through a backup, and a backup written before it existed
+    // restores with icons on, the column's default.
+    [Fact]
+    public async Task Backup_RoundTripsShowIcons_AndAnOlderBackupWithoutItRestoresIconsOn()
+    {
+        await using var store = new SqliteTestStore();
+        var services = CreateServices(store);
+        await store.Settings.SaveAsync((await store.Settings.GetAsync()) with { ShowIcons = false });
+        var backupPath = Path.Combine(Path.GetTempPath(), "Banccoon.Tests", $"{Guid.NewGuid():N}.json");
+
+        try
+        {
+            await services.BackupService.CreateBackupAsync(backupPath);
+            Assert.False((await services.BackupService.ReadBackupAsync(backupPath)).Data.Settings.ShowIcons);
+
+            var json = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllTextAsync(backupPath))!;
+            var settingsNode = json["data"]!["settings"]!.AsObject();
+            Assert.True(settingsNode.Remove("showIcons"));
+            await File.WriteAllTextAsync(backupPath, json.ToJsonString());
+
+            Assert.True((await services.BackupService.ReadBackupAsync(backupPath)).Data.Settings.ShowIcons);
+        }
+        finally
+        {
+            if (File.Exists(backupPath))
+            {
+                File.Delete(backupPath);
+            }
+        }
+    }
+
     [Fact]
     public async Task Restore_BringsBackBankCategoryLinks_AndUnlinksOnesWhoseCategoryIsMissing()
     {

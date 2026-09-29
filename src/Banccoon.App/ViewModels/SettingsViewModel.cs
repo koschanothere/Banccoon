@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.App.Services;
 using Banccoon.Core.Appearance;
 using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
@@ -307,6 +308,7 @@ public sealed class SettingsViewModel : ViewModelBase
             RebuildDashboardSectionRows();
 
             PrivacyMode.IsEnabled = settings.PrivacyModeEnabled;
+            IconPreference.Instance.ShowIcons = settings.ShowIcons;
             Translator.SetLanguage(settings.DisplayLanguage);
         });
 

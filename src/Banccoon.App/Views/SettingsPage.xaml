@@ -122,6 +122,14 @@
                                 <Switch Grid.Column="1" IsToggled="{Binding General.PrivacyModeEnabled}" VerticalOptions="Center" />
                             </Grid>
 
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                    <Label Text="{loc:Translate Settings_ShowIconsLabel}" Style="{StaticResource SecondaryLabel}" />
+                                    <Label Text="{loc:Translate Settings_ShowIconsHint}" Style="{StaticResource TertiaryLabel}" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding General.ShowIcons}" VerticalOptions="Center" />
+                            </Grid>
+
                             <HorizontalStackLayout Spacing="10">
                                 <Button Text="{loc:Translate Common_Save}" Command="{Binding General.SaveCommand}" Style="{StaticResource PrimaryButton}" />
                                 <Label Text="{Binding General.StatusText}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
