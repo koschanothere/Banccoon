@@ -32,6 +32,7 @@ Decisions made in the UI planning walkthrough, before any visual/look design. Th
   - Drill-down: clicking a category filters straight into Transactions for that category/period
   - Income vs. expense breakdown, not just expense categories
   - Donut chart of the viewed month's category spend, hover-highlighted per slice. Slices are per **parent** category (a parent's own spending plus its children's); clicking a parent's slice opens a second donut to its right breaking it down by child (built 2026-09-25). Room noted for other analysis using the same parent/child split later, not scoped yet.
+  - **Category-row click, decided 2026-09-29**: `CategoryRows`/`TopMovers` currently send every tap straight to Transactions filtered by that category (`DrillDownCommand`) — that's changing for rows that have a breakdown (`HasBreakdown`). Tapping one of those now opens/closes its breakdown donut instead, matching the chart's own click behavior (one consistent rule: click a parent, see its breakdown). Navigating to Transactions for that category becomes a small, separate "view transactions" affordance on the row instead of the whole row's tap target. Rows with no breakdown (no children, or a parent with none this period) are unaffected — tapping them still goes straight to Transactions as today. Not yet built.
 
 ## Money Model: Free to Spend
 

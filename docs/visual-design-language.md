@@ -16,12 +16,13 @@ Concrete look decisions: typography, shape, density, and color. For the underlyi
 
 - **Desktop-first, moderately denser than the mobile reference it was inspired by**, while staying airy rather than cramped. Take advantage of desktop screen space (e.g. more transaction rows visible without scrolling) without collapsing the breathing room that makes the reference feel calm.
 
-## Iconography (buttons) — deferred, tracked as a global pass
+## Iconography (buttons) — global pass under way, 2026-09-29
 
-- **Current state (temporary, explicitly acceptable for now):** every button in the app — header actions (Filter, Check-in, Select, Import, Add), form actions (Save, Close, Mark Paid, Skip, Delay, Rename, Delete, Merge) — uses a plain text label. This was a deliberate "get it working first" choice, not a design decision.
-- **Eventual requirement:** icon-based buttons are one of the actual design principles (the reference app used icon glyphs for header-level actions, not text), so text-label buttons need to be replaced app-wide once the underlying screens/flows are further along.
-- **Do not do this incrementally per-screen.** Explicitly called out by the user as a *global* fix to do in one pass near the end of the build, once more of the app exists — not something to chase screen-by-screen as new buttons get added, since that would mean re-touching the same buttons twice.
-- **Icon set: decided — [Heroicons](https://heroicons.com/).** Which specific glyph goes on which button is not decided yet; the user will work through that mapping button-by-button in a separate session later. Nothing to implement here until that mapping exists.
+- **Prior state (superseded below):** every button in the app used a plain text label. Deliberate "get it working first" choice, not a design decision — and deliberately not chased incrementally per-screen while the rest of the app was still being built.
+- **Icon set: decided — [Heroicons](https://heroicons.com/).**
+- **New: a Settings toggle controls icons app-wide** (`AppSettings`, Settings → General, next to the other appearance-adjacent switches like privacy mode) — **on by default**, and deliberately **not** one of the first-run setup steps; icons are a display preference, not a first-run decision.
+- **Default per-button treatment, decided 2026-09-29**: icon-only, with the label shown as a hover tooltip rather than permanent text — reuse `ToolTipProperties.Text`, the same attached-property mechanism already used on `StatementImportPage.xaml`'s review-row amount, rather than introducing a new tooltip mechanism. This is a *default*, not a hard rule: some buttons keep a permanently visible icon **and** label side by side when the icon alone would be ambiguous or the action is important enough to want on sight (e.g. likely candidates: the colored semantic buttons — `DestructiveButton`/`ExpenseButton`/`IncomeButton`/`TransferButton` — since they're already carrying meaning through color and an icon-only version could read as less clear, not more; and primary calls to action like "+ Add"/Save). Decided **case by case per screen**, not by a blanket icon-only-vs-icon+label split.
+- **Process, decided 2026-09-29**: a separate session proposes the actual glyph-per-button mapping, screen by screen, for the user to review afterward (screenshots, the same pattern used for every other App-layer change that can't be verified from Linux) — not a live button-by-button walkthrough in chat.
 
 ## Dark Mode
 
