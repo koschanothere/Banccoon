@@ -30,6 +30,82 @@ public sealed class AnalyticsServiceTests
     }
 
     [Fact]
+    public void BuildReport_RollsChildrenUpIntoTheirParent_AndBreaksTheParentBackDown()
+    {
+        var food = new Category(Guid.NewGuid(), "Food");
+        var groceries = new Category(Guid.NewGuid(), "Groceries", ParentCategoryId: food.Id);
+        var cafes = new Category(Guid.NewGuid(), "Cafes", ParentCategoryId: food.Id);
+        var fruit = new Category(Guid.NewGuid(), "Fruit", ParentCategoryId: food.Id);
+        var transport = new Category(Guid.NewGuid(), "Transport");
+        var transactions = new List<Transaction>
+        {
+            Expense(new DateOnly(2026, 9, 1), 10m, food.Id),
+            Expense(new DateOnly(2026, 9, 2), 50m, groceries.Id),
+            Expense(new DateOnly(2026, 8, 2), 30m, groceries.Id),
+            Expense(new DateOnly(2026, 9, 3), 25m, cafes.Id),
+            Expense(new DateOnly(2026, 9, 4), 40m, transport.Id)
+        };
+
+        var report = service.BuildReport(new DateOnly(2026, 9, 15), trendPeriodCount: 2, transactions, [food, groceries, cafes, fruit, transport]);
+
+        Assert.Equal([food.Id, transport.Id], report.CategoryTrends.Select(trend => trend.CategoryId!.Value));
+        var foodTrend = report.CategoryTrends[0];
+        Assert.Equal(85m, foodTrend.CurrentPeriodTotal);
+        Assert.Equal(30m, foodTrend.PreviousPeriodTotal);
+        Assert.True(foodTrend.HasChildren);
+        Assert.Equal(["Groceries", "Cafes", "Food", "Fruit"], foodTrend.Breakdown.Select(entry => entry.CategoryName));
+        var own = foodTrend.Breakdown.Single(entry => entry.IsParentOwnShare);
+        Assert.Equal(food.Id, own.CategoryId);
+        Assert.Equal(10m, own.CurrentPeriodTotal);
+        Assert.Equal(0m, foodTrend.Breakdown.Single(entry => entry.CategoryId == fruit.Id).CurrentPeriodTotal);
+        Assert.Equal(foodTrend.CurrentPeriodTotal, foodTrend.Breakdown.Sum(entry => entry.CurrentPeriodTotal));
+        Assert.Equal(foodTrend.PreviousPeriodTotal, foodTrend.Breakdown.Sum(entry => entry.PreviousPeriodTotal));
+
+        var transportTrend = report.CategoryTrends[1];
+        Assert.False(transportTrend.HasChildren);
+        Assert.Empty(transportTrend.Breakdown);
+    }
+
+    [Fact]
+    public void BuildReport_ParentWithChildrenButOnlyChildSpend_HasNoOwnShareEntry()
+    {
+        var food = new Category(Guid.NewGuid(), "Food");
+        var groceries = new Category(Guid.NewGuid(), "Groceries", ParentCategoryId: food.Id);
+
+        var report = service.BuildReport(
+            new DateOnly(2026, 9, 15), trendPeriodCount: 1, [Expense(new DateOnly(2026, 9, 2), 50m, groceries.Id)], [food, groceries]);
+
+        var trend = Assert.Single(report.CategoryTrends);
+        Assert.Equal(food.Id, trend.CategoryId);
+        Assert.Equal("Food", trend.CategoryName);
+        Assert.Equal(groceries.Id, Assert.Single(trend.Breakdown).CategoryId);
+        Assert.DoesNotContain(trend.Breakdown, entry => entry.IsParentOwnShare);
+    }
+
+    [Fact]
+    public void BuildReport_ChildWhoseParentIsMissing_CountsAsItsOwnTopLevelCategory()
+    {
+        var orphan = new Category(Guid.NewGuid(), "Orphan", ParentCategoryId: Guid.NewGuid());
+        var deletedCategoryId = Guid.NewGuid();
+        var transactions = new List<Transaction>
+        {
+            Expense(new DateOnly(2026, 9, 2), 20m, orphan.Id),
+            Expense(new DateOnly(2026, 9, 3), 5m, deletedCategoryId),
+            Expense(new DateOnly(2026, 9, 4), 7m, null)
+        };
+
+        var report = service.BuildReport(new DateOnly(2026, 9, 15), trendPeriodCount: 1, transactions, [orphan]);
+
+        var orphanTrend = report.CategoryTrends.Single(trend => trend.CategoryId == orphan.Id);
+        Assert.Equal("Orphan", orphanTrend.CategoryName);
+        Assert.Equal(20m, orphanTrend.CurrentPeriodTotal);
+        Assert.False(orphanTrend.HasChildren);
+        Assert.Equal(5m, report.CategoryTrends.Single(trend => trend.CategoryId == deletedCategoryId).CurrentPeriodTotal);
+        Assert.Equal(7m, report.CategoryTrends.Single(trend => trend.CategoryId is null).CurrentPeriodTotal);
+        Assert.Equal(32m, report.CurrentPeriodExpense);
+    }
+
+    [Fact]
     public void BuildReport_StepsBackWholeCalendarMonthsAcrossAYearBoundary()
     {
         var category = new Category(Guid.NewGuid(), "Dining");

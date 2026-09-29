@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
 
@@ -21,6 +22,7 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
         string categoryName,
         string? destinationAccountName,
         ObservableCollection<NamedOptionViewModel> categoryOptions,
+        CategoryTree categoryTree,
         ObservableCollection<NamedOptionViewModel> accountOptions,
         Func<Guid, Task> onForget,
         Func<CategoryLearningRuleRowViewModel, Task> onSave)
@@ -39,11 +41,18 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
 
         CategoryOptions = categoryOptions;
         AccountOptions = accountOptions;
+        Subcategory = new SubcategoryPickerViewModel();
+        Subcategory.Reset(categoryTree);
         TypeOptions = Enum.GetValues<TransactionType>();
 
         editMatchText = MatchText;
         editType = Type;
-        editCategory = categoryOptions.FirstOrDefault(option => option.Id == rule.CategoryId);
+        // A rule filed under a child shows its parent here and the child next to it.
+        editCategory = categoryOptions.FirstOrDefault(option => option.Id == categoryTree.RootIdOf(rule.CategoryId));
+        if (editCategory is not null)
+        {
+            Subcategory.SelectCategory(rule.CategoryId);
+        }
         editDestinationAccount = rule.DestinationAccountId is { } destinationAccountId
             ? accountOptions.FirstOrDefault(option => option.Id == destinationAccountId)
             : null;
@@ -84,6 +93,12 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
 
     public ObservableCollection<NamedOptionViewModel> AccountOptions { get; }
 
+    // The edited category's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
+
+    // What Save stores: the chosen child, else the chosen parent.
+    public Guid? EditCategoryId => EditCategory is { } option ? Subcategory.Resolve(option.Id) : null;
+
     public IReadOnlyList<TransactionType> TypeOptions { get; }
 
     public bool IsEditing
@@ -115,7 +130,13 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
     public NamedOptionViewModel? EditCategory
     {
         get => editCategory;
-        set => SetProperty(ref editCategory, value);
+        set
+        {
+            if (SetProperty(ref editCategory, value))
+            {
+                Subcategory.ShowChildrenOf(value?.Id);
+            }
+        }
     }
 
     public NamedOptionViewModel? EditDestinationAccount
@@ -136,7 +157,11 @@ public sealed class CategoryLearningRuleRowViewModel : ViewModelBase
     {
         EditMatchText = MatchText;
         EditType = Type;
-        EditCategory = CategoryOptions.FirstOrDefault(option => option.Id == CategoryId);
+        EditCategory = CategoryOptions.FirstOrDefault(option => option.Id == Subcategory.Tree.RootIdOf(CategoryId));
+        if (EditCategory is not null)
+        {
+            Subcategory.SelectCategory(CategoryId);
+        }
         EditDestinationAccount = DestinationAccountId is { } destinationAccountId
             ? AccountOptions.FirstOrDefault(option => option.Id == destinationAccountId)
             : null;

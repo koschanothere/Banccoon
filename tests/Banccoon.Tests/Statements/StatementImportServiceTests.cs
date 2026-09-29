@@ -197,6 +197,43 @@ public sealed class StatementImportServiceTests
     }
 
     [Fact]
+    public async Task ApproveRowAsync_WithNoCategory_UsesTheFallbackCategoryChosenAtSetup()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        var prochee = new Category(Guid.NewGuid(), "Прочее", TransactionType.Expense);
+        await store.Categories.SaveAsync(prochee);
+        await store.Settings.SaveAsync((await store.Settings.GetAsync()) with { FallbackCategoryId = prochee.Id });
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch")
+        ])], withSettings: true);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        await service.ApproveRowAsync(Assert.Single(pending.Rows).Id, null, type: null, destinationAccountId: null);
+
+        Assert.Equal(prochee.Id, Assert.Single(ForAccount(await store.Transactions.GetAllAsync(), account.Id)).CategoryId);
+        Assert.Single(await store.Categories.GetAllAsync());
+    }
+
+    [Fact]
+    public async Task ApproveRowAsync_WithNoCategory_AndTheFallbackDeleted_FallsBackToOther()
+    {
+        await using var store = new SqliteTestStore();
+        var account = CreateAccount();
+        await store.Accounts.SaveAsync(account);
+        await store.Settings.SaveAsync((await store.Settings.GetAsync()) with { FallbackCategoryId = Guid.NewGuid() });
+        var service = CreateService(store, [new FakeStatementParser([
+            new ParsedStatementRow(new DateOnly(2026, 6, 10), 25m, TransactionType.Expense, "Lunch")
+        ])], withSettings: true);
+        var pending = await service.CreatePendingImportAsync(account.Id, "statement.fake");
+
+        await service.ApproveRowAsync(Assert.Single(pending.Rows).Id, null, type: null, destinationAccountId: null);
+
+        Assert.Equal("Other", Assert.Single(await store.Categories.GetAllAsync()).Name);
+    }
+
+    [Fact]
     public async Task UndoReviewAsync_AfterApprove_DeletesTheTransactionAndRestoresTheBalance()
     {
         await using var store = new SqliteTestStore();
@@ -537,7 +574,8 @@ public sealed class StatementImportServiceTests
 
     private static StatementImportService CreateService(
         SqliteTestStore store,
-        IEnumerable<IStatementParser> parsers)
+        IEnumerable<IStatementParser> parsers,
+        bool withSettings = false)
     {
         return new StatementImportService(
             new StatementParserRegistry(parsers),
@@ -548,7 +586,8 @@ public sealed class StatementImportServiceTests
             store.Transactions,
             new TransactionApplicationService(new TransactionBalanceService()),
             new CategorySuggestionService(),
-            store.BankCategoryLinks);
+            store.BankCategoryLinks,
+            withSettings ? store.Settings : null);
     }
 
     private static Account CreateAccount()

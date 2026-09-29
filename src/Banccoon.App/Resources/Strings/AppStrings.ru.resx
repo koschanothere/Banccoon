@@ -940,6 +940,9 @@
   <data name="Transactions_AllCategoriesOption" xml:space="preserve">
     <value>Все категории</value>
   </data>
+  <data name="Transactions_AllOfCategoryOption" xml:space="preserve">
+    <value>Вся категория</value>
+  </data>
   <data name="Transactions_TransferToFormat" xml:space="preserve">
     <value>Перевод на {0}</value>
   </data>
@@ -1085,6 +1088,12 @@
   <data name="Dashboard_HoverSliceShare" xml:space="preserve">
     <value>Наведите на сегмент, чтобы увидеть долю.</value>
   </data>
+  <data name="Dashboard_ParentOwnShareFormat" xml:space="preserve">
+    <value>{0} (без подкатегории)</value>
+  </data>
+  <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
+    <value>Нажмите на сегмент с подкатегориями, чтобы разбить его на части; нажмите ещё раз, чтобы закрыть.</value>
+  </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Всего потрачено: {0}</value>
   </data>
@@ -1099,6 +1108,12 @@
   </data>
   <data name="Common_NewCategoryOption" xml:space="preserve">
     <value>+ Новая категория</value>
+  </data>
+  <data name="Common_NoSubcategoryOption" xml:space="preserve">
+    <value>Без подкатегории</value>
+  </data>
+  <data name="Common_SubcategoryPickerTitle" xml:space="preserve">
+    <value>Подкатегория</value>
   </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Другой счёт</value>
@@ -1225,7 +1240,7 @@
     <value>Управление категориями</value>
   </data>
   <data name="Settings_ManageCategoriesHint" xml:space="preserve">
-    <value>Нажмите на категорию, чтобы изменить её цвет. Перетащите одну категорию на другую, чтобы объединить их.</value>
+    <value>Нажмите на категорию, чтобы изменить её цвет или вложить её в другую категорию. Перетащите одну категорию на другую, чтобы объединить их.</value>
   </data>
   <data name="Settings_AddCategoryButton" xml:space="preserve">
     <value>+ Добавить категорию</value>
@@ -1415,6 +1430,18 @@
   </data>
   <data name="Settings_ColorForFormat" xml:space="preserve">
     <value>Цвет для {0}</value>
+  </data>
+  <data name="Settings_ColorFollowsParentFormat" xml:space="preserve">
+    <value>Цвет как у категории «{0}».</value>
+  </data>
+  <data name="Settings_ParentCategoryPickerTitle" xml:space="preserve">
+    <value>Родительская категория</value>
+  </data>
+  <data name="Settings_NoParentOption" xml:space="preserve">
+    <value>Нет (верхний уровень)</value>
+  </data>
+  <data name="Settings_CategoryHasSubcategoriesHint" xml:space="preserve">
+    <value>Есть подкатегории, поэтому остаётся на верхнем уровне.</value>
   </data>
   <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
     <value>Восстановлено: {0}, {1}, {2}, {3}, {4}.</value>
@@ -1644,5 +1671,293 @@
   </data>
   <data name="Reconciliation_DoneUnexplainedFormat" xml:space="preserve">
     <value>Завершено с необъяснённой разницей {0}.</value>
+  </data>
+  <data name="DefaultCategory_Groceries" xml:space="preserve">
+    <value>Продукты</value>
+  </data>
+  <data name="DefaultCategory_Groceries_Supermarket" xml:space="preserve">
+    <value>Супермаркет</value>
+  </data>
+  <data name="DefaultCategory_Groceries_Market" xml:space="preserve">
+    <value>Рынок</value>
+  </data>
+  <data name="DefaultCategory_Groceries_GroceryDelivery" xml:space="preserve">
+    <value>Доставка продуктов</value>
+  </data>
+  <data name="DefaultCategory_EatingOut" xml:space="preserve">
+    <value>Кафе и рестораны</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_Restaurants" xml:space="preserve">
+    <value>Рестораны</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_Cafes" xml:space="preserve">
+    <value>Кофейни</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_FastFood" xml:space="preserve">
+    <value>Фастфуд</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_FoodDelivery" xml:space="preserve">
+    <value>Доставка еды</value>
+  </data>
+  <data name="DefaultCategory_Transport" xml:space="preserve">
+    <value>Транспорт</value>
+  </data>
+  <data name="DefaultCategory_Transport_Fuel" xml:space="preserve">
+    <value>Топливо</value>
+  </data>
+  <data name="DefaultCategory_Transport_PublicTransport" xml:space="preserve">
+    <value>Общественный транспорт</value>
+  </data>
+  <data name="DefaultCategory_Transport_Taxi" xml:space="preserve">
+    <value>Такси</value>
+  </data>
+  <data name="DefaultCategory_Transport_CarSharing" xml:space="preserve">
+    <value>Каршеринг</value>
+  </data>
+  <data name="DefaultCategory_Transport_ScootersBikes" xml:space="preserve">
+    <value>Самокаты и велосипеды</value>
+  </data>
+  <data name="DefaultCategory_Home" xml:space="preserve">
+    <value>Для дома</value>
+  </data>
+  <data name="DefaultCategory_Home_Bills" xml:space="preserve">
+    <value>Счета</value>
+  </data>
+  <data name="DefaultCategory_Home_Rent" xml:space="preserve">
+    <value>Аренда</value>
+  </data>
+  <data name="DefaultCategory_Home_Mortgage" xml:space="preserve">
+    <value>Ипотека</value>
+  </data>
+  <data name="DefaultCategory_Home_Repairs" xml:space="preserve">
+    <value>Ремонт</value>
+  </data>
+  <data name="DefaultCategory_Home_FurnitureAppliances" xml:space="preserve">
+    <value>Мебель и техника</value>
+  </data>
+  <data name="DefaultCategory_Home_HouseholdGoods" xml:space="preserve">
+    <value>Хозтовары</value>
+  </data>
+  <data name="DefaultCategory_Health" xml:space="preserve">
+    <value>Здоровье</value>
+  </data>
+  <data name="DefaultCategory_Health_PersonalCare" xml:space="preserve">
+    <value>Красота и уход</value>
+  </data>
+  <data name="DefaultCategory_Health_Pharmacy" xml:space="preserve">
+    <value>Аптека</value>
+  </data>
+  <data name="DefaultCategory_Health_Doctors" xml:space="preserve">
+    <value>Врачи и клиники</value>
+  </data>
+  <data name="DefaultCategory_Health_Dentist" xml:space="preserve">
+    <value>Стоматология</value>
+  </data>
+  <data name="DefaultCategory_Health_Sport" xml:space="preserve">
+    <value>Спорт и фитнес</value>
+  </data>
+  <data name="DefaultCategory_Shopping" xml:space="preserve">
+    <value>Покупки</value>
+  </data>
+  <data name="DefaultCategory_Shopping_ClothesShoes" xml:space="preserve">
+    <value>Одежда и обувь</value>
+  </data>
+  <data name="DefaultCategory_Shopping_Electronics" xml:space="preserve">
+    <value>Электроника</value>
+  </data>
+  <data name="DefaultCategory_Shopping_Marketplaces" xml:space="preserve">
+    <value>Маркетплейсы</value>
+  </data>
+  <data name="DefaultCategory_Leisure" xml:space="preserve">
+    <value>Отдых</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Travel" xml:space="preserve">
+    <value>Путешествия</value>
+  </data>
+  <data name="DefaultCategory_Leisure_CinemaEvents" xml:space="preserve">
+    <value>Кино и мероприятия</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Hobbies" xml:space="preserve">
+    <value>Хобби</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Games" xml:space="preserve">
+    <value>Игры</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Books" xml:space="preserve">
+    <value>Книги</value>
+  </data>
+  <data name="DefaultCategory_Education" xml:space="preserve">
+    <value>Образование</value>
+  </data>
+  <data name="DefaultCategory_Education_Courses" xml:space="preserve">
+    <value>Курсы</value>
+  </data>
+  <data name="DefaultCategory_Education_SchoolUniversity" xml:space="preserve">
+    <value>Учёба</value>
+  </data>
+  <data name="DefaultCategory_Education_KidsActivities" xml:space="preserve">
+    <value>Кружки и секции</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees" xml:space="preserve">
+    <value>Финансы и комиссии</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_BankFees" xml:space="preserve">
+    <value>Банковские комиссии</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_LoanInterest" xml:space="preserve">
+    <value>Проценты по кредитам</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_Taxes" xml:space="preserve">
+    <value>Налоги</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_Insurance" xml:space="preserve">
+    <value>Страхование</value>
+  </data>
+  <data name="DefaultCategory_Other" xml:space="preserve">
+    <value>Прочее</value>
+  </data>
+  <data name="DefaultCategory_Other_Gifts" xml:space="preserve">
+    <value>Подарки</value>
+  </data>
+  <data name="DefaultCategory_Other_Charity" xml:space="preserve">
+    <value>Благотворительность</value>
+  </data>
+  <data name="DefaultCategory_Salary" xml:space="preserve">
+    <value>Зарплата</value>
+  </data>
+  <data name="DefaultCategory_Salary_Advance" xml:space="preserve">
+    <value>Аванс</value>
+  </data>
+  <data name="DefaultCategory_Salary_Bonus" xml:space="preserve">
+    <value>Премия</value>
+  </data>
+  <data name="DefaultCategory_SideIncome" xml:space="preserve">
+    <value>Подработка</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback" xml:space="preserve">
+    <value>Проценты и кешбэк</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback_DepositInterest" xml:space="preserve">
+    <value>Проценты по вкладам</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback_Cashback" xml:space="preserve">
+    <value>Кешбэк</value>
+  </data>
+  <data name="DefaultCategory_GiftsReceived" xml:space="preserve">
+    <value>Подарки (доход)</value>
+  </data>
+  <data name="DefaultCategory_OtherIncome" xml:space="preserve">
+    <value>Прочие доходы</value>
+  </data>
+  <data name="Setup_Title" xml:space="preserve">
+    <value>Добро пожаловать в Banccoon</value>
+  </data>
+  <data name="Setup_StepFormat" xml:space="preserve">
+    <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Setup_LanguageTitle" xml:space="preserve">
+    <value>Выберите язык</value>
+  </data>
+  <data name="Setup_LanguageHint" xml:space="preserve">
+    <value>Язык можно изменить позже в настройках. Категории создаются на этом языке и сохраняют названия при смене языка.</value>
+  </data>
+  <data name="Setup_RestoreLink" xml:space="preserve">
+    <value>Есть резервная копия? Восстановить</value>
+  </data>
+  <data name="Setup_RestoreHint" xml:space="preserve">
+    <value>Резервная копия содержит свои настройки и категории, поэтому остальные шаги пропускаются.</value>
+  </data>
+  <data name="Setup_SettingsTitle" xml:space="preserve">
+    <value>Основные настройки</value>
+  </data>
+  <data name="Setup_SettingsHint" xml:space="preserve">
+    <value>Всё это можно изменить позже в настройках.</value>
+  </data>
+  <data name="Setup_CurrencyLabel" xml:space="preserve">
+    <value>Валюта по умолчанию</value>
+  </data>
+  <data name="Setup_AutoBackupLabel" xml:space="preserve">
+    <value>Автоматическое резервное копирование</value>
+  </data>
+  <data name="Setup_AutoBackupEveryLabel" xml:space="preserve">
+    <value>Каждые (дней)</value>
+  </data>
+  <data name="Setup_WindowLabel" xml:space="preserve">
+    <value>«Можно потратить» считается на</value>
+  </data>
+  <data name="Setup_WindowNext7Days" xml:space="preserve">
+    <value>Ближайшие 7 дней</value>
+  </data>
+  <data name="Setup_WindowThisWeek" xml:space="preserve">
+    <value>Эту неделю</value>
+  </data>
+  <data name="Setup_WindowThisMonth" xml:space="preserve">
+    <value>Этот месяц</value>
+  </data>
+  <data name="Setup_CategoriesTitle" xml:space="preserve">
+    <value>Категории</value>
+  </data>
+  <data name="Setup_CategoriesHint" xml:space="preserve">
+    <value>Каждая основная категория — самостоятельная категория; подкатегорию выбирайте, только если нужна большая точность.</value>
+  </data>
+  <data name="Setup_ExpensesHeader" xml:space="preserve">
+    <value>Расходы</value>
+  </data>
+  <data name="Setup_IncomeHeader" xml:space="preserve">
+    <value>Доходы</value>
+  </data>
+  <data name="Setup_UntickAll" xml:space="preserve">
+    <value>Снять все</value>
+  </data>
+  <data name="Setup_OtherLockedHint" xml:space="preserve">
+    <value>Остаётся всегда: сюда попадают строки выписки без категории.</value>
+  </data>
+  <data name="Setup_PutUnderLabel" xml:space="preserve">
+    <value>Её основная категория не выбрана. Поместить в:</value>
+  </data>
+  <data name="Setup_ParentChoiceNew" xml:space="preserve">
+    <value>Новая основная категория…</value>
+  </data>
+  <data name="Setup_ParentChoiceKeepAsMain" xml:space="preserve">
+    <value>Оставить основной категорией</value>
+  </data>
+  <data name="Setup_NewParentPlaceholder" xml:space="preserve">
+    <value>Название основной категории</value>
+  </data>
+  <data name="Setup_ChooseParentsFirst" xml:space="preserve">
+    <value>Сначала укажите, куда поместить каждую выбранную подкатегорию.</value>
+  </data>
+  <data name="Setup_BanksTitle" xml:space="preserve">
+    <value>Ваши банки</value>
+  </data>
+  <data name="Setup_BanksHint" xml:space="preserve">
+    <value>Отметьте банки, выписки которых будете загружать, — они будут проверяться первыми. Или пропустите: Banccoon сам определит банк по файлу.</value>
+  </data>
+  <data name="Setup_SkipBanks" xml:space="preserve">
+    <value>Пропустить — определять автоматически</value>
+  </data>
+  <data name="Setup_StartTitle" xml:space="preserve">
+    <value>С чего начнём?</value>
+  </data>
+  <data name="Setup_StartHint" xml:space="preserve">
+    <value>Выбор сохранится, когда вы нажмёте один из вариантов.</value>
+  </data>
+  <data name="Setup_StartImport" xml:space="preserve">
+    <value>Загрузить выписку</value>
+  </data>
+  <data name="Setup_StartAccount" xml:space="preserve">
+    <value>Добавить счёт вручную</value>
+  </data>
+  <data name="Setup_StartEmpty" xml:space="preserve">
+    <value>Начать с пустого приложения</value>
+  </data>
+  <data name="Setup_BackupDaysInvalid" xml:space="preserve">
+    <value>Интервал копирования — целое число дней, не меньше 1.</value>
+  </data>
+  <data name="Setup_SaveFailedFormat" xml:space="preserve">
+    <value>Не удалось сохранить настройку: {0}</value>
+  </data>
+  <data name="Settings_DevOpenSetupButton" xml:space="preserve">
+    <value>Открыть первоначальную настройку (dev)</value>
   </data>
 </root>

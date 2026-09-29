@@ -1,7 +1,10 @@
+using Banccoon.Core.Appearance;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.ImportExport;
 using Banccoon.Core.Models;
 using Banccoon.Core.Recurrence;
+using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 using Banccoon.Infrastructure.ImportExport;
 using Banccoon.Tests.Infrastructure;
@@ -218,8 +221,31 @@ public sealed class ImportExportServiceTests
         Assert.Equal(seenAt, restored.Single(link => link.BankCategory == "Супермаркеты").FirstSeenAt);
     }
 
-    private static Services CreateServices(SqliteTestStore store)
+    [Fact]
+    public async Task Restore_KeepsCategoryParents_EvenWhenAChildComesFirst_AndPromotesOnesThatBreakTheRules()
     {
+        await using var sourceStore = new SqliteTestStore();
+        await using var targetStore = new SqliteTestStore();
+        var food = new Category(Guid.NewGuid(), "Food", Color: CategoryColor.Teal);
+        var groceries = new Category(Guid.NewGuid(), "Groceries", Color: CategoryColor.Teal, ParentCategoryId: food.Id);
+        var orphan = new Category(Guid.NewGuid(), "Orphan", ParentCategoryId: Guid.NewGuid());
+        var grandchild = new Category(Guid.NewGuid(), "Grandchild", ParentCategoryId: groceries.Id);
+        await sourceStore.Categories.SaveAsync(food);
+        var export = await CreateServices(sourceStore).ExportService.CreateExportAsync();
+        var handEdited = export with { Data = export.Data with { Categories = [grandchild, groceries, orphan, .. export.Data.Categories] } };
+
+        var result = await CreateServices(targetStore, hierarchical: true).ImportService.ImportAsync(handEdited, ImportMode.Replace);
+
+        Assert.True(result.Validation.IsValid);
+        Assert.Equal(food.Id, (await targetStore.Categories.GetByIdAsync(groceries.Id))!.ParentCategoryId);
+        Assert.Null((await targetStore.Categories.GetByIdAsync(orphan.Id))!.ParentCategoryId);
+        Assert.Null((await targetStore.Categories.GetByIdAsync(grandchild.Id))!.ParentCategoryId);
+        Assert.Null((await targetStore.Categories.GetByIdAsync(food.Id))!.ParentCategoryId);
+    }
+
+    private static Services CreateServices(SqliteTestStore store, bool hierarchical = false)
+    {
+        ICategoryRepository categories = hierarchical ? new HierarchicalCategoryRepository(store.Categories) : store.Categories;
         var validator = new ExportValidator();
         var exportService = new RepositoryExportService(
             store.Accounts,
@@ -242,7 +268,7 @@ public sealed class ImportExportServiceTests
             store.BankCategoryLinks);
         var importService = new RepositoryImportService(
             store.Accounts,
-            store.Categories,
+            categories,
             store.Transactions,
             store.ScheduledTransactions,
             store.SavingsGoals,

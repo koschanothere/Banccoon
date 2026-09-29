@@ -60,6 +60,10 @@ public sealed class DataManagementViewModel : ViewModelBase
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
     }
 
+    // Raised on the UI thread after a backup was restored (merge or replace). First-run setup
+    // uses it to leave setup, since the backup brought its own settings and categories.
+    public event Action? RestoreCompleted;
+
     public bool IsBusy
     {
         get => isBusy;
@@ -297,6 +301,7 @@ public sealed class DataManagementViewModel : ViewModelBase
                 PendingRestoreFileName = string.Empty;
                 PendingRestoreIsValid = false;
                 PendingRestoreSummaryText = string.Empty;
+                RestoreCompleted?.Invoke();
             });
         }
         catch (Exception ex)

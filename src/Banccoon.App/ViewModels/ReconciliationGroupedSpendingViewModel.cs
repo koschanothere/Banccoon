@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Reconciliation;
 using Banccoon.Core.Repositories;
@@ -49,11 +50,15 @@ public sealed class ReconciliationGroupedSpendingViewModel : ViewModelBase
         this.onAdded = onAdded;
 
         CategoryOptions = [];
+        Subcategory = new SubcategoryPickerViewModel();
         AddedEntries = [];
         AddCommand = new RelayCommand(() => _ = AddAsync());
     }
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     // One line per group recorded during this check-in (Id = the created transaction), e.g.
     // "Groceries (cash): RUB -2,400.00".
@@ -73,6 +78,7 @@ public sealed class ReconciliationGroupedSpendingViewModel : ViewModelBase
             if (SetProperty(ref category, value))
             {
                 OnPropertyChanged(nameof(IsCreatingNewCategory));
+                Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
             }
         }
     }
@@ -109,6 +115,7 @@ public sealed class ReconciliationGroupedSpendingViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
+            Subcategory.Reset(new CategoryTree(categories));
             AddedEntries.Clear();
             ResetForm();
             StatusText = string.Empty;
@@ -139,7 +146,8 @@ public sealed class ReconciliationGroupedSpendingViewModel : ViewModelBase
                 return;
             }
 
-            var (categoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+            var (chosenCategoryId, newOption) = await CategoryOptionsHelper.ResolveOrCreateAsync(Category, NewCategoryName, categoryRepository);
+            var categoryId = Subcategory.Resolve(chosenCategoryId);
             if (newOption is not null)
             {
                 await RunOnMainThreadAsync(() => CategoryOptionsHelper.InsertBeforeSentinel(CategoryOptions, newOption));

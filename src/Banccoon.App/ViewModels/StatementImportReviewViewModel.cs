@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Banccoon.App.Diagnostics;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 
@@ -68,6 +69,11 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
 
+    // The parent/child snapshot behind every row's, group's and the bulk bar's subcategory
+    // picker. Categories created during the review are always parents with no children, so it
+    // doesn't need refreshing until the next load. UI-thread only.
+    public CategoryTree CategoryTree { get; private set; } = CategoryTree.Empty;
+
     // Every other tracked account, offered as the "other side" when a row is marked Transfer.
     public ObservableCollection<NamedOptionViewModel> OtherAccountOptions { get; }
 
@@ -130,6 +136,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
         await RunOnMainThreadAsync(() =>
         {
             CategoryOptionsHelper.Repopulate(CategoryOptions, categories);
+            CategoryTree = new CategoryTree(categories);
+            Bulk.Subcategory.Reset(CategoryTree);
 
             OtherAccountOptions.Clear();
             foreach (var account in otherAccounts)
@@ -186,7 +194,8 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
     // Only called from inside RunExclusiveAsync.
     public async Task ApproveAsync(StatementImportRowViewModel row, Guid? bulkCategoryId)
     {
-        var categoryId = bulkCategoryId ?? await Categories.ResolveAsync(row.Category, row.NewCategoryName);
+        // A chosen child wins over its parent; a "+ New category" is always a parent.
+        var categoryId = bulkCategoryId ?? row.Subcategory.Resolve(await Categories.ResolveAsync(row.Category, row.NewCategoryName));
         await statementImportService.ApproveRowAsync(row.Id, categoryId, row.Type, row.OtherAccount?.Id);
         currentActionRows.Add(row);
         currentActionApproved = true;
@@ -241,7 +250,7 @@ public sealed class StatementImportReviewViewModel : ViewModelBase
             isCancelled = false;
             lastActionRows = null;
             var rowViewModels = pendingRows
-                .Select(row => new StatementImportRowViewModel(row, currency, CategoryOptions, OtherAccountOptions, ApproveRowAsync, SkipRowAsync, Categories.CreateForRowAsync))
+                .Select(row => new StatementImportRowViewModel(row, currency, CategoryOptions, CategoryTree, OtherAccountOptions, ApproveRowAsync, SkipRowAsync, Categories.CreateForRowAsync))
                 .ToList();
             foreach (var rowViewModel in rowViewModels)
             {

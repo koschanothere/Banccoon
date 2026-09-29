@@ -8,6 +8,7 @@ namespace Banccoon.App.Views
     public partial class TransactionsPage { private void InitializeComponent() { } private Button ImportButton = new(); private Border AddMenu = new(); }
     public partial class DashboardPage { private void InitializeComponent() { } }
     public partial class AccountsPage { private void InitializeComponent() { } }
+    public partial class FirstRunSetupPage { private void InitializeComponent() { } }
 }
 
 // App itself: the XAML-generated half, plus AppShell (a Shell in reality; only ever handed to Window).

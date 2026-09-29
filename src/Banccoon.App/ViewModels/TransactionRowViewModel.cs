@@ -34,7 +34,7 @@ public sealed class TransactionRowViewModel : ViewModelBase
         BalanceAfterText = MoneyFormat.Format(balanceAfter, currency);
 
         BadgeColor = CategoryId is { } categoryId
-            ? CategoryColorPalette.GetColorForCategory(categoryId, category?.Color)
+            ? CategoryColorPalette.GetColorForCategory(category?.ColorSourceId ?? categoryId, category?.Color)
             : CategoryColorPalette.GetTransferColor();
         BadgeLetter = categoryOrDestinationText.Length > 0
             ? categoryOrDestinationText[..1].ToUpperInvariant()

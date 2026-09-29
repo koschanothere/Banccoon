@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Forecasting;
 using Banccoon.Core.Models;
 using Banccoon.Core.Statements;
@@ -41,7 +42,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     // What Banccoon last suggested for this row (on load, or after a later approval taught it more)
     // - see IsUntouched.
-    private CategoryOptionViewModel? suggestedCategory;
+    private Guid? suggestedCategoryId;
     private TransactionType suggestedType;
     private NamedOptionViewModel? suggestedOtherAccount;
 
@@ -49,6 +50,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         StatementImportRow row,
         string currency,
         ObservableCollection<CategoryOptionViewModel> categoryOptions,
+        CategoryTree categoryTree,
         ObservableCollection<NamedOptionViewModel> otherAccountOptions,
         Func<StatementImportRowViewModel, Task> onApprove,
         Func<StatementImportRowViewModel, Task> onSkip,
@@ -66,6 +68,8 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             ? string.Empty
             : string.Format(Translator.Get("StatementImport_BankCategoryFormat"), row.BankCategory);
         CategoryOptions = categoryOptions;
+        Subcategory = new SubcategoryPickerViewModel();
+        Subcategory.Reset(categoryTree);
         OtherAccountOptions = otherAccountOptions;
         type = row.Type;
 
@@ -73,16 +77,21 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         // as-is files it under "Other", per the Phase 3 spec) and a transfer with no learned other
         // account starts with none picked - rather than quietly preselecting whichever category or
         // account happens to sort first, which looked like a real suggestion but wasn't.
+        // A child category shows as its parent in the picker, with the child next to it.
         var selectedCategoryId = row.CategoryId ?? row.SuggestedCategoryId;
         category = selectedCategoryId is { } categoryId
-            ? categoryOptions.FirstOrDefault(option => option.Id == categoryId && !option.IsCreateNew)
+            ? CategoryOptionsHelper.FindParentOption(categoryOptions, categoryTree, categoryId)
             : null;
+        if (category is not null)
+        {
+            Subcategory.SelectCategory(selectedCategoryId!.Value);
+        }
 
         otherAccount = row.DestinationAccountId is { } otherAccountId
             ? otherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
             : null;
 
-        suggestedCategory = category;
+        suggestedCategoryId = CategoryId;
         suggestedType = type;
         suggestedOtherAccount = otherAccount;
         Section = CurrentSection();
@@ -123,6 +132,13 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     public bool HasBankCategory => BankCategoryText.Length > 0;
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any (see SubcategoryPickerViewModel).
+    public SubcategoryPickerViewModel Subcategory { get; }
+
+    // The existing category the row is filed under: the chosen child, else the chosen parent.
+    // Null for no category, or a "+ New category" not created yet.
+    public Guid? CategoryId => Category is { IsCategory: true } option ? Subcategory.Resolve(option.Id) : null;
 
     // Bound two-way to the row's category picker. A picker never offers "no category", so a null
     // arriving here is MAUI resetting the picker while it builds the row's view - seen 2026-09-25
@@ -268,7 +284,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
     // can safely replace it.
     public bool IsUntouched =>
         !IsCreatingNewCategory
-        && Category?.Id == suggestedCategory?.Id
+        && CategoryId == suggestedCategoryId
         && Type == suggestedType
         && OtherAccount?.Id == suggestedOtherAccount?.Id;
 
@@ -281,13 +297,13 @@ public sealed class StatementImportRowViewModel : ViewModelBase
 
     // Fills an untouched row with a newer suggestion and re-decides its block. Returns whether the
     // block changed. UI-thread only.
-    public bool ApplySuggestion(TransactionType newType, CategoryOptionViewModel? newCategory, NamedOptionViewModel? newOtherAccount)
+    public bool ApplySuggestion(TransactionType newType, Guid? newCategoryId, NamedOptionViewModel? newOtherAccount)
     {
         suggestedType = newType;
-        suggestedCategory = newCategory;
         suggestedOtherAccount = newOtherAccount;
         Type = newType;
-        SetCategory(newCategory);
+        SetCategoryById(newCategoryId);
+        suggestedCategoryId = CategoryId;
         OtherAccount = newOtherAccount;
 
         var section = CurrentSection();
@@ -306,6 +322,19 @@ public sealed class StatementImportRowViewModel : ViewModelBase
         IsSelected = false;
         IsTypeEditorOpen = false;
         IsBusy = false;
+    }
+
+    // Sets the category from a stored id: a parent goes in the picker, a child goes in the picker
+    // as its parent with the child chosen next to it. An id not in the list (or null) means no
+    // category. UI-thread only.
+    public void SetCategoryById(Guid? categoryId)
+    {
+        var option = categoryId is { } id ? CategoryOptionsHelper.FindParentOption(CategoryOptions, Subcategory.Tree, id) : null;
+        SetCategory(option);
+        if (option is not null)
+        {
+            Subcategory.SelectCategory(categoryId!.Value);
+        }
     }
 
     // Points a row that was about to create a category at the real one with that name - created by
@@ -333,6 +362,7 @@ public sealed class StatementImportRowViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsCreatingNewCategory));
             OnPropertyChanged(nameof(CategoryBorderColor));
             OnPropertyChanged(nameof(IsReadyToApprove));
+            Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null);
         }
     }
 

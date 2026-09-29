@@ -901,6 +901,9 @@
   <data name="Transactions_AllCategoriesOption" xml:space="preserve">
     <value>All categories</value>
   </data>
+  <data name="Transactions_AllOfCategoryOption" xml:space="preserve">
+    <value>All of the category</value>
+  </data>
   <data name="Transactions_TransferToFormat" xml:space="preserve">
     <value>Transfer to {0}</value>
   </data>
@@ -1043,6 +1046,12 @@
   <data name="Dashboard_HoverSliceShare" xml:space="preserve">
     <value>Hover a slice to see its share.</value>
   </data>
+  <data name="Dashboard_ParentOwnShareFormat" xml:space="preserve">
+    <value>{0} (no subcategory)</value>
+  </data>
+  <data name="Dashboard_ClickSliceForBreakdown" xml:space="preserve">
+    <value>Click a slice with subcategories to break it down; click it again to close.</value>
+  </data>
   <data name="Dashboard_TotalSpendFormat" xml:space="preserve">
     <value>Total spend: {0}</value>
   </data>
@@ -1057,6 +1066,12 @@
   </data>
   <data name="Common_NewCategoryOption" xml:space="preserve">
     <value>+ New category</value>
+  </data>
+  <data name="Common_NoSubcategoryOption" xml:space="preserve">
+    <value>No subcategory</value>
+  </data>
+  <data name="Common_SubcategoryPickerTitle" xml:space="preserve">
+    <value>Subcategory</value>
   </data>
   <data name="Common_OtherAccountPickerTitle" xml:space="preserve">
     <value>Other account</value>
@@ -1183,7 +1198,7 @@
     <value>Manage categories</value>
   </data>
   <data name="Settings_ManageCategoriesHint" xml:space="preserve">
-    <value>Tap a category to change its color. Press and drag one onto another to merge them together.</value>
+    <value>Tap a category to change its color or put it under a parent category. Press and drag one onto another to merge them together.</value>
   </data>
   <data name="Settings_AddCategoryButton" xml:space="preserve">
     <value>+ Add category</value>
@@ -1373,6 +1388,18 @@
   </data>
   <data name="Settings_ColorForFormat" xml:space="preserve">
     <value>Color for {0}</value>
+  </data>
+  <data name="Settings_ColorFollowsParentFormat" xml:space="preserve">
+    <value>Its color follows {0}.</value>
+  </data>
+  <data name="Settings_ParentCategoryPickerTitle" xml:space="preserve">
+    <value>Parent category</value>
+  </data>
+  <data name="Settings_NoParentOption" xml:space="preserve">
+    <value>None (top level)</value>
+  </data>
+  <data name="Settings_CategoryHasSubcategoriesHint" xml:space="preserve">
+    <value>Has subcategories, so it stays at the top level.</value>
   </data>
   <data name="Settings_RestoredSummaryFormat" xml:space="preserve">
     <value>Restored {0}, {1}, {2}, {3}, {4}.</value>
@@ -1590,5 +1617,293 @@
   </data>
   <data name="Reconciliation_DoneUnexplainedFormat" xml:space="preserve">
     <value>Finished with an unexplained difference of {0}.</value>
+  </data>
+  <data name="DefaultCategory_Groceries" xml:space="preserve">
+    <value>Groceries</value>
+  </data>
+  <data name="DefaultCategory_Groceries_Supermarket" xml:space="preserve">
+    <value>Supermarket</value>
+  </data>
+  <data name="DefaultCategory_Groceries_Market" xml:space="preserve">
+    <value>Market</value>
+  </data>
+  <data name="DefaultCategory_Groceries_GroceryDelivery" xml:space="preserve">
+    <value>Grocery delivery</value>
+  </data>
+  <data name="DefaultCategory_EatingOut" xml:space="preserve">
+    <value>Eating out</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_Restaurants" xml:space="preserve">
+    <value>Restaurants</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_Cafes" xml:space="preserve">
+    <value>Cafés &amp; coffee</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_FastFood" xml:space="preserve">
+    <value>Fast food</value>
+  </data>
+  <data name="DefaultCategory_EatingOut_FoodDelivery" xml:space="preserve">
+    <value>Food delivery</value>
+  </data>
+  <data name="DefaultCategory_Transport" xml:space="preserve">
+    <value>Transport</value>
+  </data>
+  <data name="DefaultCategory_Transport_Fuel" xml:space="preserve">
+    <value>Fuel</value>
+  </data>
+  <data name="DefaultCategory_Transport_PublicTransport" xml:space="preserve">
+    <value>Public transport</value>
+  </data>
+  <data name="DefaultCategory_Transport_Taxi" xml:space="preserve">
+    <value>Taxi</value>
+  </data>
+  <data name="DefaultCategory_Transport_CarSharing" xml:space="preserve">
+    <value>Car sharing</value>
+  </data>
+  <data name="DefaultCategory_Transport_ScootersBikes" xml:space="preserve">
+    <value>Scooters &amp; bikes</value>
+  </data>
+  <data name="DefaultCategory_Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="DefaultCategory_Home_Bills" xml:space="preserve">
+    <value>Bills</value>
+  </data>
+  <data name="DefaultCategory_Home_Rent" xml:space="preserve">
+    <value>Rent</value>
+  </data>
+  <data name="DefaultCategory_Home_Mortgage" xml:space="preserve">
+    <value>Mortgage</value>
+  </data>
+  <data name="DefaultCategory_Home_Repairs" xml:space="preserve">
+    <value>Repairs</value>
+  </data>
+  <data name="DefaultCategory_Home_FurnitureAppliances" xml:space="preserve">
+    <value>Furniture &amp; appliances</value>
+  </data>
+  <data name="DefaultCategory_Home_HouseholdGoods" xml:space="preserve">
+    <value>Household goods</value>
+  </data>
+  <data name="DefaultCategory_Health" xml:space="preserve">
+    <value>Health</value>
+  </data>
+  <data name="DefaultCategory_Health_PersonalCare" xml:space="preserve">
+    <value>Personal care</value>
+  </data>
+  <data name="DefaultCategory_Health_Pharmacy" xml:space="preserve">
+    <value>Pharmacy</value>
+  </data>
+  <data name="DefaultCategory_Health_Doctors" xml:space="preserve">
+    <value>Doctors &amp; clinics</value>
+  </data>
+  <data name="DefaultCategory_Health_Dentist" xml:space="preserve">
+    <value>Dentist</value>
+  </data>
+  <data name="DefaultCategory_Health_Sport" xml:space="preserve">
+    <value>Sport &amp; fitness</value>
+  </data>
+  <data name="DefaultCategory_Shopping" xml:space="preserve">
+    <value>Shopping</value>
+  </data>
+  <data name="DefaultCategory_Shopping_ClothesShoes" xml:space="preserve">
+    <value>Clothes &amp; shoes</value>
+  </data>
+  <data name="DefaultCategory_Shopping_Electronics" xml:space="preserve">
+    <value>Electronics</value>
+  </data>
+  <data name="DefaultCategory_Shopping_Marketplaces" xml:space="preserve">
+    <value>Marketplaces</value>
+  </data>
+  <data name="DefaultCategory_Leisure" xml:space="preserve">
+    <value>Leisure</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Travel" xml:space="preserve">
+    <value>Travel</value>
+  </data>
+  <data name="DefaultCategory_Leisure_CinemaEvents" xml:space="preserve">
+    <value>Cinema &amp; events</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Hobbies" xml:space="preserve">
+    <value>Hobbies</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Games" xml:space="preserve">
+    <value>Games</value>
+  </data>
+  <data name="DefaultCategory_Leisure_Books" xml:space="preserve">
+    <value>Books</value>
+  </data>
+  <data name="DefaultCategory_Education" xml:space="preserve">
+    <value>Education</value>
+  </data>
+  <data name="DefaultCategory_Education_Courses" xml:space="preserve">
+    <value>Courses</value>
+  </data>
+  <data name="DefaultCategory_Education_SchoolUniversity" xml:space="preserve">
+    <value>School &amp; university</value>
+  </data>
+  <data name="DefaultCategory_Education_KidsActivities" xml:space="preserve">
+    <value>Kids' activities</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees" xml:space="preserve">
+    <value>Finance &amp; fees</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_BankFees" xml:space="preserve">
+    <value>Bank fees</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_LoanInterest" xml:space="preserve">
+    <value>Loan interest</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_Taxes" xml:space="preserve">
+    <value>Taxes</value>
+  </data>
+  <data name="DefaultCategory_FinanceFees_Insurance" xml:space="preserve">
+    <value>Insurance</value>
+  </data>
+  <data name="DefaultCategory_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="DefaultCategory_Other_Gifts" xml:space="preserve">
+    <value>Gifts</value>
+  </data>
+  <data name="DefaultCategory_Other_Charity" xml:space="preserve">
+    <value>Charity</value>
+  </data>
+  <data name="DefaultCategory_Salary" xml:space="preserve">
+    <value>Salary</value>
+  </data>
+  <data name="DefaultCategory_Salary_Advance" xml:space="preserve">
+    <value>Advance</value>
+  </data>
+  <data name="DefaultCategory_Salary_Bonus" xml:space="preserve">
+    <value>Bonus</value>
+  </data>
+  <data name="DefaultCategory_SideIncome" xml:space="preserve">
+    <value>Side income</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback" xml:space="preserve">
+    <value>Interest &amp; cashback</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback_DepositInterest" xml:space="preserve">
+    <value>Deposit interest</value>
+  </data>
+  <data name="DefaultCategory_InterestCashback_Cashback" xml:space="preserve">
+    <value>Cashback</value>
+  </data>
+  <data name="DefaultCategory_GiftsReceived" xml:space="preserve">
+    <value>Gifts received</value>
+  </data>
+  <data name="DefaultCategory_OtherIncome" xml:space="preserve">
+    <value>Other income</value>
+  </data>
+  <data name="Setup_Title" xml:space="preserve">
+    <value>Welcome to Banccoon</value>
+  </data>
+  <data name="Setup_StepFormat" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
+  <data name="Setup_LanguageTitle" xml:space="preserve">
+    <value>Choose your language</value>
+  </data>
+  <data name="Setup_LanguageHint" xml:space="preserve">
+    <value>You can change it later in Settings. Categories are created in this language and keep their names if you switch later.</value>
+  </data>
+  <data name="Setup_RestoreLink" xml:space="preserve">
+    <value>Restoring from a backup? Restore now</value>
+  </data>
+  <data name="Setup_RestoreHint" xml:space="preserve">
+    <value>A backup brings its own settings and categories, so the rest of setup is skipped.</value>
+  </data>
+  <data name="Setup_SettingsTitle" xml:space="preserve">
+    <value>Basic settings</value>
+  </data>
+  <data name="Setup_SettingsHint" xml:space="preserve">
+    <value>Everything here can be changed later in Settings.</value>
+  </data>
+  <data name="Setup_CurrencyLabel" xml:space="preserve">
+    <value>Default currency</value>
+  </data>
+  <data name="Setup_AutoBackupLabel" xml:space="preserve">
+    <value>Back up automatically</value>
+  </data>
+  <data name="Setup_AutoBackupEveryLabel" xml:space="preserve">
+    <value>Every (days)</value>
+  </data>
+  <data name="Setup_WindowLabel" xml:space="preserve">
+    <value>“Free to spend” covers</value>
+  </data>
+  <data name="Setup_WindowNext7Days" xml:space="preserve">
+    <value>The next 7 days</value>
+  </data>
+  <data name="Setup_WindowThisWeek" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="Setup_WindowThisMonth" xml:space="preserve">
+    <value>This month</value>
+  </data>
+  <data name="Setup_CategoriesTitle" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="Setup_CategoriesHint" xml:space="preserve">
+    <value>Each main category is a category in its own right; pick a subcategory only when you want more detail.</value>
+  </data>
+  <data name="Setup_ExpensesHeader" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="Setup_IncomeHeader" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Setup_UntickAll" xml:space="preserve">
+    <value>Untick all</value>
+  </data>
+  <data name="Setup_OtherLockedHint" xml:space="preserve">
+    <value>Always kept: imported rows with no category go here.</value>
+  </data>
+  <data name="Setup_PutUnderLabel" xml:space="preserve">
+    <value>Its main category isn't ticked. Put it under:</value>
+  </data>
+  <data name="Setup_ParentChoiceNew" xml:space="preserve">
+    <value>New main category…</value>
+  </data>
+  <data name="Setup_ParentChoiceKeepAsMain" xml:space="preserve">
+    <value>Keep it as a main category</value>
+  </data>
+  <data name="Setup_NewParentPlaceholder" xml:space="preserve">
+    <value>Name of the main category</value>
+  </data>
+  <data name="Setup_ChooseParentsFirst" xml:space="preserve">
+    <value>Choose where each ticked subcategory goes first.</value>
+  </data>
+  <data name="Setup_BanksTitle" xml:space="preserve">
+    <value>Your banks</value>
+  </data>
+  <data name="Setup_BanksHint" xml:space="preserve">
+    <value>Tick the banks whose statements you'll import; they're tried first. Or skip, and Banccoon will work out the bank from each file.</value>
+  </data>
+  <data name="Setup_SkipBanks" xml:space="preserve">
+    <value>Skip — detect automatically</value>
+  </data>
+  <data name="Setup_StartTitle" xml:space="preserve">
+    <value>How do you want to start?</value>
+  </data>
+  <data name="Setup_StartHint" xml:space="preserve">
+    <value>Your choices are saved when you pick one.</value>
+  </data>
+  <data name="Setup_StartImport" xml:space="preserve">
+    <value>Import a bank statement</value>
+  </data>
+  <data name="Setup_StartAccount" xml:space="preserve">
+    <value>Add an account manually</value>
+  </data>
+  <data name="Setup_StartEmpty" xml:space="preserve">
+    <value>Start with an empty app</value>
+  </data>
+  <data name="Setup_BackupDaysInvalid" xml:space="preserve">
+    <value>The backup interval must be a whole number of days, 1 or more.</value>
+  </data>
+  <data name="Setup_SaveFailedFormat" xml:space="preserve">
+    <value>Couldn't save the setup: {0}</value>
+  </data>
+  <data name="Settings_DevOpenSetupButton" xml:space="preserve">
+    <value>Open first-run setup (dev)</value>
   </data>
 </root>

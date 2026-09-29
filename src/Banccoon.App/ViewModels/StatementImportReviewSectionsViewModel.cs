@@ -231,15 +231,12 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
                 continue;
             }
 
-            var category = suggestion.CategoryId is { } categoryId
-                ? review.CategoryOptions.FirstOrDefault(option => !option.IsCreateNew && option.Id == categoryId)
-                : null;
             var otherAccount = suggestion.DestinationAccountId is { } otherAccountId
                 ? review.OtherAccountOptions.FirstOrDefault(option => option.Id == otherAccountId)
                 : null;
             var wasReady = row.Section == StatementImportRowSection.Ready;
             var previousGroup = StatementImportRowGroupKey.For(row);
-            row.ApplySuggestion(suggestion.Type, category, otherAccount);
+            row.ApplySuggestion(suggestion.Type, suggestion.CategoryId, otherAccount);
             var isReady = row.Section == StatementImportRowSection.Ready;
 
             if (wasReady && (!isReady || StatementImportRowGroupKey.For(row) != previousGroup))
@@ -357,7 +354,7 @@ public sealed class StatementImportReviewSectionsViewModel : ViewModelBase
             return;
         }
 
-        group = new StatementImportRowGroupViewModel(key, row, review.Currency, review.CategoryOptions, ApproveGroupAsync, review.Categories.CreateForGroupAsync);
+        group = new StatementImportRowGroupViewModel(key, row, review.Currency, review.CategoryOptions, review.CategoryTree, ApproveGroupAsync, review.Categories.CreateForGroupAsync);
         var index = 0;
         while (index < allGroups.Count && string.Compare(allGroups[index].Name, group.Name, StringComparison.CurrentCultureIgnoreCase) <= 0)
         {

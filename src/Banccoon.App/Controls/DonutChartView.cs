@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.Windows.Input;
 using Banccoon.App.ViewModels;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -7,7 +8,10 @@ namespace Banccoon.App.Controls;
 
 // Renders AnalyticsCategoryRowViewModel.Amount/Color as a hollow donut, and highlights whichever
 // slice the pointer is over. Windows/Mac Catalyst only (PointerGestureRecognizer isn't available
-// on touch platforms), which matches this app's Windows-only target.
+// on touch platforms), which matches this app's Windows-only target. A click (pointer released
+// over a slice) runs SegmentClickedCommand with that slice - the Analytics card uses it to open a
+// parent category's breakdown in a second donut. Uses the same PointerGestureRecognizer as the
+// hover rather than adding a TapGestureRecognizer next to it.
 public sealed class DonutChartView : GraphicsView
 {
     public static readonly BindableProperty SegmentsProperty = BindableProperty.Create(
@@ -25,6 +29,12 @@ public sealed class DonutChartView : GraphicsView
         BindingMode.TwoWay,
         propertyChanged: OnHighlightedSegmentChanged);
 
+    public static readonly BindableProperty SegmentClickedCommandProperty = BindableProperty.Create(
+        nameof(SegmentClickedCommand),
+        typeof(ICommand),
+        typeof(DonutChartView),
+        default(ICommand));
+
     private readonly DonutChartDrawable chartDrawable = new();
     private INotifyCollectionChanged? observedSegments;
 
@@ -36,6 +46,7 @@ public sealed class DonutChartView : GraphicsView
         var pointerRecognizer = new PointerGestureRecognizer();
         pointerRecognizer.PointerMoved += OnPointerMoved;
         pointerRecognizer.PointerExited += OnPointerExited;
+        pointerRecognizer.PointerReleased += OnPointerReleased;
         GestureRecognizers.Add(pointerRecognizer);
     }
 
@@ -49,6 +60,12 @@ public sealed class DonutChartView : GraphicsView
     {
         get => (AnalyticsCategoryRowViewModel?)GetValue(HighlightedSegmentProperty);
         set => SetValue(HighlightedSegmentProperty, value);
+    }
+
+    public ICommand? SegmentClickedCommand
+    {
+        get => (ICommand?)GetValue(SegmentClickedCommandProperty);
+        set => SetValue(SegmentClickedCommandProperty, value);
     }
 
     private static void OnSegmentsChanged(BindableObject bindable, object oldValue, object newValue)
@@ -103,6 +120,21 @@ public sealed class DonutChartView : GraphicsView
         if (!ReferenceEquals(segment, HighlightedSegment))
         {
             HighlightedSegment = segment;
+        }
+    }
+
+    private void OnPointerReleased(object? sender, PointerEventArgs e)
+    {
+        var point = e.GetPosition(this);
+        if (point is null || SegmentClickedCommand is not { } command)
+        {
+            return;
+        }
+
+        var segment = chartDrawable.HitTest(new PointF((float)point.Value.X, (float)point.Value.Y), (float)Width, (float)Height);
+        if (segment is not null && command.CanExecute(segment))
+        {
+            command.Execute(segment);
         }
     }
 

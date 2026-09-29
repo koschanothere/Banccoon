@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Statements;
 using Microsoft.Maui.Graphics;
 
@@ -14,17 +15,31 @@ public sealed class BankCategoryLinkRowViewModel : ViewModelBase
     private CategoryOptionViewModel? category;
     private string newCategoryName = string.Empty;
 
+    // Set while the subcategory picker is rebuilt from code, so that isn't saved as a new link.
+    private bool isSyncingSubcategory;
+
     public BankCategoryLinkRowViewModel(
         BankCategoryLink link,
         ObservableCollection<CategoryOptionViewModel> categoryOptions,
+        CategoryTree categoryTree,
         Func<BankCategoryLinkRowViewModel, Guid?, Task> onLinkChanged,
         Func<BankCategoryLinkRowViewModel, Task> onCreateCategory)
     {
         this.onLinkChanged = onLinkChanged;
         Name = link.BankCategory;
         CategoryOptions = categoryOptions;
-        category = categoryOptions.FirstOrDefault(option => option.IsCategory && option.Id == link.CategoryId)
+        Subcategory = new SubcategoryPickerViewModel(OnSubcategoryChanged);
+        // A link to a child shows its parent here and the child next to it.
+        category = (link.CategoryId is { } linkedId ? CategoryOptionsHelper.FindParentOption(categoryOptions, categoryTree, linkedId) : null)
             ?? categoryOptions.FirstOrDefault(option => option.IsNone);
+        SyncSubcategory(() =>
+        {
+            Subcategory.Reset(categoryTree);
+            if (category is { IsCategory: true } && link.CategoryId is { } childOrParentId)
+            {
+                Subcategory.SelectCategory(childOrParentId);
+            }
+        });
 
         CreateCategoryCommand = new RelayCommand(() => _ = onCreateCategory(this));
     }
@@ -32,6 +47,9 @@ public sealed class BankCategoryLinkRowViewModel : ViewModelBase
     public string Name { get; }
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any; choosing one saves the link to it.
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     public CategoryOptionViewModel? Category
     {
@@ -44,6 +62,7 @@ public sealed class BankCategoryLinkRowViewModel : ViewModelBase
             }
 
             RaiseCategoryChanged();
+            SyncSubcategory(() => Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null));
             if (value is { IsNone: true })
             {
                 _ = onLinkChanged(this, null);
@@ -73,6 +92,28 @@ public sealed class BankCategoryLinkRowViewModel : ViewModelBase
         if (SetProperty(ref category, value))
         {
             RaiseCategoryChanged();
+            SyncSubcategory(() => Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null));
+        }
+    }
+
+    private void OnSubcategoryChanged()
+    {
+        if (!isSyncingSubcategory && Category is { IsCategory: true } parent)
+        {
+            _ = onLinkChanged(this, Subcategory.Resolve(parent.Id));
+        }
+    }
+
+    private void SyncSubcategory(Action action)
+    {
+        isSyncingSubcategory = true;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            isSyncingSubcategory = false;
         }
     }
 

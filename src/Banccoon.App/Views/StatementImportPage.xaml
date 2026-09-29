@@ -40,6 +40,7 @@
                             <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
                                 <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
                             </Border>
+                            <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="130" />
                             <!-- Enter or Add creates the category at once, so every other row can pick it too. -->
                             <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="140" />
                             <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
@@ -86,6 +87,7 @@
                         <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
                             <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="140" />
                         </Border>
+                        <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="130" />
                         <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" ReturnCommand="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="140" />
                         <Button Text="{loc:Translate Common_Add}" Command="{Binding CreateCategoryCommand}" IsVisible="{Binding IsCreatingNewCategory}" Style="{StaticResource QuietButton}" />
                     </HorizontalStackLayout>
@@ -197,6 +199,7 @@
                                             <Border StrokeShape="RoundRectangle 8" StrokeThickness="2" Stroke="{Binding CategoryBorderColor}" Padding="0">
                                                 <Picker Title="{loc:Translate Common_Category}" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" WidthRequest="170" />
                                             </Border>
+                                            <Picker Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Subcategory.Options}" SelectedItem="{Binding Subcategory.Selected}" IsVisible="{Binding Subcategory.IsVisible}" WidthRequest="150" />
                                             <Entry Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding NewCategoryName}" IsVisible="{Binding IsCreatingNewCategory}" WidthRequest="150" />
                                         </HorizontalStackLayout>
                                         <Label Grid.Column="1" Text="{loc:Translate StatementImport_BankCategorySkipped}" IsVisible="{Binding IsSkipped}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
@@ -235,6 +238,8 @@
                         <Label Grid.Column="0" Text="{Binding Review.Bulk.SelectionSummaryText}" VerticalOptions="Center" />
                         <Picker Grid.Column="1" Title="{loc:Translate Common_Category}" ItemsSource="{Binding Review.CategoryOptions}" SelectedItem="{Binding Review.Bulk.BulkCategory}" WidthRequest="160" />
                         <Entry Grid.Column="2" Placeholder="{loc:Translate Common_NewCategoryNamePlaceholder}" Text="{Binding Review.Bulk.NewBulkCategoryName}" IsVisible="{Binding Review.Bulk.IsCreatingNewBulkCategory}" WidthRequest="140" />
+                        <!-- Shares the name box's column: a new category never has children. -->
+                        <Picker Grid.Column="2" Title="{loc:Translate Common_SubcategoryPickerTitle}" ItemsSource="{Binding Review.Bulk.Subcategory.Options}" SelectedItem="{Binding Review.Bulk.Subcategory.Selected}" IsVisible="{Binding Review.Bulk.Subcategory.IsVisible}" WidthRequest="140" />
                         <Button Grid.Column="3" Text="{loc:Translate StatementImport_ApplyToSelectedButton}" Command="{Binding Review.Bulk.ApplyCategoryCommand}" Style="{StaticResource QuietButton}" />
                         <Button Grid.Column="4" Text="{loc:Translate StatementImport_ApproveSelectedButton}" Command="{Binding Review.Bulk.ApproveSelectedCommand}" Style="{StaticResource PrimaryButton}" />
                     </Grid>

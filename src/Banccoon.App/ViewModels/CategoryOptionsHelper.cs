@@ -1,9 +1,14 @@
 using System.Collections.ObjectModel;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
 
+// Categories are two levels deep, but a picker never shows one combined list: Repopulate lists
+// only parent (top-level) categories, and a SubcategoryPickerViewModel next to the picker offers
+// the chosen parent's children. A category created inline here is always a parent.
+//
 // Shared behavior for every category picker that supports inline "create new category" (Statement
 // Import review rows, the Add Transaction form, the Schedule form): build the option list with the
 // create-new sentinel always last, and resolve a selection into a real category id - creating one
@@ -20,12 +25,24 @@ public static class CategoryOptionsHelper
     public static void Repopulate(ObservableCollection<CategoryOptionViewModel> options, IEnumerable<Category> categories)
     {
         options.Clear();
-        foreach (var category in categories.OrderBy(category => category.Name))
+        foreach (var category in new CategoryTree(categories).TopLevel)
         {
             options.Add(CategoryOptionViewModel.ForCategory(category));
         }
 
         options.Add(CategoryOptionViewModel.CreateNewSentinel());
+    }
+
+    // The option to show in a parent-only picker for a stored category: the category itself if it
+    // is a parent, its parent if it is a child (the child then goes in the SubcategoryPicker, via
+    // SubcategoryPickerViewModel.SelectCategory). Null if it isn't in the list.
+    public static CategoryOptionViewModel? FindParentOption(
+        IEnumerable<CategoryOptionViewModel> options,
+        CategoryTree tree,
+        Guid categoryId)
+    {
+        var parentId = tree.RootIdOf(categoryId);
+        return options.FirstOrDefault(option => option.IsCategory && option.Id == parentId);
     }
 
     public static void InsertBeforeSentinel(ObservableCollection<CategoryOptionViewModel> options, CategoryOptionViewModel option)

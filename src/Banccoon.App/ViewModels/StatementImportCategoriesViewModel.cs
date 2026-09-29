@@ -1,4 +1,5 @@
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 
 namespace Banccoon.App.ViewModels;
@@ -122,13 +123,14 @@ public sealed class StatementImportCategoriesViewModel : ViewModelBase
         });
     }
 
-    // Offers every category that exists but isn't in the list yet.
+    // Offers every parent category that exists but isn't in the list yet (children are only ever
+    // offered through a subcategory picker).
     public async Task SyncAsync()
     {
         var categories = await categoryRepository.GetAllAsync();
         await RunOnMainThreadAsync(() =>
         {
-            foreach (var category in categories.Where(category => !review.CategoryOptions.Any(option => !option.IsCreateNew && option.Id == category.Id)))
+            foreach (var category in new CategoryTree(categories).TopLevel.Where(category => !review.CategoryOptions.Any(option => !option.IsCreateNew && option.Id == category.Id)))
             {
                 AddOption(CategoryOptionViewModel.ForCategory(category));
             }

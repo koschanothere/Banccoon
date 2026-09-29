@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- First-run setup (FirstRunSetupViewModel): pushed as a modal over the shell on a brand-new install
+     (AppShell) or from Settings' DEBUG-only dev button. Five steps, one visible at a time. -->
+<ContentPage
+    x:Class="Banccoon.App.Views.FirstRunSetupPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:Banccoon.App.ViewModels"
+    xmlns:loc="clr-namespace:Banccoon.App.Localization"
+    x:DataType="viewModels:FirstRunSetupViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource LightPageBackground}, Dark={StaticResource DarkPageBackground}}">
+
+    <ContentPage.Resources>
+        <!-- A main category with its subcategories (used for both the expense and income lists). -->
+        <DataTemplate x:Key="SetupParentTemplate" x:DataType="viewModels:SetupCategoryItemViewModel">
+            <VerticalStackLayout Spacing="2" Margin="0,4">
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsEnabled}" VerticalOptions="Center" />
+                    <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6" Color="{Binding Swatch}" VerticalOptions="Center" />
+                    <Label Text="{Binding Name}" FontAttributes="Bold" VerticalOptions="Center" />
+                    <Label Text="{loc:Translate Setup_OtherLockedHint}" IsVisible="{Binding IsLocked}" Style="{StaticResource TertiaryLabel}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <VerticalStackLayout Margin="36,0,0,0" Spacing="0" BindableLayout.ItemsSource="{Binding Children}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:SetupCategoryItemViewModel">
+                            <VerticalStackLayout Spacing="2">
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding IsChecked}" VerticalOptions="Center" />
+                                    <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                                <!-- Ticked while its main category isn't: where does it go? -->
+                                <HorizontalStackLayout Spacing="8" Margin="36,0,0,6" IsVisible="{Binding NeedsParentChoice}">
+                                    <Label Text="{loc:Translate Setup_PutUnderLabel}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                                    <Picker ItemsSource="{Binding ParentChoices}" SelectedItem="{Binding ParentChoice}" WidthRequest="230" />
+                                    <Entry Text="{Binding NewParentName}" Placeholder="{loc:Translate Setup_NewParentPlaceholder}" IsVisible="{Binding IsNamingNewParent}" WidthRequest="200" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </DataTemplate>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="32,24" RowSpacing="16">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="{loc:Translate Setup_Title}" Style="{StaticResource ScreenTitleLabel}" />
+                <Label Text="{Binding StepText}" Style="{StaticResource TertiaryLabel}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Text="{loc:Translate Common_Close}" Command="{Binding CloseCommand}" IsVisible="{Binding CanClose}" Style="{StaticResource QuietButton}" VerticalOptions="Start" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16" MaximumWidthRequest="760" HorizontalOptions="Fill">
+
+                <!-- 1. Language (or restore a backup instead) -->
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsLanguageStep}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="{loc:Translate Setup_LanguageTitle}" Style="{StaticResource SectionTitleLabel}" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="English" Command="{Binding SetLanguageEnglishCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsEnglishSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="Русский" Command="{Binding SetLanguageRussianCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsRussianSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </HorizontalStackLayout>
+                        <Label Text="{loc:Translate Setup_LanguageHint}" Style="{StaticResource TertiaryLabel}" LineBreakMode="WordWrap" />
+
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDivider}}" />
+                        <Button Text="{loc:Translate Setup_RestoreLink}" Command="{Binding ToggleRestoreCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding IsRestoreOpen}">
+                            <Label Text="{loc:Translate Setup_RestoreHint}" Style="{StaticResource TertiaryLabel}" LineBreakMode="WordWrap" />
+                            <Button
+                                Text="{loc:Translate Settings_ChooseBackupFileButton}"
+                                Command="{Binding Restore.PickRestoreFileCommand}"
+                                IsVisible="{Binding Restore.HasPendingRestore, Converter={StaticResource InverseBoolConverter}}"
+                                Style="{StaticResource QuietButton}"
+                                HorizontalOptions="Start" />
+                            <VerticalStackLayout Spacing="6" IsVisible="{Binding Restore.HasPendingRestore}">
+                                <Label Text="{Binding Restore.PendingRestoreFileName}" />
+                                <Label Text="{Binding Restore.PendingRestoreSummaryText}" Style="{StaticResource TertiaryLabel}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Text="{loc:Translate Settings_ReplaceEverythingButton}" Command="{Binding Restore.ConfirmReplaceCommand}" IsEnabled="{Binding Restore.PendingRestoreIsValid}" Style="{StaticResource PrimaryButton}" />
+                                    <Button Text="{loc:Translate Common_Cancel}" Command="{Binding Restore.CancelRestoreCommand}" Style="{StaticResource QuietButton}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                            <Label Text="{Binding Restore.RestoreStatusText}" Style="{StaticResource TertiaryLabel}" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 2. Basic settings -->
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsSettingsStep}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="{loc:Translate Setup_SettingsTitle}" Style="{StaticResource SectionTitleLabel}" />
+                        <Label Text="{loc:Translate Setup_SettingsHint}" Style="{StaticResource TertiaryLabel}" />
+
+                        <Label Text="{loc:Translate Setup_CurrencyLabel}" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Text="{Binding CurrencyText}" WidthRequest="120" HorizontalOptions="Start" />
+
+                        <Label Text="{loc:Translate Settings_ThemeLabel}" Style="{StaticResource SecondaryLabel}" />
+                        <HorizontalStackLayout Spacing="6">
+                            <Button Text="{loc:Translate Settings_ThemeLight}" Command="{Binding SetThemeLightCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsThemeLightSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="{loc:Translate Settings_ThemeDark}" Command="{Binding SetThemeDarkCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsThemeDarkSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="{loc:Translate Settings_ThemeSystem}" Command="{Binding SetThemeSystemCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsThemeSystemSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </HorizontalStackLayout>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Grid.Column="0" Text="{loc:Translate Setup_AutoBackupLabel}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                            <Switch Grid.Column="1" IsToggled="{Binding AutoBackupEnabled}" VerticalOptions="Center" />
+                        </Grid>
+                        <HorizontalStackLayout Spacing="8" IsVisible="{Binding AutoBackupEnabled}">
+                            <Label Text="{loc:Translate Setup_AutoBackupEveryLabel}" Style="{StaticResource SecondaryLabel}" VerticalOptions="Center" />
+                            <Entry Text="{Binding AutoBackupFrequencyDaysText}" Keyboard="Numeric" WidthRequest="80" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="{loc:Translate Setup_WindowLabel}" Style="{StaticResource SecondaryLabel}" />
+                        <HorizontalStackLayout Spacing="6">
+                            <Button Text="{loc:Translate Setup_WindowNext7Days}" Command="{Binding SetWindowRollingCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsWindowRollingSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="{loc:Translate Setup_WindowThisWeek}" Command="{Binding SetWindowWeekCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsWindowWeekSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="{loc:Translate Setup_WindowThisMonth}" Command="{Binding SetWindowMonthCommand}" Style="{StaticResource QuietButton}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsWindowMonthSelected}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource LightAccent}, Dark={StaticResource DarkAccent}}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 3. Categories -->
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsCategoriesStep}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{loc:Translate Setup_CategoriesTitle}" Style="{StaticResource SectionTitleLabel}" />
+                        <Label Text="{loc:Translate Setup_CategoriesHint}" Style="{StaticResource SecondaryLabel}" LineBreakMode="WordWrap" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="{loc:Translate Common_SelectAll}" Command="{Binding Categories.SelectAllCommand}" Style="{StaticResource QuietButton}" />
+                            <Button Text="{loc:Translate Setup_UntickAll}" Command="{Binding Categories.ClearAllCommand}" Style="{StaticResource QuietButton}" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="{loc:Translate Setup_ExpensesHeader}" Style="{StaticResource SecondaryLabel}" FontAttributes="Bold" Margin="0,8,0,0" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories.ExpenseParents}" BindableLayout.ItemTemplate="{StaticResource SetupParentTemplate}" />
+
+                        <Label Text="{loc:Translate Setup_IncomeHeader}" Style="{StaticResource SecondaryLabel}" FontAttributes="Bold" Margin="0,8,0,0" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories.IncomeParents}" BindableLayout.ItemTemplate="{StaticResource SetupParentTemplate}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 4. Banks: every registered statement parser, automatically -->
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsBanksStep}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{loc:Translate Setup_BanksTitle}" Style="{StaticResource SectionTitleLabel}" />
+                        <Label Text="{loc:Translate Setup_BanksHint}" Style="{StaticResource SecondaryLabel}" LineBreakMode="WordWrap" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Banks.Banks}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:SetupBankOptionViewModel">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox IsChecked="{Binding IsSelected}" VerticalOptions="Center" />
+                                        <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Button Text="{loc:Translate Setup_SkipBanks}" Command="{Binding SkipBanksCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 5. How to start: saves everything -->
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding IsStartStep}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{loc:Translate Setup_StartTitle}" Style="{StaticResource SectionTitleLabel}" />
+                        <Label Text="{loc:Translate Setup_StartHint}" Style="{StaticResource TertiaryLabel}" />
+                        <Button Text="{loc:Translate Setup_StartImport}" Command="{Binding StartWithImportCommand}" Style="{StaticResource PrimaryButton}" HorizontalOptions="Start" MinimumWidthRequest="280" />
+                        <Button Text="{loc:Translate Setup_StartAccount}" Command="{Binding StartWithAccountCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" MinimumWidthRequest="280" />
+                        <Button Text="{loc:Translate Setup_StartEmpty}" Command="{Binding StartEmptyCommand}" Style="{StaticResource QuietButton}" HorizontalOptions="Start" MinimumWidthRequest="280" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Label Grid.Column="0" Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource LightStatusRed}, Dark={StaticResource DarkStatusRed}}" VerticalOptions="Center" LineBreakMode="WordWrap" />
+            <Button Grid.Column="1" Text="{loc:Translate Common_Back}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" Style="{StaticResource QuietButton}" />
+            <Button Grid.Column="2" Text="{loc:Translate Common_Next}" Command="{Binding NextCommand}" IsVisible="{Binding ShowsNextButton}" Style="{StaticResource PrimaryButton}" />
+        </Grid>
+    </Grid>
+</ContentPage>

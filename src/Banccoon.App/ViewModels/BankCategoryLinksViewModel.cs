@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Banccoon.App.Diagnostics;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Repositories;
 using Banccoon.Core.Statements;
 
@@ -16,6 +17,7 @@ public sealed class BankCategoryLinksViewModel : ViewModelBase
     private readonly ICategoryRepository categoryRepository;
     private readonly IStatementParserRegistry parserRegistry;
     private BankOptionViewModel? selectedBank;
+    private CategoryTree categoryTree = CategoryTree.Empty;
 
     // True while a new category is being put into the shared option list (see AddOption): pickers
     // knocked off their pick by the insert must not save that as a new link.
@@ -76,7 +78,9 @@ public sealed class BankCategoryLinksViewModel : ViewModelBase
         {
             CategoryOptions.Clear();
             CategoryOptions.Add(CategoryOptionViewModel.NotLinked());
-            foreach (var category in categories.OrderBy(category => category.Name))
+            // Parents only: a parent's children are offered next to it (SubcategoryPickerViewModel).
+            categoryTree = new CategoryTree(categories);
+            foreach (var category in categoryTree.TopLevel)
             {
                 CategoryOptions.Add(CategoryOptionViewModel.ForCategory(category));
             }
@@ -119,7 +123,7 @@ public sealed class BankCategoryLinksViewModel : ViewModelBase
             Rows.Clear();
             foreach (var link in links.OrderBy(link => link.BankCategory, StringComparer.CurrentCulture))
             {
-                Rows.Add(new BankCategoryLinkRowViewModel(link, CategoryOptions, SaveLinkAsync, CreateCategoryAsync));
+                Rows.Add(new BankCategoryLinkRowViewModel(link, CategoryOptions, categoryTree, SaveLinkAsync, CreateCategoryAsync));
             }
         });
     }

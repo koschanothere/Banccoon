@@ -15,6 +15,12 @@ namespace Banccoon.App.ViewModels;
 // Select mode replaces a per-box delete button with multi-select + one "Delete selected" action,
 // avoiding a delete affordance on every single box. Renaming was tried (tap-while-picker-open) and
 // removed - it didn't work in practice and wasn't worth further iteration.
+//
+// Categories are two levels deep. Each parent's children sit right after it, drawn smaller with a
+// "↳" marker (an ordering change plus a small cue, not a nested layout). A child's color is its
+// parent's, so tapping a child opens its own popup without swatches: it says whose color it
+// follows and, like every popup, offers "Parent category" - which is how an existing category is
+// put under a parent, moved, or made top-level again. "+ Add category" can pick a parent too.
 public sealed class CategoryManagementViewModel : ViewModelBase
 {
     private readonly ICategoryRepository categoryRepository;
@@ -27,6 +33,13 @@ public sealed class CategoryManagementViewModel : ViewModelBase
     private bool isAddingCategory;
     private string newCategoryName = string.Empty;
     private string statusText = string.Empty;
+    private NamedOptionViewModel? newCategoryParent;
+    private NamedOptionViewModel? activeBoxParent;
+    private IReadOnlyList<Category> categories = [];
+
+    // Set while ActiveBoxParentOptions is rebuilt, so the picker resetting itself isn't saved as a
+    // move (the same pattern as TransactionsViewModel.isRebuildingOptions).
+    private bool isRebuildingParentOptions;
 
     public CategoryManagementViewModel(
         ICategoryRepository categoryRepository,
@@ -38,6 +51,8 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         this.onChanged = onChanged;
 
         Boxes = [];
+        NewCategoryParentOptions = [];
+        ActiveBoxParentOptions = [];
 
         CloseColorPickerCommand = new RelayCommand(() => ActiveColorPickerBox = null);
         ToggleSelectModeCommand = new RelayCommand(ToggleSelectMode);
@@ -46,6 +61,8 @@ public sealed class CategoryManagementViewModel : ViewModelBase
         {
             NewCategoryName = string.Empty;
             StatusText = string.Empty;
+            RebuildParentOptions(NewCategoryParentOptions, excludeId: null);
+            NewCategoryParent = NewCategoryParentOptions.FirstOrDefault();
             IsAddingCategory = true;
         });
         CancelAddCategoryCommand = new RelayCommand(() => IsAddingCategory = false);
@@ -63,6 +80,10 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsColorPickerOpen));
                 OnPropertyChanged(nameof(ActiveColorPickerBoxColorForLabel));
+                OnPropertyChanged(nameof(CanChooseActiveColor));
+                OnPropertyChanged(nameof(ActiveBoxColorFollowsText));
+                OnPropertyChanged(nameof(CanChangeActiveParent));
+                RebuildActiveBoxParentOptions();
             }
         }
     }
@@ -70,8 +91,49 @@ public sealed class CategoryManagementViewModel : ViewModelBase
     public bool IsColorPickerOpen => ActiveColorPickerBox is not null;
 
     public string ActiveColorPickerBoxColorForLabel => ActiveColorPickerBox is { } box
-        ? string.Format(Translator.Get("Settings_ColorForFormat"), box.Name)
+        ? box.IsChild ? box.Name : string.Format(Translator.Get("Settings_ColorForFormat"), box.Name)
         : string.Empty;
+
+    // Only a parent's color can be chosen; a child's is always its parent's.
+    public bool CanChooseActiveColor => ActiveColorPickerBox is { IsChild: false };
+
+    // "Its color follows Food." in a child's popup, instead of the swatches.
+    public string ActiveBoxColorFollowsText => ActiveColorPickerBox is { IsChild: true, ParentCategoryId: { } parentId }
+        && categories.FirstOrDefault(category => category.Id == parentId) is { } parent
+            ? string.Format(Translator.Get("Settings_ColorFollowsParentFormat"), parent.Name)
+            : string.Empty;
+
+    // A category with children stays top-level (two levels only), so it gets a note instead.
+    public bool CanChangeActiveParent => ActiveColorPickerBox is { HasChildren: false };
+
+    // "None (top level)" plus every other parent: where the tapped category sits. Choosing one
+    // saves at once, like choosing a color.
+    public ObservableCollection<NamedOptionViewModel> ActiveBoxParentOptions { get; }
+
+    public NamedOptionViewModel? ActiveBoxParent
+    {
+        get => activeBoxParent;
+        set
+        {
+            if (SetProperty(ref activeBoxParent, value) && !isRebuildingParentOptions && value is not null && ActiveColorPickerBox is { } box)
+            {
+                var parentId = value.Id == Guid.Empty ? (Guid?)null : value.Id;
+                if (parentId != box.ParentCategoryId)
+                {
+                    _ = SetParentAsync(box.Id, parentId);
+                }
+            }
+        }
+    }
+
+    // "+ Add category"'s optional parent; defaults to none (a new parent category).
+    public ObservableCollection<NamedOptionViewModel> NewCategoryParentOptions { get; }
+
+    public NamedOptionViewModel? NewCategoryParent
+    {
+        get => newCategoryParent;
+        set => SetProperty(ref newCategoryParent, value);
+    }
 
     public bool IsSelectMode
     {
@@ -116,15 +178,21 @@ public sealed class CategoryManagementViewModel : ViewModelBase
 
     private async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
-        var categories = await categoryRepository.GetAllAsync(cancellationToken);
-        var ordered = categories.OrderBy(category => category.Name).ToList();
+        var loaded = await categoryRepository.GetAllAsync(cancellationToken);
+
+        // Parents by name, each followed by its own children by name.
+        var tree = new CategoryTree(loaded);
+        var ordered = tree.TopLevel
+            .SelectMany(parent => new[] { parent }.Concat(tree.ChildrenOf(parent.Id)))
+            .ToList();
 
         // Mutates a collection bound to live UI - must run on the UI thread, which the await
         // above may have resumed off of (see ViewModelBase.RunOnMainThreadAsync).
         await RunOnMainThreadAsync(() =>
         {
+            categories = loaded;
             ActiveColorPickerBox = null;
-            ReconcileBoxes(ordered);
+            ReconcileBoxes(ordered, tree);
             StatusText = string.Empty;
         });
     }
@@ -136,9 +204,9 @@ public sealed class CategoryManagementViewModel : ViewModelBase
     // every single Settings visit via InitializeAsync, not just after an actual edit, so most calls
     // had nothing to change at all. Category names are immutable once created (renaming was tried
     // and removed - see the class remarks above), so the only things that can differ between calls
-    // are additions, removals, and a color change - never a reorder of two otherwise-unchanged
-    // categories.
-    private void ReconcileBoxes(IReadOnlyList<Category> ordered)
+    // are additions, removals, a color change, and a change of parent (which moves a box next to
+    // its new parent - handled by the Move below).
+    private void ReconcileBoxes(IReadOnlyList<Category> ordered, CategoryTree tree)
     {
         var existingById = Boxes.ToDictionary(box => box.Id);
         var orderedIds = new HashSet<Guid>(ordered.Select(category => category.Id));
@@ -156,7 +224,8 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             var category = ordered[index];
             if (existingById.TryGetValue(category.Id, out var existingBox))
             {
-                existingBox.UpdateColor(category.Color);
+                existingBox.UpdateFrom(category);
+                existingBox.HasChildren = tree.HasChildren(category.Id);
                 existingBox.IsSelectModeActive = IsSelectMode;
 
                 var currentIndex = Boxes.IndexOf(existingBox);
@@ -174,7 +243,8 @@ public sealed class CategoryManagementViewModel : ViewModelBase
                     box => _ = HandleDropAsync(box),
                     SetColorAsync)
                 {
-                    IsSelectModeActive = IsSelectMode
+                    IsSelectModeActive = IsSelectMode,
+                    HasChildren = tree.HasChildren(category.Id)
                 });
             }
         }
@@ -266,7 +336,9 @@ public sealed class CategoryManagementViewModel : ViewModelBase
             return;
         }
 
-        var category = new Category(Guid.NewGuid(), NewCategoryName.Trim());
+        // Core copies the parent's color onto a child (HierarchicalCategoryRepository).
+        var parentId = NewCategoryParent is { } parent && parent.Id != Guid.Empty ? parent.Id : (Guid?)null;
+        var category = new Category(Guid.NewGuid(), NewCategoryName.Trim(), ParentCategoryId: parentId);
         await categoryRepository.SaveAsync(category);
 
         await RunOnMainThreadAsync(() =>
@@ -277,5 +349,47 @@ public sealed class CategoryManagementViewModel : ViewModelBase
 
         await RefreshAsync();
         await onChanged();
+    }
+
+    private async Task SetParentAsync(Guid id, Guid? parentId)
+    {
+        var category = await categoryRepository.GetByIdAsync(id);
+        if (category is null)
+        {
+            return;
+        }
+
+        await categoryRepository.SaveAsync(category with { ParentCategoryId = parentId });
+        await RefreshAsync();
+        await onChanged();
+    }
+
+    // UI-thread only.
+    private void RebuildActiveBoxParentOptions()
+    {
+        isRebuildingParentOptions = true;
+        try
+        {
+            var box = ActiveColorPickerBox;
+            RebuildParentOptions(ActiveBoxParentOptions, box?.Id);
+            ActiveBoxParent = box?.ParentCategoryId is { } parentId
+                ? ActiveBoxParentOptions.FirstOrDefault(option => option.Id == parentId)
+                : ActiveBoxParentOptions.FirstOrDefault();
+        }
+        finally
+        {
+            isRebuildingParentOptions = false;
+        }
+    }
+
+    // "None (top level)" (Guid.Empty) plus every parent category, except excludeId itself.
+    private void RebuildParentOptions(ObservableCollection<NamedOptionViewModel> options, Guid? excludeId)
+    {
+        options.Clear();
+        options.Add(new NamedOptionViewModel(Guid.Empty, Translator.Get("Settings_NoParentOption")));
+        foreach (var parent in new CategoryTree(categories).TopLevel.Where(parent => parent.Id != excludeId))
+        {
+            options.Add(new NamedOptionViewModel(parent.Id, parent.Name));
+        }
     }
 }

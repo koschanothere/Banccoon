@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Banccoon.App.Formatting;
 using Banccoon.App.Localization;
+using Banccoon.Core.Categories;
 using Banccoon.Core.Models;
 using Microsoft.Maui.Graphics;
 
@@ -21,14 +22,20 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
     private CategoryOptionViewModel? category;
     private string newCategoryName = string.Empty;
 
-    // The category the user picked for the whole group, if they did - rows that join later get it too.
-    private CategoryOptionViewModel? chosenCategory;
+    // The category the user picked for the whole group (a parent, or one of its children), if they
+    // did - rows that join later get it too.
+    private Guid? chosenCategoryId;
+
+    // Set while the group's own subcategory picker is being rebuilt from code, so that doesn't
+    // count as the user choosing a child for the whole group.
+    private bool isSyncingSubcategory;
 
     public StatementImportRowGroupViewModel(
         StatementImportRowGroupKey key,
         StatementImportRowViewModel firstRow,
         string currency,
         ObservableCollection<CategoryOptionViewModel> categoryOptions,
+        CategoryTree categoryTree,
         Func<StatementImportRowGroupViewModel, Task> onApprove,
         Func<StatementImportRowGroupViewModel, Task> onCreateCategory)
     {
@@ -38,6 +45,15 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
         Type = firstRow.Type;
         category = firstRow.Category;
         CategoryOptions = categoryOptions;
+        Subcategory = new SubcategoryPickerViewModel(OnSubcategoryChanged);
+        SyncSubcategory(() =>
+        {
+            Subcategory.Reset(categoryTree);
+            if (firstRow.CategoryId is { } firstCategoryId)
+            {
+                Subcategory.SelectCategory(firstCategoryId);
+            }
+        });
         DisplayedRows = [];
 
         ToggleExpandedCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
@@ -54,6 +70,9 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
     public TransactionType Type { get; }
 
     public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; }
+
+    // The chosen parent's children, when it has any: choosing one puts it on every row too.
+    public SubcategoryPickerViewModel Subcategory { get; }
 
     // The group's own category picker: choosing a category puts it on every row in the group.
     // "+ New category" only takes effect once the name is committed (Enter / Add), like on a row.
@@ -75,13 +94,10 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
             }
 
             RaiseCategoryChanged();
-            if (value is { IsCreateNew: false })
+            SyncSubcategory(() => Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null));
+            if (value is { IsCategory: true })
             {
-                chosenCategory = value;
-                foreach (var row in rows)
-                {
-                    row.Category = value;
-                }
+                ApplyToRows(value.Id);
             }
         }
     }
@@ -140,9 +156,9 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
         }
 
         rows.Insert(index, row);
-        if (chosenCategory is not null)
+        if (chosenCategoryId is not null)
         {
-            row.Category = chosenCategory;
+            row.SetCategoryById(chosenCategoryId);
         }
 
         OnRowsChanged();
@@ -162,6 +178,7 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
         if (SetProperty(ref category, value))
         {
             RaiseCategoryChanged();
+            SyncSubcategory(() => Subcategory.ShowChildrenOf(value is { IsCategory: true } ? value.Id : null));
         }
     }
 
@@ -170,6 +187,38 @@ public sealed class StatementImportRowGroupViewModel : ViewModelBase
     {
         NewCategoryName = string.Empty;
         Category = option;
+    }
+
+    // The group's subcategory picker changed by the user: that child (or, for "No subcategory",
+    // the parent itself) goes on every row.
+    private void OnSubcategoryChanged()
+    {
+        if (!isSyncingSubcategory && Category is { IsCategory: true } parent)
+        {
+            ApplyToRows(parent.Id);
+        }
+    }
+
+    private void ApplyToRows(Guid parentId)
+    {
+        chosenCategoryId = Subcategory.Resolve(parentId);
+        foreach (var row in rows)
+        {
+            row.SetCategoryById(chosenCategoryId);
+        }
+    }
+
+    private void SyncSubcategory(Action action)
+    {
+        isSyncingSubcategory = true;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            isSyncingSubcategory = false;
+        }
     }
 
     private void OnRowsChanged()
@@ -205,7 +254,7 @@ public readonly record struct StatementImportRowGroupKey(string Name, Guid? Cate
 {
     public static StatementImportRowGroupKey For(StatementImportRowViewModel row) => new(
         row.Description.Trim().ToUpperInvariant(),
-        row.Category?.Id,
+        row.CategoryId,
         row.Type,
         row.IsTransferType ? row.OtherAccount?.Id : null);
 }

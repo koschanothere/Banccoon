@@ -31,8 +31,7 @@ Decisions made in the UI planning walkthrough, before any visual/look design. Th
   - Top movers / biggest changes auto-surfaced (e.g. "Dining out up 40%")
   - Drill-down: clicking a category filters straight into Transactions for that category/period
   - Income vs. expense breakdown, not just expense categories
-  - Donut chart of the viewed month's category spend, hover-highlighted per slice
-  - **Drill-down decided 2026-09-25** (depends on hierarchical categories, see `docs/development-phases.md`): the donut shows parent-category totals; clicking a slice opens a second donut to its right, breaking that one parent down into its own children. One level of drill-down only, matching the two-level category model. Room noted for "other fun analysis" using the same parent/child split later, not scoped yet.
+  - Donut chart of the viewed month's category spend, hover-highlighted per slice. Slices are per **parent** category (a parent's own spending plus its children's); clicking a parent's slice opens a second donut to its right breaking it down by child (built 2026-09-25). Room noted for other analysis using the same parent/child split later, not scoped yet.
 
 ## Money Model: Free to Spend
 
@@ -69,7 +68,7 @@ Already partially implemented in `Banccoon.Core.Forecasting.AvailableToSpendServ
 - Bulk actions: explicit **"Select" mode toggle** button switches the list into checkbox mode; then mass category assignment, mass scheduled-occurrence assignment, mass delete.
 - **Category management** icon lives in the Transactions header next to the filter control, opening a manage-categories overlay (rename/merge/delete/recolor/reorder). This is deliberately **not in Settings** — categories are living financial data you touch constantly, unlike scheduled templates.
   - Category **creation** is inline wherever you pick a category (transaction entry, statement import row, scheduled assignment) — type a new name, confirm, done.
-  - **Superseded 2026-09-25**: categories now support exactly two levels (parent/child), decided and fully scoped — see "Hierarchical categories" in `docs/development-phases.md`'s Current Priorities for the full spec (parent categories stay directly assignable, a child's colour always follows its parent, every category picker shows only parents by default with a child list appearing only after picking a parent that has any).
+  - Categories are **two levels deep** (decided and built 2026-09-25, replacing "flat"): a category with no parent is a parent, a child can't have children, and parents are real categories a transaction can be filed under directly. A child's color is always its parent's. **No picker ever shows one combined list**: every picker lists parents only, and a small second picker appears only once a parent with children is chosen, offering just its children ("No subcategory" keeps the parent). Inline creation always makes a parent; children are made or moved in Manage categories (a "Parent category" picker in "+ Add category" and in each category's popup). Filtering by a parent covers its children. See the Phase 7 "Hierarchical categories" entry in `docs/development-phases.md` for merge behavior and the rest.
 
 ## Statement Import (full-page guided flow)
 
@@ -103,13 +102,7 @@ Not part of the active build plan; revisit later as a quality-of-life addition, 
 
 ## First-Run / Blank-State Setup
 
-- Full-screen guided overlay, not skippable, offering exactly 3 paths: **Import a bank statement / Manual setup / Restore a backup**. Each routes into its respective existing workflow.
-- **Expanded scope, raised 2026-09-25, not yet built (Phase 2 is still entirely unbuilt) — the user wants this page to also cover:**
-  - Which bank the user uses, picked from the registered parser list (same list Statement Import already builds from) — only Sberbank exists today; picking an unsupported bank needs a graceful fallback to manual setup rather than a dead end.
-  - Which starter categories to include, from a curated candidate list, accepted or denied **individually** — see the "Default categories" entry in `docs/development-phases.md`'s Current Priorities; the actual candidate list is still undecided.
-  - Whether to use hierarchical (parent/child) categories at all — **depends on how the hierarchical-categories design lands** (see Current Priorities): if the feature ships as always-available and purely opt-in per category (no app-wide mode), this setup step may turn out to be unnecessary rather than a real toggle.
-  - What the Dashboard hero number shows (Free to spend vs. current balance) — this is already a real Settings control (`AppSettings.DashboardPrimaryMetric`); surfacing it here is just exposing an existing setting earlier, no new backend work.
-  - Candidate additional fields raised but not yet decided which (if any) belong at setup vs. staying in Settings for later: safety-buffer amount, free-to-spend window mode, primary account, theme/language.
+- Full-screen guided overlay, not skippable, shown only on a brand-new (empty) install. **Five steps (decided 2026-09-28)**: (1) language, English/Русский, with a "restore a backup instead" link; (2) basic settings: currency, theme (default System), automatic backups, "free to spend" window, with dates always day/month/year; (3) the default categories as a two-level ticklist, all ticked, where a subcategory ticked without its main category must be put under another main category, a new one, or kept as a main category; (4) banks, every available parser listed automatically, multiple choice, or skip to auto-detect; (5) the original three ways to start: **Import a bank statement / Add an account manually / Start empty**. Nothing is saved before step 5. A Debug-only button in Settings reopens it during development.
 
 ## Design Language (from reference walkthrough)
 

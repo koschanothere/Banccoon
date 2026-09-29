@@ -32,7 +32,17 @@ public sealed record AppSettings(
     DashboardPrimaryMetric DashboardPrimaryMetric = DashboardPrimaryMetric.FreeToSpend,
     // Set once LegacySavingsGoalConversionService has turned the old standalone SavingsGoal rows
     // into Goal accounts, so that conversion only ever runs once.
-    bool LegacySavingsGoalsConverted = false)
+    bool LegacySavingsGoalsConverted = false,
+    // Set once first-run setup has finished (or a backup was restored from it). Setup shows only
+    // while this is false AND nothing has been created yet - see FirstRunSetupService.
+    bool FirstRunCompleted = false,
+    // The banks (statement parser ids, comma-separated) chosen at setup: tried first when reading
+    // a statement, before detecting across every parser. Empty = detect only.
+    string PreferredParserIds = "",
+    // The catch-all category an import approval with no category is filed under ("Other" /
+    // "Прочее", created by setup in the chosen language). Null falls back to a category named
+    // "Other" - see StatementImportService.
+    Guid? FallbackCategoryId = null)
 {
     public UiPreferences UiPreferences => new(
         ThemeMode,

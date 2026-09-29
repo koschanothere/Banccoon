@@ -17,6 +17,7 @@ public sealed class StatementImportService : IStatementImportService
     private readonly ITransactionApplicationService transactionApplicationService;
     private readonly ICategorySuggestionService categorySuggestionService;
     private readonly IBankCategoryLinkRepository bankCategoryLinkRepository;
+    private readonly ISettingsRepository? settingsRepository;
 
     public StatementImportService(
         IStatementParserRegistry parserRegistry,
@@ -27,7 +28,8 @@ public sealed class StatementImportService : IStatementImportService
         ITransactionRepository transactionRepository,
         ITransactionApplicationService transactionApplicationService,
         ICategorySuggestionService categorySuggestionService,
-        IBankCategoryLinkRepository bankCategoryLinkRepository)
+        IBankCategoryLinkRepository bankCategoryLinkRepository,
+        ISettingsRepository? settingsRepository = null)
     {
         this.parserRegistry = parserRegistry;
         this.statementImportRepository = statementImportRepository;
@@ -38,6 +40,7 @@ public sealed class StatementImportService : IStatementImportService
         this.transactionApplicationService = transactionApplicationService;
         this.categorySuggestionService = categorySuggestionService;
         this.bankCategoryLinkRepository = bankCategoryLinkRepository;
+        this.settingsRepository = settingsRepository;
     }
 
     public async Task<StatementPreviewResult> PreviewAsync(
@@ -53,7 +56,7 @@ public sealed class StatementImportService : IStatementImportService
         }
 
         var request = new StatementParseRequest(filePath);
-        var parser = parserRegistry.FindParser(request);
+        var parser = await FindParserAsync(request, cancellationToken);
         if (parser is null)
         {
             return new StatementPreviewResult(
@@ -90,7 +93,7 @@ public sealed class StatementImportService : IStatementImportService
         }
 
         var request = new StatementParseRequest(filePath, accountId);
-        var parser = parserRegistry.FindParser(request);
+        var parser = await FindParserAsync(request, cancellationToken);
         if (parser is null)
         {
             return new StatementImportCreateResult(
@@ -476,9 +479,28 @@ public sealed class StatementImportService : IStatementImportService
         return (type, categoryId, destinationAccountId);
     }
 
+    // The banks chosen at first-run setup are tried first (AppSettings.PreferredParserIds).
+    private async Task<IStatementParser?> FindParserAsync(StatementParseRequest request, CancellationToken cancellationToken)
+    {
+        var preferred = settingsRepository is null
+            ? []
+            : (await settingsRepository.GetAsync(cancellationToken)).PreferredParserIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parserRegistry.FindParser(request, preferred);
+    }
+
+    // The catch-all set at first-run setup ("Other" / "Прочее") if it still exists; otherwise a
+    // category named "Other", created if needed (installs from before setup existed).
     private async Task<Guid> EnsureOtherCategoryAsync(CancellationToken cancellationToken)
     {
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        if (settingsRepository is not null
+            && (await settingsRepository.GetAsync(cancellationToken)).FallbackCategoryId is { } fallbackId
+            && categories.Any(category => category.Id == fallbackId))
+        {
+            return fallbackId;
+        }
+
         var other = categories.FirstOrDefault(category =>
             string.Equals(category.Name, OtherCategoryName, StringComparison.OrdinalIgnoreCase)
             && category.Type is null);
